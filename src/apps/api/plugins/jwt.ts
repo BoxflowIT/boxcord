@@ -29,6 +29,7 @@ declare module '@fastify/jwt' {
 }
 
 const isDev = process.env.NODE_ENV !== 'production';
+const allowMockTokens = isDev || process.env.ALLOW_MOCK_TOKENS === 'true';
 
 async function jwtPluginImpl(app: FastifyInstance) {
   await app.register(jwt, {
@@ -41,8 +42,8 @@ async function jwtPluginImpl(app: FastifyInstance) {
     try {
       const authHeader = request.headers.authorization;
 
-      // Dev mode: Accept mock tokens (format: mock.base64payload.signature)
-      if (isDev && authHeader?.startsWith('Bearer mock.')) {
+      // Accept mock tokens in dev mode or when ALLOW_MOCK_TOKENS is set
+      if (allowMockTokens && authHeader?.startsWith('Bearer mock.')) {
         const parts = authHeader.split('.');
         if (parts.length >= 2) {
           try {
