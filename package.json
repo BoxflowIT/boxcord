@@ -32,11 +32,14 @@
     "@prisma/client": "^5.14.0",
     "fastify": "^4.28.0",
     "fastify-plugin": "^4.5.1",
+    "jsonwebtoken": "^9.0.3",
+    "jwks-rsa": "^3.2.2",
     "socket.io": "^4.7.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.3.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.12.12",
     "eslint": "^9.3.0",
     "eslint-config-prettier": "^9.1.0",
