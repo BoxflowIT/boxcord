@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from '../services/api';
 import { useAutocompleteNavigation } from '../hooks/useAutocompleteNavigation';
+import Avatar from './ui/Avatar';
 
 interface MentionItem {
   id: string;
@@ -107,7 +108,7 @@ export default function MentionAutocomplete({
   return (
     <div
       ref={containerRef}
-      className="absolute bg-discord-darker border border-discord-dark rounded-lg shadow-xl overflow-hidden z-50"
+      className="popup-container"
       style={{
         bottom: `calc(100% + 8px)`,
         left: position.left,
@@ -116,25 +117,23 @@ export default function MentionAutocomplete({
       }}
     >
       {loading ? (
-        <div className="px-4 py-3 text-gray-400 text-sm">Söker...</div>
+        <div className="px-4 py-3 text-muted">Söker...</div>
       ) : (
         <ul className="py-1">
           {results.map((item, index) => (
             <li
               key={item.id}
               onClick={() => handleItemClick(item)}
-              className={`px-4 py-2 cursor-pointer flex items-center gap-3 ${
+              className={`popup-list-item flex items-center gap-3 ${
                 index === selectedIndex
-                  ? 'bg-discord-blurple text-white'
-                  : 'text-gray-300 hover:bg-discord-dark'
+                  ? 'popup-list-item-selected'
+                  : 'popup-list-item-default'
               }`}
             >
-              <div className="w-8 h-8 rounded-full bg-discord-blurple flex items-center justify-center text-white text-sm font-semibold">
-                {item.display[0].toUpperCase()}
-              </div>
+              <Avatar size="sm">{item.display[0].toUpperCase()}</Avatar>
               <div>
                 <div className="font-medium">{item.display}</div>
-                <div className="text-xs text-gray-400">{item.value}</div>
+                <div className="text-subtle">{item.value}</div>
               </div>
             </li>
           ))}

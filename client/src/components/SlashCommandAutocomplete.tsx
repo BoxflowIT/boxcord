@@ -77,7 +77,7 @@ export default function SlashCommandAutocomplete({
   return (
     <div
       ref={containerRef}
-      className="absolute bg-discord-darker border border-discord-dark rounded-lg shadow-xl overflow-hidden z-50"
+      className="popup-container"
       style={{
         bottom: 'calc(100% + 8px)',
         left: 0,
@@ -86,7 +86,7 @@ export default function SlashCommandAutocomplete({
         overflowY: 'auto'
       }}
     >
-      <div className="px-3 py-2 text-xs text-gray-400 border-b border-discord-dark">
+      <div className="px-3 py-2 text-subtle border-b border-discord-dark">
         Slash-kommandon
       </div>
       <ul className="py-1">
@@ -94,19 +94,19 @@ export default function SlashCommandAutocomplete({
           <li
             key={cmd.name}
             onClick={() => handleItemClick(cmd)}
-            className={`px-4 py-2 cursor-pointer ${
+            className={`popup-list-item ${
               index === selectedIndex
-                ? 'bg-discord-blurple text-white'
-                : 'text-gray-300 hover:bg-discord-dark'
+                ? 'popup-list-item-selected'
+                : 'popup-list-item-default'
             }`}
           >
             <div className="flex items-center gap-2">
               <span className="font-mono text-discord-blurple">
                 /{cmd.name}
               </span>
-              <span className="text-gray-400 text-sm">{cmd.description}</span>
+              <span className="text-muted">{cmd.description}</span>
             </div>
-            <div className="text-xs text-gray-500 mt-1">{cmd.usage}</div>
+            <div className="text-subtle mt-1">{cmd.usage}</div>
           </li>
         ))}
       </ul>

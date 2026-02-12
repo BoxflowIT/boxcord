@@ -31,3 +31,130 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #36393f;
 }
+
+/* ============================================
+   Reusable Component Styles
+   ============================================ */
+
+@layer components {
+  /* Avatar Styles */
+  .avatar {
+    @apply rounded-full bg-discord-blurple flex items-center justify-center text-white flex-shrink-0;
+  }
+
+  .avatar-sm {
+    @apply avatar w-8 h-8 text-sm font-semibold;
+  }
+
+  .avatar-md {
+    @apply avatar w-10 h-10 text-base font-bold;
+  }
+
+  .avatar-lg {
+    @apply avatar w-20 h-20 text-3xl font-bold;
+  }
+
+  /* Button Styles */
+  .btn {
+    @apply px-3 py-1 rounded font-medium transition-colors;
+  }
+
+  .btn-primary {
+    @apply btn bg-discord-blurple text-white hover:bg-discord-blurple-hover;
+  }
+
+  .btn-secondary {
+    @apply btn hover:bg-discord-darker text-gray-400 hover:text-white;
+  }
+
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700;
+  }
+
+  .btn-icon {
+    @apply p-1 hover:bg-discord-darker rounded text-gray-400 hover:text-white transition-colors;
+  }
+
+  .btn-icon-danger {
+    @apply p-1 hover:bg-discord-darker rounded text-gray-400 hover:text-red-500 transition-colors;
+  }
+
+  /* Dropdown Menu Styles */
+  .dropdown-menu {
+    @apply absolute bg-discord-dark border border-discord-darker rounded-lg shadow-xl z-10 overflow-hidden;
+  }
+
+  .dropdown-item {
+    @apply w-full text-left px-4 py-2 hover:bg-discord-darker text-white transition-colors;
+  }
+
+  .dropdown-item-danger {
+    @apply w-full text-left px-4 py-2 hover:bg-discord-darker text-red-500 transition-colors;
+  }
+
+  /* Autocomplete/Popup Styles */
+  .popup-container {
+    @apply absolute bg-discord-darker border border-discord-dark rounded-lg shadow-xl overflow-hidden z-50;
+  }
+
+  .popup-list-item {
+    @apply px-4 py-2 cursor-pointer transition-colors;
+  }
+
+  .popup-list-item-selected {
+    @apply bg-discord-blurple text-white;
+  }
+
+  .popup-list-item-default {
+    @apply text-gray-300 hover:bg-discord-dark;
+  }
+
+  /* Input Styles */
+  .input-base {
+    @apply w-full bg-discord-darker text-discord-light rounded p-2 outline-none transition-colors;
+  }
+
+  .textarea-base {
+    @apply input-base resize-none;
+  }
+
+  /* Card/Panel Styles */
+  .card {
+    @apply p-4 bg-discord-darker rounded-lg;
+  }
+
+  /* Text Styles */
+  .text-muted {
+    @apply text-gray-400 text-sm;
+  }
+
+  .text-subtle {
+    @apply text-gray-500 text-xs;
+  }
+
+  /* Message Styles */
+  .message-container {
+    @apply group hover:bg-discord-darker/30 -mx-4 px-4 py-0.5 rounded relative;
+  }
+
+  .message-time {
+    @apply text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity;
+  }
+
+  /* Status Colors */
+  .status-online {
+    @apply bg-green-500;
+  }
+
+  .status-away {
+    @apply bg-yellow-500;
+  }
+
+  .status-busy {
+    @apply bg-red-500;
+  }
+
+  .status-offline {
+    @apply bg-gray-500;
+  }
+}
