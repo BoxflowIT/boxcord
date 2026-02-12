@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from 'react-oidc-context';
 import { useAuthStore } from '../store/auth';
+import { Button } from '../components/ui/button';
 
 export default function AuthCallback() {
   const auth = useAuth();
@@ -48,12 +49,9 @@ export default function AuthCallback() {
           <p className="text-red-400 mb-4">
             Inloggningsfel: {auth.error.message}
           </p>
-          <button
-            onClick={() => navigate('/login', { replace: true })}
-            className="px-4 py-2 bg-discord-blurple text-white rounded hover:bg-discord-blurple/80"
-          >
+          <Button onClick={() => navigate('/login', { replace: true })}>
             Tillbaka till login
-          </button>
+          </Button>
         </div>
       </div>
     );

@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from 'react-oidc-context';
 import { useAuthStore } from '../store/auth';
+import { Button } from '../components/ui/button';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -30,13 +31,14 @@ export default function Login() {
         </div>
 
         {/* Production login via Cognito */}
-        <button
+        <Button
           onClick={handleCognitoLogin}
           disabled={auth.isLoading}
-          className="w-full py-3 bg-discord-blurple hover:bg-discord-blurple/80 text-white font-semibold rounded transition-colors disabled:opacity-50"
+          className="w-full"
+          size="lg"
         >
           {auth.isLoading ? 'Laddar...' : 'Logga in med Cognito'}
-        </button>
+        </Button>
 
         <p className="text-center text-sm text-gray-500 mt-6">
           Använder samma inloggning som Boxtime

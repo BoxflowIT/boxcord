@@ -1,5 +1,14 @@
 // Edit Modal for Channel or Workspace
 import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from './ui/dialog';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
 
 interface EditModalProps {
   isOpen: boolean;
@@ -30,26 +39,25 @@ export default function EditModal({
   const [description, setDescription] = useState(initialDescription);
   const [iconUrl, setIconUrl] = useState(initialIconUrl);
 
-  if (!isOpen) return null;
-
   const handleSave = () => {
     onSave({ name, description, ...(showIcon && { iconUrl }) });
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-discord-dark p-6 rounded-lg w-96 shadow-xl">
-        <h3 className="text-lg font-semibold text-white mb-4">{title}</h3>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
         <div className="space-y-4">
           <div>
             <label className="block text-sm text-gray-400 mb-1">
               {showIcon ? 'Servernamn' : 'Kanalnamn'}
             </label>
-            <input
+            <Input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 bg-discord-darkest rounded text-white focus:outline-none focus:ring-2 focus:ring-discord-blurple"
               autoFocus
             />
           </div>
@@ -57,11 +65,10 @@ export default function EditModal({
             <label className="block text-sm text-gray-400 mb-1">
               Beskrivning
             </label>
-            <input
+            <Input
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 bg-discord-darkest rounded text-white focus:outline-none focus:ring-2 focus:ring-discord-blurple"
               placeholder="Valfritt"
             />
           </div>
@@ -70,11 +77,10 @@ export default function EditModal({
               <label className="block text-sm text-gray-400 mb-1">
                 Ikon-URL (bild)
               </label>
-              <input
+              <Input
                 type="text"
                 value={iconUrl}
                 onChange={(e) => setIconUrl(e.target.value)}
-                className="w-full px-3 py-2 bg-discord-darkest rounded text-white focus:outline-none focus:ring-2 focus:ring-discord-blurple"
                 placeholder="https://example.com/icon.png"
               />
               {iconUrl && (
@@ -95,22 +101,15 @@ export default function EditModal({
             </div>
           )}
         </div>
-        <div className="flex justify-end gap-2 mt-6">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
-          >
+        <DialogFooter>
+          <Button variant="ghost" onClick={onCancel}>
             Avbryt
-          </button>
-          <button
-            onClick={handleSave}
-            className="px-4 py-2 bg-discord-blurple hover:bg-discord-blurple/80 text-white rounded transition-colors"
-            disabled={!name.trim()}
-          >
+          </Button>
+          <Button onClick={handleSave} disabled={!name.trim()}>
             Spara
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
