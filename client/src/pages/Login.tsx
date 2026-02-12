@@ -1,15 +1,23 @@
 // Login Page
-// In production, this would redirect to Cognito hosted UI
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from 'react-oidc-context';
 import { useAuthStore } from '../store/auth';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { setAuth } = useAuthStore();
+  const auth = useAuth();
+  const { setAuth, token } = useAuthStore();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (token || auth.isAuthenticated) {
+      navigate('/chat', { replace: true });
+    }
+  }, [token, auth.isAuthenticated, navigate]);
 
   const handleDevLogin = async () => {
     setLoading(true);
@@ -17,8 +25,6 @@ export default function Login() {
 
     try {
       // DEV MODE: Create a mock JWT for local development
-      // In production, this would redirect to Cognito
-      // Use user-1 to match seeded data
       const userId = 'user-1';
       const mockToken = btoa(
         JSON.stringify({
@@ -48,23 +54,8 @@ export default function Login() {
   };
 
   const handleCognitoLogin = () => {
-    // Redirect to Cognito hosted UI
-    const cognitoDomain = import.meta.env.VITE_COGNITO_DOMAIN;
-    const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
-    
-    if (!cognitoDomain || !clientId) {
-      setError('Cognito är inte konfigurerat. Använd dev-login.');
-      return;
-    }
-    
-    const cognitoUrl = `https://${cognitoDomain}/login`;
-    const params = new URLSearchParams({
-      client_id: clientId,
-      response_type: 'code',
-      scope: 'openid email profile',
-      redirect_uri: `${window.location.origin}/auth/callback`
-    });
-    window.location.href = `${cognitoUrl}?${params}`;
+    // Use react-oidc-context to redirect to Cognito
+    auth.signinRedirect();
   };
 
   return (
@@ -81,11 +72,11 @@ export default function Login() {
           </div>
         )}
 
-        {/* Dev login - shown when Cognito is not configured or in dev mode */}
-        {(import.meta.env.DEV || !import.meta.env.VITE_COGNITO_DOMAIN) && (
+        {/* Dev login - shown in dev mode */}
+        {import.meta.env.DEV && (
           <div className="mb-6">
             <label className="block text-sm font-medium text-discord-light mb-2">
-              Email {import.meta.env.DEV ? '(dev mode)' : '(demo)'}
+              Email (dev mode)
             </label>
             <input
               type="email"
@@ -107,9 +98,10 @@ export default function Login() {
         {/* Production login via Cognito */}
         <button
           onClick={handleCognitoLogin}
-          className="w-full py-3 bg-discord-blurple hover:bg-discord-blurple/80 text-white font-semibold rounded transition-colors"
+          disabled={auth.isLoading}
+          className="w-full py-3 bg-discord-blurple hover:bg-discord-blurple/80 text-white font-semibold rounded transition-colors disabled:opacity-50"
         >
-          Logga in med Boxtime
+          {auth.isLoading ? 'Laddar...' : 'Logga in med Cognito'}
         </button>
 
         <p className="text-center text-sm text-gray-500 mt-6">

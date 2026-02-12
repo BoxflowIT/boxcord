@@ -1,21 +1,28 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from 'react-oidc-context';
 import { useAuthStore } from './store/auth';
 import Login from './pages/Login';
 import Chat from './pages/Chat';
+import AuthCallback from './pages/AuthCallback';
 
 function App() {
   const { token } = useAuthStore();
+  const auth = useAuth();
+  
+  // User is authenticated via OIDC or has a token in store
+  const isAuthenticated = token || auth.isAuthenticated;
 
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route
         path="/chat/*"
-        element={token ? <Chat /> : <Navigate to="/login" replace />}
+        element={isAuthenticated ? <Chat /> : <Navigate to="/login" replace />}
       />
       <Route
         path="*"
-        element={<Navigate to={token ? '/chat' : '/login'} replace />}
+        element={<Navigate to={isAuthenticated ? '/chat' : '/login'} replace />}
       />
     </Routes>
   );

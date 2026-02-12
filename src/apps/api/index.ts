@@ -61,7 +61,10 @@ async function main() {
 
     // SPA fallback - serve index.html for non-API routes
     app.setNotFoundHandler((request, reply) => {
-      if (!request.url.startsWith('/api/') && !request.url.startsWith('/socket.io')) {
+      if (
+        !request.url.startsWith('/api/') &&
+        !request.url.startsWith('/socket.io')
+      ) {
         return reply.sendFile('index.html');
       }
       return reply.status(404).send({ error: 'Not found' });
