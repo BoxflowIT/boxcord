@@ -65,11 +65,7 @@ class SocketService {
 
     socket.on('connect_error', (error) => {
       console.error('❌ Socket: Connection error:', error.message);
-      console.error('Error details:', {
-        type: error.type,
-        description: error.description,
-        context: error.context
-      });
+      console.error('Error details:', error);
     });
 
     socket.on('disconnect', (reason, details) => {
@@ -195,7 +191,9 @@ class SocketService {
       return;
     }
     console.log('🔗 Socket: Joining channel now:', channelId);
-    this.socket.emit('channel:join', channelId);
+    if (this.socket) {
+      this.socket.emit('channel:join', channelId);
+    }
   }
 
   leaveChannel(channelId: string) {
@@ -209,12 +207,16 @@ class SocketService {
       // Queue the message for after connection
       this.socket?.once('connect', () => {
         console.log('📤 Socket: Sending queued message to:', channelId);
-        this.socket!.emit('message:send', { channelId, content, parentId });
+        if (this.socket) {
+          this.socket.emit('message:send', { channelId, content, parentId });
+        }
       });
       return;
     }
     console.log('📤 Socket: Sending message to:', channelId);
-    this.socket.emit('message:send', { channelId, content, parentId });
+    if (this.socket) {
+      this.socket.emit('message:send', { channelId, content, parentId });
+    }
   }
 
   editMessage(messageId: string, content: string) {
@@ -223,7 +225,9 @@ class SocketService {
       return;
     }
     console.log('✏️ Socket: Editing message:', messageId);
-    this.socket!.emit('message:edit', { messageId, content });
+    if (this.socket) {
+      this.socket.emit('message:edit', { messageId, content });
+    }
   }
 
   deleteMessage(messageId: string) {
@@ -232,7 +236,9 @@ class SocketService {
       return;
     }
     console.log('🗑️ Socket: Deleting message:', messageId);
-    this.socket!.emit('message:delete', { messageId });
+    if (this.socket) {
+      this.socket.emit('message:delete', { messageId });
+    }
   }
 
   sendTyping(channelId: string) {

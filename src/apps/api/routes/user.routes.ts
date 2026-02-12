@@ -111,12 +111,12 @@ export async function userRoutes(app: FastifyInstance) {
     const user = await userService.upsertUser({
       id: request.user.id,
       email: request.user.email,
-      role: request.user.role,
+      role: request.user.role
     });
 
     // Check if user is member of any workspace
     const memberships = await prisma.workspaceMember.findMany({
-      where: { userId: request.user.id },
+      where: { userId: request.user.id }
     });
 
     // If no memberships, add to first workspace (or create one)
@@ -128,8 +128,8 @@ export async function userRoutes(app: FastifyInstance) {
           data: {
             workspaceId: defaultWorkspace.id,
             userId: request.user.id,
-            role: 'MEMBER',
-          },
+            role: 'MEMBER'
+          }
         });
       } else {
         // No workspaces exist, create one with this user as owner
@@ -140,17 +140,17 @@ export async function userRoutes(app: FastifyInstance) {
             members: {
               create: {
                 userId: request.user.id,
-                role: 'OWNER',
-              },
+                role: 'OWNER'
+              }
             },
             channels: {
               create: {
                 name: 'allmänt',
                 description: 'Allmän diskussion',
-                type: 'TEXT',
-              },
-            },
-          },
+                type: 'TEXT'
+              }
+            }
+          }
         });
       }
     }
