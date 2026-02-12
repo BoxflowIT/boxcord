@@ -4,6 +4,8 @@ import { useParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { socketService } from '../services/socket';
 import { useAuthStore } from '../store/auth';
+import { useMessageActions } from '../hooks/useMessageActions';
+import { formatTime } from '../lib/formatters';
 import MessageReactions from './MessageReactions';
 import FileUpload, { AttachmentPreview } from './FileUpload';
 import DeleteConfirmModal from './DeleteConfirmModal';
@@ -42,11 +44,31 @@ export default function DMView() {
   const [inputValue, setInputValue] = useState('');
   const [uploading, setUploading] = useState(false);
   const [otherUser, setOtherUser] = useState<UserInfo | null>(null);
-  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-  const [editContent, setEditContent] = useState('');
-  const [deleteMessageId, setDeleteMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const editTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const {
+    editingMessageId,
+    editContent,
+    deleteMessageId,
+    editTextareaRef,
+    handleEditMessage,
+    handleSaveEdit: saveEdit,
+    handleCancelEdit,
+    handleDeleteMessage,
+    handleConfirmDelete: confirmDelete,
+    handleCancelDelete,
+    setEditContent
+  } = useMessageActions({
+    onEdit: async (messageId, content) => {
+      await api.editDM(messageId, content);
+      socketService.editDM(messageId, content);
+    },
+    onDelete: async (messageId) => {
+      await api.deleteDM(messageId);
+      socketService.deleteDM(messageId);
+      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+    }
+  });
 
   useEffect(() => {
     if (!channelId) return;
@@ -79,27 +101,27 @@ export default function DMView() {
       .finally(() => setLoading(false));
 
     // Listen for DM events
-    const handleNewMessage = (message: Message) => {
+    const onNewMessage = (message: Message) => {
       if (message.channelId === channelId) {
         setMessages((prev) => [...prev, message]);
       }
     };
 
-    const handleEditMessage = (message: Message) => {
+    const onEditMessage = (message: Message) => {
       setMessages((prev) =>
         prev.map((m) => (m.id === message.id ? message : m))
       );
     };
 
-    const handleDeleteMessage = ({ messageId }: { messageId: string }) => {
+    const onDeleteMessage = ({ messageId }: { messageId: string }) => {
       setMessages((prev) => prev.filter((m) => m.id !== messageId));
     };
 
-    socketService.onDMMessage('dm-view', handleNewMessage);
+    socketService.onDMMessage('dm-view', onNewMessage);
 
     if (socketService.socket) {
-      socketService.socket.on('dm:edit', handleEditMessage);
-      socketService.socket.on('dm:delete', handleDeleteMessage);
+      socketService.socket.on('dm:edit', onEditMessage);
+      socketService.socket.on('dm:delete', onDeleteMessage);
     }
 
     return () => {
@@ -107,8 +129,8 @@ export default function DMView() {
       socketService.offDMMessage('dm-view');
 
       if (socketService.socket) {
-        socketService.socket.off('dm:edit', handleEditMessage);
-        socketService.socket.off('dm:delete', handleDeleteMessage);
+        socketService.socket.off('dm:edit', onEditMessage);
+        socketService.socket.off('dm:delete', onDeleteMessage);
       }
     };
   }, [channelId, user?.id]);
@@ -136,47 +158,6 @@ export default function DMView() {
     }
   };
 
-  const handleEditMessage = (messageId: string, currentContent: string) => {
-    setEditingMessageId(messageId);
-    setEditContent(currentContent);
-    setTimeout(() => editTextareaRef.current?.focus(), 0);
-  };
-
-  const handleSaveEdit = async () => {
-    if (!editingMessageId || !editContent.trim()) return;
-
-    try {
-      await api.editDM(editingMessageId, editContent.trim());
-      socketService.editDM(editingMessageId, editContent.trim());
-      setEditingMessageId(null);
-      setEditContent('');
-    } catch (err) {
-      console.error('Failed to edit DM:', err);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingMessageId(null);
-    setEditContent('');
-  };
-
-  const handleDeleteMessage = (messageId: string) => {
-    setDeleteMessageId(messageId);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!deleteMessageId) return;
-
-    try {
-      await api.deleteDM(deleteMessageId);
-      socketService.deleteDM(deleteMessageId);
-      setMessages((prev) => prev.filter((m) => m.id !== deleteMessageId));
-      setDeleteMessageId(null);
-    } catch (err) {
-      console.error('Failed to delete DM:', err);
-    }
-  };
-
   const handleFileSelect = async (file: File) => {
     if (!channelId) return;
 
@@ -196,14 +177,6 @@ export default function DMView() {
     } finally {
       setUploading(false);
     }
-  };
-
-  const formatTime = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleTimeString('sv-SE', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
   const getUserName = (authorId: string) => {
@@ -321,7 +294,7 @@ export default function DMView() {
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' && !e.shiftKey) {
                                 e.preventDefault();
-                                handleSaveEdit();
+                                saveEdit();
                               } else if (e.key === 'Escape') {
                                 handleCancelEdit();
                               }
@@ -331,7 +304,7 @@ export default function DMView() {
                           />
                           <div className="flex gap-2 mt-1">
                             <button
-                              onClick={handleSaveEdit}
+                              onClick={saveEdit}
                               className="text-xs px-3 py-1 bg-discord-blurple hover:bg-discord-blurple-hover rounded text-white"
                             >
                               Spara
@@ -438,7 +411,7 @@ export default function DMView() {
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' && !e.shiftKey) {
                                 e.preventDefault();
-                                handleSaveEdit();
+                                saveEdit();
                               } else if (e.key === 'Escape') {
                                 handleCancelEdit();
                               }
@@ -448,7 +421,7 @@ export default function DMView() {
                           />
                           <div className="flex gap-2 mt-1">
                             <button
-                              onClick={handleSaveEdit}
+                              onClick={saveEdit}
                               className="text-xs px-3 py-1 bg-discord-blurple hover:bg-discord-blurple-hover rounded text-white"
                             >
                               Spara
@@ -557,8 +530,8 @@ export default function DMView() {
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
         isOpen={!!deleteMessageId}
-        onClose={() => setDeleteMessageId(null)}
-        onConfirm={handleConfirmDelete}
+        onClose={handleCancelDelete}
+        onConfirm={confirmDelete}
         title="Ta bort meddelande"
         description="Är du säker på att du vill ta bort det här meddelandet? Det går inte att ångra."
       />
