@@ -8,7 +8,7 @@ import AuthCallback from './pages/AuthCallback';
 function App() {
   const { token } = useAuthStore();
   const auth = useAuth();
-  
+
   // User is authenticated via OIDC or has a token in store
   const isAuthenticated = token || auth.isAuthenticated;
 

@@ -30,9 +30,13 @@ export default function Chat() {
     // Connect to WebSocket
     socketService.connect();
 
-    // Load workspaces
+    // Initialize user (ensures user exists + has workspace access)
     api
-      .getWorkspaces()
+      .initUser()
+      .then(() => {
+        // Load workspaces
+        return api.getWorkspaces();
+      })
       .then((ws) => {
         setWorkspaces(ws);
         // Auto-select first workspace
@@ -54,8 +58,12 @@ export default function Chat() {
         .getChannels(currentWorkspace.id)
         .then((ch) => {
           setChannels(ch);
-          // Auto-select first channel and navigate
-          if (ch.length > 0) {
+          // Auto-select first channel ONLY if no channel is currently selected
+          // or if the current channel is not in this workspace
+          const currentChannelInWorkspace = ch.find(
+            (c) => c.id === useChatStore.getState().currentChannel?.id
+          );
+          if (ch.length > 0 && !currentChannelInWorkspace) {
             setCurrentChannel(ch[0]);
             navigate(`/chat/channels/${ch[0].id}`);
           }
@@ -72,13 +80,13 @@ export default function Chat() {
       {/* Main content */}
       <div className="flex-1 flex flex-col bg-discord-dark">
         <Routes>
-          <Route 
-            path="channels/:channelId" 
+          <Route
+            path="channels/:channelId"
             element={
-              <ChannelView 
-                onToggleMemberList={() => setShowMemberList(!showMemberList)} 
+              <ChannelView
+                onToggleMemberList={() => setShowMemberList(!showMemberList)}
               />
-            } 
+            }
           />
           <Route path="*" element={<WelcomeView />} />
         </Routes>

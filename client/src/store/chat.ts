@@ -44,14 +44,18 @@ interface ChatState {
 
   setWorkspaces: (workspaces: Workspace[]) => void;
   addWorkspace: (workspace: Workspace) => void;
+  updateWorkspace: (workspace: Workspace) => void;
   setCurrentWorkspace: (workspace: Workspace | null) => void;
   setChannels: (channels: Channel[]) => void;
   addChannel: (channel: Channel) => void;
+  updateChannel: (channel: Channel) => void;
   setCurrentChannel: (channel: Channel | null) => void;
   setMessages: (messages: Message[]) => void;
   addMessage: (message: Message) => void;
   updateMessage: (message: Message) => void;
   removeMessage: (messageId: string) => void;
+  removeChannel: (channelId: string) => void;
+  removeWorkspace: (workspaceId: string) => void;
   setTyping: (channelId: string, userId: string) => void;
   clearTyping: (channelId: string, userId: string) => void;
 }
@@ -67,10 +71,26 @@ export const useChatStore = create<ChatState>((set) => ({
   setWorkspaces: (workspaces) => set({ workspaces }),
   addWorkspace: (workspace) =>
     set((state) => ({ workspaces: [...state.workspaces, workspace] })),
+  updateWorkspace: (workspace) =>
+    set((state) => ({
+      workspaces: state.workspaces.map((w) =>
+        w.id === workspace.id ? workspace : w
+      ),
+      currentWorkspace:
+        state.currentWorkspace?.id === workspace.id
+          ? workspace
+          : state.currentWorkspace
+    })),
   setCurrentWorkspace: (workspace) => set({ currentWorkspace: workspace }),
   setChannels: (channels) => set({ channels }),
   addChannel: (channel) =>
     set((state) => ({ channels: [...state.channels, channel] })),
+  updateChannel: (channel) =>
+    set((state) => ({
+      channels: state.channels.map((c) => (c.id === channel.id ? channel : c)),
+      currentChannel:
+        state.currentChannel?.id === channel.id ? channel : state.currentChannel
+    })),
   setCurrentChannel: (channel) => set({ currentChannel: channel }),
   setMessages: (messages) => set({ messages }),
 
@@ -85,6 +105,26 @@ export const useChatStore = create<ChatState>((set) => ({
   removeMessage: (messageId) =>
     set((state) => ({
       messages: state.messages.filter((m) => m.id !== messageId)
+    })),
+
+  removeChannel: (channelId) =>
+    set((state) => ({
+      channels: state.channels.filter((c) => c.id !== channelId),
+      currentChannel:
+        state.currentChannel?.id === channelId ? null : state.currentChannel
+    })),
+
+  removeWorkspace: (workspaceId) =>
+    set((state) => ({
+      workspaces: state.workspaces.filter((w) => w.id !== workspaceId),
+      currentWorkspace:
+        state.currentWorkspace?.id === workspaceId
+          ? null
+          : state.currentWorkspace,
+      channels:
+        state.currentWorkspace?.id === workspaceId ? [] : state.channels,
+      currentChannel:
+        state.currentWorkspace?.id === workspaceId ? null : state.currentChannel
     })),
 
   setTyping: (channelId, userId) =>

@@ -34,6 +34,7 @@ export class UserService {
   constructor(private readonly prisma: PrismaClient) {}
 
   // Get or create user (called on login/first interaction)
+  // Note: Role is ONLY set on create, not updated on subsequent logins
   async upsertUser(data: {
     id: string;
     email: string;
@@ -51,10 +52,10 @@ export class UserService {
         role: data.role ?? 'STAFF'
       },
       update: {
+        // Only update email and name, NOT role (role is admin-managed)
         email: data.email,
         firstName: data.firstName ?? undefined,
-        lastName: data.lastName ?? undefined,
-        role: data.role ?? undefined
+        lastName: data.lastName ?? undefined
       }
     });
   }
