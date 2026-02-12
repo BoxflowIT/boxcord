@@ -49,9 +49,17 @@ export default function Login() {
 
   const handleCognitoLogin = () => {
     // Redirect to Cognito hosted UI
-    const cognitoUrl = `https://${import.meta.env.VITE_COGNITO_DOMAIN}/login`;
+    const cognitoDomain = import.meta.env.VITE_COGNITO_DOMAIN;
+    const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID;
+    
+    if (!cognitoDomain || !clientId) {
+      setError('Cognito är inte konfigurerat. Använd dev-login.');
+      return;
+    }
+    
+    const cognitoUrl = `https://${cognitoDomain}/login`;
     const params = new URLSearchParams({
-      client_id: import.meta.env.VITE_COGNITO_CLIENT_ID || '',
+      client_id: clientId,
       response_type: 'code',
       scope: 'openid email profile',
       redirect_uri: `${window.location.origin}/auth/callback`
@@ -73,11 +81,11 @@ export default function Login() {
           </div>
         )}
 
-        {/* Dev login for local development */}
-        {import.meta.env.DEV && (
+        {/* Dev login - shown when Cognito is not configured or in dev mode */}
+        {(import.meta.env.DEV || !import.meta.env.VITE_COGNITO_DOMAIN) && (
           <div className="mb-6">
             <label className="block text-sm font-medium text-discord-light mb-2">
-              Email (dev mode)
+              Email {import.meta.env.DEV ? '(dev mode)' : '(demo)'}
             </label>
             <input
               type="email"
