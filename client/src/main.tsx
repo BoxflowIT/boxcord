@@ -11,7 +11,7 @@ const cognitoAuthConfig = {
   client_id: '6rsp6ebi274j0nlrc6t44p3pu3',
   redirect_uri: `${window.location.origin}/auth/callback`,
   response_type: 'code',
-  scope: 'openid email profile',
+  scope: 'openid email',
   post_logout_redirect_uri: window.location.origin,
 };
 
