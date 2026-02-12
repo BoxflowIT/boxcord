@@ -1,6 +1,8 @@
-// Member List Component - Shows online/offline users
+// Member List Component - Shows online/offline users grouped by role
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import { useAuthStore } from '../store/auth';
 import ProfileModal from './ProfileModal';
 
 interface User {
@@ -18,6 +20,8 @@ interface User {
 }
 
 export default function MemberList() {
+  const navigate = useNavigate();
+  const { user: currentUser } = useAuthStore();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -37,8 +41,8 @@ export default function MemberList() {
 
     fetchOnlineUsers();
 
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchOnlineUsers, 30000);
+    // Refresh every 10 seconds (balance between responsiveness and performance)
+    const interval = setInterval(fetchOnlineUsers, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -49,30 +53,38 @@ export default function MemberList() {
     OFFLINE: 'bg-gray-500'
   };
 
-  const statusLabels: Record<string, string> = {
-    ONLINE: 'Online',
-    AWAY: 'Borta',
-    BUSY: 'Upptagen',
-    OFFLINE: 'Offline'
-  };
-
   const handleUserClick = (userId: string) => {
     setSelectedUserId(userId);
     setShowProfile(true);
   };
 
-  // Group users by status
-  const groupedUsers = users.reduce(
+  const handleStartDM = async (userId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const channel = await api.getOrCreateDM(userId);
+      navigate(`/chat/dm/${channel.id}`);
+    } catch (err) {
+      console.error('Failed to create DM channel:', err);
+    }
+  };
+
+  // Group users by role, then by status within each role
+  const roleOrder = ['SUPER_ADMIN', 'ADMIN', 'STAFF'];
+  const roleLabels: Record<string, string> = {
+    SUPER_ADMIN: 'Super Admin',
+    ADMIN: 'Administratörer',
+    STAFF: 'Personal'
+  };
+
+  const groupedByRole = users.reduce(
     (acc, user) => {
-      const status = user.presence?.status ?? 'OFFLINE';
-      if (!acc[status]) acc[status] = [];
-      acc[status].push(user);
+      const role = user.role || 'STAFF';
+      if (!acc[role]) acc[role] = [];
+      acc[role].push(user);
       return acc;
     },
     {} as Record<string, User[]>
   );
-
-  const statusOrder = ['ONLINE', 'BUSY', 'AWAY', 'OFFLINE'];
 
   return (
     <div className="w-60 bg-discord-darker flex flex-col border-l border-discord-darkest">
@@ -92,65 +104,82 @@ export default function MemberList() {
             Inga användare online
           </div>
         ) : (
-          statusOrder.map((status) => {
-            const statusUsers = groupedUsers[status];
-            if (!statusUsers || statusUsers.length === 0) return null;
+          roleOrder.map((role) => {
+            const roleUsers = groupedByRole[role];
+            if (!roleUsers || roleUsers.length === 0) return null;
 
             return (
-              <div key={status} className="mb-4">
+              <div key={role} className="mb-4">
                 <h4 className="text-xs font-semibold text-gray-500 uppercase px-2 mb-1">
-                  {statusLabels[status]} — {statusUsers.length}
+                  {roleLabels[role]} — {roleUsers.length}
                 </h4>
-                {statusUsers.map((user) => (
-                  <button
+                {roleUsers.map((user) => (
+                  <div
                     key={user.id}
-                    onClick={() => handleUserClick(user.id)}
-                    className="w-full flex items-center gap-3 px-2 py-1.5 rounded hover:bg-discord-dark/50 transition-colors"
+                    className="group relative flex items-center gap-2 px-2 py-1.5 rounded hover:bg-discord-dark/50 transition-colors"
                   >
-                    {/* Avatar with status */}
-                    <div className="relative">
-                      <div className="w-8 h-8 rounded-full bg-discord-blurple flex items-center justify-center text-white text-sm font-bold">
-                        {user.avatarUrl ? (
-                          <img
-                            src={user.avatarUrl}
-                            alt=""
-                            className="w-full h-full rounded-full"
-                          />
-                        ) : (
-                          (user.firstName?.[0] ?? user.email[0]).toUpperCase()
+                    <button
+                      onClick={() => handleUserClick(user.id)}
+                      className="flex-1 flex items-center gap-3 min-w-0"
+                    >
+                      {/* Avatar with status */}
+                      <div className="relative">
+                        <div className="w-8 h-8 rounded-full bg-discord-blurple flex items-center justify-center text-white text-sm font-bold">
+                          {user.avatarUrl ? (
+                            <img
+                              src={user.avatarUrl}
+                              alt=""
+                              className="w-full h-full rounded-full"
+                            />
+                          ) : (
+                            (user.firstName?.[0] ?? user.email[0]).toUpperCase()
+                          )}
+                        </div>
+                        <div
+                          className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-discord-darker ${
+                            statusColors[user.presence?.status ?? 'OFFLINE']
+                          }`}
+                        />
+                      </div>
+
+                      {/* Name and custom status */}
+                      <div className="flex-1 min-w-0 text-left">
+                        <p className="text-sm text-gray-300 truncate">
+                          {user.firstName && user.lastName
+                            ? `${user.firstName} ${user.lastName}`
+                            : (user.firstName ?? user.email.split('@')[0])}
+                        </p>
+                        {user.presence?.customStatus && (
+                          <p className="text-xs text-gray-500 truncate">
+                            {user.presence.customStatus}
+                          </p>
                         )}
                       </div>
-                      <div
-                        className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-discord-darker ${statusColors[status]}`}
-                      />
-                    </div>
+                    </button>
 
-                    {/* Name and custom status */}
-                    <div className="flex-1 min-w-0 text-left">
-                      <p className="text-sm text-gray-300 truncate">
-                        {user.firstName && user.lastName
-                          ? `${user.firstName} ${user.lastName}`
-                          : (user.firstName ?? user.email.split('@')[0])}
-                      </p>
-                      {user.presence?.customStatus && (
-                        <p className="text-xs text-gray-500 truncate">
-                          {user.presence.customStatus}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Role badge */}
-                    {user.role === 'ADMIN' && (
-                      <span className="text-xs px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded">
-                        Admin
-                      </span>
+                    {/* DM button - only show for other users */}
+                    {user.id !== currentUser?.id && (
+                      <button
+                        onClick={(e) => handleStartDM(user.id, e)}
+                        className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-white hover:bg-discord-blurple/20 rounded transition-all"
+                        title="Skicka direktmeddelande"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                          />
+                        </svg>
+                      </button>
                     )}
-                    {user.role === 'BOT' && (
-                      <span className="text-xs px-1.5 py-0.5 bg-discord-blurple/20 text-discord-blurple rounded">
-                        Bot
-                      </span>
-                    )}
-                  </button>
+                  </div>
                 ))}
               </div>
             );

@@ -157,6 +157,32 @@ export class UserService {
     });
   }
 
+  // Update user role (only SUPER_ADMIN can use this)
+  async updateUserRole(
+    userId: string,
+    newRole: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF'
+  ): Promise<LocalUser> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      throw new NotFoundError('User', userId);
+    }
+
+    // Validate role
+    if (!['SUPER_ADMIN', 'ADMIN', 'STAFF'].includes(newRole)) {
+      throw new ValidationError(
+        'Invalid role. Must be SUPER_ADMIN, ADMIN, or STAFF'
+      );
+    }
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { role: newRole }
+    });
+  }
+
   async deleteUser(userId: string): Promise<void> {
     // Delete user and all related data (cascades)
     await this.prisma.user.delete({

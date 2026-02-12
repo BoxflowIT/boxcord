@@ -38,6 +38,7 @@ export default function ProfileModal({
   const [saving, setSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [changingRole, setChangingRole] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -94,6 +95,22 @@ export default function ProfileModal({
       console.error('Failed to delete account:', err);
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleChangeRole = async (
+    newRole: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF'
+  ) => {
+    if (!profile) return;
+    setChangingRole(true);
+    try {
+      const updated = await api.updateUserRole(profile.id, newRole);
+      setProfile(updated);
+    } catch (err) {
+      console.error('Failed to change role:', err);
+      alert('Kunde inte ändra roll. Kontrollera att du har behörighet.');
+    } finally {
+      setChangingRole(false);
     }
   };
 
@@ -209,6 +226,57 @@ export default function ProfileModal({
                   <p className="text-gray-300">{profile.bio || 'Ingen bio'}</p>
                 )}
               </div>
+
+              {/* Role Management - Only SUPER_ADMIN can change roles */}
+              {!isOwnProfile && currentUser?.role === 'SUPER_ADMIN' && (
+                <div className="pt-4 border-t border-discord-darkest">
+                  <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">
+                    Rollhantering
+                  </h3>
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-400 mb-2">
+                      Nuvarande roll:{' '}
+                      <span className="text-white font-semibold">
+                        {profile.role}
+                      </span>
+                    </p>
+                    <div className="flex gap-2">
+                      {profile.role !== 'STAFF' && (
+                        <button
+                          onClick={() => handleChangeRole('STAFF')}
+                          disabled={changingRole}
+                          className="flex-1 px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded disabled:opacity-50"
+                        >
+                          Gör till Staff
+                        </button>
+                      )}
+                      {profile.role !== 'ADMIN' && (
+                        <button
+                          onClick={() => handleChangeRole('ADMIN')}
+                          disabled={changingRole}
+                          className="flex-1 px-3 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded disabled:opacity-50"
+                        >
+                          Gör till Admin
+                        </button>
+                      )}
+                      {profile.role !== 'SUPER_ADMIN' && (
+                        <button
+                          onClick={() => handleChangeRole('SUPER_ADMIN')}
+                          disabled={changingRole}
+                          className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded disabled:opacity-50"
+                        >
+                          Gör till Super Admin
+                        </button>
+                      )}
+                    </div>
+                    {changingRole && (
+                      <p className="text-xs text-gray-400 italic">
+                        Ändrar roll...
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Notification Settings - Own profile only */}
               {isOwnProfile && (

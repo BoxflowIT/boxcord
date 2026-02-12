@@ -98,6 +98,37 @@ export async function userRoutes(app: FastifyInstance) {
     return { success: true, data: users };
   });
 
+  // Update user role (only SUPER_ADMIN can do this)
+  app.patch<{
+    Params: { id: string };
+    Body: { role: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF' };
+  }>('/:id/role', async (request, reply) => {
+    // Get current user's role from database (not from JWT)
+    const currentUser = await userService.getUser(request.user.id);
+
+    // Only SUPER_ADMIN can change roles
+    if (currentUser.role !== 'SUPER_ADMIN') {
+      return reply.code(403).send({
+        success: false,
+        error: 'Only SUPER_ADMIN can change user roles'
+      });
+    }
+
+    // Cannot change own role
+    if (request.params.id === request.user.id) {
+      return reply.code(400).send({
+        success: false,
+        error: 'Cannot change your own role'
+      });
+    }
+
+    const user = await userService.updateUserRole(
+      request.params.id,
+      request.body.role
+    );
+    return { success: true, data: user };
+  });
+
   // Delete current user account
   app.delete('/me', async (request) => {
     await userService.deleteUser(request.user.id);
