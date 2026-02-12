@@ -296,7 +296,7 @@ export default function DMView() {
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
         isOpen={!!deleteMessageId}
-        onClose={handleCancelDelete}
+        onCancel={handleCancelDelete}
         onConfirm={confirmDelete}
         title="Ta bort meddelande"
         message="Är du säker på att du vill ta bort det här meddelandet? Det går inte att ångra."
