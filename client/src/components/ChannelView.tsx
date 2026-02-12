@@ -75,7 +75,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     // Join channel room
     socketService.joinChannel(channelId);
 
-    // Load messages
+    // Load messages once when channel changes
     setLoading(true);
     api
       .getMessages(channelId)
@@ -104,7 +104,10 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
         socketService.leaveChannel(channelId);
       }
     };
-  }, [channelId, channels, setCurrentChannel, setMessages, messages]);
+    // Only re-run when channelId changes, not when messages update
+    // New messages come via WebSocket, no need to refetch
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channelId]);
 
   useEffect(() => {
     // Scroll to bottom when new messages arrive
