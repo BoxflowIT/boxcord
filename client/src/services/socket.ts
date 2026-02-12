@@ -185,6 +185,33 @@ class SocketService {
     }
   }
 
+  // Helper to queue or execute socket operation
+  private queueOrExecute(
+    operation: () => void,
+    logMessage?: string
+  ): void {
+    if (!this.ensureConnected()) {
+      if (logMessage) {
+        console.log(`🔗 Socket: Queueing ${logMessage} for when connected`);
+      }
+      this.pendingOperations.push(operation);
+      return;
+    }
+    operation();
+  }
+
+  // Helper to emit socket event
+  private emit(event: string, data: unknown, logMessage?: string): void {
+    this.queueOrExecute(() => {
+      if (this.socket && this.socket.connected) {
+        if (logMessage) {
+          console.log(logMessage);
+        }
+        this.socket.emit(event, data);
+      }
+    }, logMessage?.replace(/^.*Socket: /, ''));
+  }
+
   // Ensure socket is connected (auto-connect if needed)
   private ensureConnected(): boolean {
     if (!this.socket || this.socket.disconnected) {
@@ -199,76 +226,39 @@ class SocketService {
 
   // Channel methods
   joinChannel(channelId: string) {
-    const operation = () => {
-      if (this.socket && this.socket.connected) {
-        console.log('🔗 Socket: Joining channel now:', channelId);
-        this.socket.emit('channel:join', channelId);
-      }
-    };
-
-    if (!this.ensureConnected()) {
-      console.log('🔗 Socket: Queueing join for when connected:', channelId);
-      this.pendingOperations.push(operation);
-      return;
-    }
-
-    operation();
+    this.emit(
+      'channel:join',
+      channelId,
+      `🔗 Socket: Joining channel: ${channelId}`
+    );
   }
 
   leaveChannel(channelId: string) {
-    if (!this.socket) return;
-    this.socket.emit('channel:leave', channelId);
+    this.socket?.emit('channel:leave', channelId);
   }
 
   sendMessage(channelId: string, content: string, parentId?: string) {
-    const operation = () => {
-      if (this.socket && this.socket.connected) {
-        console.log('📤 Socket: Sending message to:', channelId);
-        this.socket.emit('message:send', { channelId, content, parentId });
-      }
-    };
-
-    if (!this.ensureConnected()) {
-      console.log('📤 Socket: Queueing message for when connected');
-      this.pendingOperations.push(operation);
-      return;
-    }
-
-    operation();
+    this.emit(
+      'message:send',
+      { channelId, content, parentId },
+      `📤 Socket: Sending message to: ${channelId}`
+    );
   }
 
   editMessage(messageId: string, content: string) {
-    const operation = () => {
-      if (this.socket && this.socket.connected) {
-        console.log('✏️ Socket: Editing message:', messageId);
-        this.socket.emit('message:edit', { messageId, content });
-      }
-    };
-
-    if (!this.ensureConnected()) {
-      console.log('✏️ Socket: Queueing edit for when connected');
-      this.pendingOperations.push(operation);
-      return;
-    }
-
-    operation();
+    this.emit(
+      'message:edit',
+      { messageId, content },
+      `✏️ Socket: Editing message: ${messageId}`
+    );
   }
 
   deleteMessage(messageId: string) {
-    const operation = () => {
-      if (this.socket && this.socket.connected) {
-        console.log('🗑️ Socket: Deleting message:', messageId);
-        this.socket.emit('message:delete', { messageId });
-      }
-    };
-
-    if (!this.ensureConnected()) {
-      console.log('🗑️ Socket: Queueing delete for when connected');
-      this.pendingOperations.push(operation);
-      return;
-    }
-
-    operation();
+    this.emit(
+      'message:delete',
+      { messageId },
+      `🗑️ Socket: Deleting message: ${messageId}`
+    );
   }
 
   sendTyping(channelId: string) {
@@ -294,17 +284,19 @@ class SocketService {
   }
 
   editDM(messageId: string, content: string) {
-    if (this.socket && this.socket.connected) {
-      console.log('✏️ Socket: Editing DM:', messageId);
-      this.socket.emit('dm:edit', { messageId, content });
-    }
+    this.emit(
+      'dm:edit',
+      { messageId, content },
+      `✏️ Socket: Editing DM: ${messageId}`
+    );
   }
 
   deleteDM(messageId: string) {
-    if (this.socket && this.socket.connected) {
-      console.log('🗑️ Socket: Deleting DM:', messageId);
-      this.socket.emit('dm:delete', { messageId });
-    }
+    this.emit(
+      'dm:delete',
+      { messageId },
+      `🗑️ Socket: Deleting DM: ${messageId}`
+    );
   }
 
   sendDMTyping(channelId: string) {

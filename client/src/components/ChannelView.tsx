@@ -5,6 +5,8 @@ import { api } from '../services/api';
 import { socketService } from '../services/socket';
 import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
+import { useMessageActions } from '../hooks/useMessageActions';
+import { formatTime } from '../lib/formatters';
 import MessageReactions from './MessageReactions';
 import FileUpload, { AttachmentPreview } from './FileUpload';
 import MentionAutocomplete, { parseMentions } from './MentionAutocomplete';
@@ -30,14 +32,34 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     content: string;
     isPrivate: boolean;
   } | null>(null);
-  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-  const [editContent, setEditContent] = useState('');
   const [messageMenuOpen, setMessageMenuOpen] = useState<string | null>(null);
-  const [deleteMessageId, setDeleteMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const editTextareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<number>();
+
+  const {
+    editingMessageId,
+    editContent,
+    deleteMessageId,
+    editTextareaRef,
+    handleEditMessage,
+    handleSaveEdit: saveEdit,
+    handleCancelEdit,
+    handleDeleteMessage,
+    handleConfirmDelete: confirmDelete,
+    handleCancelDelete,
+    setEditContent
+  } = useMessageActions({
+    onEdit: async (messageId, content) => {
+      await api.editMessage(messageId, content);
+      socketService.editMessage(messageId, content);
+    },
+    onDelete: async (messageId) => {
+      await api.deleteMessage(messageId);
+      socketService.deleteMessage(messageId);
+      setMessages(messages.filter((m) => m.id !== messageId));
+    }
+  });
 
   // Filter messages for current channel only
   const channelMessages = messages.filter((m) => m.channelId === channelId);
@@ -100,38 +122,6 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, [messageMenuOpen]);
-
-  const handleEditMessage = (messageId: string, currentContent: string) => {
-    setEditingMessageId(messageId);
-    setEditContent(currentContent);
-    setMessageMenuOpen(null);
-    // Focus the edit textarea
-    setTimeout(() => editTextareaRef.current?.focus(), 0);
-  };
-
-  const handleSaveEdit = () => {
-    if (!editingMessageId || !editContent.trim()) return;
-    socketService.editMessage(editingMessageId, editContent.trim());
-    setEditingMessageId(null);
-    setEditContent('');
-  };
-
-  const handleCancelEdit = () => {
-    setEditingMessageId(null);
-    setEditContent('');
-  };
-
-  const handleDeleteMessage = (messageId: string) => {
-    setDeleteMessageId(messageId);
-    setMessageMenuOpen(null);
-  };
-
-  const confirmDeleteMessage = () => {
-    if (deleteMessageId) {
-      socketService.deleteMessage(deleteMessageId);
-      setDeleteMessageId(null);
-    }
-  };
 
   const handleSend = async () => {
     if (!inputValue.trim() || !channelId) return;
@@ -281,14 +271,6 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     }
   };
 
-  const formatTime = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleTimeString('sv-SE', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   return (
     <>
       {/* Header */}
@@ -434,7 +416,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' && !e.shiftKey) {
                                 e.preventDefault();
-                                handleSaveEdit();
+                                saveEdit();
                               } else if (e.key === 'Escape') {
                                 handleCancelEdit();
                               }
@@ -444,7 +426,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
                           />
                           <div className="flex gap-2 mt-2 text-xs">
                             <button
-                              onClick={handleSaveEdit}
+                              onClick={saveEdit}
                               className="px-3 py-1 bg-discord-blurple hover:bg-discord-blurple/80 text-white rounded"
                             >
                               Spara
@@ -573,7 +555,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' && !e.shiftKey) {
                                 e.preventDefault();
-                                handleSaveEdit();
+                                saveEdit();
                               } else if (e.key === 'Escape') {
                                 handleCancelEdit();
                               }
@@ -583,7 +565,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
                           />
                           <div className="flex gap-2 mt-2 text-xs">
                             <button
-                              onClick={handleSaveEdit}
+                              onClick={saveEdit}
                               className="px-3 py-1 bg-discord-blurple hover:bg-discord-blurple/80 text-white rounded"
                             >
                               Spara
@@ -770,14 +752,9 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
       <DeleteConfirmModal
         isOpen={!!deleteMessageId}
         title="Ta bort meddelande"
-        message={
-          <>
-            Är du säker på att du vill ta bort det här meddelandet? Detta kan
-            inte ångras.
-          </>
-        }
-        onConfirm={confirmDeleteMessage}
-        onCancel={() => setDeleteMessageId(null)}
+        description="Är du säker på att du vill ta bort det här meddelandet? Detta kan inte ångras."
+        onConfirm={confirmDelete}
+        onClose={handleCancelDelete}
       />
     </>
   );
