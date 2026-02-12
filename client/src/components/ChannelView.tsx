@@ -490,9 +490,9 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
       <DeleteConfirmModal
         isOpen={!!deleteMessageId}
         title="Ta bort meddelande"
-        description="Är du säker på att du vill ta bort det här meddelandet? Detta kan inte ångras."
+        message="Är du säker på att du vill ta bort det här meddelandet? Detta kan inte ångras."
         onConfirm={confirmDelete}
-        onClose={handleCancelDelete}
+        onCancel={handleCancelDelete}
       />
     </>
   );

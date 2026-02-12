@@ -143,6 +143,15 @@ export const api = {
     request<PaginatedMessages>(
       `/messages?channelId=${channelId}${cursor ? `&cursor=${cursor}` : ''}`
     ),
+  editMessage: (messageId: string, content: string) =>
+    request<Message>(`/messages/${messageId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ content })
+    }),
+  deleteMessage: (messageId: string) =>
+    request<void>(`/messages/${messageId}`, {
+      method: 'DELETE'
+    }),
 
   // Users
   getCurrentUser: () => request<User>('/users/me'),

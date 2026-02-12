@@ -1,6 +1,7 @@
 // Slash Command Autocomplete Component
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '../services/api';
+import { useAutocompleteNavigation } from '../hooks/useAutocompleteNavigation';
 
 interface SlashCommand {
   name: string;
@@ -21,9 +22,17 @@ export default function SlashCommandAutocomplete({
 }: SlashCommandAutocompleteProps) {
   const [commands, setCommands] = useState<SlashCommand[]>([]);
   const [filteredCommands, setFilteredCommands] = useState<SlashCommand[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Use shared autocomplete navigation hook
+  const { selectedIndex, handleItemClick } = useAutocompleteNavigation({
+    items: filteredCommands,
+    onSelect,
+    onClose,
+    containerRef,
+    enabled: filteredCommands.length > 0
+  });
 
   // Load commands on mount
   useEffect(() => {
@@ -61,64 +70,7 @@ export default function SlashCommandAutocomplete({
         )
       );
     }
-    setSelectedIndex(0);
   }, [inputValue, commands]);
-
-  const handleSelect = useCallback(
-    (command: SlashCommand) => {
-      onSelect(command);
-    },
-    [onSelect]
-  );
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (filteredCommands.length === 0) return;
-
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault();
-          setSelectedIndex((prev) => (prev + 1) % filteredCommands.length);
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          setSelectedIndex(
-            (prev) =>
-              (prev - 1 + filteredCommands.length) % filteredCommands.length
-          );
-          break;
-        case 'Tab':
-        case 'Enter':
-          if (filteredCommands[selectedIndex]) {
-            e.preventDefault();
-            handleSelect(filteredCommands[selectedIndex]);
-          }
-          break;
-        case 'Escape':
-          e.preventDefault();
-          onClose();
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [filteredCommands, selectedIndex, handleSelect, onClose]);
-
-  // Click outside to close
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        onClose();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [onClose]);
 
   if (loading || filteredCommands.length === 0) return null;
 
@@ -141,7 +93,7 @@ export default function SlashCommandAutocomplete({
         {filteredCommands.map((cmd, index) => (
           <li
             key={cmd.name}
-            onClick={() => handleSelect(cmd)}
+            onClick={() => handleItemClick(cmd)}
             className={`px-4 py-2 cursor-pointer ${
               index === selectedIndex
                 ? 'bg-discord-blurple text-white'

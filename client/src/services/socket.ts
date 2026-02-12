@@ -7,6 +7,9 @@ class SocketService {
   private socket: Socket | null = null;
   private dmMessageHandlers: Map<string, (message: Message) => void> =
     new Map();
+  private dmEditHandlers: Map<string, (message: Message) => void> = new Map();
+  private dmDeleteHandlers: Map<string, (data: { messageId: string }) => void> =
+    new Map();
   private presenceHandlers: Map<
     string,
     (data: { userId: string; status: string }) => void
@@ -148,6 +151,16 @@ class SocketService {
     this.socket.on('dm:new', (message: Message) => {
       // Notify any active DM handlers
       this.dmMessageHandlers.forEach((handler) => handler(message));
+    });
+
+    this.socket.on('dm:edit', (message: Message) => {
+      // Notify any active DM edit handlers
+      this.dmEditHandlers.forEach((handler) => handler(message));
+    });
+
+    this.socket.on('dm:delete', ({ messageId }: { messageId: string }) => {
+      // Notify any active DM delete handlers
+      this.dmDeleteHandlers.forEach((handler) => handler({ messageId }));
     });
 
     this.socket.on(
@@ -320,6 +333,24 @@ class SocketService {
 
   offDMMessage(id: string) {
     this.dmMessageHandlers.delete(id);
+  }
+
+  // Register handler for DM edits
+  onDMEdit(id: string, handler: (message: Message) => void) {
+    this.dmEditHandlers.set(id, handler);
+  }
+
+  offDMEdit(id: string) {
+    this.dmEditHandlers.delete(id);
+  }
+
+  // Register handler for DM deletes
+  onDMDelete(id: string, handler: (data: { messageId: string }) => void) {
+    this.dmDeleteHandlers.set(id, handler);
+  }
+
+  offDMDelete(id: string) {
+    this.dmDeleteHandlers.delete(id);
   }
 
   // Register handler for presence updates
