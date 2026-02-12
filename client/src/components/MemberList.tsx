@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuthStore } from '../store/auth';
 import ProfileModal from './ProfileModal';
+import Avatar from './ui/Avatar';
 
 interface User {
   id: string;
@@ -83,10 +84,10 @@ export default function MemberList() {
   }, []);
 
   const statusColors: Record<string, string> = {
-    ONLINE: 'bg-green-500',
-    AWAY: 'bg-yellow-500',
-    BUSY: 'bg-red-500',
-    OFFLINE: 'bg-gray-500'
+    ONLINE: 'status-online',
+    AWAY: 'status-away',
+    BUSY: 'status-busy',
+    OFFLINE: 'status-offline'
   };
 
   const handleUserClick = (userId: string) => {
@@ -123,20 +124,20 @@ export default function MemberList() {
   );
 
   return (
-    <div className="w-60 bg-discord-darker flex flex-col border-l border-discord-darkest">
+    <div className="sidebar-main border-l border-boxflow-border">
       {/* Header */}
-      <div className="h-12 px-4 flex items-center border-b border-discord-darkest shadow">
-        <h3 className="font-semibold text-gray-400 uppercase text-xs">
+      <div className="panel-header">
+        <h3 className="text-subtle uppercase font-semibold">
           Medlemmar — {users.length}
         </h3>
       </div>
 
       {/* User list */}
-      <div className="flex-1 overflow-y-auto p-2">
+      <div className="panel-content">
         {loading ? (
-          <div className="text-gray-400 text-sm px-2">Laddar...</div>
+          <div className="text-muted px-2">Laddar...</div>
         ) : users.length === 0 ? (
-          <div className="text-gray-400 text-sm px-2">
+          <div className="text-muted px-2">
             Inga användare online
           </div>
         ) : (
@@ -146,13 +147,13 @@ export default function MemberList() {
 
             return (
               <div key={role} className="mb-4">
-                <h4 className="text-xs font-semibold text-gray-500 uppercase px-2 mb-1">
+                <h4 className="text-subtle uppercase font-semibold px-2 mb-1">
                   {roleLabels[role]} — {roleUsers.length}
                 </h4>
                 {roleUsers.map((user) => (
                   <div
                     key={user.id}
-                    className="group relative flex items-center gap-2 px-2 py-1.5 rounded hover:bg-discord-dark/50 transition-colors"
+                    className="list-item-interactive"
                   >
                     <button
                       onClick={() => handleUserClick(user.id)}
@@ -160,33 +161,23 @@ export default function MemberList() {
                     >
                       {/* Avatar with status */}
                       <div className="relative">
-                        <div className="w-8 h-8 rounded-full bg-discord-blurple flex items-center justify-center text-white text-sm font-bold">
-                          {user.avatarUrl ? (
-                            <img
-                              src={user.avatarUrl}
-                              alt=""
-                              className="w-full h-full rounded-full"
-                            />
-                          ) : (
-                            (user.firstName?.[0] ?? user.email[0]).toUpperCase()
-                          )}
-                        </div>
+                        <Avatar size="sm" src={user.avatarUrl}>
+                          {(user.firstName?.[0] ?? user.email[0]).toUpperCase()}
+                        </Avatar>
                         <div
-                          className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-discord-darker ${
-                            statusColors[user.presence?.status ?? 'OFFLINE']
-                          }`}
+                          className={`absolute bottom-0 right-0 ${statusColors[user.presence?.status ?? 'OFFLINE']}`}
                         />
                       </div>
 
                       {/* Name and custom status */}
                       <div className="flex-1 min-w-0 text-left">
-                        <p className="text-sm text-gray-300 truncate">
+                        <p className="text-sm text-boxflow-light truncate">
                           {user.firstName && user.lastName
                             ? `${user.firstName} ${user.lastName}`
                             : (user.firstName ?? user.email.split('@')[0])}
                         </p>
                         {user.presence?.customStatus && (
-                          <p className="text-xs text-gray-500 truncate">
+                          <p className="text-subtle truncate">
                             {user.presence.customStatus}
                           </p>
                         )}
@@ -197,7 +188,7 @@ export default function MemberList() {
                     {user.id !== currentUser?.id && (
                       <button
                         onClick={(e) => handleStartDM(user.id, e)}
-                        className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-white hover:bg-discord-blurple/20 rounded transition-all"
+                        className="btn-icon-primary hover-group-visible"
                         title="Skicka direktmeddelande"
                       >
                         <svg
