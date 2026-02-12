@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from 'react-oidc-context';
 import { useAuthStore } from '../store/auth';
+import { api } from '../services/api';
 import { Button } from '../components/ui/button';
 
 export default function AuthCallback() {
@@ -11,24 +12,36 @@ export default function AuthCallback() {
   const { setAuth } = useAuthStore();
 
   useEffect(() => {
-    if (auth.isAuthenticated && auth.user) {
-      // Store token and user info in our auth store
-      const token = auth.user.id_token || auth.user.access_token || '';
-      const profile = auth.user.profile;
+    const handleAuth = async () => {
+      if (auth.isAuthenticated && auth.user) {
+        // First, store token and basic user info
+        const token = auth.user.id_token || auth.user.access_token || '';
+        const profile = auth.user.profile;
 
-      setAuth(token, {
-        id: profile.sub || '',
-        email: profile.email || '',
-        firstName:
-          (profile.given_name as string) ||
-          profile.email?.split('@')[0] ||
-          'User',
-        lastName: (profile.family_name as string) || '',
-        role: 'STAFF'
-      });
+        setAuth(token, {
+          id: profile.sub || '',
+          email: profile.email || '',
+          firstName:
+            (profile.given_name as string) ||
+            profile.email?.split('@')[0] ||
+            'User',
+          lastName: (profile.family_name as string) || '',
+          role: 'STAFF' // Temporary, will be updated below
+        });
 
-      navigate('/chat', { replace: true });
-    }
+        // Then fetch the actual user data from backend (includes correct role from DB)
+        try {
+          const userData = await api.getCurrentUser();
+          setAuth(token, userData); // Update with correct role from database
+        } catch (error) {
+          console.error('Failed to fetch user data:', error);
+        }
+
+        navigate('/chat', { replace: true });
+      }
+    };
+
+    handleAuth();
   }, [auth.isAuthenticated, auth.user, setAuth, navigate]);
 
   if (auth.isLoading) {

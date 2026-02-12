@@ -125,13 +125,18 @@ export class WorkspaceService {
       where: { id: workspaceId },
       data: {
         ...(input.name && { name: input.name }),
-        ...(input.description !== undefined && { description: input.description || null }),
+        ...(input.description !== undefined && {
+          description: input.description || null
+        }),
         ...(input.iconUrl !== undefined && { iconUrl: input.iconUrl || null })
       }
     });
   }
 
-  async deleteWorkspace(workspaceId: string, requesterId: string): Promise<void> {
+  async deleteWorkspace(
+    workspaceId: string,
+    requesterId: string
+  ): Promise<void> {
     // Check requester is owner
     const requesterMembership = await this.prisma.workspaceMember.findUnique({
       where: { workspaceId_userId: { workspaceId, userId: requesterId } }
@@ -148,7 +153,7 @@ export class WorkspaceService {
         where: { workspaceId },
         select: { id: true }
       });
-      const channelIds = channels.map(c => c.id);
+      const channelIds = channels.map((c) => c.id);
 
       // Delete messages in channels
       await tx.message.deleteMany({

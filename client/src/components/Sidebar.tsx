@@ -288,43 +288,6 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
           </button>
         </div>
 
-        {/* Create workspace modal */}
-        {showNewWorkspace && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-discord-dark p-6 rounded-lg w-96">
-              <h3 className="text-xl font-bold text-white mb-4">
-                Skapa workspace
-              </h3>
-              <input
-                type="text"
-                value={newWorkspaceName}
-                onChange={(e) => setNewWorkspaceName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleCreateWorkspace()}
-                placeholder="Workspace namn"
-                className="w-full px-3 py-2 bg-discord-darkest rounded text-white placeholder-gray-500 mb-4"
-                autoFocus
-              />
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => {
-                    setShowNewWorkspace(false);
-                    setNewWorkspaceName('');
-                  }}
-                  className="px-4 py-2 text-gray-400 hover:text-white"
-                >
-                  Avbryt
-                </button>
-                <button
-                  onClick={handleCreateWorkspace}
-                  className="px-4 py-2 bg-discord-blurple hover:bg-discord-blurple/80 text-white rounded"
-                >
-                  Skapa
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Channel list */}
         <div className="w-60 bg-discord-darker flex flex-col">
           {/* Workspace header */}
