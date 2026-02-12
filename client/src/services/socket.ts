@@ -7,6 +7,10 @@ class SocketService {
   private socket: Socket | null = null;
   private dmMessageHandlers: Map<string, (message: Message) => void> =
     new Map();
+  private presenceHandlers: Map<
+    string,
+    (data: { userId: string; status: string }) => void
+  > = new Map();
   private connecting: boolean = false;
   private pendingOperations: Array<() => void> = [];
 
@@ -155,11 +159,17 @@ class SocketService {
 
     // Presence
     this.socket.on('user:online', ({ userId }: { userId: string }) => {
-      console.log('User online:', userId);
+      console.log('👤 User online:', userId);
+      this.presenceHandlers.forEach((handler) =>
+        handler({ userId, status: 'ONLINE' })
+      );
     });
 
     this.socket.on('user:offline', ({ userId }: { userId: string }) => {
-      console.log('User offline:', userId);
+      console.log('💤 User offline:', userId);
+      this.presenceHandlers.forEach((handler) =>
+        handler({ userId, status: 'OFFLINE' })
+      );
     });
 
     // Errors
@@ -186,10 +196,7 @@ class SocketService {
   }
 
   // Helper to queue or execute socket operation
-  private queueOrExecute(
-    operation: () => void,
-    logMessage?: string
-  ): void {
+  private queueOrExecute(operation: () => void, logMessage?: string): void {
     if (!this.ensureConnected()) {
       if (logMessage) {
         console.log(`🔗 Socket: Queueing ${logMessage} for when connected`);
@@ -202,14 +209,17 @@ class SocketService {
 
   // Helper to emit socket event
   private emit(event: string, data: unknown, logMessage?: string): void {
-    this.queueOrExecute(() => {
-      if (this.socket && this.socket.connected) {
-        if (logMessage) {
-          console.log(logMessage);
+    this.queueOrExecute(
+      () => {
+        if (this.socket && this.socket.connected) {
+          if (logMessage) {
+            console.log(logMessage);
+          }
+          this.socket.emit(event, data);
         }
-        this.socket.emit(event, data);
-      }
-    }, logMessage?.replace(/^.*Socket: /, ''));
+      },
+      logMessage?.replace(/^.*Socket: /, '')
+    );
   }
 
   // Ensure socket is connected (auto-connect if needed)
@@ -310,6 +320,18 @@ class SocketService {
 
   offDMMessage(id: string) {
     this.dmMessageHandlers.delete(id);
+  }
+
+  // Register handler for presence updates
+  onPresenceUpdate(
+    id: string,
+    handler: (data: { userId: string; status: string }) => void
+  ) {
+    this.presenceHandlers.set(id, handler);
+  }
+
+  offPresenceUpdate(id: string) {
+    this.presenceHandlers.delete(id);
   }
 }
 
