@@ -14,15 +14,18 @@ export default function AuthCallback() {
       // Store token and user info in our auth store
       const token = auth.user.id_token || auth.user.access_token || '';
       const profile = auth.user.profile;
-      
+
       setAuth(token, {
         id: profile.sub || '',
         email: profile.email || '',
-        firstName: (profile.given_name as string) || profile.email?.split('@')[0] || 'User',
+        firstName:
+          (profile.given_name as string) ||
+          profile.email?.split('@')[0] ||
+          'User',
         lastName: (profile.family_name as string) || '',
         role: 'STAFF'
       });
-      
+
       navigate('/chat', { replace: true });
     }
   }, [auth.isAuthenticated, auth.user, setAuth, navigate]);
@@ -42,7 +45,9 @@ export default function AuthCallback() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-discord-darkest">
         <div className="text-center">
-          <p className="text-red-400 mb-4">Inloggningsfel: {auth.error.message}</p>
+          <p className="text-red-400 mb-4">
+            Inloggningsfel: {auth.error.message}
+          </p>
           <button
             onClick={() => navigate('/login', { replace: true })}
             className="px-4 py-2 bg-discord-blurple text-white rounded hover:bg-discord-blurple/80"

@@ -93,6 +93,49 @@ export class ChannelService {
     });
   }
 
+  async updateChannel(
+    channelId: string,
+    input: { name?: string; description?: string }
+  ): Promise<Channel> {
+    const channel = await this.prisma.channel.findUnique({
+      where: { id: channelId }
+    });
+
+    if (!channel) {
+      throw new NotFoundError('Channel', channelId);
+    }
+
+    const data: { name?: string; description?: string } = {};
+
+    if (input.name) {
+      const normalizedName = normalizeChannelName(input.name);
+      if (!validateChannelName(normalizedName)) {
+        throw new ValidationError('Invalid channel name');
+      }
+      // Check for duplicate
+      const existing = await this.prisma.channel.findFirst({
+        where: {
+          workspaceId: channel.workspaceId,
+          name: normalizedName,
+          id: { not: channelId }
+        }
+      });
+      if (existing) {
+        throw new ConflictError(`Channel "${normalizedName}" already exists`);
+      }
+      data.name = normalizedName;
+    }
+
+    if (input.description !== undefined) {
+      data.description = input.description || null;
+    }
+
+    return this.prisma.channel.update({
+      where: { id: channelId },
+      data
+    });
+  }
+
   async joinChannel(channelId: string, userId: string): Promise<void> {
     await this.prisma.channelMember.upsert({
       where: {

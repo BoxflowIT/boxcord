@@ -70,4 +70,23 @@ export async function workspaceRoutes(app: FastifyInstance) {
     );
     return reply.status(204).send();
   });
+
+  // Delete workspace
+  app.delete<{ Params: { id: string } }>('/:id', async (request, reply) => {
+    await workspaceService.deleteWorkspace(request.params.id, request.user.id);
+    return reply.status(204).send();
+  });
+
+  // Update workspace
+  app.patch<{
+    Params: { id: string };
+    Body: { name?: string; description?: string; iconUrl?: string };
+  }>('/:id', async (request) => {
+    const workspace = await workspaceService.updateWorkspace(
+      request.params.id,
+      request.user.id,
+      request.body
+    );
+    return { success: true, data: workspace };
+  });
 }

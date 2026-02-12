@@ -103,4 +103,72 @@ export class WorkspaceService {
     });
     return !!membership;
   }
+
+  async updateWorkspace(
+    workspaceId: string,
+    requesterId: string,
+    input: { name?: string; description?: string; iconUrl?: string }
+  ): Promise<Workspace> {
+    // Check requester has permission
+    const requesterMembership = await this.prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId, userId: requesterId } }
+    });
+
+    if (
+      !requesterMembership ||
+      !['OWNER', 'ADMIN'].includes(requesterMembership.role)
+    ) {
+      throw new ForbiddenError('Only owners and admins can update workspace');
+    }
+
+    return this.prisma.workspace.update({
+      where: { id: workspaceId },
+      data: {
+        ...(input.name && { name: input.name }),
+        ...(input.description !== undefined && { description: input.description || null }),
+        ...(input.iconUrl !== undefined && { iconUrl: input.iconUrl || null })
+      }
+    });
+  }
+
+  async deleteWorkspace(workspaceId: string, requesterId: string): Promise<void> {
+    // Check requester is owner
+    const requesterMembership = await this.prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId, userId: requesterId } }
+    });
+
+    if (!requesterMembership || requesterMembership.role !== 'OWNER') {
+      throw new ForbiddenError('Only workspace owner can delete workspace');
+    }
+
+    // Delete in order: messages, channels, members, then workspace
+    await this.prisma.$transaction(async (tx) => {
+      // Get all channels
+      const channels = await tx.channel.findMany({
+        where: { workspaceId },
+        select: { id: true }
+      });
+      const channelIds = channels.map(c => c.id);
+
+      // Delete messages in channels
+      await tx.message.deleteMany({
+        where: { channelId: { in: channelIds } }
+      });
+
+      // Delete channels
+      await tx.channel.deleteMany({
+        where: { workspaceId }
+      });
+
+      // Delete memberships
+      await tx.workspaceMember.deleteMany({
+        where: { workspaceId }
+      });
+
+      // Delete workspace
+      await tx.workspace.delete({
+        where: { id: workspaceId }
+      });
+    });
+  }
 }

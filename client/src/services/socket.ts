@@ -10,31 +10,105 @@ class SocketService {
 
   connect() {
     const token = useAuthStore.getState().token;
-    if (!token || this.socket?.connected) return;
+    if (!token) {
+      console.error('Socket: No token available, cannot connect');
+      return;
+    }
+    if (this.socket) {
+      if (this.socket.connected) {
+        console.log('Socket: Already connected');
+        return;
+      }
+      console.log('Socket: Socket exists but not connected, reconnecting...');
+      this.socket.connect();
+      return;
+    }
 
-    this.socket = io(window.location.origin, {
+    console.log(
+      'Socket: Connecting with token:',
+      token.substring(0, 20) + '...'
+    );
+
+    // Always connect directly to backend (bypassing Vite proxy which has issues with socket.io)
+    const socketUrl = import.meta.env.DEV
+      ? 'http://localhost:3001'
+      : window.location.origin;
+    console.log('Socket: Connection URL:', socketUrl);
+
+    // Create socket with minimal config first
+    console.log('Socket: Creating socket instance...');
+    const socket = io(socketUrl, {
       auth: { token },
-      transports: ['polling', 'websocket']
+      transports: ['polling'], // Use only polling for reliability
+      reconnection: true,
+      reconnectionAttempts: 5,
+      timeout: 10000
     });
 
-    this.socket.on('connect', () => {
-      console.log('Connected to WebSocket');
+    console.log(
+      'Socket: Instance created, type:',
+      typeof socket,
+      'connected:',
+      socket.connected
+    );
+    this.socket = socket;
+
+    // Register event listeners
+    socket.on('connect', () => {
+      console.log(
+        '✅ Socket: Connected! ID:',
+        socket.id,
+        'Transport:',
+        socket.io?.engine?.transport?.name
+      );
     });
 
-    this.socket.on('disconnect', () => {
-      console.log('Disconnected from WebSocket');
+    socket.on('connect_error', (error) => {
+      console.error('❌ Socket: Connection error:', error.message);
+      console.error('Error details:', {
+        type: error.type,
+        description: error.description,
+        context: error.context
+      });
     });
+
+    socket.on('disconnect', (reason, details) => {
+      console.log('🔌 Socket: Disconnected, reason:', reason);
+      if (details) console.log('Disconnect details:', details);
+    });
+
+    console.log('Socket: Event handlers registered. Connecting now...');
+    socket.connect(); // Use connect() instead of open()
+    console.log('Socket: Connection initiated');
+
+    // Fallback: Check connection after 2 seconds
+    setTimeout(() => {
+      if (!socket.connected) {
+        console.warn('⚠️ Socket: Not connected after 2s. State:', {
+          connected: socket.connected,
+          disconnected: socket.disconnected,
+          active: socket.active
+        });
+        if (!socket.connected && !socket.active) {
+          console.log('🔄 Socket: Forcing reconnect...');
+          socket.disconnect().connect();
+        }
+      }
+    }, 2000);
 
     // Message events
-    this.socket.on('message:new', (message: Message) => {
+    socket.on('message:new', (message: Message) => {
+      console.log('✅ Socket: Received new message:', message);
       useChatStore.getState().addMessage(message);
     });
 
     this.socket.on('message:edit', (message: Message) => {
+      console.log('✏️ Socket: Message edited:', message.id);
       useChatStore.getState().updateMessage(message);
     });
 
     this.socket.on('message:delete', ({ messageId }: { messageId: string }) => {
+      console.log('🗑️ Socket: Message deleted:', messageId);
       useChatStore.getState().removeMessage(messageId);
     });
 
@@ -97,25 +171,68 @@ class SocketService {
     this.socket = null;
   }
 
+  // Ensure socket is connected (auto-connect if needed)
+  private ensureConnected(): boolean {
+    if (!this.socket || this.socket.disconnected) {
+      console.log('🔄 Socket: Auto-connecting...');
+      this.connect();
+      return false; // Not connected yet
+    }
+    return true;
+  }
+
   // Channel methods
   joinChannel(channelId: string) {
-    this.socket?.emit('channel:join', channelId);
+    if (!this.ensureConnected()) {
+      console.log('🔗 Socket: Queueing join for when connected:', channelId);
+      // Queue for connection
+      if (this.socket) {
+        this.socket.once('connect', () => {
+          console.log('🔗 Socket: Joining channel (queued):', channelId);
+          this.socket!.emit('channel:join', channelId);
+        });
+      }
+      return;
+    }
+    console.log('🔗 Socket: Joining channel now:', channelId);
+    this.socket.emit('channel:join', channelId);
   }
 
   leaveChannel(channelId: string) {
-    this.socket?.emit('channel:leave', channelId);
+    if (!this.socket) return;
+    this.socket.emit('channel:leave', channelId);
   }
 
   sendMessage(channelId: string, content: string, parentId?: string) {
-    this.socket?.emit('message:send', { channelId, content, parentId });
+    if (!this.ensureConnected()) {
+      console.error('❌ Socket: Not connected - attempting to connect...');
+      // Queue the message for after connection
+      this.socket?.once('connect', () => {
+        console.log('📤 Socket: Sending queued message to:', channelId);
+        this.socket!.emit('message:send', { channelId, content, parentId });
+      });
+      return;
+    }
+    console.log('📤 Socket: Sending message to:', channelId);
+    this.socket.emit('message:send', { channelId, content, parentId });
   }
 
   editMessage(messageId: string, content: string) {
-    this.socket?.emit('message:edit', { messageId, content });
+    if (!this.ensureConnected()) {
+      console.error('❌ Socket: Not connected - cannot edit message');
+      return;
+    }
+    console.log('✏️ Socket: Editing message:', messageId);
+    this.socket!.emit('message:edit', { messageId, content });
   }
 
   deleteMessage(messageId: string) {
-    this.socket?.emit('message:delete', { messageId });
+    if (!this.ensureConnected()) {
+      console.error('❌ Socket: Not connected - cannot delete message');
+      return;
+    }
+    console.log('🗑️ Socket: Deleting message:', messageId);
+    this.socket!.emit('message:delete', { messageId });
   }
 
   sendTyping(channelId: string) {
@@ -154,4 +271,26 @@ class SocketService {
   }
 }
 
-export const socketService = new SocketService();
+// Preserve socket instance across HMR reloads
+let socketServiceInstance: SocketService;
+
+if (import.meta.hot?.data.socketService) {
+  // Reuse existing instance after HMR
+  console.log('♻️ HMR: Reusing existing socket service');
+  socketServiceInstance = import.meta.hot.data.socketService;
+} else {
+  // Create new instance
+  socketServiceInstance = new SocketService();
+}
+
+export const socketService = socketServiceInstance;
+
+// Hot Module Replacement: preserve socket across reloads
+if (import.meta.hot) {
+  import.meta.hot.accept();
+  import.meta.hot.dispose((data) => {
+    console.log('♻️ HMR: Preserving socket service for next reload');
+    // Store the instance for next reload
+    data.socketService = socketServiceInstance;
+  });
+}

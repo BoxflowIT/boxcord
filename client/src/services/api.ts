@@ -53,13 +53,16 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      // Only set Content-Type if there's a body
+      ...(options.body && { 'Content-Type': 'application/json' }),
       ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers
     }
   });
 
-  const data = await response.json();
+  // Handle empty responses (like DELETE with 204 No Content)
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : {};
 
   if (!response.ok) {
     throw new Error(data.error?.message ?? 'Request failed');
@@ -100,6 +103,16 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ name, description })
     }),
+  deleteWorkspace: (id: string) =>
+    request<void>(`/workspaces/${id}`, { method: 'DELETE' }),
+  updateWorkspace: (
+    id: string,
+    data: { name?: string; description?: string; iconUrl?: string }
+  ) =>
+    request<Workspace>(`/workspaces/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    }),
 
   // Channels
   getChannels: (workspaceId: string) =>
@@ -108,6 +121,13 @@ export const api = {
     request<Channel>('/channels', {
       method: 'POST',
       body: JSON.stringify({ workspaceId, name })
+    }),
+  deleteChannel: (id: string) =>
+    request<void>(`/channels/${id}`, { method: 'DELETE' }),
+  updateChannel: (id: string, data: { name?: string; description?: string }) =>
+    request<Channel>(`/channels/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
     }),
 
   // Messages
@@ -118,6 +138,7 @@ export const api = {
 
   // Users
   getCurrentUser: () => request<User>('/users/me'),
+  initUser: () => request<User>('/users/me/init', { method: 'POST' }),
   getUser: (id: string) => request<User>(`/users/${id}`),
   searchUsers: (query: string) => request<User[]>(`/users/search?q=${query}`),
   getOnlineUsers: () => request<User[]>('/users/online'),

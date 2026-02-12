@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Socket.IO Test</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>Socket.IO Connection Test</h1>
+    <div id="status">Testing...</div>
+    <div id="logs"></div>
+
+    <script>
+        const logsDiv = document.getElementById('logs');
+        const statusDiv = document.getElementById('status');
+        
+        function log(msg) {
+            console.log(msg);
+            logsDiv.innerHTML += `<p>${msg}</p>`;
+        }
+
+        // Get token from localStorage (same as the app uses)
+        const authData = localStorage.getItem('oidc.user:https://cognito-idp.eu-north-1.amazonaws.com/eu-north-1_SJ3dGBIPY:6rsp6ebi274j0nlrc6t44p3pu3');
+        const token = authData ? JSON.parse(authData).id_token : null;
+        
+        if (!token) {
+            statusDiv.innerHTML = '❌ No token found in localStorage';
+            log('Error: No auth token found. Please login to the app first.');
+        } else {
+            log('✅ Token found: ' + token.substring(0, 30) + '...');
+            log('Creating socket connection to http://localhost:3001');
+
+            const socket = io('http://localhost:3001', {
+                auth: { token },
+                transports: ['polling'],
+                reconnection: false
+            });
+
+            socket.on('connect', () => {
+                statusDiv.innerHTML = '✅ CONNECTED! Socket ID: ' + socket.id;
+                log('✅ Socket connected successfully! ID: ' + socket.id);
+            });
+
+            socket.on('connect_error', (error) => {
+                statusDiv.innerHTML = '❌ Connection Error: ' + error.message;
+                log('❌ Connection error: ' + error.message);
+                log('Error object: ' + JSON.stringify(error, null, 2));
+            });
+
+            socket.on('disconnect', () => {
+                statusDiv.innerHTML = '🔌 Disconnected';
+                log('🔌 Socket disconnected');
+            });
+
+            setTimeout(() => {
+                if (!socket.connected) {
+                    statusDiv.innerHTML = '⏱️ Timeout - Not connected after 10s';
+                    log('⏱️ Socket did not connect within 10 seconds');
+                    log('Socket state: connected=' + socket.connected + ', connecting=' + socket.connecting);
+                }
+            }, 10000);
+        }
+    </script>
+</body>
+</html>

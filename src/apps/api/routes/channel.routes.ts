@@ -47,6 +47,18 @@ export async function channelRoutes(app: FastifyInstance) {
     return reply.status(204).send();
   });
 
+  // Update channel
+  app.patch<{
+    Params: { id: string };
+    Body: { name?: string; description?: string };
+  }>('/:id', async (request) => {
+    const channel = await channelService.updateChannel(
+      request.params.id,
+      request.body
+    );
+    return { success: true, data: channel };
+  });
+
   // Join channel
   app.post<{ Params: { id: string } }>('/:id/join', async (request) => {
     await channelService.joinChannel(request.params.id, request.user.id);

@@ -103,4 +103,58 @@ export async function userRoutes(app: FastifyInstance) {
     await userService.deleteUser(request.user.id);
     return { success: true };
   });
+
+  // Initialize user (create + add to default workspace)
+  // Called after first login to ensure user exists and has access
+  app.post('/me/init', async (request) => {
+    // Create/update user
+    const user = await userService.upsertUser({
+      id: request.user.id,
+      email: request.user.email,
+      role: request.user.role,
+    });
+
+    // Check if user is member of any workspace
+    const memberships = await prisma.workspaceMember.findMany({
+      where: { userId: request.user.id },
+    });
+
+    // If no memberships, add to first workspace (or create one)
+    if (memberships.length === 0) {
+      const defaultWorkspace = await prisma.workspace.findFirst();
+
+      if (defaultWorkspace) {
+        await prisma.workspaceMember.create({
+          data: {
+            workspaceId: defaultWorkspace.id,
+            userId: request.user.id,
+            role: 'MEMBER',
+          },
+        });
+      } else {
+        // No workspaces exist, create one with this user as owner
+        await prisma.workspace.create({
+          data: {
+            name: 'Boxflow HQ',
+            description: 'Huvudkontoret för Boxflow-teamet',
+            members: {
+              create: {
+                userId: request.user.id,
+                role: 'OWNER',
+              },
+            },
+            channels: {
+              create: {
+                name: 'allmänt',
+                description: 'Allmän diskussion',
+                type: 'TEXT',
+              },
+            },
+          },
+        });
+      }
+    }
+
+    return { success: true, data: user };
+  });
 }

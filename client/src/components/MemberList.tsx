@@ -36,7 +36,7 @@ export default function MemberList() {
     };
 
     fetchOnlineUsers();
-    
+
     // Refresh every 30 seconds
     const interval = setInterval(fetchOnlineUsers, 30000);
     return () => clearInterval(interval);
@@ -88,7 +88,9 @@ export default function MemberList() {
         {loading ? (
           <div className="text-gray-400 text-sm px-2">Laddar...</div>
         ) : users.length === 0 ? (
-          <div className="text-gray-400 text-sm px-2">Inga användare online</div>
+          <div className="text-gray-400 text-sm px-2">
+            Inga användare online
+          </div>
         ) : (
           statusOrder.map((status) => {
             const statusUsers = groupedUsers[status];
@@ -128,7 +130,7 @@ export default function MemberList() {
                       <p className="text-sm text-gray-300 truncate">
                         {user.firstName && user.lastName
                           ? `${user.firstName} ${user.lastName}`
-                          : user.firstName ?? user.email.split('@')[0]}
+                          : (user.firstName ?? user.email.split('@')[0])}
                       </p>
                       {user.presence?.customStatus && (
                         <p className="text-xs text-gray-500 truncate">
