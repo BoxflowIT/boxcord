@@ -9,152 +9,310 @@
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #36393f;
-  color: #dcddde;
+  font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #1a1d23;
+  color: #e4e6eb;
 }
 
-/* Scrollbar styling */
+/* Scrollbar styling - Boxflow theme */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #2f3136;
+  background: #151820;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #202225;
+  background: #2d3139;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #36393f;
+  background: #00a8e8;
 }
 
 /* ============================================
-   Reusable Component Styles
+   Boxflow Design System - Reusable Components
    ============================================ */
 
 @layer components {
-  /* Avatar Styles */
+  /* ========== Layout Components ========== */
+
+  /* Sidebar/Panel Backgrounds */
+  .sidebar-main {
+    @apply w-60 bg-boxflow-darker flex flex-col;
+  }
+
+  .sidebar-icon {
+    @apply w-[72px] bg-boxflow-darkest flex flex-col items-center py-3 gap-2;
+  }
+
+  .panel-header {
+    @apply px-4 py-3 border-b border-boxflow-border flex items-center justify-between;
+  }
+
+  .panel-content {
+    @apply flex-1 overflow-y-auto p-4;
+  }
+
+  /* ========== Avatar Styles ========== */
   .avatar {
-    @apply rounded-full bg-discord-blurple flex items-center justify-center text-white flex-shrink-0;
+    @apply rounded-full bg-boxflow-primary flex items-center justify-center text-white flex-shrink-0 font-semibold;
   }
 
   .avatar-sm {
-    @apply avatar w-8 h-8 text-sm font-semibold;
+    @apply avatar w-8 h-8 text-sm;
   }
 
   .avatar-md {
-    @apply avatar w-10 h-10 text-base font-bold;
+    @apply avatar w-10 h-10 text-base;
   }
 
   .avatar-lg {
-    @apply avatar w-20 h-20 text-3xl font-bold;
+    @apply avatar w-20 h-20 text-3xl;
   }
 
-  /* Button Styles */
+  .avatar-xl {
+    @apply avatar w-24 h-24 text-4xl;
+  }
+
+  /* ========== Button Styles ========== */
   .btn {
-    @apply px-3 py-1 rounded font-medium transition-colors;
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
   }
 
   .btn-primary {
-    @apply btn bg-discord-blurple text-white hover:bg-discord-blurple-hover;
+    @apply btn bg-boxflow-primary text-white hover:bg-boxflow-secondary active:scale-95 disabled:opacity-50;
   }
 
   .btn-secondary {
-    @apply btn hover:bg-discord-darker text-gray-400 hover:text-white;
+    @apply btn bg-boxflow-darker text-boxflow-light hover:bg-boxflow-dark border border-boxflow-border;
+  }
+
+  .btn-success {
+    @apply btn bg-boxflow-success text-white hover:brightness-110;
   }
 
   .btn-danger {
-    @apply btn bg-red-600 text-white hover:bg-red-700;
+    @apply btn bg-boxflow-danger text-white hover:brightness-110;
+  }
+
+  .btn-warning {
+    @apply btn bg-boxflow-warning text-boxflow-dark hover:brightness-110;
   }
 
   .btn-icon {
-    @apply p-1 hover:bg-discord-darker rounded text-gray-400 hover:text-white transition-colors;
+    @apply p-1.5 hover:bg-boxflow-dark rounded-lg text-boxflow-muted hover:text-boxflow-light transition-all;
+  }
+
+  .btn-icon-primary {
+    @apply p-1.5 hover:bg-boxflow-primary/20 rounded-lg text-boxflow-muted hover:text-boxflow-primary transition-all;
   }
 
   .btn-icon-danger {
-    @apply p-1 hover:bg-discord-darker rounded text-gray-400 hover:text-red-500 transition-colors;
+    @apply p-1.5 hover:bg-boxflow-danger/20 rounded-lg text-boxflow-muted hover:text-boxflow-danger transition-all;
   }
 
-  /* Dropdown Menu Styles */
+  /* ========== Dropdown Menu Styles ========== */
   .dropdown-menu {
-    @apply absolute bg-discord-dark border border-discord-darker rounded-lg shadow-xl z-10 overflow-hidden;
+    @apply absolute bg-boxflow-darker border border-boxflow-border rounded-lg shadow-2xl z-10 overflow-hidden min-w-[200px];
   }
 
   .dropdown-item {
-    @apply w-full text-left px-4 py-2 hover:bg-discord-darker text-white transition-colors;
+    @apply w-full text-left px-4 py-2.5 hover:bg-boxflow-dark text-boxflow-light transition-colors;
   }
 
   .dropdown-item-danger {
-    @apply w-full text-left px-4 py-2 hover:bg-discord-darker text-red-500 transition-colors;
+    @apply w-full text-left px-4 py-2.5 hover:bg-boxflow-danger/10 text-boxflow-danger transition-colors;
   }
 
-  /* Autocomplete/Popup Styles */
+  .dropdown-divider {
+    @apply h-px bg-boxflow-border my-1;
+  }
+
+  /* ========== Popup/Autocomplete Styles ========== */
   .popup-container {
-    @apply absolute bg-discord-darker border border-discord-dark rounded-lg shadow-xl overflow-hidden z-50;
+    @apply absolute bg-boxflow-darker border border-boxflow-border rounded-lg shadow-2xl overflow-hidden z-50;
   }
 
   .popup-list-item {
-    @apply px-4 py-2 cursor-pointer transition-colors;
+    @apply px-4 py-2.5 cursor-pointer transition-colors;
   }
 
   .popup-list-item-selected {
-    @apply bg-discord-blurple text-white;
+    @apply bg-boxflow-primary text-white;
   }
 
   .popup-list-item-default {
-    @apply text-gray-300 hover:bg-discord-dark;
+    @apply text-boxflow-light hover:bg-boxflow-dark;
   }
 
-  /* Input Styles */
+  /* ========== Input/Form Styles ========== */
   .input-base {
-    @apply w-full bg-discord-darker text-discord-light rounded p-2 outline-none transition-colors;
+    @apply w-full bg-boxflow-darker text-boxflow-light border border-boxflow-border rounded-lg px-4 py-2.5 outline-none transition-all focus:border-boxflow-primary focus:ring-1 focus:ring-boxflow-primary/50 placeholder-boxflow-subtle;
   }
 
   .textarea-base {
     @apply input-base resize-none;
   }
 
-  /* Card/Panel Styles */
-  .card {
-    @apply p-4 bg-discord-darker rounded-lg;
+  .input-error {
+    @apply border-boxflow-danger focus:border-boxflow-danger focus:ring-boxflow-danger/50;
   }
 
-  /* Text Styles */
+  .label-base {
+    @apply block text-sm font-medium text-boxflow-muted mb-1.5;
+  }
+
+  /* ========== Card/Panel Styles ========== */
+  .card {
+    @apply p-4 bg-boxflow-darker rounded-lg border border-boxflow-border;
+  }
+
+  .card-header {
+    @apply font-semibold text-lg text-boxflow-light mb-3;
+  }
+
+  .card-interactive {
+    @apply card hover:bg-boxflow-dark transition-colors cursor-pointer;
+  }
+
+  /* ========== Text Styles ========== */
+  .text-heading {
+    @apply text-boxflow-light font-semibold;
+  }
+
+  .text-body {
+    @apply text-boxflow-light;
+  }
+
   .text-muted {
-    @apply text-gray-400 text-sm;
+    @apply text-boxflow-muted text-sm;
   }
 
   .text-subtle {
-    @apply text-gray-500 text-xs;
+    @apply text-boxflow-subtle text-xs;
   }
 
-  /* Message Styles */
+  .text-primary {
+    @apply text-boxflow-primary;
+  }
+
+  .text-success {
+    @apply text-boxflow-success;
+  }
+
+  .text-warning {
+    @apply text-boxflow-warning;
+  }
+
+  .text-danger {
+    @apply text-boxflow-danger;
+  }
+
+  /* ========== Message Styles ========== */
   .message-container {
-    @apply group hover:bg-discord-darker/30 -mx-4 px-4 py-0.5 rounded relative;
+    @apply group hover:bg-boxflow-dark/30 -mx-4 px-4 py-1 rounded-lg relative transition-colors;
   }
 
   .message-time {
-    @apply text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity;
+    @apply text-xs text-boxflow-subtle opacity-0 group-hover:opacity-100 transition-opacity;
   }
 
-  /* Status Colors */
+  .message-edited {
+    @apply text-xs text-boxflow-subtle;
+  }
+
+  /* ========== Status/Badge Styles ========== */
+  .status-indicator {
+    @apply w-3 h-3 rounded-full border-2 border-boxflow-darker;
+  }
+
   .status-online {
-    @apply bg-green-500;
+    @apply status-indicator bg-boxflow-success;
   }
 
   .status-away {
-    @apply bg-yellow-500;
+    @apply status-indicator bg-boxflow-warning;
   }
 
   .status-busy {
-    @apply bg-red-500;
+    @apply status-indicator bg-boxflow-danger;
   }
 
   .status-offline {
-    @apply bg-gray-500;
+    @apply status-indicator bg-boxflow-muted;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+  }
+
+  .badge-primary {
+    @apply badge bg-boxflow-primary/20 text-boxflow-primary;
+  }
+
+  .badge-success {
+    @apply badge bg-boxflow-success/20 text-boxflow-success;
+  }
+
+  .badge-danger {
+    @apply badge bg-boxflow-danger/20 text-boxflow-danger;
+  }
+
+  /* ========== List/Navigation Items ========== */
+  .nav-item {
+    @apply px-3 py-2 rounded-lg transition-all cursor-pointer;
+  }
+
+  .nav-item-default {
+    @apply nav-item text-boxflow-muted hover:bg-boxflow-dark hover:text-boxflow-light;
+  }
+
+  .nav-item-active {
+    @apply nav-item bg-boxflow-primary/10 text-boxflow-primary;
+  }
+
+  .list-item-interactive {
+    @apply group px-3 py-2 rounded-lg hover:bg-boxflow-dark/50 transition-colors cursor-pointer;
+  }
+
+  /* ========== Modal/Overlay Styles ========== */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm;
+  }
+
+  .modal-content {
+    @apply bg-boxflow-darker rounded-xl shadow-2xl border border-boxflow-border max-w-md w-full max-h-[90vh] overflow-y-auto;
+  }
+
+  .modal-header {
+    @apply px-6 py-4 border-b border-boxflow-border flex items-center justify-between sticky top-0 bg-boxflow-darker z-10;
+  }
+
+  .modal-body {
+    @apply px-6 py-4;
+  }
+
+  .modal-footer {
+    @apply px-6 py-4 border-t border-boxflow-border flex gap-3 justify-end sticky bottom-0 bg-boxflow-darker;
+  }
+
+  /* ========== Utility Classes ========== */
+  .hover-group-visible {
+    @apply opacity-0 group-hover:opacity-100 transition-opacity;
+  }
+
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-boxflow-primary focus:ring-offset-2 focus:ring-offset-boxflow-darker;
+  }
+
+  .divider {
+    @apply h-px bg-boxflow-border my-2;
+  }
+
+  .divider-vertical {
+    @apply w-px bg-boxflow-border mx-2;
   }
 }

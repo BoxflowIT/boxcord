@@ -236,7 +236,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
     <>
       <div className="flex h-full">
         {/* Workspace list */}
-        <div className="w-[72px] bg-discord-darkest flex flex-col items-center py-3 gap-2">
+        <div className="sidebar-icon">
           {workspaces.map((workspace) => (
             <div key={workspace.id} className="relative group">
               <button
@@ -248,8 +248,8 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
                 }}
                 className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold transition-all overflow-hidden ${
                   currentWorkspace?.id === workspace.id
-                    ? 'bg-discord-blurple rounded-2xl'
-                    : 'bg-discord-dark hover:bg-discord-blurple hover:rounded-2xl'
+                    ? 'bg-boxflow-primary rounded-2xl'
+                    : 'bg-boxflow-dark hover:bg-boxflow-primary hover:rounded-2xl'
                 }`}
                 title={`${workspace.name}\nDubbelklick: redigera\nHögerklick: ta bort`}
               >
@@ -269,7 +269,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
           {/* Add workspace button */}
           <button
             onClick={() => setShowNewWorkspace(true)}
-            className="w-12 h-12 rounded-full bg-discord-dark hover:bg-discord-green text-discord-green hover:text-white flex items-center justify-center transition-all"
+            className="w-12 h-12 rounded-full bg-boxflow-dark hover:bg-boxflow-success text-boxflow-success hover:text-white flex items-center justify-center transition-all"
             title="Lägg till workspace"
           >
             <svg
@@ -289,25 +289,25 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
         </div>
 
         {/* Channel list */}
-        <div className="w-60 bg-discord-darker flex flex-col">
+        <div className="sidebar-main">
           {/* Workspace header */}
-          <div className="h-12 px-4 flex items-center border-b border-discord-darkest shadow">
-            <h2 className="font-semibold text-white truncate">
+          <div className="panel-header">
+            <h2 className="text-heading truncate">
               {currentWorkspace?.name ?? 'Välj workspace'}
             </h2>
           </div>
 
           {/* Channels */}
-          <div className="flex-1 overflow-y-auto p-2">
+          <div className="panel-content">
             {currentWorkspace && (
               <>
                 <div className="flex items-center justify-between px-2 mb-1">
-                  <span className="text-xs font-semibold text-gray-400 uppercase">
+                  <span className="text-subtle uppercase font-semibold">
                     Text Kanaler
                   </span>
                   <button
                     onClick={() => setShowNewChannel(true)}
-                    className="text-gray-400 hover:text-white"
+                    className="btn-icon-primary"
                   >
                     <svg
                       className="w-4 h-4"
@@ -328,10 +328,10 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
                 {channels.map((channel) => (
                   <div
                     key={channel.id}
-                    className={`group w-full flex items-center gap-2 px-2 py-1 rounded text-sm transition-colors cursor-pointer ${
+                    className={`group w-full flex items-center gap-2 px-2 py-1 rounded-lg text-sm transition-colors cursor-pointer ${
                       currentChannel?.id === channel.id
-                        ? 'bg-discord-dark/50 text-white'
-                        : 'text-gray-400 hover:text-gray-200 hover:bg-discord-dark/30'
+                        ? 'nav-item-active'
+                        : 'nav-item-default'
                     }`}
                     onClick={() => handleChannelSelect(channel)}
                   >
@@ -339,7 +339,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
                     <span className="truncate flex-1">{channel.name}</span>
                     <button
                       onClick={(e) => handleEditChannel(channel, e)}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-white transition-opacity"
+                      className="btn-icon hover-group-visible"
                       title="Redigera kanal"
                     >
                       <svg
@@ -358,7 +358,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
                     </button>
                     <button
                       onClick={(e) => handleDeleteChannel(channel, e)}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-400 transition-opacity"
+                      className="btn-icon-danger hover-group-visible"
                       title="Ta bort kanal"
                     >
                       <svg
@@ -382,24 +382,24 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
           </div>
 
           {/* User info */}
-          <div className="h-14 bg-discord-darkest/50 px-2 flex items-center gap-2">
+          <div className="h-14 bg-boxflow-darkest/50 px-2 flex items-center gap-2 border-t border-boxflow-border">
             <button
               onClick={onProfileClick}
-              className="flex items-center gap-2 flex-1 min-w-0 hover:bg-discord-dark/50 rounded p-1 -m-1 transition-colors"
+              className="flex items-center gap-2 flex-1 min-w-0 hover:bg-boxflow-dark/50 rounded-lg p-1 -m-1 transition-colors"
             >
-              <div className="w-8 h-8 rounded-full bg-discord-blurple flex items-center justify-center text-white text-sm font-bold">
+              <Avatar size="sm">
                 {user?.firstName?.charAt(0) ?? user?.email?.charAt(0) ?? '?'}
-              </div>
+              </Avatar>
               <div className="flex-1 min-w-0 text-left">
-                <p className="text-sm font-medium text-white truncate">
+                <p className="text-sm font-medium text-boxflow-light truncate">
                   {user?.firstName ?? user?.email}
                 </p>
-                <p className="text-xs text-gray-400 truncate">{user?.role}</p>
+                <p className="text-subtle truncate">{user?.role}</p>
               </div>
             </button>
             <button
               onClick={handleLogout}
-              className="p-1 text-gray-400 hover:text-white"
+              className="btn-icon"
               title="Logga ut"
             >
               <svg

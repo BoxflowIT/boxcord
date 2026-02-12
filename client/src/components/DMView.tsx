@@ -134,8 +134,8 @@ export default function DMView() {
     if (!inputValue.trim() || !channelId) return;
 
     try {
-      const message = await api.sendDM(channelId, inputValue.trim());
-      setMessages((prev) => [...prev, message]);
+      // Send message - WebSocket will handle adding it to the list
+      await api.sendDM(channelId, inputValue.trim());
       setInputValue('');
     } catch (err) {
       console.error('Failed to send DM:', err);
