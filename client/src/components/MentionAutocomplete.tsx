@@ -1,6 +1,7 @@
 // @mentions Autocomplete Component
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from '../services/api';
+import { useAutocompleteNavigation } from '../hooks/useAutocompleteNavigation';
 
 interface MentionItem {
   id: string;
@@ -25,7 +26,6 @@ export default function MentionAutocomplete({
 }: MentionAutocompleteProps) {
   const [results, setResults] = useState<MentionItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Find the @mention being typed
@@ -49,6 +49,26 @@ export default function MentionAutocomplete({
     };
   }, [inputValue, cursorPosition]);
 
+  // Handle selection with mention position
+  const handleSelectItem = useCallback(
+    (item: MentionItem) => {
+      const mention = getMentionQuery();
+      if (mention) {
+        onSelect(item, mention.startPos, mention.endPos);
+      }
+    },
+    [getMentionQuery, onSelect]
+  );
+
+  // Use shared autocomplete navigation hook
+  const { selectedIndex, handleItemClick } = useAutocompleteNavigation({
+    items: results,
+    onSelect: handleSelectItem,
+    onClose,
+    containerRef,
+    enabled: results.length > 0
+  });
+
   useEffect(() => {
     const mention = getMentionQuery();
 
@@ -71,7 +91,6 @@ export default function MentionAutocomplete({
             value: `@${user.firstName?.toLowerCase() ?? user.email.split('@')[0]}`
           }))
         );
-        setSelectedIndex(0);
       } catch {
         setResults([]);
       } finally {
@@ -82,62 +101,6 @@ export default function MentionAutocomplete({
     const debounce = setTimeout(searchUsers, 200);
     return () => clearTimeout(debounce);
   }, [inputValue, cursorPosition, getMentionQuery]);
-
-  const handleSelect = useCallback(
-    (item: MentionItem) => {
-      const mention = getMentionQuery();
-      if (mention) {
-        onSelect(item, mention.startPos, mention.endPos);
-      }
-    },
-    [getMentionQuery, onSelect]
-  );
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (results.length === 0) return;
-
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault();
-          setSelectedIndex((prev) => (prev + 1) % results.length);
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          setSelectedIndex(
-            (prev) => (prev - 1 + results.length) % results.length
-          );
-          break;
-        case 'Enter':
-        case 'Tab':
-          e.preventDefault();
-          handleSelect(results[selectedIndex]);
-          break;
-        case 'Escape':
-          e.preventDefault();
-          onClose();
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [results, selectedIndex, onClose, handleSelect]);
-
-  // Click outside to close
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        onClose();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [onClose]);
 
   if (results.length === 0 && !loading) return null;
 
@@ -159,7 +122,7 @@ export default function MentionAutocomplete({
           {results.map((item, index) => (
             <li
               key={item.id}
-              onClick={() => handleSelect(item)}
+              onClick={() => handleItemClick(item)}
               className={`px-4 py-2 cursor-pointer flex items-center gap-3 ${
                 index === selectedIndex
                   ? 'bg-discord-blurple text-white'

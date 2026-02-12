@@ -101,9 +101,7 @@ export default function DMView() {
 
     // Listen for DM events
     const onNewMessage = (message: Message) => {
-      if (message.channelId === channelId) {
-        setMessages((prev) => [...prev, message]);
-      }
+      setMessages((prev) => [...prev, message]);
     };
 
     const onEditMessage = (message: Message) => {
@@ -117,20 +115,14 @@ export default function DMView() {
     };
 
     socketService.onDMMessage('dm-view', onNewMessage);
-
-    if (socketService.socket) {
-      socketService.socket.on('dm:edit', onEditMessage);
-      socketService.socket.on('dm:delete', onDeleteMessage);
-    }
+    socketService.onDMEdit('dm-view', onEditMessage);
+    socketService.onDMDelete('dm-view', onDeleteMessage);
 
     return () => {
       socketService.leaveDM(channelId);
       socketService.offDMMessage('dm-view');
-
-      if (socketService.socket) {
-        socketService.socket.off('dm:edit', onEditMessage);
-        socketService.socket.off('dm:delete', onDeleteMessage);
-      }
+      socketService.offDMEdit('dm-view');
+      socketService.offDMDelete('dm-view');
     };
   }, [channelId, user?.id]);
 
@@ -307,7 +299,7 @@ export default function DMView() {
         onClose={handleCancelDelete}
         onConfirm={confirmDelete}
         title="Ta bort meddelande"
-        description="Är du säker på att du vill ta bort det här meddelandet? Det går inte att ångra."
+        message="Är du säker på att du vill ta bort det här meddelandet? Det går inte att ångra."
       />
     </div>
   );
