@@ -2,6 +2,7 @@
 import type { FastifyInstance } from 'fastify';
 import fastifyStatic from '@fastify/static';
 import { join } from 'path';
+import { mkdirSync, existsSync } from 'fs';
 import { workspaceRoutes } from './workspace.routes.js';
 import { channelRoutes } from './channel.routes.js';
 import { messageRoutes } from './message.routes.js';
@@ -14,9 +15,15 @@ import { webhookRoutes } from './webhook.routes.js';
 import { chatbotRoutes } from './chatbot.routes.js';
 
 export async function registerRoutes(app: FastifyInstance) {
+  // Ensure uploads directory exists
+  const uploadDir = join(process.cwd(), process.env.UPLOAD_DIR ?? 'uploads');
+  if (!existsSync(uploadDir)) {
+    mkdirSync(uploadDir, { recursive: true });
+  }
+
   // Serve uploaded files
   await app.register(fastifyStatic, {
-    root: join(process.cwd(), process.env.UPLOAD_DIR ?? 'uploads'),
+    root: uploadDir,
     prefix: '/uploads/',
     decorateReply: false
   });
