@@ -127,7 +127,7 @@ export class ChannelService {
     }
 
     if (input.description !== undefined) {
-      data.description = input.description || null;
+      data.description = input.description || undefined;
     }
 
     return this.prisma.channel.update({
