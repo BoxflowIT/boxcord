@@ -6,6 +6,7 @@ import { socketService } from '../services/socket';
 import { useChatStore } from '../store/chat';
 import Sidebar from '../components/Sidebar';
 import ChannelView from '../components/ChannelView';
+import DMView from '../components/DMView';
 import WelcomeView from '../components/WelcomeView';
 import MemberList from '../components/MemberList';
 import ProfileModal from '../components/ProfileModal';
@@ -88,6 +89,7 @@ export default function Chat() {
               />
             }
           />
+          <Route path="dm/:channelId" element={<DMView />} />
           <Route path="*" element={<WelcomeView />} />
         </Routes>
       </div>

@@ -39,7 +39,15 @@ export interface DMReaction {
 export interface DMChannel {
   id: string;
   createdAt: Date;
-  participants: { userId: string }[];
+  participants: Array<{
+    userId: string;
+    user: {
+      id: string;
+      email: string;
+      firstName?: string;
+      lastName?: string;
+    };
+  }>;
   lastMessage?: DirectMessage | null;
 }
 
@@ -60,7 +68,18 @@ export class DirectMessageService {
         ]
       },
       include: {
-        participants: true,
+        participants: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true
+              }
+            }
+          }
+        },
         messages: {
           orderBy: { createdAt: 'desc' },
           take: 1
@@ -72,7 +91,15 @@ export class DirectMessageService {
       return {
         id: existing.id,
         createdAt: existing.createdAt,
-        participants: existing.participants,
+        participants: existing.participants.map((p) => ({
+          userId: p.userId,
+          user: {
+            id: p.user.id,
+            email: p.user.email,
+            firstName: p.user.firstName ?? undefined,
+            lastName: p.user.lastName ?? undefined
+          }
+        })),
         lastMessage: existing.messages[0] ?? null
       };
     }
@@ -84,13 +111,34 @@ export class DirectMessageService {
           create: [{ userId: userId1 }, { userId: userId2 }]
         }
       },
-      include: { participants: true }
+      include: {
+        participants: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true
+              }
+            }
+          }
+        }
+      }
     });
 
     return {
       id: channel.id,
       createdAt: channel.createdAt,
-      participants: channel.participants,
+      participants: channel.participants.map((p) => ({
+        userId: p.userId,
+        user: {
+          id: p.user.id,
+          email: p.user.email,
+          firstName: p.user.firstName ?? undefined,
+          lastName: p.user.lastName ?? undefined
+        }
+      })),
       lastMessage: null
     };
   }
@@ -102,7 +150,18 @@ export class DirectMessageService {
         participants: { some: { userId } }
       },
       include: {
-        participants: true,
+        participants: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true
+              }
+            }
+          }
+        },
         messages: {
           orderBy: { createdAt: 'desc' },
           take: 1
@@ -114,7 +173,15 @@ export class DirectMessageService {
     return channels.map((ch) => ({
       id: ch.id,
       createdAt: ch.createdAt,
-      participants: ch.participants,
+      participants: ch.participants.map((p) => ({
+        userId: p.userId,
+        user: {
+          id: p.user.id,
+          email: p.user.email,
+          firstName: p.user.firstName ?? undefined,
+          lastName: p.user.lastName ?? undefined
+        }
+      })),
       lastMessage: ch.messages[0] ?? null
     }));
   }

@@ -29,7 +29,15 @@ interface PaginatedMessages {
 interface DMChannel {
   id: string;
   createdAt: string;
-  participants: { userId: string }[];
+  participants: Array<{
+    userId: string;
+    user: {
+      id: string;
+      email: string;
+      firstName?: string;
+      lastName?: string;
+    };
+  }>;
   lastMessage?: Message | null;
 }
 
@@ -156,6 +164,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ status, customStatus })
     }),
+  updateUserRole: (userId: string, role: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF') =>
+    request<User>(`/users/${userId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role })
+    }),
   deleteAccount: () =>
     request<void>('/users/me', {
       method: 'DELETE'
@@ -176,6 +189,15 @@ export const api = {
     request<Message>(`/dm/channels/${channelId}/messages`, {
       method: 'POST',
       body: JSON.stringify({ content })
+    }),
+  editDM: (messageId: string, content: string) =>
+    request<Message>(`/dm/messages/${messageId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ content })
+    }),
+  deleteDM: (messageId: string) =>
+    request<void>(`/dm/messages/${messageId}`, {
+      method: 'DELETE'
     }),
 
   // Reactions

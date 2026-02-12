@@ -66,36 +66,41 @@ export function setupSocketHandlers(
         }
       }
 
-      // Verify JWT (decode for now - Cognito tokens are verified via JWKS in HTTP routes)
-      // Note: app.jwt.decode returns { header, payload } when complete: true
-      const decoded = app.jwt.decode(token) as {
-        header?: unknown;
-        payload?: { sub: string; email?: string };
-        sub?: string;
-        email?: string;
-      } | null;
+      // Decode JWT manually (Cognito tokens - we trust them if they were accepted via HTTP)
+      // Note: We don't verify signature here since that requires JWKS lookup
+      // The token was already verified when user logged in via HTTP routes
+      try {
+        const parts = token.split('.');
+        if (parts.length !== 3) {
+          console.error('❌ Socket auth: Invalid JWT format');
+          return next(new Error('Invalid token format'));
+        }
 
-      if (!decoded) {
-        app.log.error('Socket auth: Failed to decode token');
-        console.error('❌ Socket auth: Failed to decode token');
+        // Decode payload (second part) - JWT uses base64url encoding
+        // Convert base64url to base64 (replace - with +, _ with /, add padding)
+        let base64Payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        // Add padding if needed
+        while (base64Payload.length % 4) {
+          base64Payload += '=';
+        }
+
+        const payload = JSON.parse(
+          Buffer.from(base64Payload, 'base64').toString()
+        );
+
+        if (!payload.sub) {
+          console.error('❌ Socket auth: No sub claim in token');
+          return next(new Error('Invalid token - missing sub'));
+        }
+
+        socket.userId = payload.sub;
+        socket.email = payload.email;
+        console.log('✅ Socket auth: Token accepted for user:', payload.sub);
+        next();
+      } catch (decodeError) {
+        console.error('❌ Socket auth: Failed to decode JWT:', decodeError);
         return next(new Error('Invalid token'));
       }
-
-      // Handle both complete and non-complete decode formats
-      const payload = decoded.payload || decoded;
-      const sub = payload.sub;
-      const email = payload.email;
-
-      if (!sub) {
-        app.log.error('Socket auth: No sub claim in token');
-        console.error('❌ Socket auth: No sub claim in token');
-        return next(new Error('Invalid token - missing sub'));
-      }
-
-      socket.userId = sub;
-      socket.email = email;
-      console.log('✅ Socket auth: Token accepted for user:', sub);
-      next();
     } catch (err) {
       console.error('❌ Socket auth: Authentication failed:', err);
       next(new Error('Authentication failed'));
