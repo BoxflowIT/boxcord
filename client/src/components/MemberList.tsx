@@ -41,9 +41,45 @@ export default function MemberList() {
 
     fetchOnlineUsers();
 
-    // Refresh every 10 seconds (balance between responsiveness and performance)
-    const interval = setInterval(fetchOnlineUsers, 10000);
-    return () => clearInterval(interval);
+    // Listen for presence updates via WebSocket instead of polling
+    const handlePresenceUpdate = (data: { userId: string; status: string }) => {
+      setUsers((prevUsers) => {
+        const existingUser = prevUsers.find((u) => u.id === data.userId);
+        if (existingUser) {
+          // Update existing user's status
+          return prevUsers.map((u) =>
+            u.id === data.userId
+              ? {
+                  ...u,
+                  presence: {
+                    ...u.presence,
+                    status: data.status,
+                    lastSeen:
+                      data.status === 'OFFLINE'
+                        ? new Date().toISOString()
+                        : u.presence?.lastSeen
+                  }
+                }
+              : u
+          );
+        } else if (data.status === 'ONLINE') {
+          // User came online but not in list - fetch fresh data
+          fetchOnlineUsers();
+        }
+        return prevUsers;
+      });
+    };
+
+    // Import socketService dynamically to avoid circular dependencies
+    import('../services/socket').then(({ socketService }) => {
+      socketService.onPresenceUpdate('memberList', handlePresenceUpdate);
+    });
+
+    return () => {
+      import('../services/socket').then(({ socketService }) => {
+        socketService.offPresenceUpdate('memberList');
+      });
+    };
   }, []);
 
   const statusColors: Record<string, string> = {
