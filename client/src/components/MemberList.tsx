@@ -31,7 +31,17 @@ export default function MemberList() {
     const fetchOnlineUsers = async () => {
       try {
         const onlineUsers = await api.getOnlineUsers();
-        setUsers(onlineUsers);
+        
+        // Always include current user if not in list
+        if (currentUser && !onlineUsers.some(u => u.id === currentUser.id)) {
+          const currentUserWithPresence = {
+            ...currentUser,
+            presence: { status: 'ONLINE', lastSeen: new Date().toISOString() }
+          };
+          setUsers([currentUserWithPresence, ...onlineUsers]);
+        } else {
+          setUsers(onlineUsers);
+        }
       } catch (err) {
         console.error('Failed to fetch online users:', err);
       }
@@ -79,7 +89,7 @@ export default function MemberList() {
         socketService.offPresenceUpdate('memberList');
       });
     };
-  }, []);
+  }, [currentUser]);
 
   const statusColors: Record<string, string> = {
     ONLINE: 'status-online',
