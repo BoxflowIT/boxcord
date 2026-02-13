@@ -75,7 +75,7 @@ export function setupSocketHandlers(
     }
   });
 
-  io.on('connection', (socket: AuthenticatedSocket) => {
+  io.on('connection', async (socket: AuthenticatedSocket) => {
     const userId = socket.userId!;
     app.log.debug(`User connected: ${userId}`);
 
@@ -87,6 +87,25 @@ export function setupSocketHandlers(
         update: { status: 'ONLINE', lastSeen: new Date() }
       })
       .catch(console.error);
+
+    // Auto-join workspace rooms for channel events
+    try {
+      const workspaces = await prisma.workspace.findMany({
+        where: {
+          members: {
+            some: { userId }
+          }
+        },
+        select: { id: true }
+      });
+      
+      workspaces.forEach(ws => {
+        socket.join(`workspace:${ws.id}`);
+        app.log.debug(`User ${userId} joined workspace room: ${ws.id}`);
+      });
+    } catch (err) {
+      app.log.error('Failed to auto-join workspace rooms:', err);
+    }
 
     // Join a channel room
     socket.on(SOCKET_EVENTS.CHANNEL_JOIN, async (channelId: string) => {
