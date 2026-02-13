@@ -1,59 +1,17 @@
 // API Service
 import { useAuthStore } from '../store/auth';
-import type { Workspace, Channel, Message } from '../store/chat';
+import type {
+  Workspace,
+  Channel,
+  Message,
+  User,
+  PaginatedMessages,
+  DMChannel,
+  ReactionCount,
+  MessageAttachment
+} from '../types';
 
 const API_BASE = '/api/v1';
-
-// API Response types
-interface User {
-  id: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  avatarUrl?: string;
-  bio?: string;
-  role: string;
-  presence?: {
-    status: string;
-    customStatus?: string;
-    lastSeen: string;
-  };
-}
-
-interface PaginatedMessages {
-  items: Message[];
-  hasMore: boolean;
-  nextCursor?: string;
-}
-
-interface DMChannel {
-  id: string;
-  createdAt: string;
-  participants: Array<{
-    userId: string;
-    user: {
-      id: string;
-      email: string;
-      firstName?: string;
-      lastName?: string;
-    };
-  }>;
-  lastMessage?: Message | null;
-}
-
-interface ReactionCount {
-  emoji: string;
-  count: number;
-  hasReacted: boolean;
-}
-
-interface Attachment {
-  id: string;
-  fileName: string;
-  fileUrl: string;
-  fileType: string;
-  fileSize: number;
-}
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = useAuthStore.getState().token;
@@ -89,7 +47,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 // For file uploads (no JSON content-type)
-async function uploadFile(path: string, file: File): Promise<Attachment> {
+async function uploadFile(path: string, file: File): Promise<MessageAttachment> {
   const token = useAuthStore.getState().token;
   const formData = new FormData();
   formData.append('file', file);

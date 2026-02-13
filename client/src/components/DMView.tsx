@@ -1,4 +1,10 @@
-// Direct Message View Component
+// ============================================================================
+// DM VIEW - Uses React Query for messages
+// ============================================================================
+// Messages come from React Query (useDMMessages hook)
+// NO duplicate storage in local state
+// ============================================================================
+
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../services/api';
@@ -10,7 +16,7 @@ import { MessageItem } from './MessageItem';
 import FileUpload from './FileUpload';
 import EmojiPicker from './ui/EmojiPicker';
 import DeleteConfirmModal from './DeleteConfirmModal';
-import type { Message } from '../types/message';
+import type { Message } from '../types';
 
 export default function DMView() {
   const { channelId } = useParams<{ channelId: string }>();
@@ -32,15 +38,14 @@ export default function DMView() {
   // Fetch other user's info with caching
   const { data: otherUser, isLoading: loadingUser } = useUser(otherUserId);
 
-  // React Query hook for messages with auto caching
+  // React Query hook for messages - single source of truth
   const {
     data: messagesData,
-    isLoading: loadingMessages,
-    refetch
+    isLoading: loadingMessages
   } = useDMMessages(channelId);
-
-  // Local state for WebSocket real-time updates
-  const [messages, setMessages] = useState<Message[]>([]);
+  
+  // Messages from React Query cache (reversed for display)
+  const messages = messagesData?.items ? [...messagesData.items].reverse() : [];
   const [inputValue, setInputValue] = useState('');
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -67,51 +72,22 @@ export default function DMView() {
     onDelete: async (messageId) => {
       await api.deleteDM(messageId);
       socketService.deleteDM(messageId);
-      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+      // React Query cache updated automatically by WebSocket handler
     }
   });
 
   useEffect(() => {
     if (!channelId) return;
 
-    // Join DM room and setup socket listeners
+    // Join DM room for WebSocket events
     socketService.joinDM(channelId);
-
-    // Listen for DM events
-    const onNewMessage = (message: Message) => {
-      setMessages((prev) => [...prev, message]);
-    };
-
-    const onEditMessage = (message: Message) => {
-      setMessages((prev) =>
-        prev.map((m) => (m.id === message.id ? message : m))
-      );
-    };
-
-    const onDeleteMessage = ({ messageId }: { messageId: string }) => {
-      setMessages((prev) => prev.filter((m) => m.id !== messageId));
-    };
-
-    socketService.onDMMessage('dm-view', onNewMessage);
-    socketService.onDMEdit('dm-view', onEditMessage);
-    socketService.onDMDelete('dm-view', onDeleteMessage);
 
     return () => {
       socketService.leaveDM(channelId);
-      socketService.offDMMessage('dm-view');
-      socketService.offDMEdit('dm-view');
-      socketService.offDMDelete('dm-view');
     };
   }, [channelId]);
 
-  // Load messages from cache when data changes
-  useEffect(() => {
-    // IMPORTANT: Copy before reverse() to avoid mutating cache!
-    if (messagesData?.items) {
-      setMessages([...messagesData.items].reverse());
-    }
-  }, [messagesData]); // Bara när messagesData ändras!
-
+  // Auto-scroll on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -153,11 +129,8 @@ export default function DMView() {
       const message = await api.sendDM(channelId, `📎 ${file.name}`);
       // Then upload the file
       await api.uploadDMFile(message.id, file);
-      // Reload messages from cache using React Query refetch
-      const result = await refetch();
-      if (result.data?.items) {
-        setMessages([...result.data.items].reverse());
-      }
+      // React Query cache will be updated automatically via WebSocket
+      // or you could invalidate the query to refetch
     } catch (err) {
       console.error('Failed to upload file:', err);
     } finally {

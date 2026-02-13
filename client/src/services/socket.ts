@@ -1,9 +1,16 @@
-// Socket.io Client Service
+// ============================================================================
+// SOCKET SERVICE - WebSocket-First Architecture
+// ============================================================================
+// All server data updates go through React Query cache
+// Zustand only holds transient UI state (typing indicators)
+// ============================================================================
+
 import { io, Socket } from 'socket.io-client';
 import { QueryClient } from '@tanstack/react-query';
-import { useChatStore, Message } from '../store/chat';
+import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
 import { queryKeys } from '../hooks/useQuery';
+import type { Message } from '../types';
 
 // QueryClient instance for cache updates
 let queryClient: QueryClient | null = null;
@@ -109,14 +116,11 @@ class SocketService {
     }
     this.listenersRegistered = true;
 
-    // Message events - update both React Query cache and Zustand
+    // Message events - update React Query cache ONLY
     socket.on('message:new', (message: Message) => {
       console.log('✅ Socket: Received new message:', message);
       
-      // Update Zustand store
-      useChatStore.getState().addMessage(message);
-      
-      // Update React Query cache directly (avoid refetch)
+      // Update React Query cache directly (Discord-style)
       if (queryClient && message.channelId) {
         queryClient.setQueryData(
           queryKeys.messages(message.channelId),
@@ -132,9 +136,6 @@ class SocketService {
 
     this.socket.on('message:edit', (message: Message) => {
       console.log('✏️ Socket: Message edited:', message.id);
-      
-      // Update Zustand store
-      useChatStore.getState().updateMessage(message);
       
       // Update React Query cache
       if (queryClient && message.channelId) {
@@ -153,18 +154,13 @@ class SocketService {
       }
     });
 
-    this.socket.on('message:delete', ({ messageId }: { messageId: string }) => {
+    this.socket.on('message:delete', ({ messageId, channelId }: { messageId: string; channelId: string }) => {
       console.log('🗑️ Socket: Message deleted:', messageId);
       
-      // Update Zustand store
-      const messages = useChatStore.getState().messages;
-      const deletedMessage = messages.find(m => m.id === messageId);
-      useChatStore.getState().removeMessage(messageId);
-      
       // Update React Query cache
-      if (queryClient && deletedMessage?.channelId) {
+      if (queryClient && channelId) {
         queryClient.setQueryData(
-          queryKeys.messages(deletedMessage.channelId),
+          queryKeys.messages(channelId),
           (old: any) => {
             if (!old?.items) return old;
             return {
