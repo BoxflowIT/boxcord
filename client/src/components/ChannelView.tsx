@@ -8,6 +8,7 @@ import { useAuthStore } from '../store/auth';
 import { useMessageActions } from '../hooks/useMessageActions';
 import { MessageItem } from './MessageItem';
 import FileUpload from './FileUpload';
+import EmojiPicker from './ui/EmojiPicker';
 import MentionAutocomplete, { parseMentions } from './MentionAutocomplete';
 import SlashCommandAutocomplete from './SlashCommandAutocomplete';
 import DeleteConfirmModal from './DeleteConfirmModal';
@@ -273,6 +274,23 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     }
   };
 
+  const handleEmojiSelect = useCallback(
+    (emoji: string) => {
+      const cursorPos = textareaRef.current?.selectionStart ?? inputValue.length;
+      const newValue =
+        inputValue.slice(0, cursorPos) + emoji + inputValue.slice(cursorPos);
+      setInputValue(newValue);
+
+      // Focus and place cursor after emoji
+      setTimeout(() => {
+        textareaRef.current?.focus();
+        const newCursorPos = cursorPos + emoji.length;
+        textareaRef.current?.setSelectionRange(newCursorPos, newCursorPos);
+      }, 0);
+    },
+    [inputValue]
+  );
+
   return (
     <>
       {/* Header */}
@@ -467,6 +485,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
             rows={1}
             disabled={uploading}
           />
+          <EmojiPicker onEmojiSelect={handleEmojiSelect} />
           {showMentions && (
             <MentionAutocomplete
               inputValue={inputValue}

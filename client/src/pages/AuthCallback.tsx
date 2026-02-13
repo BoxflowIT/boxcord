@@ -9,11 +9,13 @@ import { Button } from '../components/ui/button';
 export default function AuthCallback() {
   const auth = useAuth();
   const navigate = useNavigate();
-  const { setAuth } = useAuthStore();
+  const { setAuth, setLoading } = useAuthStore();
 
   useEffect(() => {
     const handleAuth = async () => {
       if (auth.isAuthenticated && auth.user) {
+        setLoading(true);
+        
         // First, store token and basic user info
         const token = auth.user.id_token || auth.user.access_token || '';
         const profile = auth.user.profile;
@@ -35,6 +37,8 @@ export default function AuthCallback() {
           setAuth(token, userData); // Update with correct role from database
         } catch (error) {
           console.error('Failed to fetch user data:', error);
+        } finally {
+          setLoading(false);
         }
 
         navigate('/chat', { replace: true });
@@ -42,7 +46,7 @@ export default function AuthCallback() {
     };
 
     handleAuth();
-  }, [auth.isAuthenticated, auth.user, setAuth, navigate]);
+  }, [auth.isAuthenticated, auth.user, setAuth, setLoading, navigate]);
 
   if (auth.isLoading) {
     return (
