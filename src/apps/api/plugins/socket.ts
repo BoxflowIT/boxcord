@@ -10,16 +10,20 @@ interface AuthenticatedSocket extends Socket {
   email?: string;
 }
 
+// Utility: Decode base64url (JWT payload)
+function decodeBase64Url(str: string): string {
+  let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  while (base64.length % 4) base64 += '=';
+  return Buffer.from(base64, 'base64').toString();
+}
+
 export function setupSocketHandlers(
   io: Server,
   app: FastifyInstance,
   prisma: PrismaClient
 ) {
   const messageService = new MessageService(prisma);
-
-  // Track online users
   const onlineUsers = new Map<string, Set<string>>(); // channelId -> Set of userIds
-
   const isDev = process.env.NODE_ENV !== 'production';
   const allowMockTokens = isDev || process.env.ALLOW_MOCK_TOKENS === 'true';
 
@@ -28,64 +32,45 @@ export function setupSocketHandlers(
     try {
       const token = socket.handshake.auth.token;
       if (!token) {
-        console.error('❌ Socket auth: No token provided');
+        app.log.error('Socket auth: No token provided');
         return next(new Error('Authentication required'));
       }
 
-      // Handle mock tokens (for development)
+      // Handle mock tokens (development only)
       if (allowMockTokens && token.startsWith('mock.')) {
         const parts = token.split('.');
         if (parts.length >= 2) {
           try {
-            const payload = JSON.parse(
-              Buffer.from(parts[1], 'base64').toString()
-            );
+            const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
             socket.userId = payload.sub || payload.userId;
             socket.email = payload.email;
             return next();
           } catch {
-            console.error('❌ Socket auth: Invalid mock token format');
+            app.log.error('Socket auth: Invalid mock token format');
             return next(new Error('Invalid mock token'));
           }
         }
       }
 
-      // Decode JWT manually (Cognito tokens - we trust them if they were accepted via HTTP)
-      // Note: We don't verify signature here since that requires JWKS lookup
-      // The token was already verified when user logged in via HTTP routes
-      try {
-        const parts = token.split('.');
-        if (parts.length !== 3) {
-          console.error('❌ Socket auth: Invalid JWT format');
-          return next(new Error('Invalid token format'));
-        }
-
-        // Decode payload (second part) - JWT uses base64url encoding
-        // Convert base64url to base64 (replace - with +, _ with /, add padding)
-        let base64Payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-        // Add padding if needed
-        while (base64Payload.length % 4) {
-          base64Payload += '=';
-        }
-
-        const payload = JSON.parse(
-          Buffer.from(base64Payload, 'base64').toString()
-        );
-
-        if (!payload.sub) {
-          console.error('❌ Socket auth: No sub claim in token');
-          return next(new Error('Invalid token - missing sub'));
-        }
-
-        socket.userId = payload.sub;
-        socket.email = payload.email;
-        next();
-      } catch (decodeError) {
-        console.error('❌ Socket auth: Failed to decode JWT:', decodeError);
-        return next(new Error('Invalid token'));
+      // Decode JWT manually (Cognito tokens)
+      // Note: We don't verify signature here - it was verified during HTTP auth
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        app.log.error('Socket auth: Invalid JWT format');
+        return next(new Error('Invalid token format'));
       }
+
+      const payload = JSON.parse(decodeBase64Url(parts[1]));
+      if (!payload.sub) {
+        app.log.error('Socket auth: No sub claim in token');
+        return next(new Error('Invalid token - missing sub'));
+      }
+
+      socket.userId = payload.sub;
+      socket.email = payload.email;
+      next();
     } catch (err) {
-      console.error('❌ Socket auth: Authentication failed:', err);
+      app.log.error('Socket auth: Authentication failed', err);
       next(new Error('Authentication failed'));
     }
   });
@@ -147,7 +132,7 @@ export function setupSocketHandlers(
             message
           );
         } catch (err) {
-          console.error('❌ Backend: Error creating message:', err);
+          app.log.error('Error creating message:', err);
           socket.emit('error', { message: (err as Error).message });
         }
       }

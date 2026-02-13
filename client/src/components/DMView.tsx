@@ -10,34 +10,15 @@ import { MessageItem } from './MessageItem';
 import FileUpload from './FileUpload';
 import EmojiPicker from './ui/EmojiPicker';
 import DeleteConfirmModal from './DeleteConfirmModal';
-
-interface Message {
-  id: string;
-  authorId: string;
-  content: string;
-  edited: boolean;
-  createdAt: string;
-  attachments?: Array<{
-    id: string;
-    fileName: string;
-    fileUrl: string;
-    fileType: string;
-    fileSize: number;
-  }>;
-  reactions?: Array<{
-    emoji: string;
-    userId: string;
-  }>;
-}
+import type { Message } from '../types/message';
 
 export default function DMView() {
   const { channelId } = useParams<{ channelId: string }>();
   const { user } = useAuthStore();
 
-  // Hämta alla DM channels för att hitta participants
   const { data: dmChannels } = useDMChannels();
 
-  // Hitta den andra användarens ID från channel participants
+  // Find other user's ID from channel participants
   const otherUserId = useMemo(() => {
     if (!channelId || !dmChannels || !user) return undefined;
     const channel = dmChannels.find((ch) => ch.id === channelId);
@@ -48,17 +29,17 @@ export default function DMView() {
     return otherParticipant?.userId;
   }, [channelId, dmChannels, user]);
 
-  // Hämta den andra användarens info med caching
+  // Fetch other user's info with caching
   const { data: otherUser, isLoading: loadingUser } = useUser(otherUserId);
 
-  // React Query hook - automatisk caching av messages!
+  // React Query hook for messages with auto caching
   const {
     data: messagesData,
     isLoading: loadingMessages,
     refetch
   } = useDMMessages(channelId);
 
-  // Local state för WebSocket realtidsuppdateringar
+  // Local state for WebSocket real-time updates
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [sending, setSending] = useState(false);
@@ -93,7 +74,7 @@ export default function DMView() {
   useEffect(() => {
     if (!channelId) return;
 
-    // Join DM room och sätt upp socket listeners
+    // Join DM room and setup socket listeners
     socketService.joinDM(channelId);
 
     // Listen for DM events
@@ -121,12 +102,11 @@ export default function DMView() {
       socketService.offDMEdit('dm-view');
       socketService.offDMDelete('dm-view');
     };
-  }, [channelId]); // Bara när channelId ändras!
+  }, [channelId]);
 
-  // Separat effect för att ladda messages från cache
+  // Load messages from cache when data changes
   useEffect(() => {
-    // Sätt messages från cache/API (kommer via React Query)
-    // VIKTIGT: Gör en kopia innan reverse() för att inte mutera cachen!
+    // IMPORTANT: Copy before reverse() to avoid mutating cache!
     if (messagesData?.items) {
       setMessages([...messagesData.items].reverse());
     }

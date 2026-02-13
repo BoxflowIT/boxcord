@@ -24,7 +24,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     useChatStore();
   const { user } = useAuthStore();
 
-  // React Query hook - automatisk caching av messages!
+  // React Query hook for auto caching
   const { data: messagesData, isLoading } = useMessages(channelId);
 
   const [inputValue, setInputValue] = useState('');
@@ -77,7 +77,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
       setCurrentChannel(channel);
     }
 
-    // Join channel room och sätt upp socket listeners
+    // Join channel room and setup socket listeners
     socketService.joinChannel(channelId);
 
     return () => {
@@ -85,9 +85,9 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
         socketService.leaveChannel(channelId);
       }
     };
-  }, [channelId, channels, setCurrentChannel]); // Bara när channelId ändras!
+  }, [channelId, channels, setCurrentChannel]);
 
-  // Separat effect för att ladda messages från cache
+  // Load messages from cache when data changes
   useEffect(() => {
     if (!channelId || !messagesData?.items) return;
 
@@ -97,18 +97,18 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
       'count:',
       messagesData.items.length
     );
-    // Merge messages: keep existing messages from other channels, replace messages from this channel
+    // Merge messages: keep other channels, replace current channel
     const otherChannelMessages = messages.filter(
       (m) => m.channelId !== channelId
     );
-    // VIKTIGT: Gör en kopia innan reverse() för att inte mutera cachen!
+    // IMPORTANT: Copy before reverse() to avoid mutating cache!
     const newMessages = [
       ...otherChannelMessages,
       ...[...messagesData.items].reverse()
     ];
     setMessages(newMessages);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [channelId, messagesData]); // När channelId eller messagesData ändras
+  }, [channelId, messagesData]);
 
   useEffect(() => {
     // Scroll to bottom when new messages arrive

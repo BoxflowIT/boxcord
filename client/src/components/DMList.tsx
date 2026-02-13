@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { useAuthStore } from '../store/auth';
 import { useDMChannels, useUsers } from '../hooks/useQuery';
+import { formatRelativeTime } from '../utils/dateTime';
 
 interface DMChannel {
   id: string;
@@ -27,10 +28,9 @@ interface DMListProps {
 
 export default function DMList({ onSelectDM, selectedId }: DMListProps) {
   const { user } = useAuthStore();
-  // React Query hook - automatisk caching och deduplicering
   const { data: dmChannels, isLoading, refetch } = useDMChannels();
 
-  // Hämta alla andra user IDs från DM channels
+  // Extract other user IDs from DM channels
   const otherUserIds = useMemo(() => {
     if (!dmChannels || !user) return [];
     return dmChannels.flatMap((ch) =>
@@ -38,10 +38,10 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
     );
   }, [dmChannels, user]);
 
-  // Hämta alla users samtidigt med caching (React Query deduplice automatiskt!)
+  // Fetch all users at once with caching (React Query deduplicates automatically)
   const { data: usersArray = [] } = useUsers(otherUserIds);
 
-  // Konvertera till Map för enkel lookup
+  // Convert to Map for easy lookup
   const users = useMemo(() => {
     const map = new Map<string, UserInfo>();
     usersArray.forEach((u) => {
@@ -54,7 +54,6 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<UserInfo[]>([]);
 
-  // Konvertera dmChannels från React Query till const
   const channels = dmChannels || [];
 
   const handleSearch = async (query: string) => {
@@ -80,10 +79,10 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
       setSearchQuery('');
       setSearchResults([]);
 
-      // Refetch channels från cache för att inkludera den nya
+      // Refetch channels from cache to include new one
       await refetch();
 
-      // User info kommer att hämtas automatiskt via useUsers hook!
+      // User info will be fetched automatically via useUsers hook
 
       onSelectDM(channel.id, selectedUser);
     } catch (err) {
@@ -96,17 +95,6 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
       (p) => p.userId !== user?.id
     )?.userId;
     return otherId ? users.get(otherId) : undefined;
-  };
-
-  const formatTime = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-
-    if (diff < 60000) return 'Nu';
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
-    return date.toLocaleDateString('sv-SE');
   };
 
   return (
@@ -214,7 +202,7 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
                 </div>
                 {channel.lastMessage && (
                   <span className="text-xs text-gray-500">
-                    {formatTime(channel.lastMessage.createdAt)}
+                    {formatRelativeTime(channel.lastMessage.createdAt)}
                   </span>
                 )}
               </button>

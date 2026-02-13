@@ -25,7 +25,7 @@ export default function ProfileModal({
   const navigate = useNavigate();
   const { user: currentUser, logout } = useAuthStore();
 
-  // React Query hooks - automatisk caching
+  // React Query hooks for auto caching
   const { data: otherUserData, isLoading: loadingOther } = useUser(
     userId && userId !== currentUser?.id ? userId : undefined
   );
@@ -61,7 +61,7 @@ export default function ProfileModal({
     updateProfile(formData, {
       onSuccess: () => {
         setEditing(false);
-        // Cache uppdateras automatiskt via invalidation!
+        // Cache updated automatically via invalidation
       },
       onError: (err) => {
         console.error('Failed to save profile:', err);
@@ -92,7 +92,7 @@ export default function ProfileModal({
           console.error('Failed to change role:', err);
           alert('Kunde inte ändra roll. Kontrollera att du har behörighet.');
         }
-        // Cache uppdateras automatiskt via invalidation!
+        // Cache updated automatically via invalidation
       }
     );
   };
