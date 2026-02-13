@@ -16,7 +16,6 @@ import { MessageItem } from './MessageItem';
 import FileUpload from './FileUpload';
 import EmojiPicker from './ui/EmojiPicker';
 import DeleteConfirmModal from './DeleteConfirmModal';
-import type { Message } from '../types';
 
 export default function DMView() {
   const { channelId } = useParams<{ channelId: string }>();
@@ -39,13 +38,15 @@ export default function DMView() {
   const { data: otherUser, isLoading: loadingUser } = useUser(otherUserId);
 
   // React Query hook for messages - single source of truth
-  const {
-    data: messagesData,
-    isLoading: loadingMessages
-  } = useDMMessages(channelId);
-  
+  const { data: messagesData, isLoading: loadingMessages } =
+    useDMMessages(channelId);
+
   // Messages from React Query cache (reversed for display)
-  const messages = messagesData?.items ? [...messagesData.items].reverse() : [];
+  // Memoized to prevent unnecessary re-renders
+  const messages = useMemo(
+    () => (messagesData?.items ? [...messagesData.items].reverse() : []),
+    [messagesData?.items]
+  );
   const [inputValue, setInputValue] = useState('');
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);

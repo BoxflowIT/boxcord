@@ -26,15 +26,19 @@ interface ChannelViewProps {
 
 export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
   const { channelId } = useParams<{ channelId: string }>();
-  const { currentChannel, setCurrentChannel, currentWorkspace } = useChatStore();
+  const { currentChannel, setCurrentChannel, currentWorkspace } =
+    useChatStore();
   const { user } = useAuthStore();
 
   // React Query - single source of truth for server data
-  const { data: messagesData, isLoading: loadingMessages } = useMessages(channelId);
+  const { data: messagesData, isLoading: loadingMessages } =
+    useMessages(channelId);
   const { data: channels = [] } = useChannels(currentWorkspace?.id);
-  
+
   // Messages from React Query cache (reversed for display)
-  const channelMessages = messagesData?.items ? [...messagesData.items].reverse() : [];
+  const channelMessages = messagesData?.items
+    ? [...messagesData.items].reverse()
+    : [];
 
   const [inputValue, setInputValue] = useState('');
   const [uploading, setUploading] = useState(false);

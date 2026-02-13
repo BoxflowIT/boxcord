@@ -10,7 +10,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
 import { queryKeys } from '../hooks/useQuery';
-import type { Message } from '../types';
+import type { Message, PaginatedMessages, Channel } from '../types';
 
 // QueryClient instance for cache updates
 let queryClient: QueryClient | null = null;
@@ -119,15 +119,15 @@ class SocketService {
     // Message events - update React Query cache ONLY
     socket.on('message:new', (message: Message) => {
       console.log('✅ Socket: Received new message:', message);
-      
+
       // Update React Query cache directly (Discord-style)
       if (queryClient && message.channelId) {
-        queryClient.setQueryData(
+        queryClient.setQueryData<PaginatedMessages>(
           queryKeys.messages(message.channelId),
-          (old: any) => {
+          (old) => {
             if (!old?.items) return old;
             // Don't add duplicate
-            if (old.items.some((m: any) => m.id === message.id)) return old;
+            if (old.items.some((m) => m.id === message.id)) return old;
             return { ...old, items: [...old.items, message] };
           }
         );
@@ -136,41 +136,42 @@ class SocketService {
 
     this.socket.on('message:edit', (message: Message) => {
       console.log('✏️ Socket: Message edited:', message.id);
-      
+
       // Update React Query cache
       if (queryClient && message.channelId) {
-        queryClient.setQueryData(
+        queryClient.setQueryData<PaginatedMessages>(
           queryKeys.messages(message.channelId),
-          (old: any) => {
+          (old) => {
             if (!old?.items) return old;
             return {
               ...old,
-              items: old.items.map((m: any) => 
-                m.id === message.id ? message : m
-              )
+              items: old.items.map((m) => (m.id === message.id ? message : m))
             };
           }
         );
       }
     });
 
-    this.socket.on('message:delete', ({ messageId, channelId }: { messageId: string; channelId: string }) => {
-      console.log('🗑️ Socket: Message deleted:', messageId);
-      
-      // Update React Query cache
-      if (queryClient && channelId) {
-        queryClient.setQueryData(
-          queryKeys.messages(channelId),
-          (old: any) => {
-            if (!old?.items) return old;
-            return {
-              ...old,
-              items: old.items.filter((m: any) => m.id !== messageId)
-            };
-          }
-        );
+    this.socket.on(
+      'message:delete',
+      ({ messageId, channelId }: { messageId: string; channelId: string }) => {
+        console.log('🗑️ Socket: Message deleted:', messageId);
+
+        // Update React Query cache
+        if (queryClient && channelId) {
+          queryClient.setQueryData<PaginatedMessages>(
+            queryKeys.messages(channelId),
+            (old) => {
+              if (!old?.items) return old;
+              return {
+                ...old,
+                items: old.items.filter((m) => m.id !== messageId)
+              };
+            }
+          );
+        }
       }
-    });
+    );
 
     // Typing indicator
     this.socket.on(
@@ -222,35 +223,44 @@ class SocketService {
     );
 
     // Channel lifecycle events - update React Query cache
-    this.socket.on('channel:created', (channel: any) => {
+    this.socket.on('channel:created', (channel: Channel) => {
       console.log('🆕 Channel created:', channel);
-      
+
       if (queryClient) {
-        queryClient.setQueryData(
+        queryClient.setQueryData<Channel[]>(
           queryKeys.channels(channel.workspaceId),
-          (old: any) => {
+          (old) => {
             if (!old) return [channel];
             // Don't add duplicate
-            if (old.some((ch: any) => ch.id === channel.id)) return old;
+            if (old.some((ch) => ch.id === channel.id)) return old;
             return [...old, channel];
           }
         );
       }
     });
 
-    this.socket.on('channel:deleted', ({ channelId, workspaceId }: any) => {
-      console.log('🗑️ Channel deleted:', channelId);
-      
-      if (queryClient) {
-        queryClient.setQueryData(
-          queryKeys.channels(workspaceId),
-          (old: any) => {
-            if (!old) return old;
-            return old.filter((ch: any) => ch.id !== channelId);
-          }
-        );
+    this.socket.on(
+      'channel:deleted',
+      ({
+        channelId,
+        workspaceId
+      }: {
+        channelId: string;
+        workspaceId: string;
+      }) => {
+        console.log('🗑️ Channel deleted:', channelId);
+
+        if (queryClient) {
+          queryClient.setQueryData<Channel[]>(
+            queryKeys.channels(workspaceId),
+            (old) => {
+              if (!old) return old;
+              return old.filter((ch) => ch.id !== channelId);
+            }
+          );
+        }
       }
-    });
+    );
 
     // Presence
     this.socket.on('user:online', ({ userId }: { userId: string }) => {

@@ -12,7 +12,7 @@ interface ChatState {
   // UI State - which workspace/channel is currently selected
   currentWorkspace: Workspace | null;
   currentChannel: Channel | null;
-  
+
   // Transient State - typing indicators (not persisted)
   typingUsers: Map<string, Set<string>>; // channelId -> Set of userIds
 
@@ -31,7 +31,7 @@ export const useChatStore = create<ChatState>((set) => ({
 
   // Actions
   setCurrentWorkspace: (workspace) => set({ currentWorkspace: workspace }),
-  
+
   setCurrentChannel: (channel) => set({ currentChannel: channel }),
 
   setTyping: (channelId, userId) =>

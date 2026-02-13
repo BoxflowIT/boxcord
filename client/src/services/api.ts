@@ -47,7 +47,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 // For file uploads (no JSON content-type)
-async function uploadFile(path: string, file: File): Promise<MessageAttachment> {
+async function uploadFile(
+  path: string,
+  file: File
+): Promise<MessageAttachment> {
   const token = useAuthStore.getState().token;
   const formData = new FormData();
   formData.append('file', file);
