@@ -54,12 +54,13 @@ class SocketService {
       return;
     }
 
-    // Socket exists but disconnected - reconnect
+    // Socket exists but disconnected - clean up and create fresh connection
     if (this.socket && !this.socket.connected) {
-      console.log('Socket: Socket exists but not connected, reconnecting...');
-      this.connecting = true;
-      this.socket.connect();
-      return;
+      console.log('Socket: Cleaning up old socket before reconnecting...');
+      this.socket.removeAllListeners();
+      this.socket.disconnect();
+      this.socket = null;
+      this.listenersRegistered = false;
     }
 
     // Always connect directly to backend
@@ -71,13 +72,14 @@ class SocketService {
     this.connecting = true;
     const socket = io(socketUrl, {
       auth: { token },
-      transports: ['polling'], // Only polling - more reliable than WebSocket
+      transports: ['websocket', 'polling'], // Prefer WebSocket (cleaner disconnects), fallback to polling
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
       timeout: 15000,
-      forceNew: false, // Reuse connection if possible
-      autoConnect: false // We'll connect manually
+      forceNew: true, // Always create fresh connection (fixes 400 on reload)
+      autoConnect: false, // We'll connect manually
+      closeOnBeforeunload: true // Automatically close on page unload
     });
 
     this.socket = socket;
@@ -285,11 +287,26 @@ class SocketService {
 
   disconnect() {
     if (this.socket) {
+      // Aggressively disconnect: remove listeners first
+      this.socket.removeAllListeners();
       this.socket.disconnect();
       this.socket = null;
       this.connecting = false;
       this.pendingOperations = [];
       this.listenersRegistered = false; // Reset listeners flag
+    }
+  }
+
+  // Clean up socket for HMR reloads (prevents 400 errors with stale session IDs)
+  cleanup() {
+    if (this.socket) {
+      console.log('🧹 Cleaning up socket connection...');
+      this.socket.removeAllListeners();
+      this.socket.disconnect();
+      this.socket = null;
+      this.connecting = false;
+      this.pendingOperations = [];
+      this.listenersRegistered = false;
     }
   }
 
@@ -470,7 +487,7 @@ class SocketService {
 let socketServiceInstance: SocketService;
 
 if (import.meta.hot?.data.socketService) {
-  // Reuse existing instance after HMR
+  // Reuse existing instance after HMR (already cleaned up in dispose)
   console.log('♻️ HMR: Reusing existing socket service');
   socketServiceInstance = import.meta.hot.data.socketService;
 } else {
@@ -484,7 +501,9 @@ export const socketService = socketServiceInstance;
 if (import.meta.hot) {
   import.meta.hot.accept();
   import.meta.hot.dispose((data) => {
-    console.log('♻️ HMR: Preserving socket service for next reload');
+    console.log('♻️ HMR: Cleaning up socket before reload...');
+    // CRITICAL: Clean up socket BEFORE reload to prevent 400 errors
+    socketServiceInstance.cleanup();
     // Store the instance for next reload
     data.socketService = socketServiceInstance;
   });
