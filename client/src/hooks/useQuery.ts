@@ -7,7 +7,7 @@ import { api } from '../services/api';
 const CACHE_TIMES = {
   WORKSPACES: { stale: 30 * 60 * 1000, gc: 60 * 60 * 1000 }, // 30min stale, 1h gc (rarely change)
   CHANNELS: { stale: 30 * 60 * 1000, gc: 60 * 60 * 1000 }, // 30min stale, 1h gc (rarely change)
-  MESSAGES: { stale: Infinity, gc: 10 * 60 * 1000, refetch: 60 * 1000 }, // Never stale (WS updates), 10min gc
+  MESSAGES: { stale: Infinity, gc: 10 * 60 * 1000 }, // Never stale (WebSocket keeps fresh!), 10min gc
   USERS: { stale: 10 * 60 * 1000, gc: 30 * 60 * 1000 }, // 10min stale, 30min gc
   CURRENT_USER: { stale: 30 * 60 * 1000, gc: 60 * 60 * 1000 } // 30min stale, 1h gc
 } as const;
@@ -89,7 +89,7 @@ export function useUser(userId: string | undefined) {
   });
 }
 
-// Channel messages with backup polling
+// Channel messages - WebSocket keeps cache fresh, NO polling!
 export function useMessages(channelId: string | undefined, cursor?: string) {
   return useQuery({
     queryKey: channelId
@@ -101,12 +101,12 @@ export function useMessages(channelId: string | undefined, cursor?: string) {
         : { items: [], hasMore: false },
     enabled: !!channelId,
     staleTime: CACHE_TIMES.MESSAGES.stale,
-    gcTime: CACHE_TIMES.MESSAGES.gc,
-    refetchInterval: CACHE_TIMES.MESSAGES.refetch // Backup if socket events fail
+    gcTime: CACHE_TIMES.MESSAGES.gc
+    // NO refetchInterval - WebSocket events keep cache fresh!
   });
 }
 
-// DM messages with backup polling
+// DM messages - WebSocket keeps cache fresh, NO polling!
 export function useDMMessages(channelId: string | undefined, cursor?: string) {
   return useQuery({
     queryKey: channelId
@@ -118,8 +118,8 @@ export function useDMMessages(channelId: string | undefined, cursor?: string) {
         : { items: [], hasMore: false },
     enabled: !!channelId,
     staleTime: CACHE_TIMES.MESSAGES.stale,
-    gcTime: CACHE_TIMES.MESSAGES.gc,
-    refetchInterval: CACHE_TIMES.MESSAGES.refetch // Backup if socket events fail
+    gcTime: CACHE_TIMES.MESSAGES.gc
+    // NO refetchInterval - WebSocket events keep cache fresh!
   });
 }
 
