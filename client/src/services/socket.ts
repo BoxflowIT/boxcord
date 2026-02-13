@@ -51,6 +51,37 @@ class SocketService {
       token.substring(0, 20) + '...'
     );
 
+    // Debug: Try to decode token to see what's in it
+    if (token) {
+      try {
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          // Convert base64url to base64
+          let base64Payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+          // Add padding if needed
+          while (base64Payload.length % 4) {
+            base64Payload += '=';
+          }
+          const payload = JSON.parse(atob(base64Payload));
+          console.log('🔍 Token payload:', {
+            sub: payload.sub,
+            email: payload.email,
+            exp: payload.exp
+              ? new Date(payload.exp * 1000).toISOString()
+              : 'none',
+            iat: payload.iat
+              ? new Date(payload.iat * 1000).toISOString()
+              : 'none',
+            token_use: payload.token_use
+          });
+        } else {
+          console.warn('⚠️ Token does not have 3 parts (not a valid JWT)');
+        }
+      } catch (err) {
+        console.warn('⚠️ Could not decode token:', err);
+      }
+    }
+
     // Always connect directly to backend (bypassing Vite proxy which has issues with socket.io)
     const socketUrl = import.meta.env.DEV
       ? 'http://localhost:3001'
@@ -62,10 +93,10 @@ class SocketService {
     this.connecting = true;
     const socket = io(socketUrl, {
       auth: { token },
-      transports: ['polling', 'websocket'], // Try websocket after polling
+      transports: ['polling'], // Only polling - more reliable than WebSocket
       reconnection: true,
-      reconnectionAttempts: 3,
-      reconnectionDelay: 2000,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
       timeout: 15000,
       forceNew: false, // Reuse connection if possible
       autoConnect: false // We'll connect manually
@@ -207,6 +238,13 @@ class SocketService {
       this.pendingOperations = [];
       this.listenersRegistered = false; // Reset listeners flag
     }
+  }
+
+  // Reconnect with new token (after login)
+  reconnect() {
+    console.log('🔄 Socket: Reconnecting with fresh token...');
+    this.disconnect();
+    this.connect();
   }
 
   // Execute pending operations after connection

@@ -16,11 +16,11 @@ export async function userRoutes(app: FastifyInstance) {
 
   // Get current user (creates/updates local profile)
   app.get('/me', async (request) => {
-    // Upsert local user on each request
+    // Upsert local user on each request (without role - role is admin-managed)
     const localUser = await userService.upsertUser({
       id: request.user.id,
-      email: request.user.email,
-      role: request.user.role
+      email: request.user.email
+      // NOTE: Don't pass role here - it's admin-managed in database
     });
 
     // Try to get extra info from Boxtime

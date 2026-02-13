@@ -1,33 +1,35 @@
 // Welcome View - Shown when no channel is selected
 import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
-import { api } from '../services/api';
+import { useCreateWorkspace } from '../hooks/useQuery';
 import { useState } from 'react';
 
 export default function WelcomeView() {
-  const { currentWorkspace, setWorkspaces, setCurrentWorkspace } =
-    useChatStore();
+  const { currentWorkspace, setCurrentWorkspace } = useChatStore();
   const { user } = useAuthStore();
   const [showCreate, setShowCreate] = useState(false);
   const [workspaceName, setWorkspaceName] = useState('');
-  const [creating, setCreating] = useState(false);
+
+  // React Query mutation - invaliderar automatiskt workspaces cache
+  const { mutate: createWorkspace, isPending: creating } = useCreateWorkspace();
 
   const handleCreateWorkspace = async () => {
     if (!workspaceName.trim()) return;
 
-    setCreating(true);
-    try {
-      const workspace = await api.createWorkspace(workspaceName.trim());
-      const workspaces = await api.getWorkspaces();
-      setWorkspaces(workspaces);
-      setCurrentWorkspace(workspace);
-      setShowCreate(false);
-      setWorkspaceName('');
-    } catch (err) {
-      console.error('Failed to create workspace:', err);
-    } finally {
-      setCreating(false);
-    }
+    createWorkspace(
+      { name: workspaceName.trim() },
+      {
+        onSuccess: (workspace) => {
+          setCurrentWorkspace(workspace);
+          setShowCreate(false);
+          setWorkspaceName('');
+          // Cache uppdateras automatiskt via invalidation!
+        },
+        onError: (err) => {
+          console.error('Failed to create workspace:', err);
+        }
+      }
+    );
   };
 
   return (

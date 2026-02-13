@@ -28,8 +28,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
     setCurrentChannel,
     addChannel,
     removeChannel,
-    updateChannel: updateChannelStore,
-    setChannels
+    updateChannel: updateChannelStore
   } = useChatStore();
   const { user, logout } = useAuthStore();
   const auth = useAuth();
@@ -60,13 +59,10 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
     name: string;
   } | null>(null);
 
-  const handleWorkspaceSelect = async (workspace: typeof currentWorkspace) => {
+  const handleWorkspaceSelect = (workspace: typeof currentWorkspace) => {
     setCurrentWorkspace(workspace);
-    if (workspace) {
-      // Load channels for new workspace
-      const channels = await api.getChannels(workspace.id);
-      setChannels(channels);
-    }
+    // Channels laddas automatiskt av Chat.tsx via useChannels() hook!
+    // Ingen duplicerad API-anrop behövs här
   };
 
   const handleChannelSelect = (channel: typeof currentChannel) => {

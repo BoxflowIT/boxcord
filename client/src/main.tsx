@@ -1,4 +1,3 @@
-import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from 'react-oidc-context';
@@ -17,13 +16,11 @@ const cognitoAuthConfig = {
 };
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <AuthProvider {...cognitoAuthConfig}>
-      <BrowserRouter
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-      >
-        <App />
-      </BrowserRouter>
-    </AuthProvider>
-  </React.StrictMode>
+  <AuthProvider {...cognitoAuthConfig}>
+    <BrowserRouter
+      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+    >
+      <App />
+    </BrowserRouter>
+  </AuthProvider>
 );

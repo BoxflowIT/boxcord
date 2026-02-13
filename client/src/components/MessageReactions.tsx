@@ -22,12 +22,10 @@ export default function MessageReactions({
   const [reactions, setReactions] = useState<Reaction[]>(initialReactions);
   const [showPicker, setShowPicker] = useState(false);
 
+  // Uppdatera reactions när initialReactions ändras (från WebSocket)
   useEffect(() => {
-    // Load reactions if not provided
-    if (initialReactions.length === 0) {
-      api.getReactions(messageId).then(setReactions).catch(console.error);
-    }
-  }, [messageId, initialReactions.length]);
+    setReactions(initialReactions);
+  }, [initialReactions]);
 
   const handleToggle = async (emoji: string) => {
     try {

@@ -1,9 +1,10 @@
 // Direct Message View Component
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { socketService } from '../services/socket';
 import { useAuthStore } from '../store/auth';
+import { useDMMessages, useDMChannels, useUser } from '../hooks/useQuery';
 import { useMessageActions } from '../hooks/useMessageActions';
 import { MessageItem } from './MessageItem';
 import FileUpload from './FileUpload';
@@ -29,21 +30,39 @@ interface Message {
   }>;
 }
 
-interface UserInfo {
-  id: string;
-  firstName?: string;
-  lastName?: string;
-  email: string;
-}
-
 export default function DMView() {
   const { channelId } = useParams<{ channelId: string }>();
   const { user } = useAuthStore();
+
+  // Hämta alla DM channels för att hitta participants
+  const { data: dmChannels } = useDMChannels();
+
+  // Hitta den andra användarens ID från channel participants
+  const otherUserId = useMemo(() => {
+    if (!channelId || !dmChannels || !user) return undefined;
+    const channel = dmChannels.find((ch) => ch.id === channelId);
+    if (!channel) return undefined;
+    const otherParticipant = channel.participants.find(
+      (p) => p.userId !== user.id
+    );
+    return otherParticipant?.userId;
+  }, [channelId, dmChannels, user]);
+
+  // Hämta den andra användarens info med caching
+  const { data: otherUser, isLoading: loadingUser } = useUser(otherUserId);
+
+  // React Query hook - automatisk caching av messages!
+  const {
+    data: messagesData,
+    isLoading: loadingMessages,
+    refetch
+  } = useDMMessages(channelId);
+
+  // Local state för WebSocket realtidsuppdateringar
   const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(true);
   const [inputValue, setInputValue] = useState('');
+  const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [otherUser, setOtherUser] = useState<UserInfo | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -74,32 +93,8 @@ export default function DMView() {
   useEffect(() => {
     if (!channelId) return;
 
-    // Fetch channel info to get other user
-    api.getDMChannels().then((channels) => {
-      const channel = channels.find((c) => c.id === channelId);
-      if (channel) {
-        const other = channel.participants.find((p) => p.userId !== user?.id);
-        if (other) {
-          setOtherUser({
-            id: other.user.id,
-            email: other.user.email,
-            firstName: other.user.firstName,
-            lastName: other.user.lastName
-          });
-        }
-      }
-    });
-
-    // Join DM room
+    // Join DM room och sätt upp socket listeners
     socketService.joinDM(channelId);
-
-    // Load messages
-    setLoading(true);
-    api
-      .getDMMessages(channelId)
-      .then((result) => setMessages(result.items.reverse()))
-      .catch(console.error)
-      .finally(() => setLoading(false));
 
     // Listen for DM events
     const onNewMessage = (message: Message) => {
@@ -126,21 +121,37 @@ export default function DMView() {
       socketService.offDMEdit('dm-view');
       socketService.offDMDelete('dm-view');
     };
-  }, [channelId, user?.id]);
+  }, [channelId]); // Bara när channelId ändras!
+
+  // Separat effect för att ladda messages från cache
+  useEffect(() => {
+    // Sätt messages från cache/API (kommer via React Query)
+    // VIKTIGT: Gör en kopia innan reverse() för att inte mutera cachen!
+    if (messagesData?.items) {
+      setMessages([...messagesData.items].reverse());
+    }
+  }, [messagesData]); // Bara när messagesData ändras!
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const handleSend = async () => {
-    if (!inputValue.trim() || !channelId) return;
+    if (!inputValue.trim() || !channelId || sending) return;
+
+    const content = inputValue.trim();
+    setInputValue('');
+    setSending(true);
 
     try {
       // Send message - WebSocket will handle adding it to the list
-      await api.sendDM(channelId, inputValue.trim());
-      setInputValue('');
+      await api.sendDM(channelId, content);
     } catch (err) {
       console.error('Failed to send DM:', err);
+      // Restore input on error
+      setInputValue(content);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -162,9 +173,11 @@ export default function DMView() {
       const message = await api.sendDM(channelId, `📎 ${file.name}`);
       // Then upload the file
       await api.uploadDMFile(message.id, file);
-      // Reload messages to get the attachment
-      const result = await api.getDMMessages(channelId);
-      setMessages(result.items.reverse());
+      // Reload messages from cache using React Query refetch
+      const result = await refetch();
+      if (result.data?.items) {
+        setMessages([...result.data.items].reverse());
+      }
     } catch (err) {
       console.error('Failed to upload file:', err);
     } finally {
@@ -191,10 +204,16 @@ export default function DMView() {
     return otherUser?.firstName ?? otherUser?.email ?? 'Unknown';
   };
 
-  if (!otherUser) {
+  if (!otherUser || loadingUser) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-400">
-        Laddar...
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="relative w-12 h-12 mx-auto mb-3">
+            <div className="absolute inset-0 border-4 border-boxflow-border rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-boxflow-primary rounded-full border-t-transparent animate-spin"></div>
+          </div>
+          <p className="text-boxflow-muted text-sm">Laddar användare...</p>
+        </div>
       </div>
     );
   }
@@ -213,9 +232,17 @@ export default function DMView() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {loading ? (
-          <div className="flex items-center justify-center h-full text-gray-400">
-            Laddar meddelanden...
+        {loadingMessages ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="relative w-12 h-12 mx-auto mb-3">
+                <div className="absolute inset-0 border-4 border-boxflow-border rounded-full"></div>
+                <div className="absolute inset-0 border-4 border-boxflow-primary rounded-full border-t-transparent animate-spin"></div>
+              </div>
+              <p className="text-boxflow-muted text-sm">
+                Laddar meddelanden...
+              </p>
+            </div>
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400">
@@ -296,7 +323,10 @@ export default function DMView() {
       {/* Input */}
       <div className="px-4 pb-6">
         <div className="bg-discord-darker rounded-lg flex items-center">
-          <FileUpload onFileSelect={handleFileSelect} disabled={uploading} />
+          <FileUpload
+            onFileSelect={handleFileSelect}
+            disabled={uploading || sending}
+          />
           <textarea
             ref={textareaRef}
             value={inputValue}
@@ -305,9 +335,12 @@ export default function DMView() {
             placeholder={`Meddelande @${otherUser?.firstName ?? otherUser?.email}`}
             className="flex-1 bg-transparent text-discord-light placeholder-gray-500 resize-none outline-none p-3 max-h-48"
             rows={1}
-            disabled={uploading}
+            disabled={uploading || sending}
           />
           <EmojiPicker onEmojiSelect={handleEmojiSelect} />
+          {sending && (
+            <div className="px-3 text-boxflow-muted text-sm">Skickar...</div>
+          )}
         </div>
       </div>
 

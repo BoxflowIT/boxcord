@@ -79,7 +79,12 @@ async function main() {
     cors: {
       origin: process.env.CORS_ORIGIN ?? '*',
       credentials: true
-    }
+    },
+    // Explicit transport config to help with WebSocket upgrades
+    transports: ['polling', 'websocket'],
+    allowUpgrades: true,
+    pingTimeout: 90000, // 90s innan timeout (längre = färre reconnects)
+    pingInterval: 45000 // Ping var 45:e sekund (längre = färre requests)
   });
 
   // Setup socket handlers (not as Fastify plugin)

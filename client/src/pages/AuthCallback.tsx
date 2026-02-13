@@ -1,21 +1,27 @@
 // Auth Callback - Handles Cognito OAuth redirect
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from 'react-oidc-context';
 import { useAuthStore } from '../store/auth';
 import { api } from '../services/api';
+import { socketService } from '../services/socket';
 import { Button } from '../components/ui/button';
 
 export default function AuthCallback() {
   const auth = useAuth();
   const navigate = useNavigate();
   const { setAuth, setLoading } = useAuthStore();
+  const hasHandledAuth = useRef(false);
 
   useEffect(() => {
     const handleAuth = async () => {
+      // Prevent double execution
+      if (hasHandledAuth.current) return;
+
       if (auth.isAuthenticated && auth.user) {
+        hasHandledAuth.current = true;
         setLoading(true);
-        
+
         // First, store token and basic user info
         const token = auth.user.id_token || auth.user.access_token || '';
         const profile = auth.user.profile;
@@ -35,6 +41,9 @@ export default function AuthCallback() {
         try {
           const userData = await api.getCurrentUser();
           setAuth(token, userData); // Update with correct role from database
+
+          // Reconnect socket with new token
+          socketService.reconnect();
         } catch (error) {
           console.error('Failed to fetch user data:', error);
         } finally {
