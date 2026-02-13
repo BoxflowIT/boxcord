@@ -1,11 +1,17 @@
-// Channel View Component - Messages and Input
+// ============================================================================
+// CHANNEL VIEW - Uses React Query for messages
+// ============================================================================
+// Messages come from React Query (useMessages hook)
+// NO duplicate storage in Zustand
+// ============================================================================
+
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { socketService } from '../services/socket';
 import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
-import { useMessages } from '../hooks/useQuery';
+import { useMessages, useChannels } from '../hooks/useQuery';
 import { useMessageActions } from '../hooks/useMessageActions';
 import { MessageItem } from './MessageItem';
 import FileUpload from './FileUpload';
@@ -20,12 +26,15 @@ interface ChannelViewProps {
 
 export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
   const { channelId } = useParams<{ channelId: string }>();
-  const { messages, setMessages, currentChannel, setCurrentChannel, channels } =
-    useChatStore();
+  const { currentChannel, setCurrentChannel, currentWorkspace } = useChatStore();
   const { user } = useAuthStore();
 
-  // React Query hook for auto caching
-  const { data: messagesData, isLoading } = useMessages(channelId);
+  // React Query - single source of truth for server data
+  const { data: messagesData, isLoading: loadingMessages } = useMessages(channelId);
+  const { data: channels = [] } = useChannels(currentWorkspace?.id);
+  
+  // Messages from React Query cache (reversed for display)
+  const channelMessages = messagesData?.items ? [...messagesData.items].reverse() : [];
 
   const [inputValue, setInputValue] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -61,23 +70,20 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     onDelete: async (messageId) => {
       await api.deleteMessage(messageId);
       socketService.deleteMessage(messageId);
-      setMessages(messages.filter((m) => m.id !== messageId));
+      // React Query cache updated automatically by WebSocket handler
     }
   });
-
-  // Filter messages for current channel only
-  const channelMessages = messages.filter((m) => m.channelId === channelId);
 
   useEffect(() => {
     if (!channelId) return;
 
-    // Set current channel
+    // Set current channel from React Query data
     const channel = channels.find((c) => c.id === channelId);
     if (channel) {
       setCurrentChannel(channel);
     }
 
-    // Join channel room and setup socket listeners
+    // Join channel room for WebSocket events
     socketService.joinChannel(channelId);
 
     return () => {
@@ -87,33 +93,10 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     };
   }, [channelId, channels, setCurrentChannel]);
 
-  // Load messages from cache when data changes
+  // Auto-scroll on new messages
   useEffect(() => {
-    if (!channelId || !messagesData?.items) return;
-
-    console.log(
-      '📥 Loaded messages for channel:',
-      channelId,
-      'count:',
-      messagesData.items.length
-    );
-    // Merge messages: keep other channels, replace current channel
-    const otherChannelMessages = messages.filter(
-      (m) => m.channelId !== channelId
-    );
-    // IMPORTANT: Copy before reverse() to avoid mutating cache!
-    const newMessages = [
-      ...otherChannelMessages,
-      ...[...messagesData.items].reverse()
-    ];
-    setMessages(newMessages);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [channelId, messagesData]);
-
-  useEffect(() => {
-    // Scroll to bottom when new messages arrive
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [channelMessages]);
+  }, [channelMessages.length]);
 
   // Close message menu when clicking outside
   useEffect(() => {
@@ -336,7 +319,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {isLoading ? (
+        {loadingMessages ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <div className="relative w-12 h-12 mx-auto mb-3">

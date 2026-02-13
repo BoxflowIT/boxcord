@@ -1,15 +1,29 @@
-// Sidebar Component
+// ============================================================================
+// SIDEBAR COMPONENT - Uses React Query for server data
+// ============================================================================
+// Server data (workspaces, channels) comes from React Query
+// UI state (currentWorkspace, currentChannel) stored in Zustand
+// ============================================================================
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from 'react-oidc-context';
 import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
 import { api } from '../services/api';
-import { useCreateChannel, useDeleteChannel } from '../hooks/useQuery';
+import {
+  useWorkspaces,
+  useChannels,
+  useCreateWorkspace,
+  useCreateChannel,
+  useDeleteWorkspace,
+  useDeleteChannel
+} from '../hooks/useQuery';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import EditModal from './EditModal';
 import CreateModal from './CreateModal';
 import Avatar from './ui/Avatar';
+import type { Workspace, Channel } from '../types';
 
 interface SidebarProps {
   onProfileClick?: () => void;
@@ -17,23 +31,25 @@ interface SidebarProps {
 
 export default function Sidebar({ onProfileClick }: SidebarProps) {
   const navigate = useNavigate();
-  const {
-    workspaces,
-    currentWorkspace,
-    setCurrentWorkspace,
-    addWorkspace,
-    removeWorkspace,
-    updateWorkspace: updateWorkspaceStore,
-    channels,
-    currentChannel,
-    setCurrentChannel,
-    removeChannel,
-    updateChannel: updateChannelStore
-  } = useChatStore();
+  
+  // UI State from Zustand
+  const { currentWorkspace, setCurrentWorkspace, currentChannel, setCurrentChannel } =
+    useChatStore();
+  
+  // Server Data from React Query
+  const { data: workspaces = [], isLoading: loadingWorkspaces } = useWorkspaces();
+  const { data: channels = [], isLoading: loadingChannels } = useChannels(
+    currentWorkspace?.id
+  );
+  
+  // Mutations
+  const createWorkspaceMutation = useCreateWorkspace();
+  const createChannelMutation = useCreateChannel();
+  const deleteWorkspaceMutation = useDeleteWorkspace();
+  const deleteChannelMutation = useDeleteChannel();
+  
   const { user, logout } = useAuthStore();
   const auth = useAuth();
-  const createChannelMutation = useCreateChannel();
-  const deleteChannelMutation = useDeleteChannel();
   const [showNewChannel, setShowNewChannel] = useState(false);
   const [showNewWorkspace, setShowNewWorkspace] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -61,12 +77,12 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
     name: string;
   } | null>(null);
 
-  const handleWorkspaceSelect = (workspace: typeof currentWorkspace) => {
+  const handleWorkspaceSelect = (workspace: Workspace | null) => {
     setCurrentWorkspace(workspace);
-    // Channels loaded automatically by Chat.tsx via useChannels()
+    // Channels loaded automatically by useChannels() hook
   };
 
-  const handleChannelSelect = (channel: typeof currentChannel) => {
+  const handleChannelSelect = (channel: Channel | null) => {
     setCurrentChannel(channel);
     if (channel) {
       navigate(`/chat/channels/${channel.id}`);
@@ -78,10 +94,9 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
 
     setIsCreating(true);
     try {
-      const workspace = await api.createWorkspace(name);
-      addWorkspace(workspace);
+      const workspace = await createWorkspaceMutation.mutateAsync({ name });
       setShowNewWorkspace(false);
-      handleWorkspaceSelect(workspace);
+      handleWorkspaceSelect(workspace); // Switch to new workspace
     } catch (err) {
       console.error('Failed to create workspace:', err);
     } finally {
@@ -108,7 +123,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
   };
 
   const handleDeleteChannel = (
-    channel: typeof currentChannel,
+    channel: Channel | null,
     e: React.MouseEvent
   ) => {
     e.stopPropagation();
@@ -122,14 +137,16 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
 
     try {
       await deleteChannelMutation.mutateAsync(deleteChannel.id);
-      removeChannel(deleteChannel.id);
       setDeleteChannel(null);
-      // Select first channel if available
-      const remaining = channels.filter((c) => c.id !== deleteChannel.id);
-      if (remaining.length > 0) {
-        handleChannelSelect(remaining[0]);
-      } else {
-        navigate('/chat');
+      
+      // Navigate away if current channel was deleted
+      if (currentChannel?.id === deleteChannel.id) {
+        const remaining = channels.filter((c) => c.id !== deleteChannel.id);
+        if (remaining.length > 0) {
+          handleChannelSelect(remaining[0]);
+        } else {
+          navigate('/chat');
+        }
       }
     } catch (err) {
       console.error('Failed to delete channel:', err);
@@ -137,7 +154,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
   };
 
   const handleDeleteWorkspace = (
-    workspace: typeof currentWorkspace,
+    workspace: Workspace | null,
     e: React.MouseEvent
   ) => {
     e.stopPropagation();
@@ -150,15 +167,17 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
     if (!deleteWorkspace) return;
 
     try {
-      await api.deleteWorkspace(deleteWorkspace.id);
-      removeWorkspace(deleteWorkspace.id);
+      await deleteWorkspaceMutation.mutateAsync(deleteWorkspace.id);
       setDeleteWorkspace(null);
-      // Select first remaining workspace
-      const remaining = workspaces.filter((w) => w.id !== deleteWorkspace.id);
-      if (remaining.length > 0) {
-        handleWorkspaceSelect(remaining[0]);
-      } else {
-        navigate('/chat');
+      
+      // Navigate away if current workspace was deleted
+      if (currentWorkspace?.id === deleteWorkspace.id) {
+        const remaining = workspaces.filter((w) => w.id !== deleteWorkspace.id);
+        if (remaining.length > 0) {
+          handleWorkspaceSelect(remaining[0]);
+        } else {
+          navigate('/chat');
+        }
       }
     } catch (err) {
       console.error('Failed to delete workspace:', err);
@@ -166,7 +185,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
   };
 
   const handleEditChannel = (
-    channel: typeof currentChannel,
+    channel: Channel | null,
     e: React.MouseEvent
   ) => {
     e.stopPropagation();
@@ -185,8 +204,8 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
   }) => {
     if (!editingChannel) return;
     try {
-      const updated = await api.updateChannel(editingChannel.id, data);
-      updateChannelStore(updated);
+      await api.updateChannel(editingChannel.id, data);
+      // React Query will update cache via invalidation
       setEditingChannel(null);
     } catch (err) {
       console.error('Failed to update channel:', err);
@@ -194,7 +213,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
   };
 
   const handleEditWorkspace = (
-    workspace: typeof currentWorkspace,
+    workspace: Workspace | null,
     e: React.MouseEvent
   ) => {
     e.stopPropagation();
@@ -215,8 +234,8 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
   }) => {
     if (!editingWorkspace) return;
     try {
-      const updated = await api.updateWorkspace(editingWorkspace.id, data);
-      updateWorkspaceStore(updated);
+      await api.updateWorkspace(editingWorkspace.id, data);
+      // React Query will update cache via invalidation
       setEditingWorkspace(null);
     } catch (err) {
       console.error('Failed to update workspace:', err);

@@ -1,4 +1,10 @@
-// Chat Page - Main Layout
+// ============================================================================
+// CHAT PAGE - Uses React Query for server data
+// ============================================================================
+// Workspaces/channels come from React Query hooks
+// Zustand only holds currentWorkspace/currentChannel (UI state)
+// ============================================================================
+
 import { useEffect, useRef, useState } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { socketService } from '../services/socket';
@@ -14,8 +20,6 @@ import ProfileModal from '../components/ProfileModal';
 export default function Chat() {
   const navigate = useNavigate();
   const {
-    setWorkspaces,
-    setChannels,
     setCurrentWorkspace,
     setCurrentChannel,
     currentWorkspace
@@ -24,9 +28,9 @@ export default function Chat() {
   const [showProfile, setShowProfile] = useState(false);
   const [showMemberList, setShowMemberList] = useState(true);
 
-  // React Query hooks for auto caching and deduplication
-  const { data: workspaces } = useWorkspaces();
-  const { data: channels } = useChannels(currentWorkspace?.id);
+  // React Query hooks - single source of truth for server data
+  const { data: workspaces = [] } = useWorkspaces();
+  const { data: channels = [] } = useChannels(currentWorkspace?.id);
 
   useEffect(() => {
     if (initializedRef.current) return;
@@ -40,31 +44,26 @@ export default function Chat() {
     };
   }, []);
 
-  // Update store when workspaces load from cache/API
+  // Auto-select first workspace if none selected
   useEffect(() => {
-    if (workspaces) {
-      setWorkspaces(workspaces);
-      // Auto-select first workspace if none selected
-      if (workspaces.length > 0 && !currentWorkspace) {
-        setCurrentWorkspace(workspaces[0]);
-      }
+    if (workspaces.length > 0 && !currentWorkspace) {
+      setCurrentWorkspace(workspaces[0]);
     }
-  }, [workspaces, currentWorkspace, setWorkspaces, setCurrentWorkspace]);
+  }, [workspaces, currentWorkspace, setCurrentWorkspace]);
 
+  // Auto-select first channel when workspace changes
   useEffect(() => {
-    // Update store when channels load from cache/API
-    if (channels) {
-      setChannels(channels);
-      // Auto-select first channel only if none selected or current channel not in workspace
-      const currentChannelInWorkspace = channels.find(
-        (c) => c.id === useChatStore.getState().currentChannel?.id
-      );
-      if (channels.length > 0 && !currentChannelInWorkspace) {
-        setCurrentChannel(channels[0]);
-        navigate(`/chat/channels/${channels[0].id}`);
-      }
+    if (!currentWorkspace) return;
+    
+    const currentChannelInWorkspace = channels.find(
+      (c) => c.id === useChatStore.getState().currentChannel?.id
+    );
+    
+    if (channels.length > 0 && !currentChannelInWorkspace) {
+      setCurrentChannel(channels[0]);
+      navigate(`/chat/channels/${channels[0].id}`);
     }
-  }, [channels, navigate, setChannels, setCurrentChannel]);
+  }, [channels, currentWorkspace, navigate, setCurrentChannel]);
 
   return (
     <div className="flex h-screen overflow-hidden">
