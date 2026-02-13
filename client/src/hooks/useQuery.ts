@@ -128,8 +128,13 @@ export function useCreateWorkspace() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ name, description }: { name: string; description?: string }) =>
-      api.createWorkspace(name, description),
+    mutationFn: ({
+      name,
+      description
+    }: {
+      name: string;
+      description?: string;
+    }) => api.createWorkspace(name, description),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.workspaces });
     }
@@ -141,17 +146,26 @@ export function useCreateChannel() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ workspaceId, name }: { workspaceId: string; name: string }) =>
-      api.createChannel(workspaceId, name),
-    
+    mutationFn: ({
+      workspaceId,
+      name
+    }: {
+      workspaceId: string;
+      name: string;
+    }) => api.createChannel(workspaceId, name),
+
     // Optimistic update - UI updates instantly
     onMutate: async ({ workspaceId, name }) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: queryKeys.channels(workspaceId) });
-      
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.channels(workspaceId)
+      });
+
       // Snapshot previous value for rollback
-      const previousChannels = queryClient.getQueryData(queryKeys.channels(workspaceId));
-      
+      const previousChannels = queryClient.getQueryData(
+        queryKeys.channels(workspaceId)
+      );
+
       // Optimistically update cache with temporary channel
       const tempChannel = {
         id: `temp-${Date.now()}`,
@@ -161,15 +175,16 @@ export function useCreateChannel() {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
-      
+
       queryClient.setQueryData(
         queryKeys.channels(workspaceId),
-        (old: unknown) => Array.isArray(old) ? [...old, tempChannel] : [tempChannel]
+        (old: unknown) =>
+          Array.isArray(old) ? [...old, tempChannel] : [tempChannel]
       );
-      
+
       return { previousChannels, tempChannel };
     },
-    
+
     // Rollback on error
     onError: (_err, variables, context) => {
       if (context?.previousChannels) {
@@ -179,7 +194,7 @@ export function useCreateChannel() {
         );
       }
     },
-    
+
     // Update with real data from server
     onSuccess: (data, variables, context) => {
       queryClient.setQueryData(
@@ -187,7 +202,7 @@ export function useCreateChannel() {
         (old: unknown) => {
           if (!Array.isArray(old)) return [data];
           // Replace temp channel with real channel
-          return old.map((ch) => 
+          return old.map((ch) =>
             ch.id === context?.tempChannel?.id ? data : ch
           );
         }
@@ -214,32 +229,35 @@ export function useDeleteChannel() {
 
   return useMutation({
     mutationFn: (channelId: string) => api.deleteChannel(channelId),
-    
+
     // Optimistic update - remove from UI instantly
     onMutate: async (channelId) => {
       // Cancel any outgoing refetches for all channels
       await queryClient.cancelQueries({ queryKey: ['channels'] });
-      
+
       // Snapshot previous values for rollback
-      const previousData: Array<{ key: readonly unknown[]; data: unknown }> = [];
-      
+      const previousData: Array<{ key: readonly unknown[]; data: unknown }> =
+        [];
+
       // Remove channel from all workspace caches
-      queryClient.getQueryCache().findAll({ queryKey: ['channels'] }).forEach(query => {
-        const old = query.state.data;
-        if (old) {
-          previousData.push({ key: query.queryKey, data: old });
-          queryClient.setQueryData(
-            query.queryKey,
-            (oldData: unknown) => Array.isArray(oldData) 
-              ? oldData.filter((ch) => ch.id !== channelId)
-              : oldData
-          );
-        }
-      });
-      
+      queryClient
+        .getQueryCache()
+        .findAll({ queryKey: ['channels'] })
+        .forEach((query) => {
+          const old = query.state.data;
+          if (old) {
+            previousData.push({ key: query.queryKey, data: old });
+            queryClient.setQueryData(query.queryKey, (oldData: unknown) =>
+              Array.isArray(oldData)
+                ? oldData.filter((ch) => ch.id !== channelId)
+                : oldData
+            );
+          }
+        });
+
       return { previousData };
     },
-    
+
     // Rollback on error
     onError: (_err, _channelId, context) => {
       if (context?.previousData) {
@@ -256,8 +274,11 @@ export function useUpdateProfile() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { firstName?: string; lastName?: string; bio?: string }) =>
-      api.updateProfile(data),
+    mutationFn: (data: {
+      firstName?: string;
+      lastName?: string;
+      bio?: string;
+    }) => api.updateProfile(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.currentUser });
     }
@@ -269,10 +290,17 @@ export function useUpdateUserRole() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, role }: { userId: string; role: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF' }) =>
-      api.updateUserRole(userId, role),
+    mutationFn: ({
+      userId,
+      role
+    }: {
+      userId: string;
+      role: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF';
+    }) => api.updateUserRole(userId, role),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.user(variables.userId) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.user(variables.userId)
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.onlineUsers });
     }
   });
@@ -287,7 +315,8 @@ export function useUsers(userIds: string[]) {
     queryFn: async () => {
       const users = await Promise.all(
         userIds.map((id) =>
-          api.getUser(id)
+          api
+            .getUser(id)
             .then((user) => {
               // Cache each user individually
               queryClient.setQueryData(queryKeys.user(id), user);

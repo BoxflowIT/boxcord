@@ -31,23 +31,25 @@ interface SidebarProps {
 
 export default function Sidebar({ onProfileClick }: SidebarProps) {
   const navigate = useNavigate();
-  
+
   // UI State from Zustand
-  const { currentWorkspace, setCurrentWorkspace, currentChannel, setCurrentChannel } =
-    useChatStore();
-  
+  const {
+    currentWorkspace,
+    setCurrentWorkspace,
+    currentChannel,
+    setCurrentChannel
+  } = useChatStore();
+
   // Server Data from React Query
-  const { data: workspaces = [], isLoading: loadingWorkspaces } = useWorkspaces();
-  const { data: channels = [], isLoading: loadingChannels } = useChannels(
-    currentWorkspace?.id
-  );
-  
+  const { data: workspaces = [] } = useWorkspaces();
+  const { data: channels = [] } = useChannels(currentWorkspace?.id);
+
   // Mutations
   const createWorkspaceMutation = useCreateWorkspace();
   const createChannelMutation = useCreateChannel();
   const deleteWorkspaceMutation = useDeleteWorkspace();
   const deleteChannelMutation = useDeleteChannel();
-  
+
   const { user, logout } = useAuthStore();
   const auth = useAuth();
   const [showNewChannel, setShowNewChannel] = useState(false);
@@ -138,7 +140,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
     try {
       await deleteChannelMutation.mutateAsync(deleteChannel.id);
       setDeleteChannel(null);
-      
+
       // Navigate away if current channel was deleted
       if (currentChannel?.id === deleteChannel.id) {
         const remaining = channels.filter((c) => c.id !== deleteChannel.id);
@@ -169,7 +171,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
     try {
       await deleteWorkspaceMutation.mutateAsync(deleteWorkspace.id);
       setDeleteWorkspace(null);
-      
+
       // Navigate away if current workspace was deleted
       if (currentWorkspace?.id === deleteWorkspace.id) {
         const remaining = workspaces.filter((w) => w.id !== deleteWorkspace.id);
@@ -184,10 +186,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
     }
   };
 
-  const handleEditChannel = (
-    channel: Channel | null,
-    e: React.MouseEvent
-  ) => {
+  const handleEditChannel = (channel: Channel | null, e: React.MouseEvent) => {
     e.stopPropagation();
     if (channel) {
       setEditingChannel({

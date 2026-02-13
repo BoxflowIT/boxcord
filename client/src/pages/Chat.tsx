@@ -19,11 +19,8 @@ import ProfileModal from '../components/ProfileModal';
 
 export default function Chat() {
   const navigate = useNavigate();
-  const {
-    setCurrentWorkspace,
-    setCurrentChannel,
-    currentWorkspace
-  } = useChatStore();
+  const { setCurrentWorkspace, setCurrentChannel, currentWorkspace } =
+    useChatStore();
   const initializedRef = useRef(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showMemberList, setShowMemberList] = useState(true);
@@ -54,11 +51,11 @@ export default function Chat() {
   // Auto-select first channel when workspace changes
   useEffect(() => {
     if (!currentWorkspace) return;
-    
+
     const currentChannelInWorkspace = channels.find(
       (c) => c.id === useChatStore.getState().currentChannel?.id
     );
-    
+
     if (channels.length > 0 && !currentChannelInWorkspace) {
       setCurrentChannel(channels[0]);
       navigate(`/chat/channels/${channels[0].id}`);
