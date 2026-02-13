@@ -7,6 +7,7 @@ import { useAuthStore } from '../store/auth';
 import { useMessageActions } from '../hooks/useMessageActions';
 import { MessageItem } from './MessageItem';
 import FileUpload from './FileUpload';
+import EmojiPicker from './ui/EmojiPicker';
 import DeleteConfirmModal from './DeleteConfirmModal';
 
 interface Message {
@@ -44,6 +45,7 @@ export default function DMView() {
   const [uploading, setUploading] = useState(false);
   const [otherUser, setOtherUser] = useState<UserInfo | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
     editingMessageId,
@@ -170,6 +172,20 @@ export default function DMView() {
     }
   };
 
+  const handleEmojiSelect = (emoji: string) => {
+    const cursorPos = textareaRef.current?.selectionStart ?? inputValue.length;
+    const newValue =
+      inputValue.slice(0, cursorPos) + emoji + inputValue.slice(cursorPos);
+    setInputValue(newValue);
+
+    // Focus and place cursor after emoji
+    setTimeout(() => {
+      textareaRef.current?.focus();
+      const newCursorPos = cursorPos + emoji.length;
+      textareaRef.current?.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  };
+
   const getUserName = (authorId: string) => {
     if (authorId === user?.id) return 'Du';
     return otherUser?.firstName ?? otherUser?.email ?? 'Unknown';
@@ -282,14 +298,16 @@ export default function DMView() {
         <div className="bg-discord-darker rounded-lg flex items-center">
           <FileUpload onFileSelect={handleFileSelect} disabled={uploading} />
           <textarea
+            ref={textareaRef}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={`Meddelande @${otherUser.firstName ?? otherUser.email}`}
+            placeholder={`Meddelande @${otherUser?.firstName ?? otherUser?.email}`}
             className="flex-1 bg-transparent text-discord-light placeholder-gray-500 resize-none outline-none p-3 max-h-48"
             rows={1}
             disabled={uploading}
           />
+          <EmojiPicker onEmojiSelect={handleEmojiSelect} />
         </div>
       </div>
 

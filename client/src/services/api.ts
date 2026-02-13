@@ -68,6 +68,15 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     }
   });
 
+  // Handle 401 Unauthorized - session expired
+  if (response.status === 401) {
+    console.warn('Session expired, logging out...');
+    useAuthStore.getState().logout();
+    // Redirect to login
+    window.location.href = '/';
+    throw new Error('Session expired');
+  }
+
   // Handle empty responses (like DELETE with 204 No Content)
   const text = await response.text();
   const data = text ? JSON.parse(text) : {};
