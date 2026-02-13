@@ -164,7 +164,6 @@ export const api = {
 
   // Users
   getCurrentUser: () => request<User>('/users/me'),
-  initUser: () => request<User>('/users/me/init', { method: 'POST' }),
   getUser: (id: string) => request<User>(`/users/${id}`),
   searchUsers: (query: string) => request<User[]>(`/users/search?q=${query}`),
   getOnlineUsers: () => request<User[]>('/users/online'),

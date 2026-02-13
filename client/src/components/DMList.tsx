@@ -1,7 +1,8 @@
 // Direct Messages List Component
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { useAuthStore } from '../store/auth';
+import { useDMChannels, useUsers } from '../hooks/useQuery';
 
 interface DMChannel {
   id: string;
@@ -26,46 +27,35 @@ interface DMListProps {
 
 export default function DMList({ onSelectDM, selectedId }: DMListProps) {
   const { user } = useAuthStore();
-  const [channels, setChannels] = useState<DMChannel[]>([]);
-  const [users, setUsers] = useState<Map<string, UserInfo>>(new Map());
-  const [loading, setLoading] = useState(true);
+  // React Query hook - automatisk caching och deduplicering
+  const { data: dmChannels, isLoading, refetch } = useDMChannels();
+
+  // Hämta alla andra user IDs från DM channels
+  const otherUserIds = useMemo(() => {
+    if (!dmChannels || !user) return [];
+    return dmChannels.flatMap((ch) =>
+      ch.participants.filter((p) => p.userId !== user.id).map((p) => p.userId)
+    );
+  }, [dmChannels, user]);
+
+  // Hämta alla users samtidigt med caching (React Query deduplice automatiskt!)
+  const { data: usersArray = [] } = useUsers(otherUserIds);
+
+  // Konvertera till Map för enkel lookup
+  const users = useMemo(() => {
+    const map = new Map<string, UserInfo>();
+    usersArray.forEach((u) => {
+      if (u) map.set(u.id, u);
+    });
+    return map;
+  }, [usersArray]);
+
   const [showNewDM, setShowNewDM] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<UserInfo[]>([]);
 
-  const loadChannels = useCallback(async () => {
-    try {
-      const data = await api.getDMChannels();
-      setChannels(data);
-
-      // Get all other user IDs
-      const otherUserIds = data.flatMap((ch) =>
-        ch.participants
-          .filter((p) => p.userId !== user?.id)
-          .map((p) => p.userId)
-      );
-
-      // Load user info (batch if possible)
-      const userMap = new Map<string, UserInfo>();
-      for (const userId of otherUserIds) {
-        try {
-          const userInfo = await api.getUser(userId);
-          userMap.set(userId, userInfo);
-        } catch {
-          userMap.set(userId, { id: userId, email: 'Okänd användare' });
-        }
-      }
-      setUsers(userMap);
-    } catch (err) {
-      console.error('Failed to load DM channels:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
-
-  useEffect(() => {
-    loadChannels();
-  }, [loadChannels]);
+  // Konvertera dmChannels från React Query till const
+  const channels = dmChannels || [];
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -90,11 +80,10 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
       setSearchQuery('');
       setSearchResults([]);
 
-      // Add to channels if new
-      if (!channels.find((c) => c.id === channel.id)) {
-        setChannels((prev) => [channel, ...prev]);
-        setUsers((prev) => new Map(prev).set(selectedUser.id, selectedUser));
-      }
+      // Refetch channels från cache för att inkludera den nya
+      await refetch();
+
+      // User info kommer att hämtas automatiskt via useUsers hook!
 
       onSelectDM(channel.id, selectedUser);
     } catch (err) {
@@ -185,8 +174,16 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
 
       {/* DM list */}
       <div className="flex-1 overflow-y-auto p-2">
-        {loading ? (
-          <p className="text-gray-400 text-sm p-2">Laddar...</p>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="relative w-8 h-8 mx-auto mb-2">
+                <div className="absolute inset-0 border-3 border-boxflow-border rounded-full"></div>
+                <div className="absolute inset-0 border-3 border-boxflow-primary rounded-full border-t-transparent animate-spin"></div>
+              </div>
+              <p className="text-boxflow-muted text-xs">Laddar...</p>
+            </div>
+          </div>
         ) : channels.length === 0 ? (
           <p className="text-gray-400 text-sm p-2">Inga konversationer</p>
         ) : (

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuthStore } from '../store/auth';
+import { useOnlineUsers } from '../hooks/useQuery';
 import ProfileModal from './ProfileModal';
 import Avatar from './ui/Avatar';
 
@@ -23,33 +24,28 @@ interface User {
 export default function MemberList() {
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
+  // React Query hook - automatisk caching och uppdatering var 15:e sekund
+  const { data: onlineUsers } = useOnlineUsers();
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
-    const fetchOnlineUsers = async () => {
-      try {
-        const onlineUsers = await api.getOnlineUsers();
-        
-        // Always include current user if not in list
-        if (currentUser && !onlineUsers.some(u => u.id === currentUser.id)) {
-          const currentUserWithPresence = {
-            ...currentUser,
-            presence: { status: 'ONLINE', lastSeen: new Date().toISOString() }
-          };
-          setUsers([currentUserWithPresence, ...onlineUsers]);
-        } else {
-          setUsers(onlineUsers);
-        }
-      } catch (err) {
-        console.error('Failed to fetch online users:', err);
-      }
-    };
+    if (!onlineUsers) return;
 
-    // Fetch immediately without showing loading state
-    fetchOnlineUsers();
+    // Always include current user if not in list
+    if (currentUser && !onlineUsers.some((u) => u.id === currentUser.id)) {
+      const currentUserWithPresence = {
+        ...currentUser,
+        presence: { status: 'ONLINE', lastSeen: new Date().toISOString() }
+      };
+      setUsers([currentUserWithPresence, ...onlineUsers]);
+    } else {
+      setUsers(onlineUsers);
+    }
+  }, [onlineUsers, currentUser]);
 
+  useEffect(() => {
     // Listen for presence updates via WebSocket instead of polling
     const handlePresenceUpdate = (data: { userId: string; status: string }) => {
       setUsers((prevUsers) => {
@@ -71,9 +67,6 @@ export default function MemberList() {
                 }
               : u
           );
-        } else if (data.status === 'ONLINE') {
-          // User came online but not in list - fetch fresh data
-          fetchOnlineUsers();
         }
         return prevUsers;
       });
@@ -89,7 +82,7 @@ export default function MemberList() {
         socketService.offPresenceUpdate('memberList');
       });
     };
-  }, [currentUser]);
+  }, []);
 
   const statusColors: Record<string, string> = {
     ONLINE: 'status-online',
@@ -143,9 +136,7 @@ export default function MemberList() {
       {/* User list */}
       <div className="panel-content">
         {users.length === 0 ? (
-          <div className="text-muted px-2">
-            Inga användare online
-          </div>
+          <div className="text-muted px-2">Inga användare online</div>
         ) : (
           roleOrder.map((role) => {
             const roleUsers = groupedByRole[role];
@@ -157,10 +148,7 @@ export default function MemberList() {
                   {roleLabels[role]} — {roleUsers.length}
                 </h4>
                 {roleUsers.map((user) => (
-                  <div
-                    key={user.id}
-                    className="group list-item-interactive"
-                  >
+                  <div key={user.id} className="group list-item-interactive">
                     <button
                       onClick={() => handleUserClick(user.id)}
                       className="flex-1 flex items-center gap-3 min-w-0"

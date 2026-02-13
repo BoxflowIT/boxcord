@@ -5,6 +5,7 @@ import { api } from '../services/api';
 import { socketService } from '../services/socket';
 import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
+import { useMessages } from '../hooks/useQuery';
 import { useMessageActions } from '../hooks/useMessageActions';
 import { MessageItem } from './MessageItem';
 import FileUpload from './FileUpload';
@@ -22,8 +23,11 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
   const { messages, setMessages, currentChannel, setCurrentChannel, channels } =
     useChatStore();
   const { user } = useAuthStore();
+
+  // React Query hook - automatisk caching av messages!
+  const { data: messagesData, isLoading } = useMessages(channelId);
+
   const [inputValue, setInputValue] = useState('');
-  const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [cursorPosition, setCursorPosition] = useState(0);
   const [showMentions, setShowMentions] = useState(false);
@@ -73,42 +77,38 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
       setCurrentChannel(channel);
     }
 
-    // Join channel room
+    // Join channel room och sätt upp socket listeners
     socketService.joinChannel(channelId);
-
-    // Load messages once when channel changes
-    setLoading(true);
-    api
-      .getMessages(channelId)
-      .then((result) => {
-        console.log(
-          '📥 Loaded messages for channel:',
-          channelId,
-          'count:',
-          result.items.length
-        );
-        // Merge messages: keep existing messages from other channels, replace messages from this channel
-        const otherChannelMessages = messages.filter(
-          (m) => m.channelId !== channelId
-        );
-        const newMessages = [
-          ...otherChannelMessages,
-          ...result.items.reverse()
-        ];
-        setMessages(newMessages);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
 
     return () => {
       if (channelId) {
         socketService.leaveChannel(channelId);
       }
     };
-    // Only re-run when channelId changes, not when messages update
-    // New messages come via WebSocket, no need to refetch
+  }, [channelId, channels, setCurrentChannel]); // Bara när channelId ändras!
+
+  // Separat effect för att ladda messages från cache
+  useEffect(() => {
+    if (!channelId || !messagesData?.items) return;
+
+    console.log(
+      '📥 Loaded messages for channel:',
+      channelId,
+      'count:',
+      messagesData.items.length
+    );
+    // Merge messages: keep existing messages from other channels, replace messages from this channel
+    const otherChannelMessages = messages.filter(
+      (m) => m.channelId !== channelId
+    );
+    // VIKTIGT: Gör en kopia innan reverse() för att inte mutera cachen!
+    const newMessages = [
+      ...otherChannelMessages,
+      ...[...messagesData.items].reverse()
+    ];
+    setMessages(newMessages);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [channelId]);
+  }, [channelId, messagesData]); // När channelId eller messagesData ändras
 
   useEffect(() => {
     // Scroll to bottom when new messages arrive
@@ -276,7 +276,8 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
 
   const handleEmojiSelect = useCallback(
     (emoji: string) => {
-      const cursorPos = textareaRef.current?.selectionStart ?? inputValue.length;
+      const cursorPos =
+        textareaRef.current?.selectionStart ?? inputValue.length;
       const newValue =
         inputValue.slice(0, cursorPos) + emoji + inputValue.slice(cursorPos);
       setInputValue(newValue);
@@ -335,9 +336,17 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {loading ? (
-          <div className="flex items-center justify-center h-full text-gray-400">
-            Laddar meddelanden...
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="relative w-12 h-12 mx-auto mb-3">
+                <div className="absolute inset-0 border-4 border-boxflow-border rounded-full"></div>
+                <div className="absolute inset-0 border-4 border-boxflow-primary rounded-full border-t-transparent animate-spin"></div>
+              </div>
+              <p className="text-boxflow-muted text-sm">
+                Laddar meddelanden...
+              </p>
+            </div>
           </div>
         ) : channelMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400">

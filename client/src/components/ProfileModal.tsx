@@ -3,21 +3,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuthStore } from '../store/auth';
+import {
+  useUser,
+  useCurrentUser,
+  useUpdateProfile,
+  useUpdateUserRole
+} from '../hooks/useQuery';
 import NotificationSettings from './NotificationSettings';
-
-interface UserProfile {
-  id: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  avatarUrl?: string;
-  bio?: string;
-  role: string;
-  presence?: {
-    status: string;
-    customStatus?: string;
-  };
-}
 
 interface ProfileModalProps {
   userId?: string; // If provided, show other user's profile
@@ -32,13 +24,19 @@ export default function ProfileModal({
 }: ProfileModalProps) {
   const navigate = useNavigate();
   const { user: currentUser, logout } = useAuthStore();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+
+  // React Query hooks - automatisk caching
+  const { data: otherUserData, isLoading: loadingOther } = useUser(
+    userId && userId !== currentUser?.id ? userId : undefined
+  );
+  const { data: currentUserData, isLoading: loadingCurrent } = useCurrentUser();
+  const { mutate: updateProfile, isPending: saving } = useUpdateProfile();
+  const { mutate: updateUserRole, isPending: changingRole } =
+    useUpdateUserRole();
+
   const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [changingRole, setChangingRole] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -46,43 +44,29 @@ export default function ProfileModal({
   });
 
   const isOwnProfile = !userId || userId === currentUser?.id;
+  const profile = isOwnProfile ? currentUserData : otherUserData;
+  const loading = isOwnProfile ? loadingCurrent : loadingOther;
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !profile) return;
 
-    const fetchProfile = async () => {
-      setLoading(true);
-      try {
-        const data = userId
-          ? await api.getUser(userId)
-          : await api.getCurrentUser();
-        setProfile(data);
-        setFormData({
-          firstName: data.firstName ?? '',
-          lastName: data.lastName ?? '',
-          bio: data.bio ?? ''
-        });
-      } catch (err) {
-        console.error('Failed to load profile:', err);
-      } finally {
-        setLoading(false);
+    setFormData({
+      firstName: profile.firstName ?? '',
+      lastName: profile.lastName ?? '',
+      bio: profile.bio ?? ''
+    });
+  }, [isOpen, profile]);
+
+  const handleSave = () => {
+    updateProfile(formData, {
+      onSuccess: () => {
+        setEditing(false);
+        // Cache uppdateras automatiskt via invalidation!
+      },
+      onError: (err) => {
+        console.error('Failed to save profile:', err);
       }
-    };
-
-    fetchProfile();
-  }, [isOpen, userId]);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const updated = await api.updateProfile(formData);
-      setProfile(updated);
-      setEditing(false);
-    } catch (err) {
-      console.error('Failed to save profile:', err);
-    } finally {
-      setSaving(false);
-    }
+    });
   };
 
   const handleDelete = async () => {
@@ -98,20 +82,19 @@ export default function ProfileModal({
     }
   };
 
-  const handleChangeRole = async (
-    newRole: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF'
-  ) => {
+  const handleChangeRole = (newRole: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF') => {
     if (!profile) return;
-    setChangingRole(true);
-    try {
-      const updated = await api.updateUserRole(profile.id, newRole);
-      setProfile(updated);
-    } catch (err) {
-      console.error('Failed to change role:', err);
-      alert('Kunde inte ändra roll. Kontrollera att du har behörighet.');
-    } finally {
-      setChangingRole(false);
-    }
+
+    updateUserRole(
+      { userId: profile.id, role: newRole },
+      {
+        onError: (err) => {
+          console.error('Failed to change role:', err);
+          alert('Kunde inte ändra roll. Kontrollera att du har behörighet.');
+        }
+        // Cache uppdateras automatiskt via invalidation!
+      }
+    );
   };
 
   if (!isOpen) return null;
