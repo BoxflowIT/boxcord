@@ -38,12 +38,31 @@ export async function channelRoutes(app: FastifyInstance) {
     };
   }>('/', async (request, reply) => {
     const channel = await channelService.createChannel(request.body);
+    
+    // Emit socket event to all users in workspace
+    const io = app.io;
+    if (io) {
+      io.to(`workspace:${channel.workspaceId}`).emit('channel:created', channel);
+    }
+    
     return reply.status(201).send({ success: true, data: channel });
   });
 
   // Delete channel
   app.delete<{ Params: { id: string } }>('/:id', async (request, reply) => {
+    // Get channel info before deletion for socket event
+    const channel = await channelService.getChannel(request.params.id);
     await channelService.deleteChannel(request.params.id);
+    
+    // Emit socket event to all users in workspace
+    const io = app.io;
+    if (io && channel) {
+      io.to(`workspace:${channel.workspaceId}`).emit('channel:deleted', {
+        channelId: request.params.id,
+        workspaceId: channel.workspaceId
+      });
+    }
+    
     return reply.status(204).send();
   });
 

@@ -1,7 +1,16 @@
 // Socket.io Client Service
 import { io, Socket } from 'socket.io-client';
+import { QueryClient } from '@tanstack/react-query';
 import { useChatStore, Message } from '../store/chat';
 import { useAuthStore } from '../store/auth';
+import { queryKeys } from '../hooks/useQuery';
+
+// QueryClient instance for cache updates
+let queryClient: QueryClient | null = null;
+
+export function setQueryClient(client: QueryClient) {
+  queryClient = client;
+}
 
 class SocketService {
   private socket: Socket | null = null;
@@ -100,20 +109,71 @@ class SocketService {
     }
     this.listenersRegistered = true;
 
-    // Message events
+    // Message events - update both React Query cache and Zustand
     socket.on('message:new', (message: Message) => {
       console.log('✅ Socket: Received new message:', message);
+      
+      // Update Zustand store
       useChatStore.getState().addMessage(message);
+      
+      // Update React Query cache directly (avoid refetch)
+      if (queryClient && message.channelId) {
+        queryClient.setQueryData(
+          queryKeys.messages(message.channelId),
+          (old: any) => {
+            if (!old?.items) return old;
+            // Don't add duplicate
+            if (old.items.some((m: any) => m.id === message.id)) return old;
+            return { ...old, items: [...old.items, message] };
+          }
+        );
+      }
     });
 
     this.socket.on('message:edit', (message: Message) => {
       console.log('✏️ Socket: Message edited:', message.id);
+      
+      // Update Zustand store
       useChatStore.getState().updateMessage(message);
+      
+      // Update React Query cache
+      if (queryClient && message.channelId) {
+        queryClient.setQueryData(
+          queryKeys.messages(message.channelId),
+          (old: any) => {
+            if (!old?.items) return old;
+            return {
+              ...old,
+              items: old.items.map((m: any) => 
+                m.id === message.id ? message : m
+              )
+            };
+          }
+        );
+      }
     });
 
     this.socket.on('message:delete', ({ messageId }: { messageId: string }) => {
       console.log('🗑️ Socket: Message deleted:', messageId);
+      
+      // Update Zustand store
+      const messages = useChatStore.getState().messages;
+      const deletedMessage = messages.find(m => m.id === messageId);
       useChatStore.getState().removeMessage(messageId);
+      
+      // Update React Query cache
+      if (queryClient && deletedMessage?.channelId) {
+        queryClient.setQueryData(
+          queryKeys.messages(deletedMessage.channelId),
+          (old: any) => {
+            if (!old?.items) return old;
+            return {
+              ...old,
+              items: old.items.filter((m: any) => m.id !== messageId)
+            };
+          }
+        );
+      }
     });
 
     // Typing indicator
@@ -164,6 +224,37 @@ class SocketService {
         console.log('DM typing:', userId, channelId);
       }
     );
+
+    // Channel lifecycle events - update React Query cache
+    this.socket.on('channel:created', (channel: any) => {
+      console.log('🆕 Channel created:', channel);
+      
+      if (queryClient) {
+        queryClient.setQueryData(
+          queryKeys.channels(channel.workspaceId),
+          (old: any) => {
+            if (!old) return [channel];
+            // Don't add duplicate
+            if (old.some((ch: any) => ch.id === channel.id)) return old;
+            return [...old, channel];
+          }
+        );
+      }
+    });
+
+    this.socket.on('channel:deleted', ({ channelId, workspaceId }: any) => {
+      console.log('🗑️ Channel deleted:', channelId);
+      
+      if (queryClient) {
+        queryClient.setQueryData(
+          queryKeys.channels(workspaceId),
+          (old: any) => {
+            if (!old) return old;
+            return old.filter((ch: any) => ch.id !== channelId);
+          }
+        );
+      }
+    });
 
     // Presence
     this.socket.on('user:online', ({ userId }: { userId: string }) => {

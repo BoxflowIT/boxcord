@@ -2,24 +2,27 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuth } from 'react-oidc-context';
 import { useAuthStore } from './store/auth';
+import { setQueryClient } from './services/socket';
 import Spinner from './components/ui/Spinner';
 import Login from './pages/Login';
 import Chat from './pages/Chat';
 import AuthCallback from './pages/AuthCallback';
 
-// Skapa QueryClient med optimerade inställningar
+// Create QueryClient with optimized settings
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Globala defaults för alla queries
-      staleTime: 2 * 60 * 1000, // Data är "fresh" i 2 minuter
-      gcTime: 5 * 60 * 1000, // Cache behålls i 5 minuter (tidigare cacheTime)
-      retry: 1, // Försök max 1 gång vid fel
-      refetchOnWindowFocus: true, // Refetch när användaren kommer tillbaka till fliken
-      refetchOnReconnect: true // Refetch när internet kopplas på igen
+      staleTime: 2 * 60 * 1000,
+      gcTime: 5 * 60 * 1000,
+      retry: 1,
+      refetchOnWindowFocus: false, // Discord-style: don't refetch on focus (WebSocket keeps data fresh)
+      refetchOnReconnect: true
     }
   }
 });
+
+// Set queryClient for socket service to update cache directly
+setQueryClient(queryClient);
 
 function App() {
   const { token, isLoading } = useAuthStore();
