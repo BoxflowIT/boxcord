@@ -5,6 +5,7 @@ import { useAuth } from 'react-oidc-context';
 import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
 import { api } from '../services/api';
+import { useCreateChannel, useDeleteChannel } from '../hooks/useQuery';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import EditModal from './EditModal';
 import CreateModal from './CreateModal';
@@ -26,12 +27,13 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
     channels,
     currentChannel,
     setCurrentChannel,
-    addChannel,
     removeChannel,
     updateChannel: updateChannelStore
   } = useChatStore();
   const { user, logout } = useAuthStore();
   const auth = useAuth();
+  const createChannelMutation = useCreateChannel();
+  const deleteChannelMutation = useDeleteChannel();
   const [showNewChannel, setShowNewChannel] = useState(false);
   const [showNewWorkspace, setShowNewWorkspace] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -92,8 +94,10 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
 
     setIsCreating(true);
     try {
-      const channel = await api.createChannel(currentWorkspace.id, name);
-      addChannel(channel);
+      const channel = await createChannelMutation.mutateAsync({
+        workspaceId: currentWorkspace.id,
+        name
+      });
       setShowNewChannel(false);
       handleChannelSelect(channel);
     } catch (err) {
@@ -117,7 +121,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
     if (!deleteChannel) return;
 
     try {
-      await api.deleteChannel(deleteChannel.id);
+      await deleteChannelMutation.mutateAsync(deleteChannel.id);
       removeChannel(deleteChannel.id);
       setDeleteChannel(null);
       // Select first channel if available
