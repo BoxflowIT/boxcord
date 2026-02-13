@@ -4,21 +4,21 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Boxflow brand colors - modern dark theme
+        // Discord-inspired color palette
         'boxflow': {
-          primary: '#00a8e8',      // Cyan/blue - primary brand color
-          secondary: '#0077b6',    // Darker blue - secondary actions
-          accent: '#00d9ff',       // Bright cyan - highlights
-          success: '#06d6a0',      // Green - success states
-          warning: '#ffd166',      // Yellow/orange - warnings
-          danger: '#ef476f',       // Red - errors/delete
-          dark: '#1a1d23',         // Main dark background
-          darker: '#151820',       // Sidebar/darker panels
-          darkest: '#0f1115',      // Deepest dark for contrast
-          light: '#e4e6eb',        // Main text color
-          muted: '#9ca3af',        // Secondary text
-          subtle: '#6b7280',       // Tertiary text
-          border: '#2d3139',       // Border color
+          primary: '#5865f2',      // Discord blurple - primary brand
+          secondary: '#4752c4',    // Darker blurple - hover states
+          accent: '#7289da',       // Light blurple - accents
+          success: '#3ba55c',      // Green - success/online
+          warning: '#faa61a',      // Orange - warnings
+          danger: '#ed4245',       // Red - errors/delete
+          dark: '#36393f',         // Main dark background
+          darker: '#2f3136',       // Sidebar/darker panels
+          darkest: '#202225',      // Deepest dark for contrast
+          light: '#dcddde',        // Main text color
+          muted: '#b9bbbe',        // Secondary text
+          subtle: '#72767d',       // Tertiary text
+          border: '#202225',       // Border color
         },
         // Legacy discord colors (for gradual migration)
         'discord-dark': '#36393f',

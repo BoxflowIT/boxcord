@@ -10,26 +10,26 @@
 
 body {
   font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #1a1d23;
-  color: #e4e6eb;
+  background-color: #36393f;
+  color: #dcddde;
 }
 
-/* Scrollbar styling - Boxflow theme */
+/* Scrollbar styling - Discord theme */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #151820;
+  background: #2f3136;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2d3139;
+  background: #202225;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #00a8e8;
+  background: #5865f2;
 }
 
 /* ============================================
@@ -275,7 +275,7 @@ body {
   }
 
   .list-item-interactive {
-    @apply group px-3 py-2 rounded-lg hover:bg-boxflow-dark/50 transition-colors cursor-pointer;
+    @apply flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-boxflow-dark/50 transition-colors cursor-pointer;
   }
 
   /* ========== Modal/Overlay Styles ========== */

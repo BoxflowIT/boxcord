@@ -8,6 +8,7 @@ import { api } from '../services/api';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import EditModal from './EditModal';
 import CreateModal from './CreateModal';
+import Avatar from './ui/Avatar';
 
 interface SidebarProps {
   onProfileClick?: () => void;
