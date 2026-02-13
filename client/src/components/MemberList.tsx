@@ -24,7 +24,6 @@ export default function MemberList() {
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [showProfile, setShowProfile] = useState(false);
 
@@ -35,11 +34,10 @@ export default function MemberList() {
         setUsers(onlineUsers);
       } catch (err) {
         console.error('Failed to fetch online users:', err);
-      } finally {
-        setLoading(false);
       }
     };
 
+    // Fetch immediately without showing loading state
     fetchOnlineUsers();
 
     // Listen for presence updates via WebSocket instead of polling
@@ -134,9 +132,7 @@ export default function MemberList() {
 
       {/* User list */}
       <div className="panel-content">
-        {loading ? (
-          <div className="text-muted px-2">Laddar...</div>
-        ) : users.length === 0 ? (
+        {users.length === 0 ? (
           <div className="text-muted px-2">
             Inga användare online
           </div>
@@ -153,7 +149,7 @@ export default function MemberList() {
                 {roleUsers.map((user) => (
                   <div
                     key={user.id}
-                    className="list-item-interactive"
+                    className="group list-item-interactive"
                   >
                     <button
                       onClick={() => handleUserClick(user.id)}

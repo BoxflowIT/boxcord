@@ -16,6 +16,7 @@ class SocketService {
   > = new Map();
   private connecting: boolean = false;
   private pendingOperations: Array<() => void> = [];
+  private listenersRegistered: boolean = false; // Track if listeners are already registered
 
   connect() {
     const token = useAuthStore.getState().token;
@@ -104,6 +105,13 @@ class SocketService {
     console.log('Socket: Event handlers registered. Connecting now...');
     socket.connect();
     console.log('Socket: Connection initiated');
+
+    // Only register event listeners once
+    if (this.listenersRegistered) {
+      console.log('Socket: Event listeners already registered, skipping...');
+      return;
+    }
+    this.listenersRegistered = true;
 
     // Message events
     socket.on('message:new', (message: Message) => {
@@ -197,6 +205,7 @@ class SocketService {
       this.socket = null;
       this.connecting = false;
       this.pendingOperations = [];
+      this.listenersRegistered = false; // Reset listeners flag
     }
   }
 
