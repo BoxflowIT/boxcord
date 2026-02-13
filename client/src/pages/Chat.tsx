@@ -36,7 +36,16 @@ export default function Chat() {
     // Connect to WebSocket
     socketService.connect();
 
+    // Handle page refresh - disconnect socket BEFORE unload to prevent 400 errors
+    const handleBeforeUnload = () => {
+      console.log('🔄 Page unload: Disconnecting socket...');
+      socketService.disconnect();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       socketService.disconnect();
     };
   }, []);

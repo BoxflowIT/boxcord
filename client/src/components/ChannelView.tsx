@@ -78,24 +78,24 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     }
   });
 
+  // Set current channel when it changes
   useEffect(() => {
     if (!channelId) return;
-
-    // Set current channel from React Query data
     const channel = channels.find((c) => c.id === channelId);
     if (channel) {
       setCurrentChannel(channel);
     }
+  }, [channelId, channels, setCurrentChannel]);
 
-    // Join channel room for WebSocket events
+  // Join/leave channel room (separate effect to avoid unnecessary rejoins)
+  useEffect(() => {
+    if (!channelId) return;
     socketService.joinChannel(channelId);
 
     return () => {
-      if (channelId) {
-        socketService.leaveChannel(channelId);
-      }
+      socketService.leaveChannel(channelId);
     };
-  }, [channelId, channels, setCurrentChannel]);
+  }, [channelId]);
 
   // Auto-scroll on new messages
   useEffect(() => {
