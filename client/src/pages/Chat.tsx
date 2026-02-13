@@ -24,7 +24,7 @@ export default function Chat() {
   const [showProfile, setShowProfile] = useState(false);
   const [showMemberList, setShowMemberList] = useState(true);
 
-  // React Query hooks - automatisk caching och deduplicering
+  // React Query hooks for auto caching and deduplication
   const { data: workspaces } = useWorkspaces();
   const { data: channels } = useChannels(currentWorkspace?.id);
 
@@ -40,11 +40,11 @@ export default function Chat() {
     };
   }, []);
 
-  // Uppdatera store när workspaces laddas från cache/API
+  // Update store when workspaces load from cache/API
   useEffect(() => {
     if (workspaces) {
       setWorkspaces(workspaces);
-      // Auto-select first workspace om ingen är vald
+      // Auto-select first workspace if none selected
       if (workspaces.length > 0 && !currentWorkspace) {
         setCurrentWorkspace(workspaces[0]);
       }
@@ -52,11 +52,10 @@ export default function Chat() {
   }, [workspaces, currentWorkspace, setWorkspaces, setCurrentWorkspace]);
 
   useEffect(() => {
-    // Uppdatera store när channels laddas från cache/API
+    // Update store when channels load from cache/API
     if (channels) {
       setChannels(channels);
-      // Auto-select first channel ONLY if no channel is currently selected
-      // or if the current channel is not in this workspace
+      // Auto-select first channel only if none selected or current channel not in workspace
       const currentChannelInWorkspace = channels.find(
         (c) => c.id === useChatStore.getState().currentChannel?.id
       );

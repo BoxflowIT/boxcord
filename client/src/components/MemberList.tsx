@@ -24,7 +24,7 @@ interface User {
 export default function MemberList() {
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
-  // React Query hook - automatisk caching och uppdatering var 15:e sekund
+  // React Query hook for auto caching
   const { data: onlineUsers } = useOnlineUsers();
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);

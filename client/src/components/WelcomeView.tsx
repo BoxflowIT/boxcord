@@ -10,7 +10,7 @@ export default function WelcomeView() {
   const [showCreate, setShowCreate] = useState(false);
   const [workspaceName, setWorkspaceName] = useState('');
 
-  // React Query mutation - invaliderar automatiskt workspaces cache
+  // React Query mutation - automatically invalidates workspaces cache
   const { mutate: createWorkspace, isPending: creating } = useCreateWorkspace();
 
   const handleCreateWorkspace = async () => {
@@ -23,7 +23,7 @@ export default function WelcomeView() {
           setCurrentWorkspace(workspace);
           setShowCreate(false);
           setWorkspaceName('');
-          // Cache uppdateras automatiskt via invalidation!
+          // Cache updated automatically via invalidation
         },
         onError: (err) => {
           console.error('Failed to create workspace:', err);

@@ -1,8 +1,17 @@
-// React Query Hooks för API caching
+// React Query Hooks - API caching and data fetching
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 
-// Query Keys för caching
+// Cache duration constants (in milliseconds)
+const CACHE_TIMES = {
+  WORKSPACES: { stale: 10 * 60 * 1000, gc: 30 * 60 * 1000 },
+  CHANNELS: { stale: 10 * 60 * 1000, gc: 30 * 60 * 1000 },
+  MESSAGES: { stale: 2 * 60 * 1000, gc: 5 * 60 * 1000, refetch: 60 * 1000 },
+  USERS: { stale: 5 * 60 * 1000, gc: 10 * 60 * 1000 },
+  CURRENT_USER: { stale: 10 * 60 * 1000, gc: 30 * 60 * 1000 }
+} as const;
+
+// Query Keys for caching
 export const queryKeys = {
   workspaces: ['workspaces'] as const,
   workspace: (id: string) => ['workspace', id] as const,
@@ -17,93 +26,69 @@ export const queryKeys = {
   user: (id: string) => ['user', id] as const
 };
 
-/**
- * Hämta alla workspaces med caching
- * Uppdateras via socket events (workspace.created, workspace.updated)
- */
+// Workspaces - updated via socket events
 export function useWorkspaces() {
   return useQuery({
     queryKey: queryKeys.workspaces,
     queryFn: () => api.getWorkspaces(),
-    staleTime: 10 * 60 * 1000, // 10 min - uppdateras via socket
-    gcTime: 30 * 60 * 1000
-    // Ingen refetchInterval - socket events hanterar uppdateringar
+    staleTime: CACHE_TIMES.WORKSPACES.stale,
+    gcTime: CACHE_TIMES.WORKSPACES.gc
   });
 }
 
-/**
- * Hämta channels för en workspace med caching
- * Uppdateras via socket events (channel.created, channel.updated)
- */
+// Channels for workspace - updated via socket events
 export function useChannels(workspaceId: string | undefined) {
   return useQuery({
     queryKey: workspaceId ? queryKeys.channels(workspaceId) : ['channels-null'],
     queryFn: () => (workspaceId ? api.getChannels(workspaceId) : []),
     enabled: !!workspaceId,
-    staleTime: 10 * 60 * 1000, // 10 min - uppdateras via socket
-    gcTime: 30 * 60 * 1000
-    // Ingen refetchInterval - socket events hanterar uppdateringar
+    staleTime: CACHE_TIMES.CHANNELS.stale,
+    gcTime: CACHE_TIMES.CHANNELS.gc
   });
 }
 
-/**
- * Hämta DM channels med caching
- * Uppdateras via socket events (dm.created, message.new för DMs)
- */
+// DM channels - updated via socket events
 export function useDMChannels() {
   return useQuery({
     queryKey: queryKeys.dmChannels,
     queryFn: () => api.getDMChannels(),
-    staleTime: 10 * 60 * 1000, // 10 min - uppdateras via socket
-    gcTime: 30 * 60 * 1000
-    // Ingen refetchInterval - socket events hanterar uppdateringar
+    staleTime: CACHE_TIMES.CHANNELS.stale,
+    gcTime: CACHE_TIMES.CHANNELS.gc
   });
 }
 
-/**
- * Hämta online users med caching
- * Uppdateras via socket events, ingen polling behövs
- */
+// Online users - updated frequently via socket
 export function useOnlineUsers() {
   return useQuery({
     queryKey: queryKeys.onlineUsers,
     queryFn: () => api.getOnlineUsers(),
-    staleTime: 5 * 60 * 1000, // 5 min - uppdateras via socket
-    gcTime: 10 * 60 * 1000
-    // Ingen refetchInterval - socket events hanterar uppdateringar
+    staleTime: CACHE_TIMES.USERS.stale,
+    gcTime: CACHE_TIMES.USERS.gc
   });
 }
 
-/**
- * Hämta current user med caching
- * Cachas i 10 minuter (ändras sällan)
- */
+// Current user profile
 export function useCurrentUser() {
   return useQuery({
     queryKey: queryKeys.currentUser,
     queryFn: () => api.getCurrentUser(),
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000
+    staleTime: CACHE_TIMES.CURRENT_USER.stale,
+    gcTime: CACHE_TIMES.CURRENT_USER.gc
   });
 }
 
-/**
- * Hämta user profile med caching
- */
+// User profile by ID
 export function useUser(userId: string | undefined) {
   return useQuery({
     queryKey: userId ? queryKeys.user(userId) : ['user-null'],
     queryFn: () => (userId ? api.getUser(userId) : null),
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000
+    staleTime: CACHE_TIMES.USERS.stale,
+    gcTime: CACHE_TIMES.USERS.gc
   });
 }
 
-/**
- * Hämta messages för en channel med caching
- * Uppdateras via socket när möjligt, men har backup polling var 60:e sekund
- */
+// Channel messages with backup polling
 export function useMessages(channelId: string | undefined, cursor?: string) {
   return useQuery({
     queryKey: channelId
@@ -114,16 +99,13 @@ export function useMessages(channelId: string | undefined, cursor?: string) {
         ? api.getMessages(channelId, cursor)
         : { items: [], hasMore: false },
     enabled: !!channelId,
-    staleTime: 2 * 60 * 1000, // 2 min
-    gcTime: 5 * 60 * 1000,
-    refetchInterval: 60 * 1000 // Backup polling var 60:e sekund
+    staleTime: CACHE_TIMES.MESSAGES.stale,
+    gcTime: CACHE_TIMES.MESSAGES.gc,
+    refetchInterval: CACHE_TIMES.MESSAGES.refetch // Backup if socket events fail
   });
 }
 
-/**
- * Hämta DM messages med caching
- * Uppdateras via socket när möjligt, men har backup polling var 60:e sekund
- */
+// DM messages with backup polling
 export function useDMMessages(channelId: string | undefined, cursor?: string) {
   return useQuery({
     queryKey: channelId
@@ -134,49 +116,33 @@ export function useDMMessages(channelId: string | undefined, cursor?: string) {
         ? api.getDMMessages(channelId, cursor)
         : { items: [], hasMore: false },
     enabled: !!channelId,
-    staleTime: 2 * 60 * 1000, // 2 min
-    gcTime: 5 * 60 * 1000,
-    refetchInterval: 60 * 1000 // Backup polling var 60:e sekund
+    staleTime: CACHE_TIMES.MESSAGES.stale,
+    gcTime: CACHE_TIMES.MESSAGES.gc,
+    refetchInterval: CACHE_TIMES.MESSAGES.refetch // Backup if socket events fail
   });
 }
 
-/**
- * Create workspace mutation med cache invalidation
- */
+// Create workspace mutation
 export function useCreateWorkspace() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      name,
-      description
-    }: {
-      name: string;
-      description?: string;
-    }) => api.createWorkspace(name, description),
+    mutationFn: ({ name, description }: { name: string; description?: string }) =>
+      api.createWorkspace(name, description),
     onSuccess: () => {
-      // Invalidera workspaces cache så den refetchas
       queryClient.invalidateQueries({ queryKey: queryKeys.workspaces });
     }
   });
 }
 
-/**
- * Create channel mutation med cache invalidation
- */
+// Create channel mutation
 export function useCreateChannel() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      workspaceId,
-      name
-    }: {
-      workspaceId: string;
-      name: string;
-    }) => api.createChannel(workspaceId, name),
+    mutationFn: ({ workspaceId, name }: { workspaceId: string; name: string }) =>
+      api.createChannel(workspaceId, name),
     onSuccess: (_data, variables) => {
-      // Invalidera channels cache för denna workspace
       queryClient.invalidateQueries({
         queryKey: queryKeys.channels(variables.workspaceId)
       });
@@ -184,9 +150,7 @@ export function useCreateChannel() {
   });
 }
 
-/**
- * Delete workspace mutation
- */
+// Delete workspace mutation
 export function useDeleteWorkspace() {
   const queryClient = useQueryClient();
 
@@ -198,69 +162,46 @@ export function useDeleteWorkspace() {
   });
 }
 
-/**
- * Delete channel mutation
- */
+// Delete channel mutation
 export function useDeleteChannel() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (channelId: string) => api.deleteChannel(channelId),
     onSuccess: () => {
-      // Invalidera alla channels queries
       queryClient.invalidateQueries({ queryKey: ['channels'] });
     }
   });
 }
 
-/**
- * Update profile mutation med cache invalidation
- */
+// Update profile mutation
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: {
-      firstName?: string;
-      lastName?: string;
-      bio?: string;
-    }) => api.updateProfile(data),
+    mutationFn: (data: { firstName?: string; lastName?: string; bio?: string }) =>
+      api.updateProfile(data),
     onSuccess: () => {
-      // Invalidera current user cache
       queryClient.invalidateQueries({ queryKey: queryKeys.currentUser });
     }
   });
 }
 
-/**
- * Update user role mutation
- */
+// Update user role mutation (admin only)
 export function useUpdateUserRole() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      userId,
-      role
-    }: {
-      userId: string;
-      role: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF';
-    }) => api.updateUserRole(userId, role),
+    mutationFn: ({ userId, role }: { userId: string; role: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF' }) =>
+      api.updateUserRole(userId, role),
     onSuccess: (_data, variables) => {
-      // Invalidera user cache för denna user
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.user(variables.userId)
-      });
-      // Invalidera online users också
+      queryClient.invalidateQueries({ queryKey: queryKeys.user(variables.userId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.onlineUsers });
     }
   });
 }
 
-/**
- * Hämta flera users samtidigt med caching
- * Varje user cachas individuellt OCH som batch
- */
+// Batch fetch multiple users
 export function useUsers(userIds: string[]) {
   const queryClient = useQueryClient();
 
@@ -269,10 +210,9 @@ export function useUsers(userIds: string[]) {
     queryFn: async () => {
       const users = await Promise.all(
         userIds.map((id) =>
-          api
-            .getUser(id)
+          api.getUser(id)
             .then((user) => {
-              // Cacha varje user individuellt också!
+              // Cache each user individually
               queryClient.setQueryData(queryKeys.user(id), user);
               return user;
             })
@@ -282,21 +222,18 @@ export function useUsers(userIds: string[]) {
       return users.filter((u) => u !== null);
     },
     enabled: userIds.length > 0,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000
+    staleTime: CACHE_TIMES.USERS.stale,
+    gcTime: CACHE_TIMES.USERS.gc
   });
 }
 
-/**
- * Hämta reactions för ett meddelande med caching
- * Uppdateras via WebSocket men detta ger snabb initial load
- */
+// Message reactions
 export function useReactions(messageId: string | undefined) {
   return useQuery({
     queryKey: messageId ? ['reactions', messageId] : ['reactions-null'],
     queryFn: () => (messageId ? api.getReactions(messageId) : []),
     enabled: !!messageId,
-    staleTime: 30 * 1000, // 30 sek (reactions uppdateras ofta via WebSocket)
+    staleTime: 30 * 1000, // 30s - updated frequently via socket
     gcTime: 2 * 60 * 1000
   });
 }

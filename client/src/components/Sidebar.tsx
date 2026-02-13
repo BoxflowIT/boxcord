@@ -61,8 +61,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
 
   const handleWorkspaceSelect = (workspace: typeof currentWorkspace) => {
     setCurrentWorkspace(workspace);
-    // Channels laddas automatiskt av Chat.tsx via useChannels() hook!
-    // Ingen duplicerad API-anrop behövs här
+    // Channels loaded automatically by Chat.tsx via useChannels()
   };
 
   const handleChannelSelect = (channel: typeof currentChannel) => {

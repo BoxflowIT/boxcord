@@ -46,50 +46,12 @@ class SocketService {
       return;
     }
 
-    console.log(
-      'Socket: Connecting with token:',
-      token.substring(0, 20) + '...'
-    );
-
-    // Debug: Try to decode token to see what's in it
-    if (token) {
-      try {
-        const parts = token.split('.');
-        if (parts.length === 3) {
-          // Convert base64url to base64
-          let base64Payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-          // Add padding if needed
-          while (base64Payload.length % 4) {
-            base64Payload += '=';
-          }
-          const payload = JSON.parse(atob(base64Payload));
-          console.log('🔍 Token payload:', {
-            sub: payload.sub,
-            email: payload.email,
-            exp: payload.exp
-              ? new Date(payload.exp * 1000).toISOString()
-              : 'none',
-            iat: payload.iat
-              ? new Date(payload.iat * 1000).toISOString()
-              : 'none',
-            token_use: payload.token_use
-          });
-        } else {
-          console.warn('⚠️ Token does not have 3 parts (not a valid JWT)');
-        }
-      } catch (err) {
-        console.warn('⚠️ Could not decode token:', err);
-      }
-    }
-
-    // Always connect directly to backend (bypassing Vite proxy which has issues with socket.io)
+    // Always connect directly to backend
     const socketUrl = import.meta.env.DEV
       ? 'http://localhost:3001'
       : window.location.origin;
-    console.log('Socket: Connection URL:', socketUrl);
 
     // Create socket with optimized config
-    console.log('Socket: Creating socket instance...');
     this.connecting = true;
     const socket = io(socketUrl, {
       auth: { token },
@@ -102,12 +64,6 @@ class SocketService {
       autoConnect: false // We'll connect manually
     });
 
-    console.log(
-      'Socket: Instance created, type:',
-      typeof socket,
-      'connected:',
-      socket.connected
-    );
     this.socket = socket;
 
     // Register event listeners
