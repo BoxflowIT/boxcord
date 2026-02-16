@@ -61,7 +61,11 @@ export default function ForgotPassword() {
     setIsLoading(true);
 
     try {
-      const result = await confirmPassword(email, verificationCode, newPassword);
+      const result = await confirmPassword(
+        email,
+        verificationCode,
+        newPassword
+      );
 
       if (!result.success) {
         setError(result.error || 'Lösenordsåterställning misslyckades');
@@ -70,7 +74,7 @@ export default function ForgotPassword() {
       }
 
       setSuccess('Lösenord ändrat! Du kan nu logga in med ditt nya lösenord.');
-      
+
       // Redirect to login after 2 seconds
       setTimeout(() => {
         navigate('/login');
@@ -194,9 +198,7 @@ export default function ForgotPassword() {
                 placeholder="••••••••"
                 disabled={isLoading}
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Minst 8 tecken
-              </p>
+              <p className="text-xs text-gray-500 mt-1">Minst 8 tecken</p>
             </div>
 
             {/* Confirm Password Field */}

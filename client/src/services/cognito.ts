@@ -180,7 +180,9 @@ export const getCurrentSession = (): Promise<{
 /**
  * Initiate forgot password flow
  */
-export const forgotPassword = (email: string): Promise<ForgotPasswordResult> => {
+export const forgotPassword = (
+  email: string
+): Promise<ForgotPasswordResult> => {
   return new Promise((resolve) => {
     const userData = {
       Username: email,
