@@ -5,7 +5,7 @@
 // NO duplicate storage in Zustand
 // ============================================================================
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { socketService } from '../services/socket';
@@ -19,6 +19,8 @@ import EmojiPicker from './ui/EmojiPicker';
 import MentionAutocomplete, { parseMentions } from './MentionAutocomplete';
 import SlashCommandAutocomplete from './SlashCommandAutocomplete';
 import DeleteConfirmModal from './DeleteConfirmModal';
+import { LoadingState } from './ui/LoadingSpinner';
+import { UsersIcon } from './ui/Icons';
 
 interface ChannelViewProps {
   onToggleMemberList?: () => void;
@@ -35,10 +37,11 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     useMessages(channelId);
   const { data: channels = [] } = useChannels(currentWorkspace?.id);
 
-  // Messages from React Query cache (reversed for display)
-  const channelMessages = messagesData?.items
-    ? [...messagesData.items].reverse()
-    : [];
+  // Messages from React Query cache - memoized to prevent unnecessary re-renders
+  const channelMessages = useMemo(
+    () => messagesData?.items ?? [],
+    [messagesData?.items]
+  );
 
   const [inputValue, setInputValue] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -54,6 +57,18 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<number>();
 
+  // Stable callbacks for message actions - WebSocket ONLY (no API calls)
+  const handleEditChannelMessage = useCallback(
+    async (messageId: string, content: string) => {
+      socketService.editMessage(messageId, content);
+    },
+    []
+  );
+
+  const handleDeleteChannelMessage = useCallback(async (messageId: string) => {
+    socketService.deleteMessage(messageId);
+  }, []);
+
   const {
     editingMessageId,
     editContent,
@@ -67,15 +82,8 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     handleCancelDelete,
     setEditContent
   } = useMessageActions({
-    onEdit: async (messageId, content) => {
-      await api.editMessage(messageId, content);
-      socketService.editMessage(messageId, content);
-    },
-    onDelete: async (messageId) => {
-      await api.deleteMessage(messageId);
-      socketService.deleteMessage(messageId);
-      // React Query cache updated automatically by WebSocket handler
-    }
+    onEdit: handleEditChannelMessage,
+    onDelete: handleDeleteChannelMessage
   });
 
   // Set current channel when it changes
@@ -301,22 +309,10 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
         {onToggleMemberList && (
           <button
             onClick={onToggleMemberList}
-            className="p-2 text-gray-400 hover:text-white transition-colors"
+            className="btn-icon"
             title="Visa/dölj medlemslista"
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
-              />
-            </svg>
+            <UsersIcon />
           </button>
         )}
       </div>
@@ -324,17 +320,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {loadingMessages ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="relative w-12 h-12 mx-auto mb-3">
-                <div className="absolute inset-0 border-4 border-boxflow-border rounded-full"></div>
-                <div className="absolute inset-0 border-4 border-boxflow-primary rounded-full border-t-transparent animate-spin"></div>
-              </div>
-              <p className="text-boxflow-muted text-sm">
-                Laddar meddelanden...
-              </p>
-            </div>
-          </div>
+          <LoadingState text="Laddar meddelanden..." />
         ) : channelMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400">
             <p className="text-xl mb-2">
@@ -363,41 +349,6 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
               reactions?: Array<{ emoji: string; userId: string }>;
             };
 
-            // Group reactions
-            const reactionCounts =
-              msg.reactions?.reduce(
-                (acc, r) => {
-                  const existing = acc.find((x) => x.emoji === r.emoji);
-                  if (existing) {
-                    existing.count++;
-                    if (r.userId === user?.id) existing.hasReacted = true;
-                  } else {
-                    acc.push({
-                      emoji: r.emoji,
-                      count: 1,
-                      hasReacted: r.userId === user?.id
-                    });
-                  }
-                  return acc;
-                },
-                [] as Array<{
-                  emoji: string;
-                  count: number;
-                  hasReacted: boolean;
-                }>
-              ) ?? [];
-
-            const authorName =
-              message.authorId === user?.id
-                ? 'Du'
-                : message.author?.firstName && message.author?.lastName
-                  ? `${message.author.firstName} ${message.author.lastName}`
-                  : (message.author?.firstName ?? message.authorId.slice(0, 8));
-
-            const authorInitial = (
-              message.author?.firstName?.[0] ?? message.authorId[0]
-            ).toUpperCase();
-
             return (
               <MessageItem
                 key={message.id}
@@ -406,13 +357,44 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
                 createdAt={message.createdAt}
                 edited={message.edited}
                 attachments={msg.attachments}
-                reactionCounts={reactionCounts}
+                reactionCounts={
+                  msg.reactions?.reduce(
+                    (acc, r) => {
+                      const existing = acc.find((x) => x.emoji === r.emoji);
+                      if (existing) {
+                        existing.count++;
+                        if (r.userId === user?.id) existing.hasReacted = true;
+                      } else {
+                        acc.push({
+                          emoji: r.emoji,
+                          count: 1,
+                          hasReacted: r.userId === user?.id
+                        });
+                      }
+                      return acc;
+                    },
+                    [] as Array<{
+                      emoji: string;
+                      count: number;
+                      hasReacted: boolean;
+                    }>
+                  ) ?? []
+                }
                 showHeader={showHeader}
                 isEditing={editingMessageId === message.id}
                 isOwnMessage={message.authorId === user?.id}
-                authorName={authorName}
-                authorInitial={authorInitial}
-                editContent={editContent}
+                authorName={
+                  message.authorId === user?.id
+                    ? 'Du'
+                    : message.author?.firstName && message.author?.lastName
+                      ? `${message.author.firstName} ${message.author.lastName}`
+                      : (message.author?.firstName ??
+                        message.authorId.slice(0, 8))
+                }
+                authorInitial={(
+                  message.author?.firstName?.[0] ?? message.authorId[0]
+                ).toUpperCase()}
+                editContent={editingMessageId === message.id ? editContent : ''}
                 editTextareaRef={editTextareaRef}
                 onEditContentChange={setEditContent}
                 onSaveEdit={saveEdit}

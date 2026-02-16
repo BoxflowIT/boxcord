@@ -4,7 +4,7 @@ import { api } from '../services/api';
 import { useAutocompleteNavigation } from '../hooks/useAutocompleteNavigation';
 import Avatar from './ui/Avatar';
 
-interface MentionItem {
+export interface MentionItem {
   id: string;
   display: string; // What to show in UI
   value: string; // What to insert (@username)

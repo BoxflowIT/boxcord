@@ -23,6 +23,7 @@ import DeleteConfirmModal from './DeleteConfirmModal';
 import EditModal from './EditModal';
 import CreateModal from './CreateModal';
 import Avatar from './ui/Avatar';
+import { PlusIcon, EditIcon, CloseIcon, LogoutIcon } from './ui/Icons';
 import type { Workspace, Channel } from '../types';
 
 interface SidebarProps {
@@ -290,19 +291,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
             className="w-12 h-12 rounded-full bg-boxflow-dark hover:bg-boxflow-success text-boxflow-success hover:text-white flex items-center justify-center transition-all"
             title="Lägg till workspace"
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
+            <PlusIcon size="lg" />
           </button>
         </div>
 
@@ -327,19 +316,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
                     onClick={() => setShowNewChannel(true)}
                     className="btn-icon-primary"
                   >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
+                    <PlusIcon size="sm" />
                   </button>
                 </div>
 
@@ -360,38 +337,14 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
                       className="btn-icon hover-group-visible"
                       title="Redigera kanal"
                     >
-                      <svg
-                        className="w-3 h-3"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                        />
-                      </svg>
+                      <EditIcon size="sm" />
                     </button>
                     <button
                       onClick={(e) => handleDeleteChannel(channel, e)}
                       className="btn-icon-danger hover-group-visible"
                       title="Ta bort kanal"
                     >
-                      <svg
-                        className="w-3 h-3"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
+                      <CloseIcon size="sm" />
                     </button>
                   </div>
                 ))}
@@ -420,19 +373,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
               className="btn-icon"
               title="Logga ut"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                />
-              </svg>
+              <LogoutIcon />
             </button>
           </div>
         </div>

@@ -130,55 +130,7 @@ async function main() {
 
   console.log('✅ Created channels:', generalChannel.name, bookingsChannel.name, randomChannel.name);
 
-  // Create some test messages
-  await prisma.message.createMany({
-    data: [
-      {
-        id: 'msg-1',
-        channelId: 'ch-general',
-        authorId: 'user-1',
-        content: 'Välkommen till Boxcord! 🎉',
-        createdAt: new Date(Date.now() - 3600000)
-      },
-      {
-        id: 'msg-2',
-        channelId: 'ch-general',
-        authorId: 'user-2',
-        content: 'Hej! Kul att vara här! 👋',
-        createdAt: new Date(Date.now() - 1800000)
-      },
-      {
-        id: 'msg-3',
-        channelId: 'ch-general',
-        authorId: 'user-1',
-        content: 'Testa /help för att se tillgängliga kommandon',
-        createdAt: new Date(Date.now() - 900000)
-      },
-      {
-        id: 'msg-4',
-        channelId: 'ch-general',
-        authorId: 'user-3',
-        content: '🤖 **Boxcord Bot**\nJag är redo att hjälpa! Använd `/help` för kommandon.',
-        createdAt: new Date(Date.now() - 600000)
-      }
-    ],
-    skipDuplicates: true
-  });
-
-  console.log('✅ Created test messages');
-
-  // Add some reactions
-  await prisma.reaction.createMany({
-    data: [
-      { messageId: 'msg-1', userId: 'user-2', emoji: '🎉' },
-      { messageId: 'msg-1', userId: 'user-2', emoji: '👍' },
-      { messageId: 'msg-2', userId: 'user-1', emoji: '👋' }
-    ],
-    skipDuplicates: true
-  });
-
-  console.log('✅ Added reactions');
-
+  // Note: No mock messages - let users create real messages
   console.log('🌱 Seeding complete!');
 }
 

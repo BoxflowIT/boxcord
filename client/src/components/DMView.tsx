@@ -5,7 +5,7 @@
 // NO duplicate storage in local state
 // ============================================================================
 
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { socketService } from '../services/socket';
@@ -16,6 +16,8 @@ import { MessageItem } from './MessageItem';
 import FileUpload from './FileUpload';
 import EmojiPicker from './ui/EmojiPicker';
 import DeleteConfirmModal from './DeleteConfirmModal';
+import { LoadingState } from './ui/LoadingSpinner';
+import Avatar from './ui/Avatar';
 
 export default function DMView() {
   const { channelId } = useParams<{ channelId: string }>();
@@ -41,10 +43,10 @@ export default function DMView() {
   const { data: messagesData, isLoading: loadingMessages } =
     useDMMessages(channelId);
 
-  // Messages from React Query cache (reversed for display)
+  // Messages from React Query cache (already in order: oldest to newest)
   // Memoized to prevent unnecessary re-renders
   const messages = useMemo(
-    () => (messagesData?.items ? [...messagesData.items].reverse() : []),
+    () => messagesData?.items ?? [],
     [messagesData?.items]
   );
   const [inputValue, setInputValue] = useState('');
@@ -52,6 +54,23 @@ export default function DMView() {
   const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Stable callbacks for message actions
+  const handleEditDM = useCallback(
+    async (messageId: string, content: string) => {
+      socketService.editDM(messageId, content);
+    },
+    []
+  );
+
+  const handleDeleteDM = useCallback(
+    async (messageId: string) => {
+      if (channelId) {
+        socketService.deleteDM(messageId, channelId);
+      }
+    },
+    [channelId]
+  );
 
   const {
     editingMessageId,
@@ -66,15 +85,8 @@ export default function DMView() {
     handleCancelDelete,
     setEditContent
   } = useMessageActions({
-    onEdit: async (messageId, content) => {
-      await api.editDM(messageId, content);
-      socketService.editDM(messageId, content);
-    },
-    onDelete: async (messageId) => {
-      await api.deleteDM(messageId);
-      socketService.deleteDM(messageId);
-      // React Query cache updated automatically by WebSocket handler
-    }
+    onEdit: handleEditDM,
+    onDelete: handleDeleteDM
   });
 
   useEffect(() => {
@@ -101,8 +113,8 @@ export default function DMView() {
     setSending(true);
 
     try {
-      // Send message - WebSocket will handle adding it to the list
-      await api.sendDM(channelId, content);
+      // Send via WebSocket only - it will update React Query cache
+      socketService.sendDM(channelId, content);
     } catch (err) {
       console.error('Failed to send DM:', err);
       // Restore input on error
@@ -159,26 +171,16 @@ export default function DMView() {
   };
 
   if (!otherUser || loadingUser) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="relative w-12 h-12 mx-auto mb-3">
-            <div className="absolute inset-0 border-4 border-boxflow-border rounded-full"></div>
-            <div className="absolute inset-0 border-4 border-boxflow-primary rounded-full border-t-transparent animate-spin"></div>
-          </div>
-          <p className="text-boxflow-muted text-sm">Laddar användare...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState text="Laddar användare..." />;
   }
 
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="h-12 px-4 flex items-center border-b border-discord-darkest shadow">
-        <div className="w-8 h-8 rounded-full bg-discord-blurple flex items-center justify-center text-white text-sm mr-3">
+        <Avatar size="sm" className="mr-3">
           {otherUser.firstName?.charAt(0) ?? otherUser.email.charAt(0)}
-        </div>
+        </Avatar>
         <h2 className="font-semibold text-white">
           {otherUser.firstName ?? otherUser.email}
         </h2>
@@ -187,22 +189,12 @@ export default function DMView() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {loadingMessages ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="relative w-12 h-12 mx-auto mb-3">
-                <div className="absolute inset-0 border-4 border-boxflow-border rounded-full"></div>
-                <div className="absolute inset-0 border-4 border-boxflow-primary rounded-full border-t-transparent animate-spin"></div>
-              </div>
-              <p className="text-boxflow-muted text-sm">
-                Laddar meddelanden...
-              </p>
-            </div>
-          </div>
+          <LoadingState text="Laddar meddelanden..." />
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400">
-            <div className="w-20 h-20 rounded-full bg-discord-blurple flex items-center justify-center text-3xl mb-4">
+            <Avatar size="lg" className="mb-4">
               {otherUser.firstName?.charAt(0) ?? otherUser.email.charAt(0)}
-            </div>
+            </Avatar>
             <p className="text-xl mb-2">
               {otherUser.firstName ?? otherUser.email}
             </p>
@@ -260,7 +252,7 @@ export default function DMView() {
                 isOwnMessage={message.authorId === user?.id}
                 authorName={getUserName(message.authorId)}
                 authorInitial={authorInitial.toUpperCase()}
-                editContent={editContent}
+                editContent={editingMessageId === message.id ? editContent : ''}
                 editTextareaRef={editTextareaRef}
                 onEditContentChange={setEditContent}
                 onSaveEdit={saveEdit}

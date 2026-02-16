@@ -1,5 +1,5 @@
 // Custom hook for message editing and deletion
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 
 export interface UseMessageActionsOptions {
   onEdit?: (messageId: string, content: string) => Promise<void>;
@@ -25,51 +25,75 @@ export function useMessageActions({
   onDelete
 }: UseMessageActionsOptions = {}): UseMessageActionsReturn {
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-  const [editContent, setEditContent] = useState('');
+  const [editContent, setEditContentState] = useState('');
   const [deleteMessageId, setDeleteMessageId] = useState<string | null>(null);
   const editTextareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleEditMessage = (messageId: string, currentContent: string) => {
-    setEditingMessageId(messageId);
-    setEditContent(currentContent);
-    setTimeout(() => editTextareaRef.current?.focus(), 0);
-  };
+  // Use refs to avoid re-creating callbacks when state changes
+  const editingMessageIdRef = useRef<string | null>(null);
+  const editContentRef = useRef('');
+  const onEditRef = useRef(onEdit);
+  const onDeleteRef = useRef(onDelete);
 
-  const handleSaveEdit = async () => {
-    if (!editingMessageId || !editContent.trim()) return;
+  // Keep refs in sync
+  editingMessageIdRef.current = editingMessageId;
+  editContentRef.current = editContent;
+  onEditRef.current = onEdit;
+  onDeleteRef.current = onDelete;
+
+  const handleEditMessage = useCallback(
+    (messageId: string, currentContent: string) => {
+      setEditingMessageId(messageId);
+      setEditContentState(currentContent);
+      setTimeout(() => editTextareaRef.current?.focus(), 0);
+    },
+    []
+  );
+
+  // IMPORTANT: No dependencies - uses refs to get current values
+  const handleSaveEdit = useCallback(async () => {
+    const messageId = editingMessageIdRef.current;
+    const content = editContentRef.current.trim();
+    if (!messageId || !content) return;
 
     try {
-      await onEdit?.(editingMessageId, editContent.trim());
+      await onEditRef.current?.(messageId, content);
       setEditingMessageId(null);
-      setEditContent('');
+      setEditContentState('');
     } catch (err) {
       console.error('Failed to edit message:', err);
     }
-  };
+  }, []);
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = useCallback(() => {
     setEditingMessageId(null);
-    setEditContent('');
-  };
+    setEditContentState('');
+  }, []);
 
-  const handleDeleteMessage = (messageId: string) => {
+  const handleDeleteMessage = useCallback((messageId: string) => {
     setDeleteMessageId(messageId);
-  };
+  }, []);
 
-  const handleConfirmDelete = async () => {
-    if (!deleteMessageId) return;
+  // IMPORTANT: No dependencies - uses refs
+  const handleConfirmDelete = useCallback(async () => {
+    const messageId = deleteMessageId;
+    if (!messageId) return;
 
     try {
-      await onDelete?.(deleteMessageId);
+      await onDeleteRef.current?.(messageId);
       setDeleteMessageId(null);
     } catch (err) {
       console.error('Failed to delete message:', err);
     }
-  };
+  }, [deleteMessageId]);
 
-  const handleCancelDelete = () => {
+  const handleCancelDelete = useCallback(() => {
     setDeleteMessageId(null);
-  };
+  }, []);
+
+  const handleEditContentChange = useCallback((content: string) => {
+    setEditContentState(content);
+  }, []);
 
   return {
     editingMessageId,
@@ -82,6 +106,6 @@ export function useMessageActions({
     handleDeleteMessage,
     handleConfirmDelete,
     handleCancelDelete,
-    setEditContent
+    setEditContent: handleEditContentChange
   };
 }

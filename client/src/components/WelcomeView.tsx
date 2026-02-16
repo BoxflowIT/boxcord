@@ -3,6 +3,7 @@ import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
 import { useCreateWorkspace } from '../hooks/useQuery';
 import { useState } from 'react';
+import { ChatIcon } from './ui/Icons';
 
 export default function WelcomeView() {
   const { currentWorkspace, setCurrentWorkspace } = useChatStore();
@@ -36,19 +37,7 @@ export default function WelcomeView() {
     <div className="flex-1 flex flex-col items-center justify-center p-8">
       <div className="text-center max-w-md">
         <div className="w-20 h-20 bg-discord-blurple rounded-full flex items-center justify-center mx-auto mb-6">
-          <svg
-            className="w-10 h-10 text-white"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-            />
-          </svg>
+          <ChatIcon size="lg" className="text-white" />
         </div>
 
         <h1 className="text-2xl font-bold text-white mb-2">
@@ -79,14 +68,14 @@ export default function WelcomeView() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowCreate(false)}
-                    className="flex-1 py-2 border border-gray-600 text-gray-400 hover:text-white hover:border-gray-500 rounded transition-colors"
+                    className="btn-secondary flex-1"
                   >
                     Avbryt
                   </button>
                   <button
                     onClick={handleCreateWorkspace}
                     disabled={creating || !workspaceName.trim()}
-                    className="flex-1 py-2 bg-discord-blurple hover:bg-discord-blurple/80 text-white font-semibold rounded transition-colors disabled:opacity-50"
+                    className="btn-primary flex-1"
                   >
                     {creating ? 'Skapar...' : 'Skapa'}
                   </button>
@@ -95,7 +84,7 @@ export default function WelcomeView() {
             ) : (
               <button
                 onClick={() => setShowCreate(true)}
-                className="px-6 py-3 bg-discord-blurple hover:bg-discord-blurple/80 text-white font-semibold rounded transition-colors"
+                className="btn-primary px-6 py-3"
               >
                 Skapa ny workspace
               </button>
