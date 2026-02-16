@@ -1,5 +1,16 @@
 // Push Notification Service - Application Layer
 import type { PrismaClient } from '@prisma/client';
+import webPush from 'web-push';
+
+// Configure VAPID keys
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
+const VAPID_SUBJECT =
+  process.env.VAPID_SUBJECT || 'mailto:support@boxflow.com';
+
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+  webPush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+}
 
 export interface PushSubscriptionData {
   endpoint: string;
@@ -71,8 +82,7 @@ export class PushService {
     return count > 0;
   }
 
-  // Send push notifications (simplified - uses native fetch)
-  // In production, you'd use web-push library
+  // Send push notifications using web-push
   async sendNotification(
     subscriptions: Array<{ endpoint: string; p256dh: string; auth: string }>,
     payload: NotificationPayload
@@ -80,18 +90,63 @@ export class PushService {
     let success = 0;
     let failed = 0;
 
-    // Note: This is a simplified implementation
-    // For production, use web-push library with VAPID keys
-    for (const sub of subscriptions) {
-      try {
-        // In development, just log the notification
-        // eslint-disable-next-line no-console
-        console.info(`[PUSH] Would send to ${sub.endpoint}:`, payload);
+    // Check if VAPID keys are configured
+    if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[PUSH] VAPID keys not configured. Skipping push notifications.'
+      );
+      return { success: 0, failed: subscriptions.length };
+    }
+
+    // Send notifications in parallel
+    const results = await Promise.allSettled(
+      subscriptions.map(async (sub) => {
+        const pushSubscription = {
+          endpoint: sub.endpoint,
+          keys: {
+            p256dh: sub.p256dh,
+            auth: sub.auth
+          }
+        };
+
+        try {
+          await webPush.sendNotification(
+            pushSubscription,
+            JSON.stringify(payload),
+            {
+              TTL: 3600, // 1 hour
+              urgency: 'high'
+            }
+          );
+          return { success: true };
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error(`[PUSH] Failed to send to ${sub.endpoint}:`, error);
+          
+          // If subscription is invalid (410 Gone), we should remove it
+          if (
+            error &&
+            typeof error === 'object' &&
+            'statusCode' in error &&
+            error.statusCode === 410
+          ) {
+            await this.unsubscribe(sub.endpoint);
+          }
+          
+          return { success: false };
+        }
+      })
+    );
+
+    // Count successes and failures
+    results.forEach((result) => {
+      if (result.status === 'fulfilled' && result.value.success) {
         success++;
-      } catch {
+      } else {
         failed++;
       }
-    }
+    });
 
     return { success, failed };
   }

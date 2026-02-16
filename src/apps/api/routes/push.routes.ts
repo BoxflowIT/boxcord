@@ -6,9 +6,15 @@ import { PushService } from '../../../02-application/services/push.service.js';
 
 const pushService = new PushService(prisma);
 
-// VAPID public key - In production, generate with web-push
-// For development, we use a placeholder
-const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'development-key';
+// VAPID public key for client subscription
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
+
+if (!VAPID_PUBLIC_KEY) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    '[PUSH] VAPID_PUBLIC_KEY not set. Push notifications will not work. Generate keys with: npx web-push generate-vapid-keys'
+  );
+}
 
 const subscriptionSchema = z.object({
   endpoint: z.string().url(),
