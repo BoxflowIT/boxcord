@@ -265,11 +265,11 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
                   e.preventDefault();
                   handleDeleteWorkspace(workspace, e);
                 }}
-                className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold transition-all overflow-hidden ${
+                className={
                   currentWorkspace?.id === workspace.id
-                    ? 'bg-boxflow-primary rounded-2xl'
-                    : 'bg-boxflow-dark hover:bg-boxflow-primary hover:rounded-2xl'
-                }`}
+                    ? 'workspace-icon-active'
+                    : 'workspace-icon-inactive'
+                }
                 title={`${workspace.name}\nDubbelklick: redigera\nHögerklick: ta bort`}
               >
                 {workspace.iconUrl ? (
@@ -288,7 +288,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
           {/* Add workspace button */}
           <button
             onClick={() => setShowNewWorkspace(true)}
-            className="w-12 h-12 rounded-full bg-boxflow-dark hover:bg-boxflow-success text-boxflow-success hover:text-white flex items-center justify-center transition-all"
+            className="workspace-icon-add"
             title="Lägg till workspace"
           >
             <PlusIcon size="lg" />
@@ -353,11 +353,8 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
           </div>
 
           {/* User info */}
-          <div className="h-14 bg-boxflow-darkest/50 px-2 flex items-center gap-2 border-t border-boxflow-border">
-            <button
-              onClick={onProfileClick}
-              className="flex items-center gap-2 flex-1 min-w-0 hover:bg-boxflow-dark/50 rounded-lg p-1 -m-1 transition-colors"
-            >
+          <div className="user-bar">
+            <button onClick={onProfileClick} className="user-bar-button">
               <Avatar size="sm">
                 {user?.firstName?.charAt(0) ?? user?.email?.charAt(0) ?? '?'}
               </Avatar>

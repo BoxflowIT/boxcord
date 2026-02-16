@@ -122,7 +122,7 @@ export default function ProfileModal({
         <div className="px-4 pb-4">
           {/* Avatar */}
           <div className="relative -mt-12 mb-4">
-            <div className="w-24 h-24 rounded-full bg-discord-darker border-4 border-discord-dark flex items-center justify-center text-3xl font-bold text-white">
+            <div className="profile-avatar-large">
               {profile?.avatarUrl ? (
                 <img
                   src={profile.avatarUrl}

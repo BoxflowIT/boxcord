@@ -158,10 +158,7 @@ export function parseMentions(content: string): (string | JSX.Element)[] {
 
     // Add the mention as a styled element
     parts.push(
-      <span
-        key={match.index}
-        className="text-discord-blurple bg-discord-blurple/10 rounded px-1 cursor-pointer hover:underline"
-      >
+      <span key={match.index} className="mention-link">
         {match[0]}
       </span>
     );

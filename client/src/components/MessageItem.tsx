@@ -176,14 +176,10 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
     <div className="group hover:bg-discord-darker/30 -mx-4 px-4 py-0.5 rounded relative">
       {showHeader ? (
         <div className="flex items-start gap-4 mt-4">
-          <div className="w-10 h-10 rounded-full bg-discord-blurple flex-shrink-0 flex items-center justify-center text-white font-bold">
-            {authorInitial}
-          </div>
+          <div className="message-author-avatar">{authorInitial}</div>
           <div className="flex-1 min-w-0">
             <div className="flex items-baseline gap-2">
-              <span className="font-medium text-white hover:underline cursor-pointer">
-                {authorName}
-              </span>
+              <span className="message-author-name">{authorName}</span>
               <span className="text-xs text-gray-400">
                 {formatTime(createdAt)}
               </span>

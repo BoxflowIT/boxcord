@@ -36,7 +36,7 @@ export default function WelcomeView() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-8">
       <div className="text-center max-w-md">
-        <div className="w-20 h-20 bg-discord-blurple rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="welcome-icon">
           <ChatIcon size="lg" className="text-white" />
         </div>
 
@@ -62,7 +62,7 @@ export default function WelcomeView() {
                     e.key === 'Enter' && handleCreateWorkspace()
                   }
                   placeholder="Workspace namn, t.ex. Boxflow Team"
-                  className="w-full px-4 py-3 bg-discord-darker border border-discord-darkest rounded text-white placeholder-gray-500 focus:outline-none focus:border-discord-blurple"
+                  className="form-input-large"
                   autoFocus
                 />
                 <div className="flex gap-3">
