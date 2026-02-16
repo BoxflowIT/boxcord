@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from './store/auth';
 import { setQueryClient } from './services/socket';
+import { useEffect } from 'react';
 import Spinner from './components/ui/Spinner';
 import CustomLogin from './pages/CustomLogin';
 import ForgotPassword from './pages/ForgotPassword';
@@ -25,6 +26,23 @@ setQueryClient(queryClient);
 
 function App() {
   const { token, isLoading } = useAuthStore();
+
+  // Apply saved appearance settings on mount
+  useEffect(() => {
+    // Apply theme
+    const theme = localStorage.getItem('theme');
+    if (theme === 'light') {
+      document.documentElement.classList.add('light-theme');
+    }
+
+    // Apply font size
+    const fontSize = localStorage.getItem('fontSize') || 'medium';
+    const root = document.documentElement;
+    root.style.setProperty(
+      '--base-font-size',
+      fontSize === 'small' ? '14px' : fontSize === 'large' ? '18px' : '16px'
+    );
+  }, []);
 
   // User is authenticated if token exists in store
   const isAuthenticated = !!token;

@@ -16,6 +16,7 @@ import DMView from '../components/DMView';
 import WelcomeView from '../components/WelcomeView';
 import MemberList from '../components/MemberList';
 import ProfileModal from '../components/ProfileModal';
+import SettingsModal from '../components/SettingsModal';
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ export default function Chat() {
     useChatStore();
   const initializedRef = useRef(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [showMemberList, setShowMemberList] = useState(true);
 
   // React Query hooks - single source of truth for server data
@@ -103,7 +105,10 @@ export default function Chat() {
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <Sidebar onProfileClick={() => setShowProfile(true)} />
+      <Sidebar
+        onProfileClick={() => setShowProfile(true)}
+        onSettingsClick={() => setShowSettings(true)}
+      />
 
       {/* Main content */}
       <div className="flex-1 flex flex-col bg-discord-dark">
@@ -128,6 +133,12 @@ export default function Chat() {
       <ProfileModal
         isOpen={showProfile}
         onClose={() => setShowProfile(false)}
+      />
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
       />
     </div>
   );

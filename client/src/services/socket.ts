@@ -118,18 +118,20 @@ class SocketService {
       if (queryClient && message.channelId) {
         const exactKey = queryKeys.messages(message.channelId, undefined);
         const cacheData = queryClient.getQueryData<PaginatedMessages>(exactKey);
-        
+
         // If message is for a channel we're NOT viewing, force refetch channels list for unread badges
         if (!cacheData) {
           queryClient.refetchQueries({ queryKey: ['channels'] });
-          
+
           // Play sound ONLY if: 1) not own message, 2) not viewing channel, 3) in current workspace
           // Check if message is from current workspace by finding channel in cache
           if (!isOwnMessage && currentWorkspaceId) {
             const channelsKey = queryKeys.channels(currentWorkspaceId);
             const channels = queryClient.getQueryData<Channel[]>(channelsKey);
-            const isCurrentWorkspace = channels?.some(ch => ch.id === message.channelId);
-            
+            const isCurrentWorkspace = channels?.some(
+              (ch) => ch.id === message.channelId
+            );
+
             if (isCurrentWorkspace) {
               playMessageNotification();
             }
@@ -237,7 +239,7 @@ class SocketService {
           }
           return { ...old, items: [...old.items, message] };
         });
-        
+
         queryClient.refetchQueries({ queryKey: queryKeys.dmChannels });
         // No sound when viewing the DM (user is actively in the chat)
       }
