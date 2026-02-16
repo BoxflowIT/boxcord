@@ -23,6 +23,7 @@ import {
 import DeleteConfirmModal from './DeleteConfirmModal';
 import EditModal from './EditModal';
 import CreateModal from './CreateModal';
+import DMList from './DMList';
 import Avatar from './ui/Avatar';
 import { PlusIcon, EditIcon, CloseIcon, LogoutIcon } from './ui/Icons';
 import type { Workspace, Channel } from '../types';
@@ -304,7 +305,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
           </div>
 
           {/* Channels */}
-          <div className="panel-content">
+          <div className="panel-content flex-1 min-h-0 overflow-y-auto">
             {currentWorkspace && (
               <>
                 <div className="flex items-center justify-between px-2 mb-1">
@@ -362,6 +363,13 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
               </>
             )}
           </div>
+
+          {/* Direct Messages */}
+          <DMList
+            onSelectDM={(channelId) => {
+              navigate(`/chat/dm/${channelId}`);
+            }}
+          />
 
           {/* User info */}
           <div className="user-bar">

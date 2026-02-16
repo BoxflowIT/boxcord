@@ -12,6 +12,7 @@ import { useAuthStore } from '../store/auth';
 import { queryKeys } from '../hooks/useQuery';
 import type { Message, PaginatedMessages, Channel } from '../types';
 import { logger } from '../utils/logger';
+import { playMessageNotification } from '../utils/notificationSound';
 
 // QueryClient instance for cache updates
 let queryClient: QueryClient | null = null;
@@ -88,106 +89,75 @@ class SocketService {
     // Register event listeners
     socket.on('connect', () => {
       this.connecting = false;
-      logger.log(
-        '✅ Socket: Connected! ID:',
-        socket.id,
-        'Transport:',
-        socket.io?.engine?.transport?.name
-      );
       this.executePendingOperations();
     });
 
     socket.on('connect_error', (error) => {
       this.connecting = false;
-      logger.error('❌ Socket: Connection error:', error.message);
+      logger.error('Socket connection error:', error.message);
     });
 
-    socket.on('disconnect', (reason, details) => {
+    socket.on('disconnect', () => {
       this.connecting = false;
-      logger.log('🔌 Socket: Disconnected, reason:', reason);
-      if (details) logger.log('Disconnect details:', details);
     });
 
-    logger.log('Socket: Event handlers registered. Connecting now...');
     socket.connect();
-    logger.log('Socket: Connection initiated');
 
     // Only register event listeners once
     if (this.listenersRegistered) {
-      logger.log('Socket: Event listeners already registered, skipping...');
       return;
     }
     this.listenersRegistered = true;
 
     // Message events - update React Query cache ONLY
     socket.on('message:new', (message: Message) => {
-      logger.log('✅ Socket: Received new message:', message);
+      const currentUserId = useAuthStore.getState().user?.id;
+      const currentWorkspaceId = useChatStore.getState().currentWorkspace?.id;
+      const isOwnMessage = message.authorId === currentUserId;
 
-      // Update React Query cache directly (Discord-style)
       if (queryClient && message.channelId) {
-        // Use exact key that matches useMessages hook (with undefined cursor)
         const exactKey = queryKeys.messages(message.channelId, undefined);
-        logger.log('📝 Updating cache with exact key:', exactKey);
-
-        queryClient.setQueryData<PaginatedMessages>(exactKey, (old) => {
-          logger.log('📦 Current cache:', old?.items?.length ?? 'no cache');
-          // If no cache exists yet, DON'T create one - let the query fetch it
-          if (!old) {
-            logger.log('⚠️ No cache found, skipping WebSocket update');
-            return old;
+        const cacheData = queryClient.getQueryData<PaginatedMessages>(exactKey);
+        
+        // If message is for a channel we're NOT viewing, force refetch channels list for unread badges
+        if (!cacheData) {
+          queryClient.refetchQueries({ queryKey: ['channels'] });
+          
+          // Play sound ONLY if: 1) not own message, 2) not viewing channel, 3) in current workspace
+          // Check if message is from current workspace by finding channel in cache
+          if (!isOwnMessage && currentWorkspaceId) {
+            const channelsKey = queryKeys.channels(currentWorkspaceId);
+            const channels = queryClient.getQueryData<Channel[]>(channelsKey);
+            const isCurrentWorkspace = channels?.some(ch => ch.id === message.channelId);
+            
+            if (isCurrentWorkspace) {
+              playMessageNotification();
+            }
           }
-          if (!old.items) {
-            return { ...old, items: [message] };
+          return;
+        }
+
+        // Update cache for currently open channel
+        queryClient.setQueryData<PaginatedMessages>(exactKey, (old) => {
+          if (!old || !old.items) {
+            return old ? { ...old, items: [message] } : old;
           }
           // Don't add duplicate
           if (old.items.some((m) => m.id === message.id)) {
-            logger.log('⚠️ Duplicate message, skipping');
             return old;
           }
-          logger.log(
-            '✅ Adding message to cache, new count:',
-            old.items.length + 1
-          );
           return { ...old, items: [...old.items, message] };
         });
-      } else {
-        logger.warn('⚠️ No queryClient or channelId:', {
-          queryClient: !!queryClient,
-          channelId: message.channelId
-        });
+        // No sound when viewing the channel (user is actively in the chat)
       }
     });
 
     this.socket.on('message:edit', (message: Message) => {
-      logger.log(
-        '✏️ Socket: Message edited:',
-        message.id,
-        'channelId:',
-        message.channelId,
-        'content:',
-        message.content
-      );
-
-      // Update React Query cache with exact key
       if (queryClient && message.channelId) {
         const exactKey = queryKeys.messages(message.channelId, undefined);
-        logger.log('✏️ Updating cache with key:', exactKey);
-
         queryClient.setQueryData<PaginatedMessages>(exactKey, (old) => {
-          logger.log(
-            '✏️ Current cache for edit:',
-            old?.items?.length ?? 'no cache'
-          );
-          if (!old?.items) {
-            logger.warn('✏️ No cache found for edit');
-            return old;
-          }
-          const found = old.items.some((m) => m.id === message.id);
-          if (!found) {
-            logger.warn('✏️ Message not found in cache:', message.id);
-            return old;
-          }
-          logger.log('✏️ Updating message in cache:', message.id);
+          if (!old?.items) return old;
+          if (!old.items.some((m) => m.id === message.id)) return old;
           return {
             ...old,
             items: old.items.map((m) =>
@@ -201,29 +171,10 @@ class SocketService {
     this.socket.on(
       'message:delete',
       ({ messageId, channelId }: { messageId: string; channelId: string }) => {
-        logger.log(
-          '🗑️ Socket: Message deleted:',
-          messageId,
-          'channelId:',
-          channelId
-        );
-
-        // Update React Query cache with exact key
         if (queryClient && channelId) {
           const exactKey = queryKeys.messages(channelId, undefined);
-          logger.log('🗑️ Deleting from cache with key:', exactKey);
-
           queryClient.setQueryData<PaginatedMessages>(exactKey, (old) => {
-            if (!old?.items) {
-              logger.warn('🗑️ No cache found for delete');
-              return old;
-            }
-            const found = old.items.some((m) => m.id === messageId);
-            if (!found) {
-              logger.warn('🗑️ Message not found in cache:', messageId);
-              return old;
-            }
-            logger.log('🗑️ Removing message from cache:', messageId);
+            if (!old?.items) return old;
             return {
               ...old,
               items: old.items.filter((m) => m.id !== messageId)
@@ -261,19 +212,34 @@ class SocketService {
 
     // DM events - update React Query cache directly
     this.socket.on('dm:new', (message: Message) => {
-      logger.log('✅ Socket: Received new DM:', message);
+      const currentUserId = useAuthStore.getState().user?.id;
+      const isOwnMessage = message.authorId === currentUserId;
 
-      // Update React Query cache directly
       if (queryClient && message.channelId) {
-        queryClient.setQueryData<PaginatedMessages>(
-          queryKeys.dmMessages(message.channelId),
-          (old) => {
-            if (!old?.items) return old;
-            // Don't add duplicate
-            if (old.items.some((m) => m.id === message.id)) return old;
-            return { ...old, items: [...old.items, message] };
+        const dmKey = queryKeys.dmMessages(message.channelId, undefined);
+        const cacheData = queryClient.getQueryData<PaginatedMessages>(dmKey);
+
+        if (!cacheData) {
+          queryClient.refetchQueries({ queryKey: queryKeys.dmChannels });
+          // Play sound ONLY if: 1) not own message, 2) not viewing the DM
+          if (!isOwnMessage) {
+            playMessageNotification();
           }
-        );
+          return;
+        }
+
+        queryClient.setQueryData<PaginatedMessages>(dmKey, (old) => {
+          if (!old || !old.items) {
+            return old ? { ...old, items: [message] } : old;
+          }
+          if (old.items.some((m) => m.id === message.id)) {
+            return old;
+          }
+          return { ...old, items: [...old.items, message] };
+        });
+        
+        queryClient.refetchQueries({ queryKey: queryKeys.dmChannels });
+        // No sound when viewing the DM (user is actively in the chat)
       }
 
       // Also notify any active DM handlers (legacy support)
@@ -281,9 +247,6 @@ class SocketService {
     });
 
     this.socket.on('dm:edit', (message: Message) => {
-      logger.log('✏️ Socket: DM edited:', message.id);
-
-      // Update React Query cache
       if (queryClient && message.channelId) {
         queryClient.setQueryData<PaginatedMessages>(
           queryKeys.dmMessages(message.channelId),
@@ -304,14 +267,6 @@ class SocketService {
     this.socket.on(
       'dm:delete',
       ({ messageId, channelId }: { messageId: string; channelId?: string }) => {
-        logger.log(
-          '🗑️ Socket: DM deleted:',
-          messageId,
-          'channelId:',
-          channelId
-        );
-
-        // Update React Query cache if we have channelId
         if (queryClient && channelId) {
           queryClient.setQueryData<PaginatedMessages>(
             queryKeys.dmMessages(channelId),
@@ -324,10 +279,6 @@ class SocketService {
             }
           );
         } else if (queryClient && !channelId) {
-          // Fallback: invalidate all DM queries to refetch
-          logger.warn(
-            '⚠️ No channelId in delete event, invalidating all DM queries'
-          );
           queryClient.invalidateQueries({ queryKey: ['dmMessages'] });
         }
 
@@ -336,23 +287,17 @@ class SocketService {
       }
     );
 
-    this.socket.on(
-      'dm:typing',
-      ({ userId, channelId }: { userId: string; channelId: string }) => {
-        logger.log('DM typing:', userId, channelId);
-      }
-    );
+    this.socket.on('dm:typing', () => {
+      // Handle DM typing indicator
+    });
 
     // Channel lifecycle events - update React Query cache
     this.socket.on('channel:created', (channel: Channel) => {
-      logger.log('🆕 Channel created:', channel);
-
       if (queryClient) {
         queryClient.setQueryData<Channel[]>(
           queryKeys.channels(channel.workspaceId),
           (old) => {
             if (!old) return [channel];
-            // Don't add duplicate
             if (old.some((ch) => ch.id === channel.id)) return old;
             return [...old, channel];
           }
@@ -369,8 +314,6 @@ class SocketService {
         channelId: string;
         workspaceId: string;
       }) => {
-        logger.log('🗑️ Channel deleted:', channelId);
-
         if (queryClient) {
           queryClient.setQueryData<Channel[]>(
             queryKeys.channels(workspaceId),
@@ -385,14 +328,12 @@ class SocketService {
 
     // Presence
     this.socket.on('user:online', ({ userId }: { userId: string }) => {
-      logger.log('👤 User online:', userId);
       this.presenceHandlers.forEach((handler) =>
         handler({ userId, status: 'ONLINE' })
       );
     });
 
     this.socket.on('user:offline', ({ userId }: { userId: string }) => {
-      logger.log('💤 User offline:', userId);
       this.presenceHandlers.forEach((handler) =>
         handler({ userId, status: 'OFFLINE' })
       );
@@ -419,7 +360,6 @@ class SocketService {
   // Clean up socket for HMR reloads (prevents 400 errors with stale session IDs)
   cleanup() {
     if (this.socket) {
-      logger.log('🧹 Cleaning up socket connection...');
       this.socket.removeAllListeners();
       this.socket.disconnect();
       this.socket = null;
@@ -431,7 +371,6 @@ class SocketService {
 
   // Reconnect with new token (after login)
   reconnect() {
-    logger.log('🔄 Socket: Reconnecting with fresh token...');
     this.disconnect();
     this.connect();
   }
@@ -445,11 +384,8 @@ class SocketService {
   }
 
   // Helper to queue or execute socket operation
-  private queueOrExecute(operation: () => void, logMessage?: string): void {
+  private queueOrExecute(operation: () => void): void {
     if (!this.ensureConnected()) {
-      if (logMessage) {
-        logger.log(`🔗 Socket: Queueing ${logMessage} for when connected`);
-      }
       this.pendingOperations.push(operation);
       return;
     }
@@ -457,39 +393,28 @@ class SocketService {
   }
 
   // Helper to emit socket event
-  private emit(event: string, data: unknown, logMessage?: string): void {
-    this.queueOrExecute(
-      () => {
-        if (this.socket && this.socket.connected) {
-          if (logMessage) {
-            logger.log(logMessage);
-          }
-          this.socket.emit(event, data);
-        }
-      },
-      logMessage?.replace(/^.*Socket: /, '')
-    );
+  private emit(event: string, data: unknown): void {
+    this.queueOrExecute(() => {
+      if (this.socket && this.socket.connected) {
+        this.socket.emit(event, data);
+      }
+    });
   }
 
   // Ensure socket is connected (auto-connect if needed)
   private ensureConnected(): boolean {
     if (!this.socket || this.socket.disconnected) {
       if (!this.connecting) {
-        logger.log('🔄 Socket: Auto-connecting...');
         this.connect();
       }
-      return false; // Not connected yet
+      return false;
     }
     return true;
   }
 
   // Channel methods
   joinChannel(channelId: string) {
-    this.emit(
-      'channel:join',
-      channelId,
-      `🔗 Socket: Joining channel: ${channelId}`
-    );
+    this.emit('channel:join', channelId);
   }
 
   leaveChannel(channelId: string) {
@@ -497,27 +422,15 @@ class SocketService {
   }
 
   sendMessage(channelId: string, content: string, parentId?: string) {
-    this.emit(
-      'message:send',
-      { channelId, content, parentId },
-      `📤 Socket: Sending message to: ${channelId}`
-    );
+    this.emit('message:send', { channelId, content, parentId });
   }
 
   editMessage(messageId: string, content: string) {
-    this.emit(
-      'message:edit',
-      { messageId, content },
-      `✏️ Socket: Editing message: ${messageId}`
-    );
+    this.emit('message:edit', { messageId, content });
   }
 
   deleteMessage(messageId: string) {
-    this.emit(
-      'message:delete',
-      { messageId },
-      `🗑️ Socket: Deleting message: ${messageId}`
-    );
+    this.emit('message:delete', { messageId });
   }
 
   sendTyping(channelId: string) {
@@ -539,27 +452,15 @@ class SocketService {
   }
 
   sendDM(channelId: string, content: string) {
-    this.emit(
-      'dm:send',
-      { channelId, content },
-      `💬 Socket: Sending DM to channel: ${channelId}`
-    );
+    this.emit('dm:send', { channelId, content });
   }
 
   editDM(messageId: string, content: string) {
-    this.emit(
-      'dm:edit',
-      { messageId, content },
-      `✏️ Socket: Editing DM: ${messageId}`
-    );
+    this.emit('dm:edit', { messageId, content });
   }
 
   deleteDM(messageId: string, channelId?: string) {
-    this.emit(
-      'dm:delete',
-      { messageId, channelId },
-      `🗑️ Socket: Deleting DM: ${messageId} in channel: ${channelId}`
-    );
+    this.emit('dm:delete', { messageId, channelId });
   }
 
   sendDMTyping(channelId: string) {
@@ -610,11 +511,8 @@ class SocketService {
 let socketServiceInstance: SocketService;
 
 if (import.meta.hot?.data.socketService) {
-  // Reuse existing instance after HMR (already cleaned up in dispose)
-  logger.log('♻️ HMR: Reusing existing socket service');
   socketServiceInstance = import.meta.hot.data.socketService;
 } else {
-  // Create new instance
   socketServiceInstance = new SocketService();
 }
 
@@ -624,10 +522,7 @@ export const socketService = socketServiceInstance;
 if (import.meta.hot) {
   import.meta.hot.accept();
   import.meta.hot.dispose((data) => {
-    logger.log('♻️ HMR: Cleaning up socket before reload...');
-    // CRITICAL: Clean up socket BEFORE reload to prevent 400 errors
     socketServiceInstance.cleanup();
-    // Store the instance for next reload
     data.socketService = socketServiceInstance;
   });
 }

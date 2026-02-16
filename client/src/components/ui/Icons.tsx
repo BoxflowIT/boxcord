@@ -130,6 +130,25 @@ export function UsersIcon({ size = 'md', className }: IconProps) {
   );
 }
 
+// Search icon
+export function SearchIcon({ size = 'md', className }: IconProps) {
+  return (
+    <svg
+      className={getClass(size, className)}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+      />
+    </svg>
+  );
+}
+
 // Emoji/Smile icon
 export function EmojiIcon({ size = 'md', className }: IconProps) {
   return (

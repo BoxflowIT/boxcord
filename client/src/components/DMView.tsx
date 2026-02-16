@@ -12,9 +12,8 @@ import { api } from '../services/api';
 import { logger } from '../utils/logger';
 import { socketService } from '../services/socket';
 import { useAuthStore } from '../store/auth';
-import { useDMMessages, useDMChannels, useUser } from '../hooks/useQuery';
+import { useDMMessages, useDMChannels, queryKeys } from '../hooks/useQuery';
 import { useMessageActions } from '../hooks/useMessageActions';
-import { queryKeys } from '../hooks/useQuery';
 import { MessageItem } from './MessageItem';
 import FileUpload from './FileUpload';
 import EmojiPicker from './ui/EmojiPicker';
@@ -33,23 +32,23 @@ export default function DMView() {
 
   const { data: dmChannels } = useDMChannels();
 
-  // Find other user's ID from channel participants
-  const otherUserId = useMemo(() => {
+  // Get other user's info directly from channel participants (no separate fetch needed)
+  const otherUser = useMemo(() => {
     if (!channelId || !dmChannels || !user) return undefined;
     const channel = dmChannels.find((ch) => ch.id === channelId);
     if (!channel) return undefined;
     const otherParticipant = channel.participants.find(
       (p) => p.userId !== user.id
     );
-    return otherParticipant?.userId;
+    // Use user data embedded in participant
+    return otherParticipant?.user;
   }, [channelId, dmChannels, user]);
-
-  // Fetch other user's info with caching
-  const { data: otherUser, isLoading: loadingUser } = useUser(otherUserId);
 
   // React Query hook for messages - single source of truth
   const { data: messagesData, isLoading: loadingMessages } =
     useDMMessages(channelId);
+
+  const loadingUser = !otherUser; // Loading if we don't have other user yet
 
   // Pre-process messages with computed properties (memoized for stable references)
   const messages = useMemo(() => {

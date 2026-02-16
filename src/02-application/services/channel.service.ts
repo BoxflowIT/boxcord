@@ -53,16 +53,22 @@ export class ChannelService {
 
         let unreadCount = 0;
         if (lastReadAt) {
-          // Count messages after last read time
+          // Count messages after last read time (excluding own messages)
           unreadCount = await this.prisma.message.count({
             where: {
               channelId: channel.id,
-              createdAt: { gt: lastReadAt }
+              createdAt: { gt: lastReadAt },
+              authorId: { not: userId }
             }
           });
         } else {
-          // If never read, all messages are unread
-          unreadCount = channel._count.messages;
+          // If never read, count all messages (excluding own messages)
+          unreadCount = await this.prisma.message.count({
+            where: {
+              channelId: channel.id,
+              authorId: { not: userId }
+            }
+          });
         }
 
         // Remove internal fields before returning

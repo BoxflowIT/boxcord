@@ -89,7 +89,7 @@ export default function MentionAutocomplete({
               user.firstName && user.lastName
                 ? `${user.firstName} ${user.lastName}`
                 : user.email.split('@')[0],
-            value: `@${user.firstName?.toLowerCase() ?? user.email.split('@')[0]}`
+            value: `@${user.email}` // Full email for push notifications
           }))
         );
       } catch {

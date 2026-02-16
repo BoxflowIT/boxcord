@@ -52,7 +52,7 @@ export class MessageService {
 
     const messages = await this.prisma.message.findMany({
       where: { channelId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' },
       take: limit + 1,
       ...(params.cursor && {
         cursor: { id: params.cursor },

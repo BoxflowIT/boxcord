@@ -1,9 +1,11 @@
 // Message Item Component - Reusable message display
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { formatTime } from '../lib/formatters';
 import MessageReactions from './MessageReactions';
 import { AttachmentPreview } from './FileUpload';
-import { EditIcon, TrashIcon, MoreIcon } from './ui/Icons';
+import { EditIcon, TrashIcon } from './ui/Icons';
+import { api } from '../services/api';
+import { logger } from '../utils/logger';
 
 export interface MessageAttachment {
   id: string;
@@ -47,11 +49,10 @@ export interface MessageItemProps {
 
   // Optional customization
   renderContent?: (content: string) => React.ReactNode;
-  showMessageMenu?: boolean;
-  messageMenuOpen?: boolean;
-  onToggleMessageMenu?: (messageId: string) => void;
   compact?: boolean; // Use compact styling (like ChannelView)
 }
+
+const QUICK_REACTIONS = ['👍', '❤️', '😂', '🎉', '🔥'];
 
 const MessageItemComponent: React.FC<MessageItemProps> = ({
   messageId,
@@ -73,11 +74,38 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
   onEdit,
   onDelete,
   renderContent,
-  showMessageMenu = false,
-  messageMenuOpen = false,
-  onToggleMessageMenu,
   compact = false
 }) => {
+  const [localReactions, setLocalReactions] = useState(reactionCounts);
+
+  const handleQuickReaction = async (emoji: string) => {
+    try {
+      const { added } = await api.toggleReaction(messageId, emoji);
+      setLocalReactions((prev) => {
+        const existing = prev.find((r) => r.emoji === emoji);
+        if (existing) {
+          if (added) {
+            return prev.map((r) =>
+              r.emoji === emoji ? { ...r, count: r.count + 1, hasReacted: true } : r
+            );
+          } else {
+            const newCount = existing.count - 1;
+            if (newCount <= 0) {
+              return prev.filter((r) => r.emoji !== emoji);
+            }
+            return prev.map((r) =>
+              r.emoji === emoji ? { ...r, count: newCount, hasReacted: false } : r
+            );
+          }
+        } else if (added) {
+          return [...prev, { emoji, count: 1, hasReacted: true }];
+        }
+        return prev;
+      });
+    } catch (err) {
+      logger.error('Failed to add quick reaction:', err);
+    }
+  };
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -124,51 +152,42 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
     </div>
   );
 
-  const EditDeleteButtons = () => (
-    <div className="hover-group-visible flex gap-1">
-      <button
-        onClick={() => onEdit(messageId, content)}
-        className="btn-icon"
-        title="Redigera"
-      >
-        <EditIcon size="sm" />
-      </button>
-      <button
-        onClick={() => onDelete(messageId)}
-        className="btn-icon-danger"
-        title="Ta bort"
-      >
-        <TrashIcon size="sm" />
-      </button>
-    </div>
-  );
-
-  const MessageMenu = () => (
-    <div className="absolute top-0 right-4 hover-group-visible">
-      <div className="relative">
+  const QuickReactionsBar = () => (
+    <div className="absolute top-0 right-4 hover-group-visible bg-boxflow-dark border border-boxflow-border rounded-lg shadow-lg px-2 py-1 flex items-center gap-1 -mt-3">
+      {/* Quick reactions */}
+      {QUICK_REACTIONS.map((emoji) => (
         <button
-          onClick={() => onToggleMessageMenu?.(messageId)}
-          className="btn-icon"
+          key={emoji}
+          onClick={() => handleQuickReaction(emoji)}
+          className="p-1 hover:bg-boxflow-darker rounded text-lg transition-transform hover:scale-125"
+          title={`Reagera med ${emoji}`}
         >
-          <MoreIcon size="md" />
+          {emoji}
         </button>
-        {messageMenuOpen && (
-          <div className="dropdown-menu right-0 mt-1 w-48">
-            <button
-              onClick={() => onEdit(messageId, content)}
-              className="dropdown-item"
-            >
-              Redigera
-            </button>
-            <button
-              onClick={() => onDelete(messageId)}
-              className="dropdown-item-danger"
-            >
-              Ta bort
-            </button>
-          </div>
-        )}
-      </div>
+      ))}
+      
+      {/* Divider */}
+      <div className="w-px h-4 bg-boxflow-border mx-1" />
+      
+      {/* Edit/Delete for own messages */}
+      {isOwnMessage && (
+        <>
+          <button
+            onClick={() => onEdit(messageId, content)}
+            className="p-1 hover:bg-boxflow-darker rounded"
+            title="Redigera"
+          >
+            <EditIcon size="sm" />
+          </button>
+          <button
+            onClick={() => onDelete(messageId)}
+            className="p-1 hover:bg-red-500/20 rounded text-red-400"
+            title="Ta bort"
+          >
+            <TrashIcon size="sm" />
+          </button>
+        </>
+      )}
     </div>
   );
 
@@ -212,20 +231,18 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
                 )}
 
                 {/* Reactions */}
-                {reactionCounts.length > 0 && (
+                {localReactions.length > 0 && (
                   <MessageReactions
                     messageId={messageId}
-                    initialReactions={reactionCounts}
+                    initialReactions={localReactions}
                   />
                 )}
               </>
             )}
           </div>
 
-          {/* Message actions */}
-          {isOwnMessage &&
-            !isEditing &&
-            (showMessageMenu ? <MessageMenu /> : <EditDeleteButtons />)}
+          {/* Message actions - Quick reactions bar (Teams style) */}
+          {!isEditing && <QuickReactionsBar />}
         </div>
       ) : (
         // Compact mode (no header)
@@ -254,49 +271,18 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
                     ))}
                   </div>
                 )}
-                {reactionCounts.length > 0 && (
+                {localReactions.length > 0 && (
                   <MessageReactions
                     messageId={messageId}
-                    initialReactions={reactionCounts}
+                    initialReactions={localReactions}
                   />
                 )}
               </>
             )}
           </div>
 
-          {/* Message actions for compact view */}
-          {isOwnMessage && !isEditing && (
-            <div className="absolute top-0 right-4 hover-group-visible">
-              {showMessageMenu ? (
-                <div className="relative">
-                  <button
-                    onClick={() => onToggleMessageMenu?.(messageId)}
-                    className="btn-icon"
-                  >
-                    <MoreIcon size="md" />
-                  </button>
-                  {messageMenuOpen && (
-                    <div className="dropdown-menu right-0 mt-1 w-48">
-                      <button
-                        onClick={() => onEdit(messageId, content)}
-                        className="dropdown-item"
-                      >
-                        Redigera
-                      </button>
-                      <button
-                        onClick={() => onDelete(messageId)}
-                        className="dropdown-item-danger"
-                      >
-                        Ta bort
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <EditDeleteButtons />
-              )}
-            </div>
-          )}
+          {/* Message actions - Quick reactions bar (Teams style) */}
+          {!isEditing && <QuickReactionsBar />}
         </div>
       )}
     </div>
@@ -325,7 +311,6 @@ const areEqual = (
   if (prevProps.isOwnMessage !== nextProps.isOwnMessage) return false;
   if (prevProps.authorName !== nextProps.authorName) return false;
   if (prevProps.authorInitial !== nextProps.authorInitial) return false;
-  if (prevProps.messageMenuOpen !== nextProps.messageMenuOpen) return false;
   if (prevProps.compact !== nextProps.compact) return false;
 
   // Shallow compare arrays by reference (they should be memoized in parent)

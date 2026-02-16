@@ -94,7 +94,7 @@ export function setupSocketHandlers(
 
   io.on('connection', async (socket: AuthenticatedSocket) => {
     const userId = socket.userId!;
-    app.log.debug(`User connected: ${userId}`);
+    app.log.info(`User ${userId} connected (socket: ${socket.id})`);
 
     // Update presence to online
     prisma.userPresence
@@ -118,7 +118,9 @@ export function setupSocketHandlers(
 
       workspaces.forEach((ws) => {
         socket.join(`workspace:${ws.id}`);
-        app.log.debug(`User ${userId} joined workspace room: ${ws.id}`);
+        app.log.info(
+          `[WORKSPACE_JOIN] User ${userId} joined workspace:${ws.id}`
+        );
       });
     } catch (err) {
       app.log.error(
@@ -126,8 +128,17 @@ export function setupSocketHandlers(
       );
     }
 
+    // Auto-join user-specific room for DM notifications
+    socket.join(`user:${userId}`);
+    app.log.info(
+      `[USER_JOIN] User ${userId} joined personal room: user:${userId}`
+    );
+
     // Join a channel room
     socket.on(SOCKET_EVENTS.CHANNEL_JOIN, async (channelId: string) => {
+      app.log.info(
+        `[CHANNEL_JOIN] User ${userId} joining channel: ${channelId}`
+      );
       socket.join(`channel:${channelId}`);
 
       // Track online users in channel
@@ -135,6 +146,9 @@ export function setupSocketHandlers(
         onlineUsers.set(channelId, new Set());
       }
       onlineUsers.get(channelId)!.add(userId);
+      app.log.info(
+        `[CHANNEL_JOIN] User ${userId} successfully joined channel:${channelId}`
+      );
 
       // Broadcast user joined
       socket
@@ -157,6 +171,24 @@ export function setupSocketHandlers(
         parentId?: string;
       }) => {
         try {
+          app.log.info(
+            `[MESSAGE_SEND] User ${userId} sending to ${data.channelId}: ${data.content.substring(0, 50)}`
+          );
+
+          // Auto-join channel if not already joined (fixes race condition)
+          const rooms = Array.from(socket.rooms);
+          const channelRoom = `channel:${data.channelId}`;
+          if (!rooms.includes(channelRoom)) {
+            app.log.info(
+              `[AUTO_JOIN] User ${userId} auto-joining ${channelRoom} to receive messages`
+            );
+            socket.join(channelRoom);
+            if (!onlineUsers.has(data.channelId)) {
+              onlineUsers.set(data.channelId, new Set());
+            }
+            onlineUsers.get(data.channelId)!.add(userId);
+          }
+
           const message = await messageService.createMessage({
             channelId: data.channelId,
             authorId: userId,
@@ -164,11 +196,30 @@ export function setupSocketHandlers(
             parentId: data.parentId
           });
 
-          // Broadcast to all in channel (including sender)
+          app.log.info(
+            `[MESSAGE_NEW] Broadcasting message ${message.id} to channel:${data.channelId}`
+          );
+
+          // Broadcast to all in channel (including sender) for realtime messages
           io.to(`channel:${data.channelId}`).emit(
             SOCKET_EVENTS.MESSAGE_NEW,
             message
           );
+
+          // Also broadcast to workspace for unread badge updates
+          const channel = await prisma.channel.findUnique({
+            where: { id: data.channelId },
+            select: { workspaceId: true }
+          });
+          if (channel) {
+            app.log.info(
+              `[WORKSPACE_BROADCAST] Broadcasting to workspace:${channel.workspaceId} for unread badges`
+            );
+            io.to(`workspace:${channel.workspaceId}`).emit(
+              SOCKET_EVENTS.MESSAGE_NEW,
+              message
+            );
+          }
 
           // Check for mentions and send push notifications
           const mentions = extractMentions(data.content);
@@ -302,6 +353,15 @@ export function setupSocketHandlers(
       'dm:send',
       async (data: { channelId: string; content: string }) => {
         try {
+          // Auto-join DM room if not already in it (prevent race conditions)
+          const dmRoom = `dm:${data.channelId}`;
+          if (!socket.rooms.has(dmRoom)) {
+            app.log.info(
+              `[AUTO_JOIN] User ${userId} auto-joining ${dmRoom} to receive messages`
+            );
+            socket.join(dmRoom);
+          }
+
           const dm = await prisma.directMessage.create({
             data: {
               channelId: data.channelId,
@@ -310,7 +370,56 @@ export function setupSocketHandlers(
             },
             include: { attachments: true, reactions: true }
           });
-          io.to(`dm:${data.channelId}`).emit('dm:new', dm);
+
+          app.log.info(
+            `[DM_NEW] Broadcasting DM ${dm.id} to dm:${data.channelId}`
+          );
+
+          // Broadcast to DM room (for users currently viewing the DM)
+          io.to(dmRoom).emit('dm:new', dm);
+
+          // Also broadcast to each participant's personal room for unread badge updates
+          const participants = await prisma.directMessageParticipant.findMany({
+            where: { channelId: data.channelId },
+            select: { userId: true }
+          });
+
+          participants.forEach((participant) => {
+            app.log.info(
+              `[DM_BROADCAST] Broadcasting DM to user:${participant.userId}`
+            );
+            io.to(`user:${participant.userId}`).emit('dm:new', dm);
+          });
+
+          // Send push notification to other participant (if not author)
+          const otherParticipant = participants.find(
+            (p) => p.userId !== userId
+          );
+          if (otherParticipant) {
+            const author = await prisma.user.findUnique({
+              where: { id: userId },
+              select: { firstName: true, lastName: true, email: true }
+            });
+
+            if (author) {
+              const authorName =
+                author.firstName && author.lastName
+                  ? `${author.firstName} ${author.lastName}`
+                  : author.email;
+
+              try {
+                await pushService.notifyNewDM(
+                  data.channelId,
+                  userId,
+                  authorName,
+                  otherParticipant.userId,
+                  data.content
+                );
+              } catch (pushErr) {
+                app.log.error('Failed to send DM push notification:', pushErr);
+              }
+            }
+          }
         } catch (err) {
           socket.emit('error', { message: (err as Error).message });
         }
