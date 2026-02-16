@@ -178,6 +178,10 @@ export const api = {
     request<void>(`/dm/messages/${messageId}`, {
       method: 'DELETE'
     }),
+  markDMAsRead: (channelId: string) =>
+    request<void>(`/dm/channels/${channelId}/read`, {
+      method: 'POST'
+    }),
 
   // Reactions
   getQuickReactions: () => request<string[]>('/reactions/quick'),

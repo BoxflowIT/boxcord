@@ -74,6 +74,14 @@ async function main() {
   // Connect to database
   await connectDatabase();
 
+  // Warmup database connection (prevent initial 500 errors)
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    app.log.info('🔥 Database connection warmed up');
+  } catch (err) {
+    app.log.warn('Database warmup failed, but continuing...', err);
+  }
+
   // Setup Socket.io before starting server
   const io = new Server(app.server, {
     cors: {

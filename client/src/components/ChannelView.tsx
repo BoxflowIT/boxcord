@@ -7,12 +7,13 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { logger } from '../utils/logger';
 import { socketService } from '../services/socket';
 import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
-import { useMessages, useChannels } from '../hooks/useQuery';
+import { useMessages, useChannels, queryKeys } from '../hooks/useQuery';
 import { useMessageActions } from '../hooks/useMessageActions';
 import { MessageItem } from './MessageItem';
 import FileUpload from './FileUpload';
@@ -36,6 +37,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
   const { currentChannel, setCurrentChannel, currentWorkspace } =
     useChatStore();
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
 
   // React Query - single source of truth for server data
   const { data: messagesData, isLoading: loadingMessages } =
@@ -133,6 +135,27 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
       socketService.leaveChannel(channelId);
     };
   }, [channelId]);
+
+  // Mark channel as read after viewing for 1 second
+  useEffect(() => {
+    if (!channelId || !currentWorkspace?.id) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        await api.post(`/channels/${channelId}/read`);
+        logger.log(`✅ Marked channel ${channelId} as read`);
+        
+        // Invalidate channels query to refresh unread counts
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.channels(currentWorkspace.id)
+        });
+      } catch (error) {
+        logger.error('Failed to mark channel as read:', error);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [channelId, currentWorkspace?.id, queryClient]);
 
   // Auto-scroll on new messages
   useEffect(() => {

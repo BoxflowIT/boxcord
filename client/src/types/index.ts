@@ -80,6 +80,7 @@ export interface Channel {
   isPrivate: boolean;
   createdAt?: string;
   updatedAt?: string;
+  unreadCount?: number; // Number of unread messages
 }
 
 export interface DMChannel {
@@ -96,6 +97,7 @@ export interface DMChannel {
     };
   }>;
   lastMessage?: Message | null;
+  unreadCount?: number;
 }
 
 // ============================================================================

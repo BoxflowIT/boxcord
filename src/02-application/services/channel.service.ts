@@ -20,9 +20,9 @@ export class ChannelService {
   async getWorkspaceChannels(
     workspaceId: string,
     userId: string
-  ): Promise<Channel[]> {
+  ): Promise<Array<Channel & { unreadCount?: number }>> {
     // Get public channels + private channels user is member of
-    return this.prisma.channel.findMany({
+    const channels = await this.prisma.channel.findMany({
       where: {
         workspaceId,
         OR: [
@@ -33,8 +33,43 @@ export class ChannelService {
           }
         ]
       },
+      include: {
+        members: {
+          where: { userId },
+          select: { lastReadAt: true }
+        },
+        _count: {
+          select: { messages: true }
+        }
+      },
       orderBy: { name: 'asc' }
     });
+
+    // Calculate unread count for each channel
+    return Promise.all(
+      channels.map(async (channel) => {
+        const member = channel.members[0];
+        const lastReadAt = member?.lastReadAt;
+
+        let unreadCount = 0;
+        if (lastReadAt) {
+          // Count messages after last read time
+          unreadCount = await this.prisma.message.count({
+            where: {
+              channelId: channel.id,
+              createdAt: { gt: lastReadAt }
+            }
+          });
+        } else {
+          // If never read, all messages are unread
+          unreadCount = channel._count.messages;
+        }
+
+        // Remove internal fields before returning
+        const { members, _count, ...channelData } = channel;
+        return { ...channelData, unreadCount };
+      })
+    );
   }
 
   async getChannel(channelId: string): Promise<Channel> {

@@ -5,8 +5,7 @@ import webPush from 'web-push';
 // Configure VAPID keys
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
-const VAPID_SUBJECT =
-  process.env.VAPID_SUBJECT || 'mailto:support@boxflow.com';
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:support@boxflow.com';
 
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webPush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
@@ -123,7 +122,7 @@ export class PushService {
         } catch (error) {
           // eslint-disable-next-line no-console
           console.error(`[PUSH] Failed to send to ${sub.endpoint}:`, error);
-          
+
           // If subscription is invalid (410 Gone), we should remove it
           if (
             error &&
@@ -133,7 +132,7 @@ export class PushService {
           ) {
             await this.unsubscribe(sub.endpoint);
           }
-          
+
           return { success: false };
         }
       })

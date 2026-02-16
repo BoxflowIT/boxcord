@@ -4,10 +4,22 @@ import type { Server, Socket } from 'socket.io';
 import type { PrismaClient } from '@prisma/client';
 import { SOCKET_EVENTS } from '../../../00-core/constants.js';
 import { MessageService } from '../../../02-application/services/message.service.js';
+import { PushService } from '../../../02-application/services/push.service.js';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
   email?: string;
+}
+
+// Extract mentions from message content (@user@domain.com)
+function extractMentions(content: string): string[] {
+  const mentionRegex = /@([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+  const mentions: string[] = [];
+  let match;
+  while ((match = mentionRegex.exec(content)) !== null) {
+    mentions.push(match[1]); // Extract email without the @ prefix
+  }
+  return mentions;
 }
 
 // Utility: Decode base64url (JWT payload)
@@ -23,6 +35,7 @@ export function setupSocketHandlers(
   prisma: PrismaClient
 ) {
   const messageService = new MessageService(prisma);
+  const pushService = new PushService(prisma);
   const onlineUsers = new Map<string, Set<string>>(); // channelId -> Set of userIds
   const isDev = process.env.NODE_ENV !== 'production';
   const allowMockTokens = isDev || process.env.ALLOW_MOCK_TOKENS === 'true';
@@ -156,6 +169,51 @@ export function setupSocketHandlers(
             SOCKET_EVENTS.MESSAGE_NEW,
             message
           );
+
+          // Check for mentions and send push notifications
+          const mentions = extractMentions(data.content);
+          if (mentions.length > 0) {
+            // Get channel and author info for notifications
+            const channel = await prisma.channel.findUnique({
+              where: { id: data.channelId },
+              select: { name: true }
+            });
+
+            const author = await prisma.user.findUnique({
+              where: { id: userId },
+              select: { firstName: true, lastName: true, email: true }
+            });
+
+            if (channel && author) {
+              const authorName =
+                author.firstName && author.lastName
+                  ? `${author.firstName} ${author.lastName}`
+                  : author.email;
+
+              // Get user IDs for mentioned emails
+              const mentionedUsers = await prisma.user.findMany({
+                where: { email: { in: mentions } },
+                select: { id: true, email: true }
+              });
+
+              // Send push notification to each mentioned user (except author)
+              for (const mentionedUser of mentionedUsers) {
+                if (mentionedUser.id !== userId) {
+                  try {
+                    await pushService.notifyMention(
+                      mentionedUser.id,
+                      authorName,
+                      channel.name,
+                      data.channelId,
+                      data.content
+                    );
+                  } catch (pushErr) {
+                    app.log.error('Failed to send push notification:', pushErr);
+                  }
+                }
+              }
+            }
+          }
         } catch (err) {
           app.log.error('Error creating message: ' + (err as Error).message);
           socket.emit('error', { message: (err as Error).message });

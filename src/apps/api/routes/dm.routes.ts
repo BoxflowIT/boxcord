@@ -93,4 +93,30 @@ export async function dmRoutes(app: FastifyInstance) {
       return reply.status(204).send();
     }
   );
+
+  // Mark DM channel as read
+  app.post<{ Params: { channelId: string } }>(
+    '/channels/:channelId/read',
+    async (request, reply) => {
+      // Use upsert to create participant if it doesn't exist
+      await prisma.directMessageParticipant.upsert({
+        where: {
+          channelId_userId: {
+            channelId: request.params.channelId,
+            userId: request.user.id
+          }
+        },
+        update: {
+          lastReadAt: new Date()
+        },
+        create: {
+          channelId: request.params.channelId,
+          userId: request.user.id,
+          lastReadAt: new Date()
+        }
+      });
+
+      return reply.status(204).send();
+    }
+  );
 }

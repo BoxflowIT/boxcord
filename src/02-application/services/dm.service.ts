@@ -49,6 +49,7 @@ export interface DMChannel {
     };
   }>;
   lastMessage?: DirectMessage | null;
+  unreadCount?: number;
 }
 
 export class DirectMessageService {
@@ -170,20 +171,46 @@ export class DirectMessageService {
       orderBy: { createdAt: 'desc' }
     });
 
-    return channels.map((ch) => ({
-      id: ch.id,
-      createdAt: ch.createdAt,
-      participants: ch.participants.map((p) => ({
-        userId: p.userId,
-        user: {
-          id: p.user.id,
-          email: p.user.email,
-          firstName: p.user.firstName ?? undefined,
-          lastName: p.user.lastName ?? undefined
+    // Calculate unread count for each channel
+    const channelsWithUnread = await Promise.all(
+      channels.map(async (ch) => {
+        const participant = ch.participants.find((p) => p.userId === userId);
+        const lastReadAt = participant?.lastReadAt;
+
+        let unreadCount = 0;
+        if (lastReadAt) {
+          unreadCount = await this.prisma.directMessage.count({
+            where: {
+              channelId: ch.id,
+              createdAt: { gt: lastReadAt }
+            }
+          });
+        } else {
+          // If never read, count all messages
+          unreadCount = await this.prisma.directMessage.count({
+            where: { channelId: ch.id }
+          });
         }
-      })),
-      lastMessage: ch.messages[0] ?? null
-    }));
+
+        return {
+          id: ch.id,
+          createdAt: ch.createdAt,
+          participants: ch.participants.map((p) => ({
+            userId: p.userId,
+            user: {
+              id: p.user.id,
+              email: p.user.email,
+              firstName: p.user.firstName ?? undefined,
+              lastName: p.user.lastName ?? undefined
+            }
+          })),
+          lastMessage: ch.messages[0] ?? null,
+          unreadCount
+        };
+      })
+    );
+
+    return channelsWithUnread;
   }
 
   // Get messages in a DM channel
