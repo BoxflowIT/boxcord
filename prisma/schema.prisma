@@ -82,10 +82,11 @@ model Channel {
 }
 
 model ChannelMember {
-    id        String   @id @default(uuid())
-    channelId String   @map("channel_id")
-    userId    String   @map("user_id")
-    joinedAt  DateTime @default(now()) @map("joined_at")
+    id         String    @id @default(uuid())
+    channelId  String    @map("channel_id")
+    userId     String    @map("user_id")
+    joinedAt   DateTime  @default(now()) @map("joined_at")
+    lastReadAt DateTime? @map("last_read_at") // Track when user last read messages
 
     channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
@@ -162,9 +163,10 @@ model DirectMessageChannel {
 }
 
 model DirectMessageParticipant {
-    id        String @id @default(uuid())
-    channelId String @map("channel_id")
-    userId    String @map("user_id")
+    id         String    @id @default(uuid())
+    channelId  String    @map("channel_id")
+    userId     String    @map("user_id")
+    lastReadAt DateTime? @map("last_read_at") // Track when user last read DMs
 
     channel DirectMessageChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
     user    User                 @relation(fields: [userId], references: [id], onDelete: Cascade)

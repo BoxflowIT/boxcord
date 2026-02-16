@@ -92,4 +92,27 @@ export async function channelRoutes(app: FastifyInstance) {
     await channelService.leaveChannel(request.params.id, request.user.id);
     return { success: true };
   });
+
+  // Mark channel as read
+  app.post<{ Params: { id: string } }>('/:id/read', async (request, reply) => {
+    // Use upsert to create membership if it doesn't exist (for public channels)
+    await prisma.channelMember.upsert({
+      where: {
+        channelId_userId: {
+          channelId: request.params.id,
+          userId: request.user.id
+        }
+      },
+      update: {
+        lastReadAt: new Date()
+      },
+      create: {
+        channelId: request.params.id,
+        userId: request.user.id,
+        lastReadAt: new Date()
+      }
+    });
+
+    return reply.status(204).send();
+  });
 }

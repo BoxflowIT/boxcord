@@ -15,6 +15,7 @@ interface DMChannel {
     content: string;
     createdAt: string;
   } | null;
+  unreadCount?: number;
 }
 
 interface UserInfo {
@@ -167,6 +168,8 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
             const otherUser = getOtherUser(channel);
             if (!otherUser) return null;
 
+            const hasUnread = (channel.unreadCount ?? 0) > 0;
+
             return (
               <button
                 key={channel.id}
@@ -179,7 +182,7 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
                   {otherUser.firstName?.charAt(0) ?? otherUser.email.charAt(0)}
                 </Avatar>
                 <div className="flex-1 min-w-0 text-left">
-                  <p className="text-body text-sm truncate">
+                  <p className={`text-sm truncate ${hasUnread ? 'text-white font-semibold' : 'text-body'}`}>
                     {otherUser.firstName ?? otherUser.email}
                   </p>
                   {channel.lastMessage && (
@@ -188,11 +191,18 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
                     </p>
                   )}
                 </div>
-                {channel.lastMessage && (
-                  <span className="text-subtle">
-                    {formatRelativeTime(channel.lastMessage.createdAt)}
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  {channel.lastMessage && (
+                    <span className="text-subtle">
+                      {formatRelativeTime(channel.lastMessage.createdAt)}
+                    </span>
+                  )}
+                  {hasUnread && (
+                    <span className="px-1.5 py-0.5 text-xs font-bold bg-white text-discord-dark rounded-full">
+                      {channel.unreadCount}
+                    </span>
+                  )}
+                </div>
               </button>
             );
           })

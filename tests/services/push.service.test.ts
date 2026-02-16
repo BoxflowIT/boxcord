@@ -1,5 +1,16 @@
 // Push Service Tests
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+// Mock web-push library
+vi.mock('web-push', () => {
+  return {
+    default: {
+      setVapidDetails: vi.fn(),
+      sendNotification: vi.fn().mockResolvedValue({ statusCode: 201 })
+    }
+  };
+});
+
 import { PushService } from '../../src/02-application/services/push.service';
 
 describe('PushService', () => {

@@ -319,34 +319,46 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
                   </button>
                 </div>
 
-                {channels.map((channel) => (
-                  <div
-                    key={channel.id}
-                    className={`group w-full flex items-center gap-2 px-2 py-1 rounded-lg text-sm transition-colors cursor-pointer ${
-                      currentChannel?.id === channel.id
-                        ? 'nav-item-active'
-                        : 'nav-item-default'
-                    }`}
-                    onClick={() => handleChannelSelect(channel)}
-                  >
-                    <span className="text-lg">#</span>
-                    <span className="truncate flex-1">{channel.name}</span>
-                    <button
-                      onClick={(e) => handleEditChannel(channel, e)}
-                      className="btn-icon hover-group-visible"
-                      title="Redigera kanal"
+                {channels.map((channel) => {
+                  const hasUnread = (channel.unreadCount ?? 0) > 0;
+                  return (
+                    <div
+                      key={channel.id}
+                      className={`group w-full flex items-center gap-2 px-2 py-1 rounded-lg text-sm transition-colors cursor-pointer ${
+                        currentChannel?.id === channel.id
+                          ? 'nav-item-active'
+                          : 'nav-item-default'
+                      }`}
+                      onClick={() => handleChannelSelect(channel)}
                     >
-                      <EditIcon size="sm" />
-                    </button>
-                    <button
-                      onClick={(e) => handleDeleteChannel(channel, e)}
-                      className="btn-icon-danger hover-group-visible"
-                      title="Ta bort kanal"
-                    >
-                      <CloseIcon size="sm" />
-                    </button>
-                  </div>
-                ))}
+                      <span className="text-lg">#</span>
+                      <span
+                        className={`truncate flex-1 ${hasUnread ? 'text-white font-semibold' : ''}`}
+                      >
+                        {channel.name}
+                      </span>
+                      {hasUnread && (
+                        <span className="px-1.5 py-0.5 text-xs font-bold bg-white text-discord-dark rounded-full">
+                          {channel.unreadCount}
+                        </span>
+                      )}
+                      <button
+                        onClick={(e) => handleEditChannel(channel, e)}
+                        className="btn-icon hover-group-visible"
+                        title="Redigera kanal"
+                      >
+                        <EditIcon size="sm" />
+                      </button>
+                      <button
+                        onClick={(e) => handleDeleteChannel(channel, e)}
+                        className="btn-icon-danger hover-group-visible"
+                        title="Ta bort kanal"
+                      >
+                        <CloseIcon size="sm" />
+                      </button>
+                    </div>
+                  );
+                })}
               </>
             )}
           </div>

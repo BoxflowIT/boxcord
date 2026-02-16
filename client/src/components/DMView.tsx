@@ -7,12 +7,14 @@
 
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { logger } from '../utils/logger';
 import { socketService } from '../services/socket';
 import { useAuthStore } from '../store/auth';
 import { useDMMessages, useDMChannels, useUser } from '../hooks/useQuery';
 import { useMessageActions } from '../hooks/useMessageActions';
+import { queryKeys } from '../hooks/useQuery';
 import { MessageItem } from './MessageItem';
 import FileUpload from './FileUpload';
 import EmojiPicker from './ui/EmojiPicker';
@@ -27,6 +29,7 @@ import {
 export default function DMView() {
   const { channelId } = useParams<{ channelId: string }>();
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
 
   const { data: dmChannels } = useDMChannels();
 
@@ -115,6 +118,23 @@ export default function DMView() {
       socketService.leaveDM(channelId);
     };
   }, [channelId]);
+
+  // Auto-mark as read after viewing for 1 second
+  useEffect(() => {
+    if (!channelId) return;
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        await api.markDMAsRead(channelId);
+        // Invalidate DM channels query to refresh unread counts
+        queryClient.invalidateQueries({ queryKey: queryKeys.dmChannels });
+      } catch (err) {
+        logger.error('Failed to mark DM as read:', err);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [channelId, queryClient]);
 
   // Auto-scroll on new messages
   useEffect(() => {
