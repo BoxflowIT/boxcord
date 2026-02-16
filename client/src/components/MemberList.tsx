@@ -7,7 +7,7 @@ import { useAuthStore } from '../store/auth';
 import { useOnlineUsers } from '../hooks/useQuery';
 import ProfileModal from './ProfileModal';
 import Avatar from './ui/Avatar';
-import { ChatIcon } from './ui/Icons';
+import { ChatIcon, SearchIcon, CloseIcon } from './ui/Icons';
 
 interface User {
   id: string;
@@ -31,6 +31,8 @@ export default function MemberList() {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [showProfile, setShowProfile] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (!onlineUsers) return;
@@ -116,7 +118,19 @@ export default function MemberList() {
     STAFF: 'Personal'
   };
 
-  const groupedByRole = users.reduce(
+  // Filter users based on search query
+  const filteredUsers = searchQuery
+    ? users.filter((user) => {
+        const fullName = `${user.firstName ?? ''} ${user.lastName ?? ''}`
+          .toLowerCase()
+          .trim();
+        const email = user.email.toLowerCase();
+        const query = searchQuery.toLowerCase();
+        return fullName.includes(query) || email.includes(query);
+      })
+    : users;
+
+  const groupedByRole = filteredUsers.reduce(
     (acc, user) => {
       const role = user.role || 'STAFF';
       if (!acc[role]) acc[role] = [];
@@ -130,15 +144,41 @@ export default function MemberList() {
     <div className="sidebar-main border-l border-boxflow-border">
       {/* Header */}
       <div className="panel-header">
-        <h3 className="text-subtle uppercase font-semibold">
-          Medlemmar — {users.length}
+        <h3 className="text-subtle uppercase font-semibold flex-1">
+          Medlemmar — {filteredUsers.length}
         </h3>
+        <button
+          onClick={() => {
+            setShowSearch(!showSearch);
+            if (showSearch) setSearchQuery('');
+          }}
+          className="btn-icon"
+          title="Sök medlemmar"
+        >
+          {showSearch ? <CloseIcon size="sm" /> : <SearchIcon size="sm" />}
+        </button>
       </div>
+
+      {/* Search input */}
+      {showSearch && (
+        <div className="px-4 py-2 border-b border-boxflow-border">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Sök efter namn eller e-post..."
+            className="w-full bg-boxflow-dark text-boxflow-light border border-boxflow-border rounded px-3 py-2 text-sm outline-none focus:border-boxflow-primary"
+            autoFocus
+          />
+        </div>
+      )}
 
       {/* User list */}
       <div className="panel-content">
-        {users.length === 0 ? (
-          <div className="text-muted px-2">Inga användare online</div>
+        {filteredUsers.length === 0 ? (
+          <div className="text-muted px-2">
+            {searchQuery ? 'Inga användare hittades' : 'Inga användare online'}
+          </div>
         ) : (
           roleOrder.map((role) => {
             const roleUsers = groupedByRole[role];

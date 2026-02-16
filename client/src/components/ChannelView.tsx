@@ -83,7 +83,6 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     content: string;
     isPrivate: boolean;
   } | null>(null);
-  const [messageMenuOpen, setMessageMenuOpen] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<number>();
@@ -143,7 +142,6 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     const timer = setTimeout(async () => {
       try {
         await api.post(`/channels/${channelId}/read`);
-        logger.log(`✅ Marked channel ${channelId} as read`);
         
         // Invalidate channels query to refresh unread counts
         queryClient.invalidateQueries({
@@ -162,16 +160,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [channelMessages.length]);
 
-  // Close message menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (messageMenuOpen && !(e.target as Element).closest('.relative')) {
-        setMessageMenuOpen(null);
-      }
-    };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [messageMenuOpen]);
+
 
   const handleSend = async () => {
     if (!inputValue.trim() || !channelId) return;
@@ -411,13 +400,6 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
               onEdit={handleEditMessage}
               onDelete={handleDeleteMessage}
               renderContent={(content) => parseMentions(content)}
-              showMessageMenu={true}
-              messageMenuOpen={messageMenuOpen === message.id}
-              onToggleMessageMenu={() =>
-                setMessageMenuOpen(
-                  messageMenuOpen === message.id ? null : message.id
-                )
-              }
               compact={true}
             />
           ))

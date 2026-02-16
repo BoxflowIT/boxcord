@@ -8,7 +8,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { socketService } from '../services/socket';
-import { logger } from '../utils/logger';
 import { useChatStore } from '../store/chat';
 import { useWorkspaces, useChannels } from '../hooks/useQuery';
 import Sidebar from '../components/Sidebar';
@@ -40,7 +39,6 @@ export default function Chat() {
 
     // Handle page refresh - disconnect socket BEFORE unload to prevent 400 errors
     const handleBeforeUnload = () => {
-      logger.log('🔄 Page unload: Disconnecting socket...');
       socketService.disconnect();
     };
 

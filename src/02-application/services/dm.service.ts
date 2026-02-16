@@ -182,13 +182,17 @@ export class DirectMessageService {
           unreadCount = await this.prisma.directMessage.count({
             where: {
               channelId: ch.id,
-              createdAt: { gt: lastReadAt }
+              createdAt: { gt: lastReadAt },
+              authorId: { not: userId }
             }
           });
         } else {
-          // If never read, count all messages
+          // If never read, count all messages (excluding own messages)
           unreadCount = await this.prisma.directMessage.count({
-            where: { channelId: ch.id }
+            where: {
+              channelId: ch.id,
+              authorId: { not: userId }
+            }
           });
         }
 
@@ -210,7 +214,16 @@ export class DirectMessageService {
       })
     );
 
-    return channelsWithUnread;
+    // Sort by last message time (most recent first), channels without messages last
+    return channelsWithUnread.sort((a, b) => {
+      if (!a.lastMessage && !b.lastMessage) return 0;
+      if (!a.lastMessage) return 1;
+      if (!b.lastMessage) return -1;
+      return (
+        new Date(b.lastMessage.createdAt).getTime() -
+        new Date(a.lastMessage.createdAt).getTime()
+      );
+    });
   }
 
   // Get messages in a DM channel
@@ -237,7 +250,7 @@ export class DirectMessageService {
 
     const messages = await this.prisma.directMessage.findMany({
       where: { channelId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' },
       take: limit + 1,
       ...(params.cursor && {
         cursor: { id: params.cursor },

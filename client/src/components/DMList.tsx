@@ -1,16 +1,24 @@
 // Direct Messages List Component
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { api } from '../services/api';
 import { logger } from '../utils/logger';
 import { useAuthStore } from '../store/auth';
-import { useDMChannels, useUsers } from '../hooks/useQuery';
+import { useDMChannels } from '../hooks/useQuery';
 import { formatRelativeTime } from '../utils/dateTime';
 import Avatar from './ui/Avatar';
 import { PlusIcon } from './ui/Icons';
 
 interface DMChannel {
   id: string;
-  participants: { userId: string }[];
+  participants: {
+    userId: string;
+    user?: {
+      id: string;
+      email: string;
+      firstName?: string;
+      lastName?: string;
+    };
+  }[];
   lastMessage?: {
     content: string;
     createdAt: string;
@@ -33,26 +41,6 @@ interface DMListProps {
 export default function DMList({ onSelectDM, selectedId }: DMListProps) {
   const { user } = useAuthStore();
   const { data: dmChannels, isLoading, refetch } = useDMChannels();
-
-  // Extract other user IDs from DM channels
-  const otherUserIds = useMemo(() => {
-    if (!dmChannels || !user) return [];
-    return dmChannels.flatMap((ch) =>
-      ch.participants.filter((p) => p.userId !== user.id).map((p) => p.userId)
-    );
-  }, [dmChannels, user]);
-
-  // Fetch all users at once with caching (React Query deduplicates automatically)
-  const { data: usersArray = [] } = useUsers(otherUserIds);
-
-  // Convert to Map for easy lookup
-  const users = useMemo(() => {
-    const map = new Map<string, UserInfo>();
-    usersArray.forEach((u) => {
-      if (u) map.set(u.id, u);
-    });
-    return map;
-  }, [usersArray]);
 
   const [showNewDM, setShowNewDM] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -95,16 +83,18 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
   };
 
   const getOtherUser = (channel: DMChannel): UserInfo | undefined => {
-    const otherId = channel.participants.find(
+    const otherParticipant = channel.participants.find(
       (p) => p.userId !== user?.id
-    )?.userId;
-    return otherId ? users.get(otherId) : undefined;
+    );
+    
+    // Use user data directly from participant
+    return otherParticipant?.user;
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col min-h-0 border-t border-discord-darkest">
       {/* Header */}
-      <div className="px-3 py-2 flex items-center justify-between border-b border-discord-darkest">
+      <div className="px-3 py-2 flex items-center justify-between flex-shrink-0">
         <span className="text-xs font-semibold text-gray-400 uppercase">
           Direktmeddelanden
         </span>
@@ -119,7 +109,7 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
 
       {/* New DM search */}
       {showNewDM && (
-        <div className="p-2 border-b border-discord-darkest">
+        <div className="p-2 border-b border-discord-darkest flex-shrink-0">
           <input
             type="text"
             value={searchQuery}
@@ -153,7 +143,7 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
       )}
 
       {/* DM list */}
-      <div className="flex-1 overflow-y-auto p-2">
+      <div className="flex-1 min-h-0 overflow-y-auto p-2">
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <div className="spinner-container p-4">
