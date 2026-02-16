@@ -3,6 +3,10 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from 'react-oidc-context';
 import App from './App';
 import './index.css';
+import { initSentry } from './config/sentry';
+
+// Initialize Sentry before React renders
+initSentry();
 
 // Cognito OIDC configuration
 const cognitoAuthConfig = {

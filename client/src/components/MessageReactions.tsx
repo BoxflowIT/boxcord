@@ -1,6 +1,7 @@
 // Message Reactions Component
 import { useState, useEffect } from 'react';
 import { api } from '../services/api';
+import { logger } from '../utils/logger';
 import { EmojiIcon } from './ui/Icons';
 
 interface Reaction {
@@ -60,7 +61,7 @@ export default function MessageReactions({
 
       setShowPicker(false);
     } catch (err) {
-      console.error('Failed to toggle reaction:', err);
+      logger.error('Failed to toggle reaction:', err);
     }
   };
 

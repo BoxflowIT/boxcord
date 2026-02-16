@@ -1,5 +1,6 @@
 // Custom hook for message editing and deletion
 import { useState, useRef, useCallback } from 'react';
+import { logger } from '../utils/logger';
 
 export interface UseMessageActionsOptions {
   onEdit?: (messageId: string, content: string) => Promise<void>;
@@ -61,7 +62,7 @@ export function useMessageActions({
       setEditingMessageId(null);
       setEditContentState('');
     } catch (err) {
-      console.error('Failed to edit message:', err);
+      logger.error('Failed to edit message:', err);
     }
   }, []);
 
@@ -83,7 +84,7 @@ export function useMessageActions({
       await onDeleteRef.current?.(messageId);
       setDeleteMessageId(null);
     } catch (err) {
-      console.error('Failed to delete message:', err);
+      logger.error('Failed to delete message:', err);
     }
   }, [deleteMessageId]);
 

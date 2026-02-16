@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../services/api';
+import { logger } from '../utils/logger';
 import { socketService } from '../services/socket';
 import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
@@ -291,7 +292,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
       // Note: In a real implementation, you'd create a message and upload in one call
       // For now, this is a simplified version
     } catch (err) {
-      console.error('Failed to upload file:', err);
+      logger.error('Failed to upload file:', err);
     } finally {
       setUploading(false);
     }

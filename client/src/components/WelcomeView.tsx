@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/auth';
 import { useCreateWorkspace } from '../hooks/useQuery';
 import { useState } from 'react';
 import { ChatIcon } from './ui/Icons';
+import { logger } from '../utils/logger';
 
 export default function WelcomeView() {
   const { currentWorkspace, setCurrentWorkspace } = useChatStore();
@@ -27,7 +28,7 @@ export default function WelcomeView() {
           // Cache updated automatically via invalidation
         },
         onError: (err) => {
-          console.error('Failed to create workspace:', err);
+          logger.error('Failed to create workspace:', err);
         }
       }
     );

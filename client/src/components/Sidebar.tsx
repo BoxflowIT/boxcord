@@ -11,6 +11,7 @@ import { useAuth } from 'react-oidc-context';
 import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
 import { api } from '../services/api';
+import { logger } from '../utils/logger';
 import {
   useWorkspaces,
   useChannels,
@@ -101,7 +102,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
       setShowNewWorkspace(false);
       handleWorkspaceSelect(workspace); // Switch to new workspace
     } catch (err) {
-      console.error('Failed to create workspace:', err);
+      logger.error('Failed to create workspace:', err);
     } finally {
       setIsCreating(false);
     }
@@ -119,7 +120,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
       setShowNewChannel(false);
       handleChannelSelect(channel);
     } catch (err) {
-      console.error('Failed to create channel:', err);
+      logger.error('Failed to create channel:', err);
     } finally {
       setIsCreating(false);
     }
@@ -152,7 +153,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
         }
       }
     } catch (err) {
-      console.error('Failed to delete channel:', err);
+      logger.error('Failed to delete channel:', err);
     }
   };
 
@@ -183,7 +184,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
         }
       }
     } catch (err) {
-      console.error('Failed to delete workspace:', err);
+      logger.error('Failed to delete workspace:', err);
     }
   };
 
@@ -208,7 +209,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
       // React Query will update cache via invalidation
       setEditingChannel(null);
     } catch (err) {
-      console.error('Failed to update channel:', err);
+      logger.error('Failed to update channel:', err);
     }
   };
 
@@ -238,7 +239,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
       // React Query will update cache via invalidation
       setEditingWorkspace(null);
     } catch (err) {
-      console.error('Failed to update workspace:', err);
+      logger.error('Failed to update workspace:', err);
     }
   };
 

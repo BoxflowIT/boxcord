@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from 'react-oidc-context';
 import { useAuthStore } from '../store/auth';
 import { api } from '../services/api';
+import { logger } from '../utils/logger';
 import { socketService } from '../services/socket';
 import { Button } from '../components/ui/button';
 
@@ -45,7 +46,7 @@ export default function AuthCallback() {
           // Reconnect socket with new token
           socketService.reconnect();
         } catch (error) {
-          console.error('Failed to fetch user data:', error);
+          logger.error('Failed to fetch user data:', error);
         } finally {
           setLoading(false);
         }

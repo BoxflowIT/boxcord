@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../services/api';
+import { logger } from '../utils/logger';
 import { socketService } from '../services/socket';
 import { useAuthStore } from '../store/auth';
 import { useDMMessages, useDMChannels, useUser } from '../hooks/useQuery';
@@ -131,7 +132,7 @@ export default function DMView() {
       // Send via WebSocket only - it will update React Query cache
       socketService.sendDM(channelId, content);
     } catch (err) {
-      console.error('Failed to send DM:', err);
+      logger.error('Failed to send DM:', err);
       // Restore input on error
       setInputValue(content);
     } finally {
@@ -160,7 +161,7 @@ export default function DMView() {
       // React Query cache will be updated automatically via WebSocket
       // or you could invalidate the query to refetch
     } catch (err) {
-      console.error('Failed to upload file:', err);
+      logger.error('Failed to upload file:', err);
     } finally {
       setUploading(false);
     }

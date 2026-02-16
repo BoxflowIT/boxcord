@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import { logger } from '../utils/logger';
 import { useAuthStore } from '../store/auth';
 import { useOnlineUsers } from '../hooks/useQuery';
 import ProfileModal from './ProfileModal';
@@ -103,7 +104,7 @@ export default function MemberList() {
       const channel = await api.getOrCreateDM(userId);
       navigate(`/chat/dm/${channel.id}`);
     } catch (err) {
-      console.error('Failed to create DM channel:', err);
+      logger.error('Failed to create DM channel:', err);
     }
   };
 
