@@ -1,12 +1,11 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useAuth } from 'react-oidc-context';
 import { useAuthStore } from './store/auth';
 import { setQueryClient } from './services/socket';
 import Spinner from './components/ui/Spinner';
-import Login from './pages/Login';
+import CustomLogin from './pages/CustomLogin';
+import ForgotPassword from './pages/ForgotPassword';
 import Chat from './pages/Chat';
-import AuthCallback from './pages/AuthCallback';
 
 // Create QueryClient with optimized settings
 const queryClient = new QueryClient({
@@ -26,17 +25,16 @@ setQueryClient(queryClient);
 
 function App() {
   const { token, isLoading } = useAuthStore();
-  const auth = useAuth();
 
-  // User is authenticated via OIDC or has a token in store
-  const isAuthenticated = token || auth.isAuthenticated;
+  // User is authenticated if token exists in store
+  const isAuthenticated = !!token;
 
   return (
     <QueryClientProvider client={queryClient}>
       {isLoading && <Spinner />}
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/login" element={<CustomLogin />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route
           path="/chat/*"
           element={
