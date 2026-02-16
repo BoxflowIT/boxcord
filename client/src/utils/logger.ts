@@ -1,6 +1,6 @@
 /**
  * Logger Utility
- * 
+ *
  * Wraps console methods to only log in development mode.
  * In production, logs are silenced to avoid exposing debug info.
  */
@@ -13,15 +13,15 @@ export const logger = {
   log: (...args: unknown[]) => {
     if (isDev) console.log(...args);
   },
-  
+
   warn: (...args: unknown[]) => {
     if (isDev) console.warn(...args);
   },
-  
+
   error: (...args: unknown[]) => {
     // Always log errors to console
     console.error(...args);
-    
+
     // Send to Sentry in production
     if (!isDev) {
       const [message, ...context] = args;
@@ -35,11 +35,11 @@ export const logger = {
       }
     }
   },
-  
+
   info: (...args: unknown[]) => {
     if (isDev) console.info(...args);
   },
-  
+
   debug: (...args: unknown[]) => {
     if (isDev) console.debug(...args);
   }

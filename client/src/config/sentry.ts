@@ -1,6 +1,6 @@
 /**
  * Sentry Configuration
- * 
+ *
  * Error tracking and monitoring for production.
  * Set VITE_SENTRY_DSN in your .env file to enable.
  */
@@ -10,7 +10,7 @@ import * as Sentry from '@sentry/react';
 export function initSentry() {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
   const environment = import.meta.env.MODE; // 'development' or 'production'
-  
+
   // Only initialize if DSN is provided
   if (!dsn) {
     console.log('Sentry: No DSN provided, skipping initialization');
@@ -30,8 +30,8 @@ export function initSentry() {
       Sentry.replayIntegration({
         // Mask all text and inputs for privacy
         maskAllText: true,
-        blockAllMedia: true,
-      }),
+        blockAllMedia: true
+      })
     ],
     // Replay sample rates
     replaysSessionSampleRate: 0, // Don't record normal sessions
@@ -43,7 +43,7 @@ export function initSentry() {
         delete event.user.ip_address;
       }
       return event;
-    },
+    }
   });
 
   console.log(`Sentry initialized for ${environment} environment`);
