@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import { signOut } from '../services/cognito';
 import { logger } from '../utils/logger';
 import { useAuthStore } from '../store/auth';
 import {
@@ -74,6 +75,9 @@ export default function ProfileModal({
     setDeleting(true);
     try {
       await api.deleteAccount();
+      // Sign out from Cognito
+      signOut();
+      // Clear local auth state
       logout();
       navigate('/login');
     } catch (err) {

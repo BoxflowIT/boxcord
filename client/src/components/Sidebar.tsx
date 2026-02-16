@@ -7,10 +7,10 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from 'react-oidc-context';
 import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
 import { api } from '../services/api';
+import { signOut } from '../services/cognito';
 import { logger } from '../utils/logger';
 import {
   useWorkspaces,
@@ -53,7 +53,6 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
   const deleteChannelMutation = useDeleteChannel();
 
   const { user, logout } = useAuthStore();
-  const auth = useAuth();
   const [showNewChannel, setShowNewChannel] = useState(false);
   const [showNewWorkspace, setShowNewWorkspace] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -244,11 +243,10 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
   };
 
   const handleLogout = () => {
+    // Sign out from Cognito
+    signOut();
+    // Clear local auth state
     logout();
-    // Also sign out from OIDC if applicable
-    if (auth.isAuthenticated) {
-      auth.removeUser();
-    }
     navigate('/login');
   };
 
