@@ -21,6 +21,10 @@ import SlashCommandAutocomplete from './SlashCommandAutocomplete';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import { LoadingState } from './ui/LoadingSpinner';
 import { UsersIcon } from './ui/Icons';
+import {
+  groupReactionsByEmoji,
+  shouldShowMessageHeader
+} from '../utils/messageUtils';
 
 interface ChannelViewProps {
   onToggleMemberList?: () => void;
@@ -37,11 +41,35 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     useMessages(channelId);
   const { data: channels = [] } = useChannels(currentWorkspace?.id);
 
-  // Messages from React Query cache - memoized to prevent unnecessary re-renders
-  const channelMessages = useMemo(
-    () => messagesData?.items ?? [],
-    [messagesData?.items]
-  );
+  // Pre-process messages with computed properties (memoized for stable references)
+  const channelMessages = useMemo(() => {
+    const rawMessages = messagesData?.items ?? [];
+    return rawMessages.map((message, index) => {
+      const prevMessage = rawMessages[index - 1];
+      const msg = message as typeof message & {
+        attachments?: Array<{
+          id: string;
+          fileName: string;
+          fileUrl: string;
+          fileType: string;
+          fileSize: number;
+        }>;
+        reactions?: Array<{ emoji: string; userId: string }>;
+      };
+
+      return {
+        ...message,
+        attachments: msg.attachments,
+        reactionCounts: groupReactionsByEmoji(msg.reactions, user?.id),
+        showHeader: shouldShowMessageHeader(
+          message.authorId,
+          message.createdAt,
+          prevMessage?.authorId,
+          prevMessage?.createdAt
+        )
+      };
+    });
+  }, [messagesData?.items, user?.id]);
 
   const [inputValue, setInputValue] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -328,91 +356,47 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
             </p>
           </div>
         ) : (
-          channelMessages.map((message, index) => {
-            const prevMessage = channelMessages[index - 1];
-            const showHeader =
-              !prevMessage ||
-              prevMessage.authorId !== message.authorId ||
-              new Date(message.createdAt).getTime() -
-                new Date(prevMessage.createdAt).getTime() >
-                300000;
-
-            // Type the message with optional attachments/reactions
-            const msg = message as typeof message & {
-              attachments?: Array<{
-                id: string;
-                fileName: string;
-                fileUrl: string;
-                fileType: string;
-                fileSize: number;
-              }>;
-              reactions?: Array<{ emoji: string; userId: string }>;
-            };
-
-            return (
-              <MessageItem
-                key={message.id}
-                messageId={message.id}
-                content={message.content}
-                createdAt={message.createdAt}
-                edited={message.edited}
-                attachments={msg.attachments}
-                reactionCounts={
-                  msg.reactions?.reduce(
-                    (acc, r) => {
-                      const existing = acc.find((x) => x.emoji === r.emoji);
-                      if (existing) {
-                        existing.count++;
-                        if (r.userId === user?.id) existing.hasReacted = true;
-                      } else {
-                        acc.push({
-                          emoji: r.emoji,
-                          count: 1,
-                          hasReacted: r.userId === user?.id
-                        });
-                      }
-                      return acc;
-                    },
-                    [] as Array<{
-                      emoji: string;
-                      count: number;
-                      hasReacted: boolean;
-                    }>
-                  ) ?? []
-                }
-                showHeader={showHeader}
-                isEditing={editingMessageId === message.id}
-                isOwnMessage={message.authorId === user?.id}
-                authorName={
-                  message.authorId === user?.id
-                    ? 'Du'
-                    : message.author?.firstName && message.author?.lastName
-                      ? `${message.author.firstName} ${message.author.lastName}`
-                      : (message.author?.firstName ??
-                        message.authorId.slice(0, 8))
-                }
-                authorInitial={(
-                  message.author?.firstName?.[0] ?? message.authorId[0]
-                ).toUpperCase()}
-                editContent={editingMessageId === message.id ? editContent : ''}
-                editTextareaRef={editTextareaRef}
-                onEditContentChange={setEditContent}
-                onSaveEdit={saveEdit}
-                onCancelEdit={handleCancelEdit}
-                onEdit={handleEditMessage}
-                onDelete={handleDeleteMessage}
-                renderContent={(content) => parseMentions(content)}
-                showMessageMenu={true}
-                messageMenuOpen={messageMenuOpen === message.id}
-                onToggleMessageMenu={() =>
-                  setMessageMenuOpen(
-                    messageMenuOpen === message.id ? null : message.id
-                  )
-                }
-                compact={true}
-              />
-            );
-          })
+          channelMessages.map((message) => (
+            <MessageItem
+              key={message.id}
+              messageId={message.id}
+              content={message.content}
+              createdAt={message.createdAt}
+              edited={message.edited}
+              attachments={message.attachments}
+              reactionCounts={message.reactionCounts}
+              showHeader={message.showHeader}
+              isEditing={editingMessageId === message.id}
+              isOwnMessage={message.authorId === user?.id}
+              authorName={
+                message.authorId === user?.id
+                  ? 'Du'
+                  : message.author?.firstName && message.author?.lastName
+                    ? `${message.author.firstName} ${message.author.lastName}`
+                    : (message.author?.firstName ??
+                      message.authorId.slice(0, 8))
+              }
+              authorInitial={(
+                message.author?.firstName?.[0] ?? message.authorId[0]
+              ).toUpperCase()}
+              editContent={editingMessageId === message.id ? editContent : ''}
+              editTextareaRef={editTextareaRef}
+              onEditContentChange={setEditContent}
+              onSaveEdit={saveEdit}
+              onCancelEdit={handleCancelEdit}
+              onEdit={handleEditMessage}
+              onDelete={handleDeleteMessage}
+              renderContent={(content) => parseMentions(content)}
+              showMessageMenu={true}
+              messageMenuOpen={messageMenuOpen === message.id}
+              onToggleMessageMenu={() =>
+                setMessageMenuOpen(
+                  messageMenuOpen === message.id ? null : message.id
+                )
+              }
+              compact={true}
+            />
+          ))
         )}
         <div ref={messagesEndRef} />
       </div>
