@@ -3,6 +3,9 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { forgotPassword, confirmPassword } from '../services/cognito';
 import { Button } from '../components/ui/button';
+import { FormField } from '../components/ui/FormField';
+import { Alert } from '../components/ui/Alert';
+import { AuthLayout } from '../components/ui/AuthLayout';
 import { logger } from '../utils/logger';
 
 export default function ForgotPassword() {
@@ -88,188 +91,120 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-discord-darkest">
-      <div className="bg-discord-dark p-8 rounded-lg shadow-xl w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Återställ lösenord
-          </h1>
-          <p className="text-discord-light">
-            {step === 'email'
-              ? 'Ange din e-postadress för att få en återställningskod'
-              : 'Ange verifieringskoden och ditt nya lösenord'}
-          </p>
-        </div>
+    <AuthLayout
+      title="Återställ lösenord"
+      description={
+        step === 'email'
+          ? 'Ange din e-postadress för att få en återställningskod'
+          : 'Ange verifieringskoden och ditt nya lösenord'
+      }
+    >
+      {step === 'email' ? (
+        <form onSubmit={handleSubmitEmail} className="space-y-4">
+          <FormField
+            type="email"
+            id="email"
+            label="E-postadress"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="din@email.com"
+            disabled={isLoading}
+            required
+          />
 
-        {step === 'email' ? (
-          <form onSubmit={handleSubmitEmail} className="space-y-4">
-            {/* Email Field */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                E-postadress <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-3 py-2 bg-discord-darkest border border-discord-darker rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-discord-blurple focus:border-transparent"
-                placeholder="din@email.com"
-                disabled={isLoading}
-              />
-            </div>
+          {error && <Alert type="error" message={error} />}
+          {success && <Alert type="success" message={success} />}
 
-            {/* Error Message */}
-            {error && (
-              <div className="p-3 bg-red-500/10 border border-red-500/50 rounded text-red-400 text-sm">
-                {error}
-              </div>
-            )}
+          <Button
+            type="submit"
+            disabled={isLoading || !email}
+            className="w-full"
+            size="lg"
+          >
+            {isLoading ? 'Skickar...' : 'Skicka återställningskod'}
+          </Button>
 
-            {/* Success Message */}
-            {success && (
-              <div className="p-3 bg-green-500/10 border border-green-500/50 rounded text-green-400 text-sm">
-                {success}
-              </div>
-            )}
-
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              disabled={isLoading || !email}
-              className="w-full"
-              size="lg"
+          <div className="text-center">
+            <Link
+              to="/login"
+              className="text-sm text-discord-blurple hover:text-discord-blurple-hover transition-colors"
             >
-              {isLoading ? 'Skickar...' : 'Skicka återställningskod'}
-            </Button>
+              Tillbaka till inloggning
+            </Link>
+          </div>
+        </form>
+      ) : (
+        <form onSubmit={handleResetPassword} className="space-y-4">
+          <FormField
+            type="text"
+            id="code"
+            label="Verifieringskod"
+            value={verificationCode}
+            onChange={(e) => setVerificationCode(e.target.value)}
+            placeholder="123456"
+            disabled={isLoading}
+            required
+          />
 
-            {/* Back to Login Link */}
-            <div className="text-center">
-              <Link
-                to="/login"
-                className="text-sm text-discord-blurple hover:text-discord-blurple-hover transition-colors"
-              >
-                Tillbaka till inloggning
-              </Link>
-            </div>
-          </form>
-        ) : (
-          <form onSubmit={handleResetPassword} className="space-y-4">
-            {/* Verification Code Field */}
-            <div>
-              <label
-                htmlFor="code"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                Verifieringskod <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                id="code"
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
-                required
-                className="w-full px-3 py-2 bg-discord-darkest border border-discord-darker rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-discord-blurple focus:border-transparent"
-                placeholder="123456"
-                disabled={isLoading}
-              />
-            </div>
+          <FormField
+            type="password"
+            id="newPassword"
+            label="Nytt lösenord"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="••••••••"
+            helperText="Minst 8 tecken"
+            disabled={isLoading}
+            minLength={8}
+            required
+          />
 
-            {/* New Password Field */}
-            <div>
-              <label
-                htmlFor="newPassword"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                Nytt lösenord <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="password"
-                id="newPassword"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                minLength={8}
-                className="w-full px-3 py-2 bg-discord-darkest border border-discord-darker rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-discord-blurple focus:border-transparent"
-                placeholder="••••••••"
-                disabled={isLoading}
-              />
-              <p className="text-xs text-gray-500 mt-1">Minst 8 tecken</p>
-            </div>
+          <FormField
+            type="password"
+            id="confirmPassword"
+            label="Bekräfta lösenord"
+            value={confirmNewPassword}
+            onChange={(e) => setConfirmNewPassword(e.target.value)}
+            placeholder="••••••••"
+            disabled={isLoading}
+            minLength={8}
+            required
+          />
 
-            {/* Confirm Password Field */}
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                Bekräfta lösenord <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="password"
-                id="confirmPassword"
-                value={confirmNewPassword}
-                onChange={(e) => setConfirmNewPassword(e.target.value)}
-                required
-                minLength={8}
-                className="w-full px-3 py-2 bg-discord-darkest border border-discord-darker rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-discord-blurple focus:border-transparent"
-                placeholder="••••••••"
-                disabled={isLoading}
-              />
-            </div>
+          {error && <Alert type="error" message={error} />}
+          {success && <Alert type="success" message={success} />}
 
-            {/* Error Message */}
-            {error && (
-              <div className="p-3 bg-red-500/10 border border-red-500/50 rounded text-red-400 text-sm">
-                {error}
-              </div>
-            )}
+          <Button
+            type="submit"
+            disabled={
+              isLoading ||
+              !verificationCode ||
+              !newPassword ||
+              !confirmNewPassword
+            }
+            className="w-full"
+            size="lg"
+          >
+            {isLoading ? 'Återställer...' : 'Återställ lösenord'}
+          </Button>
 
-            {/* Success Message */}
-            {success && (
-              <div className="p-3 bg-green-500/10 border border-green-500/50 rounded text-green-400 text-sm">
-                {success}
-              </div>
-            )}
-
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              disabled={
-                isLoading ||
-                !verificationCode ||
-                !newPassword ||
-                !confirmNewPassword
-              }
-              className="w-full"
-              size="lg"
-            >
-              {isLoading ? 'Återställer...' : 'Återställ lösenord'}
-            </Button>
-
-            {/* Back Button */}
-            <Button
-              type="button"
-              onClick={() => {
-                setStep('email');
-                setVerificationCode('');
-                setNewPassword('');
-                setConfirmNewPassword('');
-                setError('');
-                setSuccess('');
-              }}
-              variant="secondary"
-              className="w-full"
-            >
-              Tillbaka
-            </Button>
-          </form>
-        )}
-      </div>
-    </div>
+          <Button
+            type="button"
+            onClick={() => {
+              setStep('email');
+              setVerificationCode('');
+              setNewPassword('');
+              setConfirmNewPassword('');
+              setError('');
+              setSuccess('');
+            }}
+            variant="secondary"
+            className="w-full"
+          >
+            Tillbaka
+          </Button>
+        </form>
+      )}
+    </AuthLayout>
   );
 }

@@ -6,6 +6,9 @@ import { signIn } from '../services/cognito';
 import { api } from '../services/api';
 import { socketService } from '../services/socket';
 import { Button } from '../components/ui/button';
+import { FormField } from '../components/ui/FormField';
+import { Alert } from '../components/ui/Alert';
+import { AuthLayout } from '../components/ui/AuthLayout';
 import { logger } from '../utils/logger';
 
 export default function CustomLogin() {
@@ -80,86 +83,54 @@ export default function CustomLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-discord-darkest">
-      <div className="bg-discord-dark p-8 rounded-lg shadow-xl w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Boxcord</h1>
-          <p className="text-discord-light">Välkommen tillbaka!</p>
+    <AuthLayout
+      title="Boxcord"
+      description="Välkommen tillbaka!"
+      footer="Använder samma inloggning som Boxtime"
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <FormField
+          type="email"
+          id="email"
+          label="E-postadress"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="din@email.com"
+          disabled={isLoggingIn}
+          required
+        />
+
+        <FormField
+          type="password"
+          id="password"
+          label="Lösenord"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+          disabled={isLoggingIn}
+          required
+        />
+
+        {error && <Alert type="error" message={error} />}
+
+        <div className="text-right">
+          <Link
+            to="/forgot-password"
+            className="text-sm text-discord-blurple hover:text-discord-blurple-hover transition-colors"
+          >
+            Glömt lösenord?
+          </Link>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Email Field */}
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-300 mb-2"
-            >
-              E-postadress <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-3 py-2 bg-discord-darkest border border-discord-darker rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-discord-blurple focus:border-transparent"
-              placeholder="din@email.com"
-              disabled={isLoggingIn}
-            />
-          </div>
-
-          {/* Password Field */}
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-300 mb-2"
-            >
-              Lösenord <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-3 py-2 bg-discord-darkest border border-discord-darker rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-discord-blurple focus:border-transparent"
-              placeholder="••••••••"
-              disabled={isLoggingIn}
-            />
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/50 rounded text-red-400 text-sm">
-              {error}
-            </div>
-          )}
-
-          {/* Forgot Password Link */}
-          <div className="text-right">
-            <Link
-              to="/forgot-password"
-              className="text-sm text-discord-blurple hover:text-discord-blurple-hover transition-colors"
-            >
-              Glömt lösenord?
-            </Link>
-          </div>
-
-          {/* Submit Button */}
-          <Button
-            type="submit"
-            disabled={isLoggingIn || !email || !password}
-            className="w-full"
-            size="lg"
-          >
-            {isLoggingIn ? 'Loggar in...' : 'Logga in'}
-          </Button>
-        </form>
-
-        <p className="text-center text-sm text-gray-500 mt-6">
-          Använder samma inloggning som Boxtime
-        </p>
-      </div>
-    </div>
+        <Button
+          type="submit"
+          disabled={isLoggingIn || !email || !password}
+          className="w-full"
+          size="lg"
+        >
+          {isLoggingIn ? 'Loggar in...' : 'Logga in'}
+        </Button>
+      </form>
+    </AuthLayout>
   );
 }
