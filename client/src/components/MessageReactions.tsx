@@ -94,7 +94,7 @@ export default function MessageReactions({
 
         {/* Quick emoji picker */}
         {showPicker && (
-          <div className="absolute bottom-full left-0 mb-1 p-2 bg-discord-darkest rounded-lg shadow-lg flex gap-1 z-10">
+          <div className="emoji-picker-popup">
             {QUICK_EMOJIS.map((emoji) => (
               <button
                 key={emoji}

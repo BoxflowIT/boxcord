@@ -404,10 +404,8 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
       {/* Ephemeral bot response */}
       {botResponse && (
         <div className="px-4 pb-2">
-          <div className="bg-discord-blurple/10 border border-discord-blurple/30 rounded-lg p-3 flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-discord-blurple flex items-center justify-center text-white text-sm">
-              🤖
-            </div>
+          <div className="bot-response">
+            <div className="bot-avatar">🤖</div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-sm font-medium text-discord-blurple">

@@ -342,4 +342,103 @@ body {
   .divider-vertical {
     @apply w-px bg-boxflow-border mx-2;
   }
+
+  /* ========== Workspace Icon Styles ========== */
+  .workspace-icon {
+    @apply w-12 h-12 rounded-full flex items-center justify-center text-white font-bold transition-all overflow-hidden;
+  }
+
+  .workspace-icon-active {
+    @apply workspace-icon bg-boxflow-primary rounded-2xl;
+  }
+
+  .workspace-icon-inactive {
+    @apply workspace-icon bg-boxflow-dark hover:bg-boxflow-primary hover:rounded-2xl;
+  }
+
+  .workspace-icon-add {
+    @apply workspace-icon bg-boxflow-dark hover:bg-boxflow-success text-boxflow-success hover:text-white;
+  }
+
+  /* ========== Channel Item Styles ========== */
+  .channel-item {
+    @apply flex items-center gap-2 flex-1 min-w-0 hover:bg-boxflow-dark/50 rounded-lg p-1 -m-1 transition-colors;
+  }
+
+  .channel-item-active {
+    @apply channel-item bg-boxflow-dark/50;
+  }
+
+  /* ========== File/Attachment Styles ========== */
+  .file-attachment {
+    @apply flex items-center gap-3 p-3 bg-boxflow-darker rounded-lg max-w-sm hover:bg-boxflow-dark transition-colors;
+  }
+
+  .file-icon-container {
+    @apply w-10 h-10 rounded bg-boxflow-primary flex items-center justify-center;
+  }
+
+  .media-preview {
+    @apply rounded-lg max-h-80 object-contain;
+  }
+
+  .media-container {
+    @apply block max-w-md;
+  }
+
+  /* ========== Message Author Styles ========== */
+  .message-author-avatar {
+    @apply w-10 h-10 rounded-full bg-boxflow-primary flex-shrink-0 flex items-center justify-center text-white font-bold;
+  }
+
+  .message-author-name {
+    @apply font-medium text-white hover:underline cursor-pointer;
+  }
+
+  /* ========== User Bar Styles ========== */
+  .user-bar {
+    @apply h-14 bg-boxflow-darkest/50 px-2 flex items-center gap-2 border-t border-boxflow-border;
+  }
+
+  .user-bar-button {
+    @apply flex items-center gap-2 flex-1 min-w-0 hover:bg-boxflow-dark/50 rounded-lg p-1 -m-1 transition-colors;
+  }
+
+  /* ========== Profile Styles ========== */
+  .profile-avatar-large {
+    @apply w-24 h-24 rounded-full bg-boxflow-darker border-4 border-boxflow-dark flex items-center justify-center text-3xl font-bold text-white;
+  }
+
+  /* ========== Form Styles ========== */
+  .form-input-large {
+    @apply input-base py-3;
+  }
+
+  /* ========== Tooltip/Popup Styles ========== */
+  .tooltip {
+    @apply absolute bottom-full left-0 mb-1 px-2 py-1 bg-red-500 text-white text-xs rounded whitespace-nowrap;
+  }
+
+  .emoji-picker-popup {
+    @apply absolute bottom-full left-0 mb-1 p-2 bg-boxflow-darkest rounded-lg shadow-lg flex gap-1 z-10;
+  }
+
+  /* ========== Mention/Link Styles ========== */
+  .mention-link {
+    @apply text-boxflow-primary bg-boxflow-primary/10 rounded px-1 cursor-pointer hover:underline;
+  }
+
+  /* ========== Bot Response Styles ========== */
+  .bot-response {
+    @apply bg-boxflow-primary/10 border border-boxflow-primary/30 rounded-lg p-3 flex items-start gap-3;
+  }
+
+  .bot-avatar {
+    @apply w-8 h-8 rounded-full bg-boxflow-primary flex items-center justify-center text-white text-sm;
+  }
+
+  /* ========== Welcome Page Styles ========== */
+  .welcome-icon {
+    @apply w-20 h-20 bg-boxflow-primary rounded-full flex items-center justify-center mx-auto mb-6;
+  }
 }

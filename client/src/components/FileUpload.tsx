@@ -75,11 +75,7 @@ export default function FileUpload({
       >
         <AttachmentIcon />
       </button>
-      {error && (
-        <div className="absolute bottom-full left-0 mb-1 px-2 py-1 bg-red-500 text-white text-xs rounded whitespace-nowrap">
-          {error}
-        </div>
-      )}
+      {error && <div className="tooltip">{error}</div>}
     </div>
   );
 }
@@ -136,13 +132,13 @@ export function AttachmentPreview({
       href={fileUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-3 p-3 bg-discord-darker rounded-lg max-w-sm hover:bg-discord-dark transition-colors"
+      className="file-attachment"
     >
-      <div className="w-10 h-10 rounded bg-discord-blurple flex items-center justify-center">
+      <div className="file-icon-container">
         <DocumentIcon className="text-white" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-discord-blurple truncate">{fileName}</p>
+        <p className="text-boxflow-primary truncate">{fileName}</p>
         <p className="text-xs text-gray-400">{formatSize(fileSize)}</p>
       </div>
       <DownloadIcon className="text-gray-400" />
