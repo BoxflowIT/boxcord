@@ -1,5 +1,6 @@
 // Push Notification Service - Frontend
 import { api } from './api';
+import { logger } from '../utils/logger';
 
 // Extend types for push notification support
 type PushManagerRegistration = ServiceWorkerRegistration & {
@@ -22,7 +23,7 @@ class PushNotificationService {
   // Initialize service worker
   async init(): Promise<boolean> {
     if (!this.isSupported()) {
-      console.log('Push notifications not supported');
+      logger.log('Push notifications not supported');
       return false;
     }
 
@@ -30,7 +31,7 @@ class PushNotificationService {
       this.registration = await navigator.serviceWorker.register('/sw.js', {
         scope: '/'
       });
-      console.log('Service Worker registered');
+      logger.log('Service Worker registered');
 
       // Check for existing subscription
       const reg = this.registration as PushManagerRegistration;
@@ -38,7 +39,7 @@ class PushNotificationService {
 
       return true;
     } catch (err) {
-      console.error('Service Worker registration failed:', err);
+      logger.error('Service Worker registration failed:', err);
       return false;
     }
   }
@@ -61,14 +62,14 @@ class PushNotificationService {
     }
 
     if (!this.registration) {
-      console.error('No service worker registration');
+      logger.error('No service worker registration');
       return false;
     }
 
     // Request notification permission
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
-      console.log('Notification permission denied');
+      logger.log('Notification permission denied');
       return false;
     }
 
@@ -89,7 +90,7 @@ class PushNotificationService {
             auth: 'mock-auth-key'
           }
         });
-        console.log('Mock push subscription created (development mode)');
+        logger.log('Mock push subscription created (development mode)');
         return true;
       }
 
@@ -110,10 +111,10 @@ class PushNotificationService {
         }
       });
 
-      console.log('Push subscription created');
+      logger.log('Push subscription created');
       return true;
     } catch (err) {
-      console.error('Failed to subscribe:', err);
+      logger.error('Failed to subscribe:', err);
       return false;
     }
   }
@@ -134,10 +135,10 @@ class PushNotificationService {
       // Remove subscription from server
       await api.post('/push/unsubscribe', { endpoint });
 
-      console.log('Push subscription removed');
+      logger.log('Push subscription removed');
       return true;
     } catch (err) {
-      console.error('Failed to unsubscribe:', err);
+      logger.error('Failed to unsubscribe:', err);
       return false;
     }
   }
@@ -148,7 +149,7 @@ class PushNotificationService {
       await api.post('/push/test');
       return true;
     } catch (err) {
-      console.error('Failed to send test notification:', err);
+      logger.error('Failed to send test notification:', err);
       return false;
     }
   }

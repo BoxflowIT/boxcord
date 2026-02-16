@@ -11,6 +11,7 @@ import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
 import { queryKeys } from '../hooks/useQuery';
 import type { Message, PaginatedMessages, Channel } from '../types';
+import { logger } from '../utils/logger';
 
 // QueryClient instance for cache updates
 let queryClient: QueryClient | null = null;
@@ -37,26 +38,26 @@ class SocketService {
   connect() {
     const token = useAuthStore.getState().token;
     if (!token) {
-      console.error('Socket: No token available, cannot connect');
+      logger.error('Socket: No token available, cannot connect');
       return;
     }
 
     // Already connected
     if (this.socket?.connected) {
-      console.log('Socket: Already connected');
+      logger.log('Socket: Already connected');
       this.executePendingOperations();
       return;
     }
 
     // Currently connecting
     if (this.connecting) {
-      console.log('Socket: Connection already in progress...');
+      logger.log('Socket: Connection already in progress...');
       return;
     }
 
     // Socket exists but disconnected - clean up and create fresh connection
     if (this.socket && !this.socket.connected) {
-      console.log('Socket: Cleaning up old socket before reconnecting...');
+      logger.log('Socket: Cleaning up old socket before reconnecting...');
       this.socket.removeAllListeners();
       this.socket.disconnect();
       this.socket = null;
@@ -87,7 +88,7 @@ class SocketService {
     // Register event listeners
     socket.on('connect', () => {
       this.connecting = false;
-      console.log(
+      logger.log(
         '✅ Socket: Connected! ID:',
         socket.id,
         'Transport:',
@@ -98,41 +99,41 @@ class SocketService {
 
     socket.on('connect_error', (error) => {
       this.connecting = false;
-      console.error('❌ Socket: Connection error:', error.message);
+      logger.error('❌ Socket: Connection error:', error.message);
     });
 
     socket.on('disconnect', (reason, details) => {
       this.connecting = false;
-      console.log('🔌 Socket: Disconnected, reason:', reason);
-      if (details) console.log('Disconnect details:', details);
+      logger.log('🔌 Socket: Disconnected, reason:', reason);
+      if (details) logger.log('Disconnect details:', details);
     });
 
-    console.log('Socket: Event handlers registered. Connecting now...');
+    logger.log('Socket: Event handlers registered. Connecting now...');
     socket.connect();
-    console.log('Socket: Connection initiated');
+    logger.log('Socket: Connection initiated');
 
     // Only register event listeners once
     if (this.listenersRegistered) {
-      console.log('Socket: Event listeners already registered, skipping...');
+      logger.log('Socket: Event listeners already registered, skipping...');
       return;
     }
     this.listenersRegistered = true;
 
     // Message events - update React Query cache ONLY
     socket.on('message:new', (message: Message) => {
-      console.log('✅ Socket: Received new message:', message);
+      logger.log('✅ Socket: Received new message:', message);
 
       // Update React Query cache directly (Discord-style)
       if (queryClient && message.channelId) {
         // Use exact key that matches useMessages hook (with undefined cursor)
         const exactKey = queryKeys.messages(message.channelId, undefined);
-        console.log('📝 Updating cache with exact key:', exactKey);
+        logger.log('📝 Updating cache with exact key:', exactKey);
 
         queryClient.setQueryData<PaginatedMessages>(exactKey, (old) => {
-          console.log('📦 Current cache:', old?.items?.length ?? 'no cache');
+          logger.log('📦 Current cache:', old?.items?.length ?? 'no cache');
           // If no cache exists yet, DON'T create one - let the query fetch it
           if (!old) {
-            console.log('⚠️ No cache found, skipping WebSocket update');
+            logger.log('⚠️ No cache found, skipping WebSocket update');
             return old;
           }
           if (!old.items) {
@@ -140,17 +141,17 @@ class SocketService {
           }
           // Don't add duplicate
           if (old.items.some((m) => m.id === message.id)) {
-            console.log('⚠️ Duplicate message, skipping');
+            logger.log('⚠️ Duplicate message, skipping');
             return old;
           }
-          console.log(
+          logger.log(
             '✅ Adding message to cache, new count:',
             old.items.length + 1
           );
           return { ...old, items: [...old.items, message] };
         });
       } else {
-        console.warn('⚠️ No queryClient or channelId:', {
+        logger.warn('⚠️ No queryClient or channelId:', {
           queryClient: !!queryClient,
           channelId: message.channelId
         });
@@ -158,7 +159,7 @@ class SocketService {
     });
 
     this.socket.on('message:edit', (message: Message) => {
-      console.log(
+      logger.log(
         '✏️ Socket: Message edited:',
         message.id,
         'channelId:',
@@ -170,23 +171,23 @@ class SocketService {
       // Update React Query cache with exact key
       if (queryClient && message.channelId) {
         const exactKey = queryKeys.messages(message.channelId, undefined);
-        console.log('✏️ Updating cache with key:', exactKey);
+        logger.log('✏️ Updating cache with key:', exactKey);
 
         queryClient.setQueryData<PaginatedMessages>(exactKey, (old) => {
-          console.log(
+          logger.log(
             '✏️ Current cache for edit:',
             old?.items?.length ?? 'no cache'
           );
           if (!old?.items) {
-            console.warn('✏️ No cache found for edit');
+            logger.warn('✏️ No cache found for edit');
             return old;
           }
           const found = old.items.some((m) => m.id === message.id);
           if (!found) {
-            console.warn('✏️ Message not found in cache:', message.id);
+            logger.warn('✏️ Message not found in cache:', message.id);
             return old;
           }
-          console.log('✏️ Updating message in cache:', message.id);
+          logger.log('✏️ Updating message in cache:', message.id);
           return {
             ...old,
             items: old.items.map((m) =>
@@ -200,7 +201,7 @@ class SocketService {
     this.socket.on(
       'message:delete',
       ({ messageId, channelId }: { messageId: string; channelId: string }) => {
-        console.log(
+        logger.log(
           '🗑️ Socket: Message deleted:',
           messageId,
           'channelId:',
@@ -210,19 +211,19 @@ class SocketService {
         // Update React Query cache with exact key
         if (queryClient && channelId) {
           const exactKey = queryKeys.messages(channelId, undefined);
-          console.log('🗑️ Deleting from cache with key:', exactKey);
+          logger.log('🗑️ Deleting from cache with key:', exactKey);
 
           queryClient.setQueryData<PaginatedMessages>(exactKey, (old) => {
             if (!old?.items) {
-              console.warn('🗑️ No cache found for delete');
+              logger.warn('🗑️ No cache found for delete');
               return old;
             }
             const found = old.items.some((m) => m.id === messageId);
             if (!found) {
-              console.warn('🗑️ Message not found in cache:', messageId);
+              logger.warn('🗑️ Message not found in cache:', messageId);
               return old;
             }
-            console.log('🗑️ Removing message from cache:', messageId);
+            logger.log('🗑️ Removing message from cache:', messageId);
             return {
               ...old,
               items: old.items.filter((m) => m.id !== messageId)
@@ -254,13 +255,13 @@ class SocketService {
         added: boolean;
       }) => {
         // Handle reaction update - could update message in store
-        console.log('Reaction update:', data);
+        logger.log('Reaction update:', data);
       }
     );
 
     // DM events - update React Query cache directly
     this.socket.on('dm:new', (message: Message) => {
-      console.log('✅ Socket: Received new DM:', message);
+      logger.log('✅ Socket: Received new DM:', message);
 
       // Update React Query cache directly
       if (queryClient && message.channelId) {
@@ -280,7 +281,7 @@ class SocketService {
     });
 
     this.socket.on('dm:edit', (message: Message) => {
-      console.log('✏️ Socket: DM edited:', message.id);
+      logger.log('✏️ Socket: DM edited:', message.id);
 
       // Update React Query cache
       if (queryClient && message.channelId) {
@@ -303,7 +304,7 @@ class SocketService {
     this.socket.on(
       'dm:delete',
       ({ messageId, channelId }: { messageId: string; channelId?: string }) => {
-        console.log(
+        logger.log(
           '🗑️ Socket: DM deleted:',
           messageId,
           'channelId:',
@@ -324,7 +325,7 @@ class SocketService {
           );
         } else if (queryClient && !channelId) {
           // Fallback: invalidate all DM queries to refetch
-          console.warn(
+          logger.warn(
             '⚠️ No channelId in delete event, invalidating all DM queries'
           );
           queryClient.invalidateQueries({ queryKey: ['dmMessages'] });
@@ -338,13 +339,13 @@ class SocketService {
     this.socket.on(
       'dm:typing',
       ({ userId, channelId }: { userId: string; channelId: string }) => {
-        console.log('DM typing:', userId, channelId);
+        logger.log('DM typing:', userId, channelId);
       }
     );
 
     // Channel lifecycle events - update React Query cache
     this.socket.on('channel:created', (channel: Channel) => {
-      console.log('🆕 Channel created:', channel);
+      logger.log('🆕 Channel created:', channel);
 
       if (queryClient) {
         queryClient.setQueryData<Channel[]>(
@@ -368,7 +369,7 @@ class SocketService {
         channelId: string;
         workspaceId: string;
       }) => {
-        console.log('🗑️ Channel deleted:', channelId);
+        logger.log('🗑️ Channel deleted:', channelId);
 
         if (queryClient) {
           queryClient.setQueryData<Channel[]>(
@@ -384,14 +385,14 @@ class SocketService {
 
     // Presence
     this.socket.on('user:online', ({ userId }: { userId: string }) => {
-      console.log('👤 User online:', userId);
+      logger.log('👤 User online:', userId);
       this.presenceHandlers.forEach((handler) =>
         handler({ userId, status: 'ONLINE' })
       );
     });
 
     this.socket.on('user:offline', ({ userId }: { userId: string }) => {
-      console.log('💤 User offline:', userId);
+      logger.log('💤 User offline:', userId);
       this.presenceHandlers.forEach((handler) =>
         handler({ userId, status: 'OFFLINE' })
       );
@@ -399,7 +400,7 @@ class SocketService {
 
     // Errors
     this.socket.on('error', (error: { message: string }) => {
-      console.error('Socket error:', error.message);
+      logger.error('Socket error:', error.message);
     });
   }
 
@@ -418,7 +419,7 @@ class SocketService {
   // Clean up socket for HMR reloads (prevents 400 errors with stale session IDs)
   cleanup() {
     if (this.socket) {
-      console.log('🧹 Cleaning up socket connection...');
+      logger.log('🧹 Cleaning up socket connection...');
       this.socket.removeAllListeners();
       this.socket.disconnect();
       this.socket = null;
@@ -430,7 +431,7 @@ class SocketService {
 
   // Reconnect with new token (after login)
   reconnect() {
-    console.log('🔄 Socket: Reconnecting with fresh token...');
+    logger.log('🔄 Socket: Reconnecting with fresh token...');
     this.disconnect();
     this.connect();
   }
@@ -447,7 +448,7 @@ class SocketService {
   private queueOrExecute(operation: () => void, logMessage?: string): void {
     if (!this.ensureConnected()) {
       if (logMessage) {
-        console.log(`🔗 Socket: Queueing ${logMessage} for when connected`);
+        logger.log(`🔗 Socket: Queueing ${logMessage} for when connected`);
       }
       this.pendingOperations.push(operation);
       return;
@@ -461,7 +462,7 @@ class SocketService {
       () => {
         if (this.socket && this.socket.connected) {
           if (logMessage) {
-            console.log(logMessage);
+            logger.log(logMessage);
           }
           this.socket.emit(event, data);
         }
@@ -474,7 +475,7 @@ class SocketService {
   private ensureConnected(): boolean {
     if (!this.socket || this.socket.disconnected) {
       if (!this.connecting) {
-        console.log('🔄 Socket: Auto-connecting...');
+        logger.log('🔄 Socket: Auto-connecting...');
         this.connect();
       }
       return false; // Not connected yet
@@ -610,7 +611,7 @@ let socketServiceInstance: SocketService;
 
 if (import.meta.hot?.data.socketService) {
   // Reuse existing instance after HMR (already cleaned up in dispose)
-  console.log('♻️ HMR: Reusing existing socket service');
+  logger.log('♻️ HMR: Reusing existing socket service');
   socketServiceInstance = import.meta.hot.data.socketService;
 } else {
   // Create new instance
@@ -623,7 +624,7 @@ export const socketService = socketServiceInstance;
 if (import.meta.hot) {
   import.meta.hot.accept();
   import.meta.hot.dispose((data) => {
-    console.log('♻️ HMR: Cleaning up socket before reload...');
+    logger.log('♻️ HMR: Cleaning up socket before reload...');
     // CRITICAL: Clean up socket BEFORE reload to prevent 400 errors
     socketServiceInstance.cleanup();
     // Store the instance for next reload

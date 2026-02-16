@@ -1,6 +1,7 @@
 // Direct Messages List Component
 import { useState, useMemo } from 'react';
 import { api } from '../services/api';
+import { logger } from '../utils/logger';
 import { useAuthStore } from '../store/auth';
 import { useDMChannels, useUsers } from '../hooks/useQuery';
 import { formatRelativeTime } from '../utils/dateTime';
@@ -70,7 +71,7 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
       // Filter out current user
       setSearchResults(results.filter((u) => u.id !== user?.id));
     } catch (err) {
-      console.error('Search failed:', err);
+      logger.error('Search failed:', err);
     }
   };
 
@@ -88,7 +89,7 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
 
       onSelectDM(channel.id, selectedUser);
     } catch (err) {
-      console.error('Failed to start DM:', err);
+      logger.error('Failed to start DM:', err);
     }
   };
 

@@ -1,5 +1,6 @@
 // API Service
 import { useAuthStore } from '../store/auth';
+import { logger } from '../utils/logger';
 import type {
   Workspace,
   Channel,
@@ -28,7 +29,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   // Handle 401 Unauthorized - session expired
   if (response.status === 401) {
-    console.warn('Session expired, logging out...');
+    logger.warn('Session expired, logging out...');
     useAuthStore.getState().logout();
     // Redirect to login
     window.location.href = '/';

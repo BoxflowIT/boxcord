@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import { logger } from '../utils/logger';
 import { useAuthStore } from '../store/auth';
 import {
   useUser,
@@ -64,7 +65,7 @@ export default function ProfileModal({
         // Cache updated automatically via invalidation
       },
       onError: (err) => {
-        console.error('Failed to save profile:', err);
+        logger.error('Failed to save profile:', err);
       }
     });
   };
@@ -76,7 +77,7 @@ export default function ProfileModal({
       logout();
       navigate('/login');
     } catch (err) {
-      console.error('Failed to delete account:', err);
+      logger.error('Failed to delete account:', err);
     } finally {
       setDeleting(false);
     }
@@ -89,7 +90,7 @@ export default function ProfileModal({
       { userId: profile.id, role: newRole },
       {
         onError: (err) => {
-          console.error('Failed to change role:', err);
+          logger.error('Failed to change role:', err);
           alert('Kunde inte ändra roll. Kontrollera att du har behörighet.');
         }
         // Cache updated automatically via invalidation
