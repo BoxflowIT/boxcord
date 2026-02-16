@@ -80,18 +80,10 @@ class PushNotificationService {
       );
       const vapidKey = data.publicKey;
 
-      // For development without real VAPID keys, create a mock subscription
-      if (vapidKey === 'development-key') {
-        // Register a mock subscription on the server
-        await api.post('/push/subscribe', {
-          endpoint: `https://mock.push.service/${Date.now()}`,
-          keys: {
-            p256dh: 'mock-p256dh-key',
-            auth: 'mock-auth-key'
-          }
-        });
-        logger.log('Mock push subscription created (development mode)');
-        return true;
+      // Check if VAPID keys are configured
+      if (!vapidKey || vapidKey === '') {
+        logger.error('VAPID keys not configured on server');
+        return false;
       }
 
       // Subscribe to push manager with VAPID key
