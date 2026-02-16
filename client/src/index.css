@@ -8,10 +8,19 @@
   box-sizing: border-box;
 }
 
+:root {
+  --base-font-size: 16px;
+}
+
+html {
+  font-size: var(--base-font-size);
+}
+
 body {
   font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #36393f;
   color: #dcddde;
+  font-size: 1rem;
 }
 
 /* Scrollbar styling - Discord theme */
@@ -442,3 +451,105 @@ body {
     @apply w-20 h-20 bg-boxflow-primary rounded-full flex items-center justify-center mx-auto mb-6;
   }
 }
+
+/* ============================================
+   Light Theme Override
+   ============================================ */
+.light-theme {
+  /* Body background and text */
+  background-color: #f9fafb;
+  color: #1f2937;
+}
+
+.light-theme body {
+  background-color: #f9fafb;
+  color: #1f2937;
+}
+
+/* Override Discord/Boxflow dark colors */
+.light-theme .bg-discord-darkest,
+.light-theme .bg-boxflow-darkest {
+  background-color: #e5e7eb !important;
+}
+
+.light-theme .bg-discord-darker,
+.light-theme .bg-boxflow-darker {
+  background-color: #f3f4f6 !important;
+}
+
+.light-theme .bg-discord-dark,
+.light-theme .bg-boxflow-dark {
+  background-color: #ffffff !important;
+}
+
+/* Text colors */
+.light-theme .text-white {
+  color: #111827 !important;
+}
+
+.light-theme .text-gray-400 {
+  color: #6b7280 !important;
+}
+
+.light-theme .text-gray-300 {
+  color: #4b5563 !important;
+}
+
+.light-theme .text-gray-500 {
+  color: #9ca3af !important;
+}
+
+.light-theme .text-boxflow-light,
+.light-theme .text-discord-light {
+  color: #374151 !important;
+}
+
+/* Borders */
+.light-theme .border-discord-darkest,
+.light-theme .border-boxflow-border {
+  border-color: #d1d5db !important;
+}
+
+/* Scrollbar light theme */
+.light-theme ::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+.light-theme ::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+}
+
+.light-theme ::-webkit-scrollbar-thumb:hover {
+  background: #5865f2;
+}
+
+/* Input fields */
+.light-theme .bg-discord-darker input,
+.light-theme .bg-boxflow-darker input,
+.light-theme input,
+.light-theme textarea {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  border: 1px solid #d1d5db;
+}
+
+.light-theme input::placeholder,
+.light-theme textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Buttons and hover states */
+.light-theme button:not(.bg-blue-500):not(.btn-primary):hover {
+  background-color: #e5e7eb !important;
+}
+
+/* Message hover */
+.light-theme .message-item:hover {
+  background-color: #f3f4f6 !important;
+}
+
+/* Workspace/Channel items */
+.light-theme [class*="hover:bg-"] {
+  transition: background-color 0.15s ease;
+}
+

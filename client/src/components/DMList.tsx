@@ -6,7 +6,7 @@ import { useAuthStore } from '../store/auth';
 import { useDMChannels } from '../hooks/useQuery';
 import { formatRelativeTime } from '../utils/dateTime';
 import Avatar from './ui/Avatar';
-import { PlusIcon } from './ui/Icons';
+import { PlusIcon, CloseIcon } from './ui/Icons';
 
 interface DMChannel {
   id: string;
@@ -86,7 +86,7 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
     const otherParticipant = channel.participants.find(
       (p) => p.userId !== user?.id
     );
-    
+
     // Use user data directly from participant
     return otherParticipant?.user;
   };
@@ -110,14 +110,27 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
       {/* New DM search */}
       {showNewDM && (
         <div className="p-2 border-b border-discord-darkest flex-shrink-0">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-            placeholder="Sök användare..."
-            className="input-base text-sm"
-            autoFocus
-          />
+          <div className="flex items-center gap-2 mb-2">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              placeholder="Sök användare..."
+              className="input-base text-sm flex-1"
+              autoFocus
+            />
+            <button
+              onClick={() => {
+                setShowNewDM(false);
+                setSearchQuery('');
+                setSearchResults([]);
+              }}
+              className="text-gray-400 hover:text-white p-1"
+              title="Stäng"
+            >
+              <CloseIcon size="sm" />
+            </button>
+          </div>
           {searchResults.length > 0 && (
             <div className="mt-1 max-h-40 overflow-y-auto">
               {searchResults.map((u) => (
@@ -172,7 +185,9 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
                   {otherUser.firstName?.charAt(0) ?? otherUser.email.charAt(0)}
                 </Avatar>
                 <div className="flex-1 min-w-0 text-left">
-                  <p className={`text-sm truncate ${hasUnread ? 'text-white font-semibold' : 'text-body'}`}>
+                  <p
+                    className={`text-sm truncate ${hasUnread ? 'text-white font-semibold' : 'text-body'}`}
+                  >
                     {otherUser.firstName ?? otherUser.email}
                   </p>
                   {channel.lastMessage && (

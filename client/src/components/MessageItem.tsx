@@ -86,7 +86,9 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
         if (existing) {
           if (added) {
             return prev.map((r) =>
-              r.emoji === emoji ? { ...r, count: r.count + 1, hasReacted: true } : r
+              r.emoji === emoji
+                ? { ...r, count: r.count + 1, hasReacted: true }
+                : r
             );
           } else {
             const newCount = existing.count - 1;
@@ -94,7 +96,9 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
               return prev.filter((r) => r.emoji !== emoji);
             }
             return prev.map((r) =>
-              r.emoji === emoji ? { ...r, count: newCount, hasReacted: false } : r
+              r.emoji === emoji
+                ? { ...r, count: newCount, hasReacted: false }
+                : r
             );
           }
         } else if (added) {
@@ -118,7 +122,7 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
   // IMPORTANT: This is a JSX element, NOT a function component!
   // Using a function component here would cause remount on every render, losing focus
   const editTextareaElement = (
-    <div className={compact ? 'mt-1' : 'mt-1'}>
+    <div className="mt-1">
       <textarea
         ref={editTextareaRef}
         value={editContent}
@@ -128,11 +132,13 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
         rows={compact ? 2 : 3}
       />
       <div
-        className={`flex gap-2 mt-${compact ? '2' : '1'} ${compact ? 'text-xs' : 'text-xs'}`}
+        className={
+          compact ? 'flex gap-2 mt-1 text-xs' : 'flex gap-2 mt-2 text-xs'
+        }
       >
         <button
           onClick={onSaveEdit}
-          className={`px-3 py-1 bg-discord-blurple ${compact ? 'hover:bg-discord-blurple/80' : 'hover:bg-discord-blurple-hover'} text-white rounded`}
+          className="px-3 py-1 bg-discord-blurple hover:bg-discord-blurple/80 text-white rounded"
         >
           Spara
         </button>
@@ -165,10 +171,10 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
           {emoji}
         </button>
       ))}
-      
+
       {/* Divider */}
       <div className="w-px h-4 bg-boxflow-border mx-1" />
-      
+
       {/* Edit/Delete for own messages */}
       {isOwnMessage && (
         <>
@@ -192,13 +198,23 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
   );
 
   return (
-    <div className="group hover:bg-discord-darker/30 -mx-4 px-4 py-0.5 rounded relative">
+    <div
+      className={`group hover:bg-discord-darker/30 -mx-4 px-4 rounded relative ${
+        compact ? 'py-0.5' : 'py-1'
+      }`}
+    >
       {showHeader ? (
-        <div className="flex items-start gap-4 mt-4">
+        <div className={`flex items-start gap-4 ${compact ? 'mt-2' : 'mt-4'}`}>
           <div className="message-author-avatar">{authorInitial}</div>
           <div className="flex-1 min-w-0">
             <div className="flex items-baseline gap-2">
-              <span className="message-author-name">{authorName}</span>
+              <span
+                className={`message-author-name ${
+                  compact ? 'text-sm' : 'text-base'
+                }`}
+              >
+                {authorName}
+              </span>
               <span className="text-xs text-gray-400">
                 {formatTime(createdAt)}
               </span>
@@ -211,7 +227,11 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
               editTextareaElement
             ) : (
               <>
-                <p className="text-discord-light break-words">
+                <p
+                  className={`text-discord-light break-words ${
+                    compact ? 'text-sm leading-5' : 'text-base'
+                  }`}
+                >
                   {renderContent ? renderContent(content) : content}
                 </p>
 
@@ -246,7 +266,11 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
         </div>
       ) : (
         // Compact mode (no header)
-        <div className="flex items-start gap-4 pl-14">
+        <div
+          className={`flex items-start gap-4 pl-14 ${
+            compact ? 'py-0' : 'py-0.5'
+          }`}
+        >
           <span className="text-xs text-gray-500 opacity-0 group-hover:opacity-100 -ml-10 w-10 text-right">
             {formatTime(createdAt)}
           </span>
@@ -255,7 +279,11 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
               editTextareaElement
             ) : (
               <>
-                <p className="text-discord-light break-words">
+                <p
+                  className={`text-discord-light break-words ${
+                    compact ? 'text-sm' : 'text-base'
+                  }`}
+                >
                   {renderContent ? renderContent(content) : content}
                 </p>
                 {attachments.length > 0 && (

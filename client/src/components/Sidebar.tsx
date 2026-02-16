@@ -25,14 +25,24 @@ import EditModal from './EditModal';
 import CreateModal from './CreateModal';
 import DMList from './DMList';
 import Avatar from './ui/Avatar';
-import { PlusIcon, EditIcon, CloseIcon, LogoutIcon } from './ui/Icons';
+import {
+  PlusIcon,
+  EditIcon,
+  CloseIcon,
+  LogoutIcon,
+  SettingsIcon
+} from './ui/Icons';
 import type { Workspace, Channel } from '../types';
 
 interface SidebarProps {
   onProfileClick?: () => void;
+  onSettingsClick?: () => void;
 }
 
-export default function Sidebar({ onProfileClick }: SidebarProps) {
+export default function Sidebar({
+  onProfileClick,
+  onSettingsClick
+}: SidebarProps) {
   const navigate = useNavigate();
 
   // UI State from Zustand
@@ -293,6 +303,18 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
           >
             <PlusIcon size="lg" />
           </button>
+
+          {/* Spacer to push settings to bottom */}
+          <div className="flex-1" />
+
+          {/* Settings button */}
+          <button
+            onClick={onSettingsClick}
+            className="workspace-icon-add"
+            title="Settings"
+          >
+            <SettingsIcon size="lg" />
+          </button>
         </div>
 
         {/* Channel list */}
@@ -366,7 +388,7 @@ export default function Sidebar({ onProfileClick }: SidebarProps) {
 
           {/* Direct Messages */}
           <DMList
-            onSelectDM={(channelId) => {
+            onSelectDM={(channelId, _otherUser) => {
               navigate(`/chat/dm/${channelId}`);
             }}
           />

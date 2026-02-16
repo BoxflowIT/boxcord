@@ -30,6 +30,25 @@ export default function DMView() {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
+  // Read appearance settings (reactive state)
+  const [compactMode, setCompactMode] = useState(
+    localStorage.getItem('compactMode') === 'true'
+  );
+  const [messageGrouping, setMessageGrouping] = useState(
+    localStorage.getItem('messageGrouping') !== 'false'
+  );
+
+  // Listen for settings changes
+  useEffect(() => {
+    const handleSettingsChange = () => {
+      setCompactMode(localStorage.getItem('compactMode') === 'true');
+      setMessageGrouping(localStorage.getItem('messageGrouping') !== 'false');
+    };
+    window.addEventListener('settingsChanged', handleSettingsChange);
+    return () =>
+      window.removeEventListener('settingsChanged', handleSettingsChange);
+  }, []);
+
   const { data: dmChannels } = useDMChannels();
 
   // Get other user's info directly from channel participants (no separate fetch needed)
@@ -58,15 +77,17 @@ export default function DMView() {
       return {
         ...message,
         reactionCounts: groupReactionsByEmoji(message.reactions, user?.id),
-        showHeader: shouldShowMessageHeader(
-          message.authorId,
-          message.createdAt,
-          prevMessage?.authorId,
-          prevMessage?.createdAt
-        )
+        showHeader: messageGrouping
+          ? shouldShowMessageHeader(
+              message.authorId,
+              message.createdAt,
+              prevMessage?.authorId,
+              prevMessage?.createdAt
+            )
+          : true
       };
     });
-  }, [messagesData?.items, user?.id]);
+  }, [messagesData?.items, user?.id, messageGrouping]);
   const [inputValue, setInputValue] = useState('');
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -262,6 +283,7 @@ export default function DMView() {
                 onCancelEdit={handleCancelEdit}
                 onEdit={handleEditMessage}
                 onDelete={handleDeleteMessage}
+                compact={compactMode}
               />
             );
           })

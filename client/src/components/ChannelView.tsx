@@ -39,6 +39,25 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
+  // Read appearance settings (reactive state)
+  const [compactMode, setCompactMode] = useState(
+    localStorage.getItem('compactMode') === 'true'
+  );
+  const [messageGrouping, setMessageGrouping] = useState(
+    localStorage.getItem('messageGrouping') !== 'false'
+  );
+
+  // Listen for settings changes
+  useEffect(() => {
+    const handleSettingsChange = () => {
+      setCompactMode(localStorage.getItem('compactMode') === 'true');
+      setMessageGrouping(localStorage.getItem('messageGrouping') !== 'false');
+    };
+    window.addEventListener('settingsChanged', handleSettingsChange);
+    return () =>
+      window.removeEventListener('settingsChanged', handleSettingsChange);
+  }, []);
+
   // React Query - single source of truth for server data
   const { data: messagesData, isLoading: loadingMessages } =
     useMessages(channelId);
@@ -64,15 +83,17 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
         ...message,
         attachments: msg.attachments,
         reactionCounts: groupReactionsByEmoji(msg.reactions, user?.id),
-        showHeader: shouldShowMessageHeader(
-          message.authorId,
-          message.createdAt,
-          prevMessage?.authorId,
-          prevMessage?.createdAt
-        )
+        showHeader: messageGrouping
+          ? shouldShowMessageHeader(
+              message.authorId,
+              message.createdAt,
+              prevMessage?.authorId,
+              prevMessage?.createdAt
+            )
+          : true
       };
     });
-  }, [messagesData?.items, user?.id]);
+  }, [messagesData?.items, user?.id, messageGrouping]);
 
   const [inputValue, setInputValue] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -142,7 +163,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     const timer = setTimeout(async () => {
       try {
         await api.post(`/channels/${channelId}/read`);
-        
+
         // Invalidate channels query to refresh unread counts
         queryClient.invalidateQueries({
           queryKey: queryKeys.channels(currentWorkspace.id)
@@ -159,8 +180,6 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [channelMessages.length]);
-
-
 
   const handleSend = async () => {
     if (!inputValue.trim() || !channelId) return;
@@ -400,7 +419,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
               onEdit={handleEditMessage}
               onDelete={handleDeleteMessage}
               renderContent={(content) => parseMentions(content)}
-              compact={true}
+              compact={compactMode}
             />
           ))
         )}
