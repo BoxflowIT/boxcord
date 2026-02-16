@@ -41,7 +41,9 @@ export function setupSocketHandlers(
         const parts = token.split('.');
         if (parts.length >= 2) {
           try {
-            const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+            const payload = JSON.parse(
+              Buffer.from(parts[1], 'base64').toString()
+            );
             socket.userId = payload.sub || payload.userId;
             socket.email = payload.email;
             return next();
@@ -70,7 +72,9 @@ export function setupSocketHandlers(
       socket.email = payload.email;
       next();
     } catch (err) {
-      app.log.error('Socket auth: Authentication failed', err);
+      app.log.error(
+        'Socket auth: Authentication failed: ' + (err as Error).message
+      );
       next(new Error('Authentication failed'));
     }
   });
@@ -98,13 +102,15 @@ export function setupSocketHandlers(
         },
         select: { id: true }
       });
-      
-      workspaces.forEach(ws => {
+
+      workspaces.forEach((ws) => {
         socket.join(`workspace:${ws.id}`);
         app.log.debug(`User ${userId} joined workspace room: ${ws.id}`);
       });
     } catch (err) {
-      app.log.error('Failed to auto-join workspace rooms:', err);
+      app.log.error(
+        'Failed to auto-join workspace rooms: ' + (err as Error).message
+      );
     }
 
     // Join a channel room
@@ -151,7 +157,7 @@ export function setupSocketHandlers(
             message
           );
         } catch (err) {
-          app.log.error('Error creating message:', err);
+          app.log.error('Error creating message: ' + (err as Error).message);
           socket.emit('error', { message: (err as Error).message });
         }
       }
@@ -259,6 +265,84 @@ export function setupSocketHandlers(
         .to(`dm:${dmChannelId}`)
         .emit('dm:typing', { userId, channelId: dmChannelId });
     });
+
+    // Edit DM
+    socket.on(
+      'dm:edit',
+      async (data: { messageId: string; content: string }) => {
+        try {
+          // Get message to verify ownership and get channelId
+          const existing = await prisma.directMessage.findUnique({
+            where: { id: data.messageId }
+          });
+
+          if (!existing) {
+            socket.emit('error', { message: 'Message not found' });
+            return;
+          }
+
+          if (existing.authorId !== userId) {
+            socket.emit('error', {
+              message: 'You can only edit your own messages'
+            });
+            return;
+          }
+
+          // Update message
+          const updated = await prisma.directMessage.update({
+            where: { id: data.messageId },
+            data: {
+              content: data.content.trim(),
+              edited: true
+            },
+            include: { attachments: true, reactions: true }
+          });
+
+          // Broadcast to all users in DM channel
+          io.to(`dm:${existing.channelId}`).emit('dm:edit', updated);
+        } catch (err) {
+          socket.emit('error', { message: (err as Error).message });
+        }
+      }
+    );
+
+    // Delete DM
+    socket.on(
+      'dm:delete',
+      async (data: { messageId: string; channelId?: string }) => {
+        try {
+          // Get message to verify ownership and get channelId
+          const existing = await prisma.directMessage.findUnique({
+            where: { id: data.messageId }
+          });
+
+          if (!existing) {
+            socket.emit('error', { message: 'Message not found' });
+            return;
+          }
+
+          if (existing.authorId !== userId) {
+            socket.emit('error', {
+              message: 'You can only delete your own messages'
+            });
+            return;
+          }
+
+          // Delete message
+          await prisma.directMessage.delete({
+            where: { id: data.messageId }
+          });
+
+          // Broadcast to all users in DM channel
+          io.to(`dm:${existing.channelId}`).emit('dm:delete', {
+            messageId: data.messageId,
+            channelId: existing.channelId
+          });
+        } catch (err) {
+          socket.emit('error', { message: (err as Error).message });
+        }
+      }
+    );
 
     // ============================================
     // REACTIONS

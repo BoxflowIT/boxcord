@@ -6,7 +6,7 @@
 // ============================================================================
 
 import { useEffect, useRef, useState } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { socketService } from '../services/socket';
 import { useChatStore } from '../store/chat';
 import { useWorkspaces, useChannels } from '../hooks/useQuery';
@@ -19,6 +19,7 @@ import ProfileModal from '../components/ProfileModal';
 
 export default function Chat() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { setCurrentWorkspace, setCurrentChannel, currentWorkspace } =
     useChatStore();
   const initializedRef = useRef(false);
@@ -58,9 +59,32 @@ export default function Chat() {
   }, [workspaces, currentWorkspace, setCurrentWorkspace]);
 
   // Auto-select first channel when workspace changes
+  // BUT respect the current URL if it points to a valid channel/DM
   useEffect(() => {
     if (!currentWorkspace) return;
 
+    // Check if URL already has a channel/DM - don't redirect away
+    const urlMatch = location.pathname.match(/\/chat\/(channels|dm)\/([^/]+)/);
+    if (urlMatch) {
+      const [, type, urlChannelId] = urlMatch;
+
+      // For channels, verify it exists in current workspace
+      if (type === 'channels') {
+        const channelExists = channels.find((c) => c.id === urlChannelId);
+        if (channelExists) {
+          // URL is valid, sync state if needed
+          if (useChatStore.getState().currentChannel?.id !== urlChannelId) {
+            setCurrentChannel(channelExists);
+          }
+          return; // Don't redirect
+        }
+      } else if (type === 'dm') {
+        // DM routes are valid, don't redirect
+        return;
+      }
+    }
+
+    // No valid URL channel - auto-select first channel
     const currentChannelInWorkspace = channels.find(
       (c) => c.id === useChatStore.getState().currentChannel?.id
     );
@@ -69,7 +93,13 @@ export default function Chat() {
       setCurrentChannel(channels[0]);
       navigate(`/chat/channels/${channels[0].id}`);
     }
-  }, [channels, currentWorkspace, navigate, setCurrentChannel]);
+  }, [
+    channels,
+    currentWorkspace,
+    navigate,
+    setCurrentChannel,
+    location.pathname
+  ]);
 
   return (
     <div className="flex h-screen overflow-hidden">

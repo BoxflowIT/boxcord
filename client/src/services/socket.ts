@@ -124,53 +124,110 @@ class SocketService {
 
       // Update React Query cache directly (Discord-style)
       if (queryClient && message.channelId) {
-        queryClient.setQueryData<PaginatedMessages>(
-          queryKeys.messages(message.channelId),
-          (old) => {
-            if (!old?.items) return old;
-            // Don't add duplicate
-            if (old.items.some((m) => m.id === message.id)) return old;
-            return { ...old, items: [...old.items, message] };
+        // Use exact key that matches useMessages hook (with undefined cursor)
+        const exactKey = queryKeys.messages(message.channelId, undefined);
+        console.log('📝 Updating cache with exact key:', exactKey);
+
+        queryClient.setQueryData<PaginatedMessages>(exactKey, (old) => {
+          console.log('📦 Current cache:', old?.items?.length ?? 'no cache');
+          // If no cache exists yet, DON'T create one - let the query fetch it
+          if (!old) {
+            console.log('⚠️ No cache found, skipping WebSocket update');
+            return old;
           }
-        );
+          if (!old.items) {
+            return { ...old, items: [message] };
+          }
+          // Don't add duplicate
+          if (old.items.some((m) => m.id === message.id)) {
+            console.log('⚠️ Duplicate message, skipping');
+            return old;
+          }
+          console.log(
+            '✅ Adding message to cache, new count:',
+            old.items.length + 1
+          );
+          return { ...old, items: [...old.items, message] };
+        });
+      } else {
+        console.warn('⚠️ No queryClient or channelId:', {
+          queryClient: !!queryClient,
+          channelId: message.channelId
+        });
       }
     });
 
     this.socket.on('message:edit', (message: Message) => {
-      console.log('✏️ Socket: Message edited:', message.id);
+      console.log(
+        '✏️ Socket: Message edited:',
+        message.id,
+        'channelId:',
+        message.channelId,
+        'content:',
+        message.content
+      );
 
-      // Update React Query cache
+      // Update React Query cache with exact key
       if (queryClient && message.channelId) {
-        queryClient.setQueryData<PaginatedMessages>(
-          queryKeys.messages(message.channelId),
-          (old) => {
-            if (!old?.items) return old;
-            return {
-              ...old,
-              items: old.items.map((m) => (m.id === message.id ? message : m))
-            };
+        const exactKey = queryKeys.messages(message.channelId, undefined);
+        console.log('✏️ Updating cache with key:', exactKey);
+
+        queryClient.setQueryData<PaginatedMessages>(exactKey, (old) => {
+          console.log(
+            '✏️ Current cache for edit:',
+            old?.items?.length ?? 'no cache'
+          );
+          if (!old?.items) {
+            console.warn('✏️ No cache found for edit');
+            return old;
           }
-        );
+          const found = old.items.some((m) => m.id === message.id);
+          if (!found) {
+            console.warn('✏️ Message not found in cache:', message.id);
+            return old;
+          }
+          console.log('✏️ Updating message in cache:', message.id);
+          return {
+            ...old,
+            items: old.items.map((m) =>
+              m.id === message.id ? { ...m, ...message, edited: true } : m
+            )
+          };
+        });
       }
     });
 
     this.socket.on(
       'message:delete',
       ({ messageId, channelId }: { messageId: string; channelId: string }) => {
-        console.log('🗑️ Socket: Message deleted:', messageId);
+        console.log(
+          '🗑️ Socket: Message deleted:',
+          messageId,
+          'channelId:',
+          channelId
+        );
 
-        // Update React Query cache
+        // Update React Query cache with exact key
         if (queryClient && channelId) {
-          queryClient.setQueryData<PaginatedMessages>(
-            queryKeys.messages(channelId),
-            (old) => {
-              if (!old?.items) return old;
-              return {
-                ...old,
-                items: old.items.filter((m) => m.id !== messageId)
-              };
+          const exactKey = queryKeys.messages(channelId, undefined);
+          console.log('🗑️ Deleting from cache with key:', exactKey);
+
+          queryClient.setQueryData<PaginatedMessages>(exactKey, (old) => {
+            if (!old?.items) {
+              console.warn('🗑️ No cache found for delete');
+              return old;
             }
-          );
+            const found = old.items.some((m) => m.id === messageId);
+            if (!found) {
+              console.warn('🗑️ Message not found in cache:', messageId);
+              return old;
+            }
+            console.log('🗑️ Removing message from cache:', messageId);
+            return {
+              ...old,
+              items: old.items.filter((m) => m.id !== messageId)
+            };
+          });
         }
       }
     );
@@ -201,21 +258,82 @@ class SocketService {
       }
     );
 
-    // DM events
+    // DM events - update React Query cache directly
     this.socket.on('dm:new', (message: Message) => {
-      // Notify any active DM handlers
+      console.log('✅ Socket: Received new DM:', message);
+
+      // Update React Query cache directly
+      if (queryClient && message.channelId) {
+        queryClient.setQueryData<PaginatedMessages>(
+          queryKeys.dmMessages(message.channelId),
+          (old) => {
+            if (!old?.items) return old;
+            // Don't add duplicate
+            if (old.items.some((m) => m.id === message.id)) return old;
+            return { ...old, items: [...old.items, message] };
+          }
+        );
+      }
+
+      // Also notify any active DM handlers (legacy support)
       this.dmMessageHandlers.forEach((handler) => handler(message));
     });
 
     this.socket.on('dm:edit', (message: Message) => {
-      // Notify any active DM edit handlers
+      console.log('✏️ Socket: DM edited:', message.id);
+
+      // Update React Query cache
+      if (queryClient && message.channelId) {
+        queryClient.setQueryData<PaginatedMessages>(
+          queryKeys.dmMessages(message.channelId),
+          (old) => {
+            if (!old?.items) return old;
+            return {
+              ...old,
+              items: old.items.map((m) => (m.id === message.id ? message : m))
+            };
+          }
+        );
+      }
+
+      // Also notify any active DM edit handlers (legacy support)
       this.dmEditHandlers.forEach((handler) => handler(message));
     });
 
-    this.socket.on('dm:delete', ({ messageId }: { messageId: string }) => {
-      // Notify any active DM delete handlers
-      this.dmDeleteHandlers.forEach((handler) => handler({ messageId }));
-    });
+    this.socket.on(
+      'dm:delete',
+      ({ messageId, channelId }: { messageId: string; channelId?: string }) => {
+        console.log(
+          '🗑️ Socket: DM deleted:',
+          messageId,
+          'channelId:',
+          channelId
+        );
+
+        // Update React Query cache if we have channelId
+        if (queryClient && channelId) {
+          queryClient.setQueryData<PaginatedMessages>(
+            queryKeys.dmMessages(channelId),
+            (old) => {
+              if (!old?.items) return old;
+              return {
+                ...old,
+                items: old.items.filter((m) => m.id !== messageId)
+              };
+            }
+          );
+        } else if (queryClient && !channelId) {
+          // Fallback: invalidate all DM queries to refetch
+          console.warn(
+            '⚠️ No channelId in delete event, invalidating all DM queries'
+          );
+          queryClient.invalidateQueries({ queryKey: ['dmMessages'] });
+        }
+
+        // Also notify any active DM delete handlers (legacy support)
+        this.dmDeleteHandlers.forEach((handler) => handler({ messageId }));
+      }
+    );
 
     this.socket.on(
       'dm:typing',
@@ -420,7 +538,11 @@ class SocketService {
   }
 
   sendDM(channelId: string, content: string) {
-    this.socket?.emit('dm:send', { channelId, content });
+    this.emit(
+      'dm:send',
+      { channelId, content },
+      `💬 Socket: Sending DM to channel: ${channelId}`
+    );
   }
 
   editDM(messageId: string, content: string) {
@@ -431,11 +553,11 @@ class SocketService {
     );
   }
 
-  deleteDM(messageId: string) {
+  deleteDM(messageId: string, channelId?: string) {
     this.emit(
       'dm:delete',
-      { messageId },
-      `🗑️ Socket: Deleting DM: ${messageId}`
+      { messageId, channelId },
+      `🗑️ Socket: Deleting DM: ${messageId} in channel: ${channelId}`
     );
   }
 

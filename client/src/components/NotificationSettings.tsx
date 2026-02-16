@@ -57,20 +57,18 @@ export default function NotificationSettings() {
 
   if (!supported) {
     return (
-      <div className="p-4 bg-discord-darker rounded-lg">
-        <h3 className="text-white font-semibold mb-2">Push-notiser</h3>
-        <p className="text-gray-400 text-sm">
-          Din webbläsare stöder inte push-notiser.
-        </p>
+      <div className="card">
+        <h3 className="text-heading mb-2">Push-notiser</h3>
+        <p className="text-muted">Din webbläsare stöder inte push-notiser.</p>
       </div>
     );
   }
 
   if (permission === 'denied') {
     return (
-      <div className="p-4 bg-discord-darker rounded-lg">
-        <h3 className="text-white font-semibold mb-2">Push-notiser</h3>
-        <p className="text-gray-400 text-sm">
+      <div className="card">
+        <h3 className="text-heading mb-2">Push-notiser</h3>
+        <p className="text-muted">
           Du har blockerat notiser. Aktivera dem i webbläsarens inställningar.
         </p>
       </div>
@@ -78,11 +76,11 @@ export default function NotificationSettings() {
   }
 
   return (
-    <div className="p-4 bg-discord-darker rounded-lg">
+    <div className="card">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-white font-semibold">Push-notiser</h3>
-          <p className="text-gray-400 text-sm">
+          <h3 className="text-heading">Push-notiser</h3>
+          <p className="text-muted">
             Få notiser om nya meddelanden och omnämnanden
           </p>
         </div>

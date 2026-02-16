@@ -4,6 +4,8 @@ import { api } from '../services/api';
 import { useAuthStore } from '../store/auth';
 import { useDMChannels, useUsers } from '../hooks/useQuery';
 import { formatRelativeTime } from '../utils/dateTime';
+import Avatar from './ui/Avatar';
+import { PlusIcon } from './ui/Icons';
 
 interface DMChannel {
   id: string;
@@ -109,19 +111,7 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
           className="text-gray-400 hover:text-white"
           title="Nytt meddelande"
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
+          <PlusIcon size="sm" />
         </button>
       </div>
 
@@ -133,7 +123,7 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
             placeholder="Sök användare..."
-            className="w-full px-3 py-2 bg-discord-darkest rounded text-white text-sm"
+            className="input-base text-sm"
             autoFocus
           />
           {searchResults.length > 0 && (
@@ -142,16 +132,16 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
                 <button
                   key={u.id}
                   onClick={() => handleStartDM(u)}
-                  className="w-full flex items-center gap-2 p-2 hover:bg-discord-dark rounded text-left"
+                  className="list-item-interactive w-full text-left"
                 >
-                  <div className="w-8 h-8 rounded-full bg-discord-blurple flex items-center justify-center text-white text-sm">
+                  <Avatar size="sm">
                     {u.firstName?.charAt(0) ?? u.email.charAt(0)}
-                  </div>
+                  </Avatar>
                   <div>
-                    <p className="text-white text-sm">
+                    <p className="text-body text-sm">
                       {u.firstName} {u.lastName}
                     </p>
-                    <p className="text-gray-400 text-xs">{u.email}</p>
+                    <p className="text-subtle">{u.email}</p>
                   </div>
                 </button>
               ))}
@@ -164,12 +154,9 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
       <div className="flex-1 overflow-y-auto p-2">
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="text-center">
-              <div className="relative w-8 h-8 mx-auto mb-2">
-                <div className="absolute inset-0 border-3 border-boxflow-border rounded-full"></div>
-                <div className="absolute inset-0 border-3 border-boxflow-primary rounded-full border-t-transparent animate-spin"></div>
-              </div>
-              <p className="text-boxflow-muted text-xs">Laddar...</p>
+            <div className="spinner-container p-4">
+              <div className="spinner-ring w-8 h-8" />
+              <p className="text-muted text-xs">Laddar...</p>
             </div>
           </div>
         ) : channels.length === 0 ? (
@@ -183,25 +170,25 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
               <button
                 key={channel.id}
                 onClick={() => onSelectDM(channel.id, otherUser)}
-                className={`w-full flex items-center gap-3 p-2 rounded hover:bg-discord-dark/50 ${
+                className={`list-item-interactive w-full ${
                   selectedId === channel.id ? 'bg-discord-dark/50' : ''
                 }`}
               >
-                <div className="w-8 h-8 rounded-full bg-discord-blurple flex items-center justify-center text-white text-sm flex-shrink-0">
+                <Avatar size="sm">
                   {otherUser.firstName?.charAt(0) ?? otherUser.email.charAt(0)}
-                </div>
+                </Avatar>
                 <div className="flex-1 min-w-0 text-left">
-                  <p className="text-white text-sm truncate">
+                  <p className="text-body text-sm truncate">
                     {otherUser.firstName ?? otherUser.email}
                   </p>
                   {channel.lastMessage && (
-                    <p className="text-gray-400 text-xs truncate">
+                    <p className="text-subtle truncate">
                       {channel.lastMessage.content}
                     </p>
                   )}
                 </div>
                 {channel.lastMessage && (
-                  <span className="text-xs text-gray-500">
+                  <span className="text-subtle">
                     {formatRelativeTime(channel.lastMessage.createdAt)}
                   </span>
                 )}

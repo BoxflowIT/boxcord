@@ -1,6 +1,7 @@
 // Message Reactions Component
 import { useState, useEffect } from 'react';
 import { api } from '../services/api';
+import { EmojiIcon } from './ui/Icons';
 
 interface Reaction {
   emoji: string;
@@ -88,19 +89,7 @@ export default function MessageReactions({
           className="p-1 rounded hover:bg-discord-darker text-gray-400 hover:text-white"
           title="Lägg till reaktion"
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
+          <EmojiIcon size="sm" />
         </button>
 
         {/* Quick emoji picker */}

@@ -1,8 +1,9 @@
 // Message Item Component - Reusable message display
-import React from 'react';
+import React, { memo } from 'react';
 import { formatTime } from '../lib/formatters';
 import MessageReactions from './MessageReactions';
 import { AttachmentPreview } from './FileUpload';
+import { EditIcon, TrashIcon, MoreIcon } from './ui/Icons';
 
 export interface MessageAttachment {
   id: string;
@@ -52,7 +53,7 @@ export interface MessageItemProps {
   compact?: boolean; // Use compact styling (like ChannelView)
 }
 
-export const MessageItem: React.FC<MessageItemProps> = ({
+const MessageItemComponent: React.FC<MessageItemProps> = ({
   messageId,
   content,
   createdAt,
@@ -86,7 +87,9 @@ export const MessageItem: React.FC<MessageItemProps> = ({
     }
   };
 
-  const EditTextarea = () => (
+  // IMPORTANT: This is a JSX element, NOT a function component!
+  // Using a function component here would cause remount on every render, losing focus
+  const editTextareaElement = (
     <div className={compact ? 'mt-1' : 'mt-1'}>
       <textarea
         ref={editTextareaRef}
@@ -122,70 +125,44 @@ export const MessageItem: React.FC<MessageItemProps> = ({
   );
 
   const EditDeleteButtons = () => (
-    <div className="opacity-0 group-hover:opacity-100 flex gap-1">
+    <div className="hover-group-visible flex gap-1">
       <button
         onClick={() => onEdit(messageId, content)}
-        className="p-1 hover:bg-discord-darker rounded text-gray-400 hover:text-white"
+        className="btn-icon"
         title="Redigera"
       >
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-          />
-        </svg>
+        <EditIcon size="sm" />
       </button>
       <button
         onClick={() => onDelete(messageId)}
-        className="p-1 hover:bg-discord-darker rounded text-gray-400 hover:text-red-500"
+        className="btn-icon-danger"
         title="Ta bort"
       >
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-          />
-        </svg>
+        <TrashIcon size="sm" />
       </button>
     </div>
   );
 
   const MessageMenu = () => (
-    <div className="absolute top-0 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+    <div className="absolute top-0 right-4 hover-group-visible">
       <div className="relative">
         <button
           onClick={() => onToggleMessageMenu?.(messageId)}
-          className="p-1 hover:bg-discord-dark rounded text-gray-400 hover:text-white"
+          className="btn-icon"
         >
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-          </svg>
+          <MoreIcon size="md" />
         </button>
         {messageMenuOpen && (
-          <div className="absolute right-0 mt-1 w-48 bg-discord-dark border border-discord-darker rounded-lg shadow-xl z-10">
+          <div className="dropdown-menu right-0 mt-1 w-48">
             <button
               onClick={() => onEdit(messageId, content)}
-              className="w-full text-left px-4 py-2 hover:bg-discord-darker text-white"
+              className="dropdown-item"
             >
               Redigera
             </button>
             <button
               onClick={() => onDelete(messageId)}
-              className="w-full text-left px-4 py-2 hover:bg-discord-darker text-red-500"
+              className="dropdown-item-danger"
             >
               Ta bort
             </button>
@@ -216,7 +193,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
             </div>
 
             {isEditing ? (
-              <EditTextarea />
+              editTextareaElement
             ) : (
               <>
                 <p className="text-discord-light break-words">
@@ -262,7 +239,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
           </span>
           <div className="flex-1">
             {isEditing ? (
-              <EditTextarea />
+              editTextareaElement
             ) : (
               <>
                 <p className="text-discord-light break-words">
@@ -293,32 +270,26 @@ export const MessageItem: React.FC<MessageItemProps> = ({
 
           {/* Message actions for compact view */}
           {isOwnMessage && !isEditing && (
-            <div className="absolute top-0 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute top-0 right-4 hover-group-visible">
               {showMessageMenu ? (
                 <div className="relative">
                   <button
                     onClick={() => onToggleMessageMenu?.(messageId)}
-                    className="p-1 hover:bg-discord-dark rounded text-gray-400 hover:text-white"
+                    className="btn-icon"
                   >
-                    <svg
-                      className="w-5 h-5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                    </svg>
+                    <MoreIcon size="md" />
                   </button>
                   {messageMenuOpen && (
-                    <div className="absolute right-0 mt-1 w-48 bg-discord-dark border border-discord-darker rounded-lg shadow-xl z-10">
+                    <div className="dropdown-menu right-0 mt-1 w-48">
                       <button
                         onClick={() => onEdit(messageId, content)}
-                        className="w-full text-left px-4 py-2 hover:bg-discord-darker text-white"
+                        className="dropdown-item"
                       >
                         Redigera
                       </button>
                       <button
                         onClick={() => onDelete(messageId)}
-                        className="w-full text-left px-4 py-2 hover:bg-discord-darker text-red-500"
+                        className="dropdown-item-danger"
                       >
                         Ta bort
                       </button>
@@ -335,3 +306,38 @@ export const MessageItem: React.FC<MessageItemProps> = ({
     </div>
   );
 };
+
+// Custom comparison to prevent unnecessary re-renders
+// Only re-render when actual data changes, NOT when callbacks change
+const areEqual = (
+  prevProps: MessageItemProps,
+  nextProps: MessageItemProps
+): boolean => {
+  // Always re-render if editing state changes
+  if (prevProps.isEditing !== nextProps.isEditing) return false;
+
+  // If we're editing THIS message, check edit content
+  if (nextProps.isEditing && prevProps.editContent !== nextProps.editContent)
+    return false;
+
+  // Check data props
+  if (prevProps.messageId !== nextProps.messageId) return false;
+  if (prevProps.content !== nextProps.content) return false;
+  if (prevProps.createdAt !== nextProps.createdAt) return false;
+  if (prevProps.edited !== nextProps.edited) return false;
+  if (prevProps.showHeader !== nextProps.showHeader) return false;
+  if (prevProps.isOwnMessage !== nextProps.isOwnMessage) return false;
+  if (prevProps.authorName !== nextProps.authorName) return false;
+  if (prevProps.authorInitial !== nextProps.authorInitial) return false;
+  if (prevProps.messageMenuOpen !== nextProps.messageMenuOpen) return false;
+  if (prevProps.compact !== nextProps.compact) return false;
+
+  // Shallow compare arrays by reference (they should be memoized in parent)
+  if (prevProps.attachments !== nextProps.attachments) return false;
+  if (prevProps.reactionCounts !== nextProps.reactionCounts) return false;
+
+  // Callbacks are NOT compared - they don't affect render output
+  return true;
+};
+
+export const MessageItem = memo(MessageItemComponent, areEqual);
