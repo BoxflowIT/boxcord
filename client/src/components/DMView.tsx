@@ -18,6 +18,10 @@ import EmojiPicker from './ui/EmojiPicker';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import { LoadingState } from './ui/LoadingSpinner';
 import Avatar from './ui/Avatar';
+import {
+  groupReactionsByEmoji,
+  shouldShowMessageHeader
+} from '../utils/messageUtils';
 
 export default function DMView() {
   const { channelId } = useParams<{ channelId: string }>();
@@ -43,12 +47,23 @@ export default function DMView() {
   const { data: messagesData, isLoading: loadingMessages } =
     useDMMessages(channelId);
 
-  // Messages from React Query cache (already in order: oldest to newest)
-  // Memoized to prevent unnecessary re-renders
-  const messages = useMemo(
-    () => messagesData?.items ?? [],
-    [messagesData?.items]
-  );
+  // Pre-process messages with computed properties (memoized for stable references)
+  const messages = useMemo(() => {
+    const rawMessages = messagesData?.items ?? [];
+    return rawMessages.map((message, index) => {
+      const prevMessage = rawMessages[index - 1];
+      return {
+        ...message,
+        reactionCounts: groupReactionsByEmoji(message.reactions, user?.id),
+        showHeader: shouldShowMessageHeader(
+          message.authorId,
+          message.createdAt,
+          prevMessage?.authorId,
+          prevMessage?.createdAt
+        )
+      };
+    });
+  }, [messagesData?.items, user?.id]);
   const [inputValue, setInputValue] = useState('');
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -200,39 +215,7 @@ export default function DMView() {
             </p>
           </div>
         ) : (
-          messages.map((message, index) => {
-            const prevMessage = messages[index - 1];
-            const showHeader =
-              !prevMessage ||
-              prevMessage.authorId !== message.authorId ||
-              new Date(message.createdAt).getTime() -
-                new Date(prevMessage.createdAt).getTime() >
-                300000;
-
-            // Group reactions by emoji
-            const reactionCounts =
-              message.reactions?.reduce(
-                (acc, r) => {
-                  const existing = acc.find((x) => x.emoji === r.emoji);
-                  if (existing) {
-                    existing.count++;
-                    if (r.userId === user?.id) existing.hasReacted = true;
-                  } else {
-                    acc.push({
-                      emoji: r.emoji,
-                      count: 1,
-                      hasReacted: r.userId === user?.id
-                    });
-                  }
-                  return acc;
-                },
-                [] as Array<{
-                  emoji: string;
-                  count: number;
-                  hasReacted: boolean;
-                }>
-              ) ?? [];
-
+          messages.map((message) => {
             const authorInitial =
               message.authorId === user?.id
                 ? (user?.firstName?.charAt(0) ?? user?.email?.charAt(0))
@@ -246,8 +229,8 @@ export default function DMView() {
                 createdAt={message.createdAt}
                 edited={message.edited}
                 attachments={message.attachments}
-                reactionCounts={reactionCounts}
-                showHeader={showHeader}
+                reactionCounts={message.reactionCounts}
+                showHeader={message.showHeader}
                 isEditing={editingMessageId === message.id}
                 isOwnMessage={message.authorId === user?.id}
                 authorName={getUserName(message.authorId)}
