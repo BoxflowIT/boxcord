@@ -1,8 +1,7 @@
 // Message Item Component - Reusable message display
-import React, { memo, useState } from 'react';
+import React, { memo } from 'react';
 import { formatTime } from '../lib/formatters';
-import { api } from '../services/api';
-import { logger } from '../utils/logger';
+import { useMessageReactions } from '../hooks/useMessageReactions';
 import {
   MessageAvatar,
   MessageHeader,
@@ -74,42 +73,11 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
   compact = false,
   isDM = false
 }) => {
-  const [localReactions, setLocalReactions] = useState(reactionCounts);
-
-  const handleQuickReaction = async (emoji: string) => {
-    try {
-      const { added } = isDM
-        ? await api.toggleDMReaction(messageId, emoji)
-        : await api.toggleReaction(messageId, emoji);
-      setLocalReactions((prev) => {
-        const existing = prev.find((r) => r.emoji === emoji);
-        if (existing) {
-          if (added) {
-            return prev.map((r) =>
-              r.emoji === emoji
-                ? { ...r, count: r.count + 1, hasReacted: true }
-                : r
-            );
-          } else {
-            const newCount = existing.count - 1;
-            if (newCount <= 0) {
-              return prev.filter((r) => r.emoji !== emoji);
-            }
-            return prev.map((r) =>
-              r.emoji === emoji
-                ? { ...r, count: newCount, hasReacted: false }
-                : r
-            );
-          }
-        } else if (added) {
-          return [...prev, { emoji, count: 1, hasReacted: true }];
-        }
-        return prev;
-      });
-    } catch (err) {
-      logger.error('Failed to add quick reaction:', err);
-    }
-  };
+  const { reactions, handleToggleReaction } = useMessageReactions({
+    messageId,
+    initialReactions: reactionCounts,
+    isDM
+  });
 
   return (
     <div
@@ -120,7 +88,7 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
       {/* Message actions - Quick reactions bar (hover) */}
       {!isEditing && (
         <MessageActions
-          onQuickReaction={handleQuickReaction}
+          onQuickReaction={handleToggleReaction}
           onEdit={() => onEdit(messageId, content)}
           onDelete={() => onDelete(messageId)}
           isOwnMessage={isOwnMessage}
@@ -161,8 +129,8 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
                   renderContent={renderContent}
                 />
                 <MessageReactionBubbles
-                  reactions={localReactions}
-                  onToggle={handleQuickReaction}
+                  reactions={reactions}
+                  onToggle={handleToggleReaction}
                 />
               </>
             )}
@@ -197,8 +165,8 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
                   renderContent={renderContent}
                 />
                 <MessageReactionBubbles
-                  reactions={localReactions}
-                  onToggle={handleQuickReaction}
+                  reactions={reactions}
+                  onToggle={handleToggleReaction}
                 />
               </>
             )}
