@@ -1,4 +1,5 @@
 // Image Preview - Shows preview of uploaded/entered image URL
+import { cn } from '../../utils/classNames';
 
 interface ImagePreviewProps {
   src: string;
@@ -36,7 +37,11 @@ export default function ImagePreview({
       <img
         src={src}
         alt={alt}
-        className={`${sizeClasses[size]} ${roundedClasses[rounded]} object-cover`}
+        className={cn(
+          sizeClasses[size],
+          roundedClasses[rounded],
+          'object-cover'
+        )}
         onError={(e) => {
           (e.target as HTMLImageElement).style.display = 'none';
           onError?.();

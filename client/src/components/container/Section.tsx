@@ -1,4 +1,5 @@
 // Section - Content section with optional title and description
+import { cn } from '../../utils/classNames';
 
 interface SectionProps {
   title?: string;
@@ -22,7 +23,7 @@ export default function Section({
   className = ''
 }: SectionProps) {
   return (
-    <div className={`${spacingClasses[spacing]} ${className}`}>
+    <div className={cn(spacingClasses[spacing], className)}>
       {(title || description) && (
         <div className="space-y-1">
           {title && (

@@ -5,30 +5,28 @@
 // NO duplicate storage in local state
 // ============================================================================
 
-import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import { useRef, useState, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { logger } from '../utils/logger';
 import { socketService } from '../services/socket';
 import { useAuthStore } from '../store/auth';
-import { useDMMessages, useDMChannels, queryKeys } from '../hooks/useQuery';
+import { useDMMessages, useDMChannels } from '../hooks/useQuery';
 import { useMessageActions } from '../hooks/useMessageActions';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useProcessedMessages } from '../hooks/useProcessedMessages';
+import { useMessageScroll } from '../hooks/useMessageScroll';
+import { useMarkAsRead } from '../hooks/useMarkAsRead';
+import { useSocketRoom } from '../hooks/useSocketRoom';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import { LoadingState } from './ui/LoadingSpinner';
 import { DMHeader } from './dm/DMHeader';
 import MessageListDisplay from './channel/MessageListDisplay';
 import DMInputSection from './dm/DMInputSection';
-import {
-  groupReactionsByEmoji,
-  shouldShowMessageHeader
-} from '../utils/messageUtils';
 
 export default function DMView() {
   const { channelId } = useParams<{ channelId: string }>();
   const { user } = useAuthStore();
-  const queryClient = useQueryClient();
 
   // Read appearance settings (reactive state with auto-sync)
   const [compactMode] = useLocalStorage('compactMode', false);
@@ -54,30 +52,21 @@ export default function DMView() {
 
   const loadingUser = !otherUser; // Loading if we don't have other user yet
 
-  // Pre-process messages with computed properties (memoized for stable references)
-  const messages = useMemo(() => {
-    const rawMessages = messagesData?.items ?? [];
-    return rawMessages.map((message, index) => {
-      const prevMessage = rawMessages[index - 1];
-      return {
-        ...message,
-        reactionCounts: groupReactionsByEmoji(message.reactions, user?.id),
-        showHeader: messageGrouping
-          ? shouldShowMessageHeader(
-              message.authorId,
-              message.createdAt,
-              prevMessage?.authorId,
-              prevMessage?.createdAt
-            )
-          : true
-      };
-    });
-  }, [messagesData?.items, user?.id, messageGrouping]);
+  // Pre-process messages with computed properties (using shared hook)
+  const messages = useProcessedMessages(
+    messagesData?.items,
+    user?.id,
+    messageGrouping
+  );
   const [inputValue, setInputValue] = useState('');
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Shared hooks for common message view patterns
+  const messagesEndRef = useMessageScroll(messages);
+  useMarkAsRead({ channelId, isDM: true });
+  useSocketRoom(channelId, 'dm');
 
   // Stable callbacks for message actions
   const handleEditDM = useCallback(
@@ -112,39 +101,6 @@ export default function DMView() {
     onEdit: handleEditDM,
     onDelete: handleDeleteDM
   });
-
-  useEffect(() => {
-    if (!channelId) return;
-
-    // Join DM room for WebSocket events
-    socketService.joinDM(channelId);
-
-    return () => {
-      socketService.leaveDM(channelId);
-    };
-  }, [channelId]);
-
-  // Auto-mark as read after viewing for 1 second
-  useEffect(() => {
-    if (!channelId) return;
-
-    const timeoutId = setTimeout(async () => {
-      try {
-        await api.markDMAsRead(channelId);
-        // Invalidate DM channels query to refresh unread counts
-        queryClient.invalidateQueries({ queryKey: queryKeys.dmChannels });
-      } catch (err) {
-        logger.error('Failed to mark DM as read:', err);
-      }
-    }, 1000);
-
-    return () => clearTimeout(timeoutId);
-  }, [channelId, queryClient]);
-
-  // Auto-scroll on new messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
 
   const handleSend = async () => {
     if (!inputValue.trim() || !channelId || sending) return;

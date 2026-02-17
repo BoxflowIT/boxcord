@@ -5,27 +5,26 @@
 // NO duplicate storage in Zustand
 // ============================================================================
 
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { logger } from '../utils/logger';
 import { socketService } from '../services/socket';
 import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
-import { useMessages, useChannels, queryKeys } from '../hooks/useQuery';
+import { useMessages, useChannels } from '../hooks/useQuery';
 import { useMessageActions } from '../hooks/useMessageActions';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useChannelInput } from '../hooks/useChannelInput';
+import { useProcessedMessages } from '../hooks/useProcessedMessages';
+import { useMessageScroll } from '../hooks/useMessageScroll';
+import { useMarkAsRead } from '../hooks/useMarkAsRead';
+import { useSocketRoom } from '../hooks/useSocketRoom';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import { ChannelHeader } from './channel/ChannelHeader';
 import { BotResponseBanner } from './channel';
 import MessageListDisplay from './channel/MessageListDisplay';
 import ChannelInputSection from './channel/ChannelInputSection';
-import {
-  groupReactionsByEmoji,
-  shouldShowMessageHeader
-} from '../utils/messageUtils';
 
 interface ChannelViewProps {
   onToggleMemberList?: () => void;
@@ -36,7 +35,6 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
   const { currentChannel, setCurrentChannel, currentWorkspace } =
     useChatStore();
   const { user } = useAuthStore();
-  const queryClient = useQueryClient();
 
   // Read appearance settings (reactive state with auto-sync)
   const [compactMode] = useLocalStorage('compactMode', false);
@@ -47,37 +45,32 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     useMessages(channelId);
   const { data: channels = [] } = useChannels(currentWorkspace?.id);
 
-  // Pre-process messages with computed properties (memoized for stable references)
-  const channelMessages = useMemo(() => {
-    const rawMessages = messagesData?.items ?? [];
-    return rawMessages.map((message, index) => {
-      const prevMessage = rawMessages[index - 1];
-      const msg = message as typeof message & {
-        attachments?: Array<{
-          id: string;
-          fileName: string;
-          fileUrl: string;
-          fileType: string;
-          fileSize: number;
-        }>;
-        reactions?: Array<{ emoji: string; userId: string }>;
-      };
+  // Pre-process messages with computed properties (using shared hook)
+  const processedMessages = useProcessedMessages(
+    messagesData?.items,
+    user?.id,
+    messageGrouping
+  );
 
-      return {
-        ...message,
-        attachments: msg.attachments,
-        reactionCounts: groupReactionsByEmoji(msg.reactions, user?.id),
-        showHeader: messageGrouping
-          ? shouldShowMessageHeader(
-              message.authorId,
-              message.createdAt,
-              prevMessage?.authorId,
-              prevMessage?.createdAt
-            )
-          : true
-      };
-    });
-  }, [messagesData?.items, user?.id, messageGrouping]);
+  // Add attachments to processed messages
+  const channelMessages = processedMessages.map((message) => {
+    const rawMsg = messagesData?.items?.find((m) => m.id === message.id) as
+      | (typeof message & {
+          attachments?: Array<{
+            id: string;
+            fileName: string;
+            fileUrl: string;
+            fileType: string;
+            fileSize: number;
+          }>;
+        })
+      | undefined;
+
+    return {
+      ...message,
+      attachments: rawMsg?.attachments
+    };
+  });
 
   const [uploading, setUploading] = useState(false);
   const [showMentions, setShowMentions] = useState(false);
@@ -86,7 +79,15 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     content: string;
     isPrivate: boolean;
   } | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Shared hooks for common message view patterns
+  const messagesEndRef = useMessageScroll(channelMessages);
+  useMarkAsRead({
+    channelId,
+    workspaceId: currentWorkspace?.id,
+    isDM: false
+  });
+  useSocketRoom(channelId, 'channel');
 
   const {
     inputValue,
@@ -140,41 +141,6 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
       setCurrentChannel(channel);
     }
   }, [channelId, channels, setCurrentChannel]);
-
-  // Join/leave channel room (separate effect to avoid unnecessary rejoins)
-  useEffect(() => {
-    if (!channelId) return;
-    socketService.joinChannel(channelId);
-
-    return () => {
-      socketService.leaveChannel(channelId);
-    };
-  }, [channelId]);
-
-  // Mark channel as read after viewing for 1 second
-  useEffect(() => {
-    if (!channelId || !currentWorkspace?.id) return;
-
-    const timer = setTimeout(async () => {
-      try {
-        await api.post(`/channels/${channelId}/read`);
-
-        // Invalidate channels query to refresh unread counts
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.channels(currentWorkspace.id)
-        });
-      } catch (error) {
-        logger.error('Failed to mark channel as read:', error);
-      }
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [channelId, currentWorkspace?.id, queryClient]);
-
-  // Auto-scroll on new messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [channelMessages.length]);
 
   const handleSend = async () => {
     if (!inputValue.trim() || !channelId) return;

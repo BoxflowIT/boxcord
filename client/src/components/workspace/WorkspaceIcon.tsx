@@ -1,4 +1,5 @@
 // Workspace Icon - Display workspace icon or initial
+import { cn } from '../../utils/classNames';
 
 interface WorkspaceIconProps {
   name: string;
@@ -20,7 +21,7 @@ export default function WorkspaceIcon({
   className = ''
 }: WorkspaceIconProps) {
   return (
-    <div className={`${sizeClasses[size]} ${className}`}>
+    <div className={cn(sizeClasses[size], className)}>
       {iconUrl ? (
         <img
           src={iconUrl}
