@@ -357,10 +357,9 @@ class SocketService {
         if (currentUserId === data.userId) {
           const { updateUser } = useAuthStore.getState();
           updateUser({
-            firstName: data.firstName,
-            lastName: data.lastName,
-            avatarUrl: data.avatarUrl,
-            bio: data.bio
+            firstName: data.firstName ?? undefined,
+            lastName: data.lastName ?? undefined,
+            avatarUrl: data.avatarUrl ?? undefined
           });
         }
 
