@@ -24,11 +24,30 @@
   
   --color-border: #3f4147;
   --color-border-hover: #4e5058;
+  --color-border-50: rgba(63, 65, 71, 0.5);
   
+  --color-bg-hover: #404249;
+  --color-bg-hover-50: rgba(64, 66, 73, 0.5);
+  
+  /* Primary colors and gradients */
   --color-primary: #5865f2;
+  --color-primary-dark: #4752c4;
+  --color-primary-darker: #3c44a8;
+  --color-primary-hover: rgba(88, 101, 242, 0.2);
+  --color-primary-10: rgba(88, 101, 242, 0.1);
+  --color-primary-20: rgba(88, 101, 242, 0.2);
+  --color-primary-25: rgba(88, 101, 242, 0.25);
+  --color-primary-30: rgba(88, 101, 242, 0.3);
+  --color-primary-50: rgba(88, 101, 242, 0.5);
+  --color-primary-90: rgba(88, 101, 242, 0.9);
   --color-secondary: #7289da;
   --color-success: #43b581;
+  --color-success-20: rgba(67, 181, 129, 0.2);
   --color-danger: #f04747;
+  --color-danger-hover: rgba(240, 71, 71, 0.2);
+  --color-danger-10: rgba(240, 71, 71, 0.1);
+  --color-danger-20: rgba(240, 71, 71, 0.2);
+  --color-danger-50: rgba(240, 71, 71, 0.5);
   --color-warning: #faa61a;
   
   /* Scrollbar colors */
@@ -44,6 +63,7 @@
   --color-bg-darker: #f3f2f1;
   --color-bg-dark: #ffffff;
   --color-bg-hover: #f3f2f1;
+  --color-bg-hover-50: rgba(243, 242, 241, 0.5);
   
   --color-text-light: #242424;
   --color-text-normal: #242424;
@@ -52,8 +72,9 @@
   
   --color-border: #e1dfdd;
   --color-border-hover: #c8c6c4;
+  --color-border-50: rgba(225, 223, 221, 0.5);
   
-  /* Primary colors stay the same */
+  /* Primary/danger hover colors stay the same for light theme */
   
   /* Scrollbar colors for light theme */
   --scrollbar-track: #f3f2f1;
@@ -176,11 +197,21 @@ body {
   }
 
   .btn-icon-primary {
-    @apply btn-icon hover:bg-boxflow-primary/20 hover:text-boxflow-primary;
+    @apply btn-icon;
+  }
+  
+  .btn-icon-primary:hover {
+    background-color: var(--color-primary-hover);
+    color: var(--color-primary);
   }
 
   .btn-icon-danger {
-    @apply btn-icon hover:bg-boxflow-danger/20 hover:text-boxflow-danger;
+    @apply btn-icon;
+  }
+  
+  .btn-icon-danger:hover {
+    background-color: var(--color-danger-hover);
+    color: var(--color-danger);
   }
 
   /* ========== Dropdown Menu Styles ========== */
@@ -193,7 +224,11 @@ body {
   }
 
   .dropdown-item-danger {
-    @apply w-full text-left px-4 py-2.5 hover:bg-boxflow-danger/10 text-boxflow-danger transition-colors;
+    @apply w-full text-left px-4 py-2.5 text-boxflow-danger transition-colors;
+  }
+  
+  .dropdown-item-danger:hover {
+    background-color: var(--color-danger-10);
   }
 
   .dropdown-divider {
@@ -219,9 +254,9 @@ body {
 
   /* ========== Input/Form Styles ========== */
   .input-base {
-    @apply w-full bg-boxflow-darkest text-boxflow-light border border-boxflow-border/50 rounded-lg px-4 py-2.5;
+    @apply w-full bg-boxflow-darkest text-boxflow-light border border-boxflow-border-50 rounded-lg px-4 py-2.5;
     @apply outline-none transition-interactive placeholder-boxflow-subtle;
-    @apply focus:border-boxflow-primary focus:bg-boxflow-darker focus:ring-2 focus:ring-boxflow-primary/30;
+    @apply focus:border-boxflow-primary focus:bg-boxflow-darker focus:ring-2 focus:ring-boxflow-primary-30;
   }
 
   .textarea-base {
@@ -229,13 +264,13 @@ body {
   }
 
   .input-error {
-    @apply border-boxflow-danger focus:border-boxflow-danger focus:ring-boxflow-danger/50;
+    @apply border-boxflow-danger focus:border-boxflow-danger focus:ring-boxflow-danger-50;
   }
 
   .input-message {
     @apply w-full bg-boxflow-darkest text-boxflow-light rounded-lg p-3 resize-none;
     @apply outline-none transition-interactive placeholder-boxflow-subtle;
-    @apply focus:bg-boxflow-darker focus:ring-2 focus:ring-boxflow-primary/50;
+    @apply focus:bg-boxflow-darker focus:ring-2 focus:ring-boxflow-primary-50;
   }
 
   .input-search {
@@ -266,15 +301,15 @@ body {
   }
 
   .modal-container {
-    @apply bg-boxflow-dark rounded-2xl shadow-2xl border border-boxflow-hover/50 overflow-hidden;
+    @apply bg-boxflow-dark rounded-2xl shadow-2xl border border-boxflow-hover-50 overflow-hidden;
   }
 
   .modal-panel {
-    @apply bg-boxflow-dark rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-boxflow-hover/50;
+    @apply bg-boxflow-dark rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-boxflow-hover-50;
   }
 
   .modal-panel-lg {
-    @apply bg-boxflow-dark rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex overflow-hidden border border-boxflow-hover/50;
+    @apply bg-boxflow-dark rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex overflow-hidden border border-boxflow-hover-50;
   }
 
   /* ========== Action Bars & Hovers ========== */
@@ -347,7 +382,11 @@ body {
 
   /* ========== Message Styles ========== */
   .message-container {
-    @apply group hover:bg-boxflow-hover/40 -mx-4 px-4 py-1 rounded transition-interactive;
+    @apply group -mx-4 px-4 py-1 rounded transition-interactive;
+  }
+  
+  .message-container:hover {
+    background-color: color-mix(in srgb, var(--color-bg-hover) 40%, transparent);
   }
 
   .message-time {
@@ -384,15 +423,15 @@ body {
   }
 
   .badge-primary {
-    @apply badge bg-boxflow-primary/20 text-boxflow-primary;
+    @apply badge bg-boxflow-primary-20 text-boxflow-primary;
   }
 
   .badge-success {
-    @apply badge bg-boxflow-success/20 text-boxflow-success;
+    @apply badge bg-boxflow-success-20 text-boxflow-success;
   }
 
   .badge-danger {
-    @apply badge bg-boxflow-danger/20 text-boxflow-danger;
+    @apply badge bg-boxflow-danger-20 text-boxflow-danger;
   }
 
   /* ========== List/Navigation Items ========== */
@@ -405,12 +444,17 @@ body {
   }
 
   .nav-item-active {
-    @apply nav-item bg-boxflow-primary/10 text-boxflow-primary;
+    @apply nav-item bg-boxflow-primary-10 text-boxflow-primary;
   }
 
   .list-item-interactive {
-    @apply flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-boxflow-dark/50 transition-interactive cursor-pointer;
+    @apply flex items-center gap-2 px-3 py-2 rounded-lg transition-interactive cursor-pointer;
   }
+  
+  .list-item-interactive:hover {
+    background-color: color-mix(in srgb, var(--color-bg-dark) 50%, transparent);
+  }
+
 
   /* ========== Modal/Dialog Styles ========== */
   .modal-overlay {
@@ -490,12 +534,16 @@ body {
   }
 
   .workspace-icon-active {
-    @apply workspace-icon rounded-2xl shadow-lg shadow-boxflow-primary/30;
+    @apply workspace-icon rounded-2xl shadow-lg shadow-boxflow-primary-30;
     @apply bg-gradient-to-br from-boxflow-primary to-boxflow-secondary;
   }
 
   .workspace-icon-inactive {
-    @apply workspace-icon bg-boxflow-hover hover:bg-boxflow-hover/80 hover:rounded-2xl;
+    @apply workspace-icon bg-boxflow-hover hover:rounded-2xl;
+  }
+  
+  .workspace-icon-inactive:hover {
+    background-color: color-mix(in srgb, var(--color-bg-hover) 80%, transparent);
   }
 
   .workspace-icon-add {
@@ -544,11 +592,16 @@ body {
 
   /* ========== User Bar Styles ========== */
   .user-bar {
-    @apply h-14 bg-boxflow-darkest/50 px-2 flex items-center gap-2 border-t border-boxflow-border;
+    @apply h-14 px-2 flex items-center gap-2 border-t border-boxflow-border;
+    background-color: color-mix(in srgb, var(--color-bg-darkest) 50%, transparent);
   }
 
   .user-bar-button {
-    @apply flex items-center gap-2 flex-1 min-w-0 hover:bg-boxflow-dark/50 rounded-lg p-1 -m-1 transition-interactive;
+    @apply flex items-center gap-2 flex-1 min-w-0 rounded-lg p-1 -m-1 transition-interactive;
+  }
+  
+  .user-bar-button:hover {
+    background-color: color-mix(in srgb, var(--color-bg-dark) 50%, transparent);
   }
 
   /* ========== Profile Styles ========== */
@@ -568,16 +621,17 @@ body {
 
   /* ========== Mention/Link Styles ========== */
   .mention-link {
-    @apply text-boxflow-primary bg-boxflow-primary/10 rounded px-1 cursor-pointer hover:underline;
+    @apply text-boxflow-primary bg-boxflow-primary-10 rounded px-1 cursor-pointer hover:underline;
   }
 
   /* ========== Bot Response Styles ========== */
   .bot-response {
-    @apply bg-boxflow-primary/10 border border-boxflow-primary/30 rounded-lg p-3 flex items-start gap-3;
+    @apply bg-boxflow-primary-10 border border-boxflow-primary-30 rounded-lg p-3 flex items-start gap-3;
   }
 
   .bot-avatar {
-    @apply w-8 h-8 rounded-full bg-boxflow-hover/80 flex items-center justify-center text-white text-sm;
+    @apply w-8 h-8 rounded-full flex items-center justify-center text-white text-sm;
+    background-color: color-mix(in srgb, var(--color-bg-hover) 80%, transparent);
   }
 
   /* ========== Welcome Page Styles ========== */
@@ -596,6 +650,59 @@ body {
 
   .hover-brightness {
     @apply transition-interactive hover:brightness-110;
+  }
+
+  /* ========== Gradient Utilities ========== */
+  .gradient-primary {
+    background: linear-gradient(to right, var(--color-primary), var(--color-primary-dark));
+  }
+  
+  .gradient-primary:hover {
+    background: linear-gradient(to right, var(--color-primary-dark), var(--color-primary-darker));
+  }
+  
+  .gradient-primary-br {
+    background: linear-gradient(to bottom right, var(--color-primary), var(--color-primary-dark));
+  }
+  
+  .gradient-dark-bg {
+    background: linear-gradient(to bottom right, var(--color-bg-darkest), var(--color-bg-darker), var(--color-bg-darkest));
+  }
+  
+  .shadow-primary {
+    box-shadow: 0 10px 15px -3px var(--color-primary-25), 0 4px 6px -4px var(--color-primary-25);
+  }
+  
+  .text-link {
+    @apply text-boxflow-primary transition-colors;
+  }
+  
+  .text-link:hover {
+    color: var(--color-primary-dark);
+  }
+  
+  /* Toggle switch styles */
+  .toggle-track {
+    @apply relative inline-flex items-center rounded-full transition-colors;
+    background-color: var(--color-bg-hover);
+  }
+  
+  .toggle-track-checked {
+    background: linear-gradient(to right, var(--color-primary), var(--color-primary-dark));
+  }
+  
+  /* Theme selector button styles */
+  .theme-btn {
+    @apply px-4 py-2 rounded-lg transition-colors bg-boxflow-hover text-boxflow-muted;
+  }
+  
+  .theme-btn:hover {
+    background-color: var(--color-border-hover);
+  }
+  
+  .theme-btn-active {
+    @apply px-4 py-2 rounded-lg transition-colors text-white shadow-md;
+    background-color: var(--color-border-hover);
   }
 }
 

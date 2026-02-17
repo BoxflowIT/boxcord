@@ -27,7 +27,7 @@ export default function ProfileEditActions({
           <button
             onClick={onSave}
             disabled={saving}
-            className="flex-1 px-4 py-2 bg-gradient-to-r from-[#5865f2] to-[#4752c4] hover:from-[#4752c4] hover:to-[#3c44a8] text-white rounded-lg shadow-lg shadow-[#5865f2]/25 disabled:opacity-50 transition-all"
+            className="flex-1 px-4 py-2 gradient-primary text-white rounded-lg shadow-primary disabled:opacity-50 transition-all"
           >
             {saving ? 'Sparar...' : 'Spara'}
           </button>
@@ -35,7 +35,7 @@ export default function ProfileEditActions({
       ) : (
         <button
           onClick={onEdit}
-          className="flex-1 px-4 py-2 bg-gradient-to-r from-[#5865f2] to-[#4752c4] hover:from-[#4752c4] hover:to-[#3c44a8] text-white rounded-lg shadow-lg shadow-[#5865f2]/25 transition-all"
+          className="flex-1 px-4 py-2 gradient-primary text-white rounded-lg shadow-primary transition-all"
         >
           Redigera profil
         </button>

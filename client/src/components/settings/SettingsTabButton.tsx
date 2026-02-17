@@ -19,7 +19,7 @@ export function SettingsTabButton({
         'w-full text-left px-3 py-2 rounded-lg text-sm transition-colors',
         isActive
           ? 'bg-boxflow-hover text-white font-medium'
-          : 'text-boxflow-muted hover:bg-boxflow-hover/50 hover:text-white'
+          : 'text-boxflow-muted hover:bg-[var(--color-bg-hover)]/50 hover:text-white'
       )}
     >
       {label}

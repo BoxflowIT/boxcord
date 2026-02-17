@@ -4,30 +4,45 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Modern Discord-inspired color palette
+        // Now using CSS variables for proper theme switching
         'boxflow': {
-          primary: '#5865f2',      // Discord blurple - primary brand
-          secondary: '#4752c4',    // Darker blurple - hover states
-          accent: '#7289da',       // Light blurple - accents
-          success: '#3ba55c',      // Green - success/online
-          warning: '#faa61a',      // Orange - warnings
-          danger: '#ed4245',       // Red - errors/delete
-          dark: '#313338',         // Main dark background (Discord 2023)
-          darker: '#2b2d31',       // Sidebar/darker panels (Discord 2023)
-          darkest: '#1e1f22',      // Deepest dark for contrast (Discord 2023)
-          light: '#f2f3f5',        // Main text color (brighter)
-          muted: '#b5bac1',        // Secondary text (adjusted)
-          subtle: '#80848e',       // Tertiary text (adjusted)
-          border: '#1e1f22',       // Border color
-          hover: '#404249',        // Hover state background
+          primary: 'var(--color-primary)',
+          'primary-hover': 'var(--color-primary-hover)',
+          'primary-10': 'var(--color-primary-10)',
+          'primary-20': 'var(--color-primary-20)',
+          'primary-25': 'var(--color-primary-25)',
+          'primary-30': 'var(--color-primary-30)',
+          'primary-50': 'var(--color-primary-50)',
+          'primary-90': 'var(--color-primary-90)',
+          secondary: 'var(--color-secondary)',
+          accent: 'var(--color-secondary)', // Alias for secondary
+          success: 'var(--color-success)',
+          'success-20': 'var(--color-success-20)',
+          warning: 'var(--color-warning)',
+          danger: 'var(--color-danger)',
+          'danger-hover': 'var(--color-danger-hover)',
+          'danger-10': 'var(--color-danger-10)',
+          'danger-20': 'var(--color-danger-20)',
+          'danger-50': 'var(--color-danger-50)',
+          dark: 'var(--color-bg-dark)',
+          darker: 'var(--color-bg-darker)',
+          darkest: 'var(--color-bg-darkest)',
+          hover: 'var(--color-bg-hover)',
+          'hover-50': 'var(--color-bg-hover-50)',
+          light: 'var(--color-text-light)',
+          normal: 'var(--color-text-normal)',
+          muted: 'var(--color-text-muted)',
+          subtle: 'var(--color-text-subtle)',
+          border: 'var(--color-border)',
+          'border-50': 'var(--color-border-50)',
         },
-        // Legacy discord colors (for gradual migration)
-        'discord-dark': '#313338',
-        'discord-darker': '#2b2d31',
-        'discord-darkest': '#1e1f22',
-        'discord-light': '#f2f3f5',
-        'discord-blurple': '#5865f2',
-        'discord-green': '#3ba55c',
+        // Legacy discord colors (kept for backward compatibility)
+        'discord-dark': 'var(--color-bg-dark)',
+        'discord-darker': 'var(--color-bg-darker)',
+        'discord-darkest': 'var(--color-bg-darkest)',
+        'discord-light': 'var(--color-text-light)',
+        'discord-blurple': 'var(--color-primary)',
+        'discord-green': 'var(--color-success)',
       },
       fontFamily: {
         sans: ['Montserrat', 'Segoe UI', 'Tahoma', 'Geneva', 'Verdana', 'sans-serif'],

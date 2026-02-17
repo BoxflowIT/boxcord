@@ -38,7 +38,7 @@ export default function Modal({
     >
       <div
         className={cn(
-          'bg-boxflow-dark rounded-2xl shadow-2xl w-full max-h-[90vh] overflow-hidden border border-boxflow-hover/50',
+          'bg-boxflow-dark rounded-2xl shadow-2xl w-full max-h-[90vh] overflow-hidden border border-boxflow-hover-50',
           maxWidthClasses[maxWidth]
         )}
         onClick={(e) => e.stopPropagation()}

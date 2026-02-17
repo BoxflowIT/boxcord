@@ -116,7 +116,7 @@ export default function CustomLogin() {
         <div className="text-right">
           <Link
             to="/forgot-password"
-            className="text-sm text-[#5865f2] hover:text-[#4752c4] transition-colors"
+            className="text-sm text-link"
           >
             Glömt lösenord?
           </Link>

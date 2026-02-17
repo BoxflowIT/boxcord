@@ -14,7 +14,7 @@ export default function SpinnerOverlay({
     <div
       className={cn(
         'fixed inset-0 z-50 flex flex-col items-center justify-center',
-        transparent ? 'bg-black/30' : 'bg-boxflow-dark/90'
+        transparent ? 'bg-black/30' : 'bg-[var(--color-bg-dark)]/90'
       )}
     >
       <div className="spinner-ring w-12 h-12 mb-4" />

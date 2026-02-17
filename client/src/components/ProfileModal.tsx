@@ -125,7 +125,7 @@ export default function ProfileModal({
       onClick={onClose}
     >
       <div
-        className="bg-boxflow-dark rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-boxflow-hover/50"
+        className="bg-boxflow-dark rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-boxflow-hover-50"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header/Banner */}
@@ -227,7 +227,7 @@ export default function ProfileModal({
                   onClick={() => {
                     /* Start DM */
                   }}
-                  className="w-full px-4 py-2 bg-gradient-to-r from-[#5865f2] to-[#4752c4] hover:from-[#4752c4] hover:to-[#3c44a8] text-white rounded-lg shadow-lg shadow-[#5865f2]/25 transition-all"
+                  className="w-full px-4 py-2 gradient-primary text-white rounded-lg shadow-primary transition-all"
                 >
                   Skicka meddelande
                 </button>

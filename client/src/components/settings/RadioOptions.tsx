@@ -28,7 +28,7 @@ export function RadioOptions({
           className={cn(
             'flex items-start p-3 bg-boxflow-darker rounded-lg border-2 transition-all',
             value === option.value
-              ? 'border-boxflow-primary bg-boxflow-primary/10'
+              ? 'border-boxflow-primary bg-boxflow-primary-10'
               : 'border-transparent hover:bg-boxflow-hover',
             disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
           )}

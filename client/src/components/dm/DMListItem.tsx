@@ -38,7 +38,7 @@ export default function DMListItem({
       onClick={onClick}
       className={cn(
         'list-item-interactive w-full',
-        isSelected && 'bg-[#404249]/60'
+        isSelected && 'bg-boxflow-hover/60'
       )}
     >
       <Avatar size="sm">{initial}</Avatar>

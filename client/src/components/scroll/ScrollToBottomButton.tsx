@@ -22,7 +22,7 @@ export default function ScrollToBottomButton({
       className={cn(
         'fixed bottom-24 right-8 z-10',
         'w-12 h-12 rounded-full',
-        'bg-boxflow-primary hover:bg-boxflow-primary/90',
+        'bg-boxflow-primary hover:bg-boxflow-primary-90',
         'text-white shadow-lg',
         'flex items-center justify-center',
         'transition-all duration-200',

@@ -41,7 +41,7 @@ export function MessageEditForm({
       >
         <button
           onClick={onSave}
-          className="px-3 py-1 bg-gradient-to-r from-boxflow-primary to-boxflow-secondary hover:from-boxflow-secondary hover:to-[#3c44a8] text-white rounded-lg shadow-lg shadow-boxflow-primary/25 transition-all"
+          className="px-3 py-1 gradient-primary text-white rounded-lg shadow-primary transition-all"
         >
           Spara
         </button>

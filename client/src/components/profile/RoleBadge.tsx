@@ -19,7 +19,7 @@ const roleConfig = {
   },
   MEMBER: {
     label: 'Medlem',
-    color: 'bg-boxflow-muted/20 text-boxflow-muted border-boxflow-muted/30'
+    color: 'bg-[var(--color-text-muted)]/20 text-boxflow-muted border-[var(--color-text-muted)]/30'
   }
 };
 

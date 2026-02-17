@@ -31,8 +31,8 @@ export default function SettingsTabSidebar({
             className={cn(
               'w-full text-left px-3 py-2 rounded mb-1 transition-colors',
               activeTab === tab.id
-                ? 'bg-[#404249] text-white font-medium rounded-lg'
-                : 'text-[#b5bac1] hover:bg-[#404249]/50 hover:text-white rounded-lg'
+                ? 'bg-boxflow-hover text-white font-medium rounded-lg'
+                : 'text-boxflow-muted hover:bg-boxflow-hover/50 hover:text-white rounded-lg'
             )}
           >
             {tab.label}
