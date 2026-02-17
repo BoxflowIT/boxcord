@@ -90,7 +90,7 @@ export default function NotificationSettings() {
         <button
           onClick={handleTest}
           disabled={loading}
-          className="text-sm text-[#5865f2] hover:underline disabled:opacity-50 mt-3"
+          className="text-sm text-link disabled:opacity-50 mt-3"
         >
           Skicka testnotis
         </button>

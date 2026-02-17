@@ -53,7 +53,7 @@ export default function ChannelInputSection({
           onChange={onInputChange}
           onKeyDown={onKeyDown}
           placeholder={`Skicka meddelande i #${channelName ?? 'kanal'}`}
-          className="flex-1 bg-transparent text-[#f2f3f5] placeholder-[#80848e] resize-none outline-none p-3 max-h-48"
+          className="flex-1 bg-transparent text-boxflow-light placeholder-boxflow-subtle resize-none outline-none p-3 max-h-48"
           rows={1}
           disabled={uploading}
         />

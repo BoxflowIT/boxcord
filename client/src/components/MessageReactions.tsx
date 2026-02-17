@@ -47,7 +47,7 @@ export default function MessageReactions({
       <div className="relative inline-block">
         <button
           onClick={() => setShowPicker(!showPicker)}
-          className="p-1.5 rounded-lg hover:bg-[#404249] text-[#80848e] hover:text-white transition-colors"
+          className="p-1.5 rounded-lg hover:bg-boxflow-hover text-boxflow-subtle hover:text-white transition-colors"
           title="Lägg till reaktion"
         >
           <EmojiIcon size="sm" />

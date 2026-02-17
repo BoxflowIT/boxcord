@@ -17,8 +17,8 @@ export default function ToggleSwitch({
   description
 }: ToggleSwitchProps) {
   const buttonClasses = `
-    relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-    ${checked ? 'bg-gradient-to-r from-[#5865f2] to-[#4752c4]' : 'bg-[#404249]'}
+    toggle-track h-6 w-11
+    ${checked ? 'toggle-track-checked' : ''}
     ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
   `
     .trim()

@@ -9,12 +9,12 @@ export default function QuickEmojiPicker({
   onEmojiSelect
 }: QuickEmojiPickerProps) {
   return (
-    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 bg-[#1e1f22] border border-[#404249] rounded-lg shadow-2xl flex gap-1 z-50">
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 bg-boxflow-darkest border border-boxflow-hover rounded-lg shadow-2xl flex gap-1 z-50">
       {emojis.map((emoji) => (
         <button
           key={emoji}
           onClick={() => onEmojiSelect(emoji)}
-          className="p-1 hover:bg-[#404249] rounded-lg text-lg transition-colors"
+          className="p-1 hover:bg-boxflow-hover rounded-lg text-lg transition-colors"
         >
           {emoji}
         </button>

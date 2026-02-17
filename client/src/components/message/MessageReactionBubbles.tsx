@@ -27,7 +27,7 @@ export function MessageReactionBubbles({
           className={cn(
             'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-colors border',
             reaction.hasReacted
-              ? 'bg-boxflow-primary/20 text-boxflow-primary border-boxflow-primary'
+              ? 'bg-boxflow-primary-20 text-boxflow-primary border-boxflow-primary'
               : 'bg-boxflow-darker hover:bg-boxflow-hover text-boxflow-muted border-transparent'
           )}
         >

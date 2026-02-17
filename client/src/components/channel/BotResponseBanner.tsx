@@ -18,22 +18,22 @@ export default function BotResponseBanner({
         <div className="bot-avatar">🤖</div>
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm font-medium text-[#5865f2]">
+            <span className="text-sm font-medium text-boxflow-primary">
               Boxcord Bot
             </span>
             {isPrivate && (
-              <span className="text-xs text-[#80848e]">
+              <span className="text-xs text-boxflow-subtle">
                 Endast synligt för dig
               </span>
             )}
           </div>
-          <div className="text-[#f2f3f5] text-sm whitespace-pre-wrap">
+          <div className="text-boxflow-light text-sm whitespace-pre-wrap">
             {content}
           </div>
         </div>
         <button
           onClick={onDismiss}
-          className="text-[#80848e] hover:text-white transition-colors"
+          className="text-boxflow-subtle hover:text-white transition-colors"
         >
           ✕
         </button>

@@ -103,7 +103,7 @@ export default function SlashCommandAutocomplete({
             )}
           >
             <div className="flex items-center gap-2">
-              <span className="font-mono text-[#5865f2]">/{cmd.name}</span>
+              <span className="font-mono text-boxflow-primary">/{cmd.name}</span>
               <span className="text-muted">{cmd.description}</span>
             </div>
             <div className="text-subtle mt-1">{cmd.usage}</div>

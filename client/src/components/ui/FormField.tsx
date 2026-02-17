@@ -14,17 +14,17 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
       <div>
         <label
           htmlFor={props.id}
-          className="block text-sm font-semibold text-[#b5bac1] mb-2"
+          className="block text-sm font-semibold text-boxflow-muted mb-2"
         >
           {label} {required && <span className="text-red-400">*</span>}
         </label>
         <input
           ref={ref}
           className={cn(
-            'w-full px-4 py-3 bg-[#1e1f22] border rounded-lg text-white placeholder-[#80848e]',
+            'w-full px-4 py-3 bg-boxflow-darkest border rounded-lg text-white placeholder-boxflow-subtle',
             'focus:outline-none focus:ring-2 focus:ring-boxflow-primary focus:border-transparent focus:bg-boxflow-darker',
             'transition-all duration-200',
-            error ? 'border-red-500' : 'border-[#404249]',
+            error ? 'border-red-500' : 'border-boxflow-hover',
             props.disabled && 'opacity-50 cursor-not-allowed',
             className
           )}

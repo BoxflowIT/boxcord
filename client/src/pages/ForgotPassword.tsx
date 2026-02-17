@@ -127,7 +127,7 @@ export default function ForgotPassword() {
           <div className="text-center">
             <Link
               to="/login"
-              className="text-sm text-[#5865f2] hover:text-[#4752c4] transition-colors"
+              className="text-sm text-link"
             >
               Tillbaka till inloggning
             </Link>

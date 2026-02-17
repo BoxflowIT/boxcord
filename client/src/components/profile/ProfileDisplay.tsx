@@ -24,7 +24,7 @@ export default function ProfileDisplay({
           {firstName ?? ''} {lastName ?? ''}
         </h2>
         <p className="text-gray-400">{email}</p>
-        <span className="inline-block mt-1 px-2 py-0.5 bg-boxflow-primary/20 text-boxflow-primary text-xs rounded-lg">
+        <span className="inline-block mt-1 px-2 py-0.5 bg-boxflow-primary-20 text-boxflow-primary text-xs rounded-lg">
           {role}
         </span>
       </div>

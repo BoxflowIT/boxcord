@@ -27,7 +27,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       onClick={onClose}
     >
       <div
-        className="bg-boxflow-dark rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex overflow-hidden border border-boxflow-hover/50"
+        className="bg-boxflow-dark rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex overflow-hidden border border-boxflow-hover-50"
         onClick={(e) => e.stopPropagation()}
       >
         <SettingsTabSidebar activeTab={activeTab} onTabChange={setActiveTab} />

@@ -15,7 +15,7 @@ export default function SettingsHeader({
       <h2 className="text-2xl font-bold text-white">{title}</h2>
       <button
         onClick={onClose}
-        className="p-2 hover:bg-[#404249] rounded-lg transition-colors"
+        className="p-2 hover:bg-boxflow-hover rounded-lg transition-colors"
       >
         <CloseIcon className="w-6 h-6 text-gray-400" />
       </button>

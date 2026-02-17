@@ -13,12 +13,12 @@ export default function DMEmptyState({
   userInitial
 }: DMEmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center h-full text-[#b5bac1]">
+    <div className="flex flex-col items-center justify-center h-full text-boxflow-muted">
       <Avatar size="lg" className="mb-4">
         {userInitial}
       </Avatar>
       <p className="text-xl mb-2">{userName}</p>
-      <p className="text-sm text-[#80848e]">
+      <p className="text-sm text-boxflow-subtle">
         Detta är början av din direktmeddelandehistorik med {userName}.
       </p>
     </div>

@@ -9,14 +9,14 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-gradient-to-r from-[#5865f2] to-[#4752c4] text-white hover:from-[#4752c4] hover:to-[#3c44a8] focus-visible:ring-[#5865f2] shadow-lg shadow-[#5865f2]/25 active:scale-[0.98]',
+          'gradient-primary shadow-primary text-white focus-visible:ring-boxflow-primary active:scale-[0.98]',
         destructive:
           'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 focus-visible:ring-red-500 shadow-lg shadow-red-500/25',
         outline:
-          'border-2 border-boxflow-primary bg-transparent hover:bg-boxflow-primary/10 text-boxflow-primary font-semibold',
-        secondary: 'bg-[#404249] text-white hover:bg-[#4e5158] shadow-md',
-        ghost: 'hover:bg-[#404249] text-[#b5bac1] hover:text-white',
-        link: 'text-[#5865f2] underline-offset-4 hover:underline'
+          'border-2 border-boxflow-primary bg-transparent hover:bg-boxflow-primary-10 text-boxflow-primary font-semibold',
+        secondary: 'bg-boxflow-hover text-white hover:brightness-110 shadow-md',
+        ghost: 'hover:bg-boxflow-hover text-boxflow-muted hover:text-white',
+        link: 'text-boxflow-primary underline-offset-4 hover:underline'
       },
       size: {
         default: 'h-10 px-4 py-2',
