@@ -1,5 +1,4 @@
 // Reusable Setting Section Component
-import React from 'react';
 
 interface SettingSectionProps {
   title: string;

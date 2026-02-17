@@ -72,7 +72,7 @@ export default function ProfileModal({
   };
 
   const handleRemoveImage = () => {
-    setFormData({ ...formData, avatarUrl: null });
+    setFormData({ ...formData, avatarUrl: '' });
   };
 
   const handleSave = () => {

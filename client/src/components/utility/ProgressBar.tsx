@@ -1,5 +1,4 @@
 // Progress Bar - Linear progress indicator
-import React from 'react';
 
 interface ProgressBarProps {
   value: number;

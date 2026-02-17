@@ -1,5 +1,4 @@
 // Dialog Header - Reusable dialog header
-import React from 'react';
 import { CloseIcon } from '../ui/Icons';
 
 interface DialogHeaderProps {

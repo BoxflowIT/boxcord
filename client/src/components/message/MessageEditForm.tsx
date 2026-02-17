@@ -1,5 +1,4 @@
 // Reusable Message Edit Form Component
-import React from 'react';
 
 interface MessageEditFormProps {
   value: string;

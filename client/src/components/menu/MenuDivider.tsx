@@ -1,5 +1,4 @@
 // Menu Divider - Visual separator in menus
-import React from 'react';
 
 interface MenuDividerProps {
   className?: string;

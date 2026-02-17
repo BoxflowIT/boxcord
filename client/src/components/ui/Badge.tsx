@@ -1,5 +1,4 @@
 // Badge - Small label for counts, status, or categories
-import React from 'react';
 
 interface BadgeProps {
   children: React.ReactNode;

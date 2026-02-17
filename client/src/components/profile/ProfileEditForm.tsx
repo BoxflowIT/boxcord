@@ -1,5 +1,4 @@
 // Reusable Profile Edit Form Component
-import React from 'react';
 import { TextInput, TextArea, FormGroup } from '../form';
 
 interface ProfileFormData {

@@ -1,5 +1,4 @@
 // Spinner Overlay - Full screen loading overlay
-import React from 'react';
 
 interface SpinnerOverlayProps {
   message?: string;

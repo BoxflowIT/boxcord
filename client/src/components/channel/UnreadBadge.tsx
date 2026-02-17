@@ -1,5 +1,4 @@
 // Unread Badge - Show unread count
-import React from 'react';
 
 interface UnreadBadgeProps {
   count: number;

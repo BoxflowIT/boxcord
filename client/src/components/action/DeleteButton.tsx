@@ -1,5 +1,4 @@
 // Delete Button - Quick delete action button
-import React from 'react';
 import { CloseIcon } from '../ui/Icons';
 import ActionButton from './ActionButton';
 

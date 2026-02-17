@@ -1,5 +1,4 @@
 // Reusable Section Header Component (for lists with add button)
-import React from 'react';
 import { PlusIcon } from '../ui/Icons';
 
 interface SectionHeaderProps {

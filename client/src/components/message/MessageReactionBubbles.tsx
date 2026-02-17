@@ -1,5 +1,4 @@
 // Reusable Message Reaction Bubbles Component
-import React from 'react';
 
 export interface MessageReaction {
   emoji: string;

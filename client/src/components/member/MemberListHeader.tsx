@@ -1,5 +1,4 @@
 // Member List Header - Shows member count and search toggle
-import React from 'react';
 import { SearchIcon, CloseIcon } from '../ui/Icons';
 
 interface MemberListHeaderProps {

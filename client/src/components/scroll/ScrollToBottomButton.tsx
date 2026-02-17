@@ -1,5 +1,4 @@
 // Scroll To Bottom Button - Floating button to scroll to bottom
-import React from 'react';
 
 interface ScrollToBottomButtonProps {
   onClick: () => void;

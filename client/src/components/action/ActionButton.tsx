@@ -1,5 +1,4 @@
 // Action Button - Generic action button with icon
-import React from 'react';
 
 interface ActionButtonProps {
   icon: React.ReactNode;
@@ -23,7 +22,6 @@ export default function ActionButton({
   label,
   onClick,
   variant = 'default',
-  size = 'md',
   title,
   disabled = false,
   className = ''

@@ -1,5 +1,4 @@
 // Reusable Empty State Component
-import React from 'react';
 
 interface EmptyStateProps {
   icon?: React.ReactNode;

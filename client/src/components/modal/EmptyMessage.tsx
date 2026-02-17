@@ -1,5 +1,4 @@
 // Empty State Message - Shows when no items are found
-import React from 'react';
 
 interface EmptyMessageProps {
   message: string;

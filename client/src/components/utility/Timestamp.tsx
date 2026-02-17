@@ -1,5 +1,4 @@
 // Timestamp - Format and display timestamp
-import React from 'react';
 
 interface TimestampProps {
   date: string | Date;

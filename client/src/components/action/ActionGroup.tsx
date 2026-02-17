@@ -1,5 +1,4 @@
 // Action Group - Group of action buttons with spacing
-import React from 'react';
 
 interface ActionGroupProps {
   children: React.ReactNode;

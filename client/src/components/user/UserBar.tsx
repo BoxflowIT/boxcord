@@ -1,5 +1,4 @@
 // User Bar - Bottom user info bar with avatar, name, role
-import React from 'react';
 import Avatar from '../ui/Avatar';
 import { LogoutIcon } from '../ui/Icons';
 

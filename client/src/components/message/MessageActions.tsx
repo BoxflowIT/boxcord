@@ -1,5 +1,4 @@
 // Reusable Message Actions Bar - Quick reactions + edit/delete
-import React from 'react';
 import { EditIcon, TrashIcon } from '../ui/Icons';
 
 interface MessageActionsProps {

@@ -1,5 +1,4 @@
 // Reusable Channel Header Component
-import React from 'react';
 import { UsersIcon } from '../ui/Icons';
 
 interface ChannelHeaderProps {

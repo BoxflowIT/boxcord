@@ -1,5 +1,4 @@
 // Dialog Footer - Reusable dialog footer with actions
-import React from 'react';
 
 interface DialogFooterProps {
   children: React.ReactNode;

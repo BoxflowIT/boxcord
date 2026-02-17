@@ -1,5 +1,4 @@
 // User Avatar Info - Compact user info with avatar
-import React from 'react';
 import Avatar from '../ui/Avatar';
 
 interface UserAvatarInfoProps {

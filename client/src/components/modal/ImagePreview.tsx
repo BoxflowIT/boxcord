@@ -1,5 +1,4 @@
 // Image Preview - Shows preview of uploaded/entered image URL
-import React from 'react';
 
 interface ImagePreviewProps {
   src: string;

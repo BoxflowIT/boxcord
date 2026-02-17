@@ -1,5 +1,4 @@
 // Search Input - Reusable search input with icon
-import React from 'react';
 import { SearchIcon } from './Icons';
 
 interface SearchInputProps {

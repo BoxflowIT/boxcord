@@ -1,5 +1,4 @@
 // Count Badge - Shows a numerical count (e.g., unread messages, online users)
-import React from 'react';
 
 interface CountBadgeProps {
   count: number;

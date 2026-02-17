@@ -1,5 +1,4 @@
 // List Header - Generic list section header
-import React from 'react';
 
 interface ListHeaderProps {
   title: string;

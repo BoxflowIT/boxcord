@@ -1,5 +1,4 @@
 // Toast Container - Container for managing multiple toasts
-import React from 'react';
 import Toast, { ToastVariant } from './Toast';
 
 export interface ToastItem {

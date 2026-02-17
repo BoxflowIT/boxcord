@@ -1,5 +1,4 @@
 // Member List Item - Individual member row with avatar, name, status, and DM button
-import React from 'react';
 import Avatar from '../ui/Avatar';
 import { ChatIcon } from '../ui/Icons';
 import StatusIndicator, { UserStatus } from './StatusIndicator';
@@ -16,7 +15,6 @@ interface MemberListItemProps {
 }
 
 export default function MemberListItem({
-  userId,
   avatarUrl,
   displayName,
   customStatus,

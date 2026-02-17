@@ -1,9 +1,8 @@
 // Reusable Channel List Item Component
-import React from 'react';
 import { SettingsIcon } from '../ui/Icons';
 
 interface ChannelListItemProps {
-  id: string;
+  id?: string;
   name: string;
   isActive: boolean;
   unreadCount?: number;
@@ -12,7 +11,6 @@ interface ChannelListItemProps {
 }
 
 export function ChannelListItem({
-  id,
   name,
   isActive,
   unreadCount = 0,

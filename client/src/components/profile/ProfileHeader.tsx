@@ -1,5 +1,4 @@
 // Reusable Profile Header Component with Avatar
-import React from 'react';
 import Avatar from '../ui/Avatar';
 import { RoleBadge, type UserRole } from './RoleBadge';
 import { EditIcon, TrashIcon } from '../ui/Icons';
@@ -26,7 +25,6 @@ export function ProfileHeader({
   role,
   isEditing = false,
   isOwnProfile = false,
-  onEdit,
   onRemoveAvatar,
   onUploadAvatar,
   uploadingAvatar = false

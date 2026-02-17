@@ -1,5 +1,5 @@
 // Typing Indicator - Show who's typing
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface TypingIndicatorProps {
   users: string[];

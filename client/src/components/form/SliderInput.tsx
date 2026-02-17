@@ -1,5 +1,4 @@
 // Slider Input - Range slider with label
-import React from 'react';
 
 interface SliderInputProps {
   value: number;

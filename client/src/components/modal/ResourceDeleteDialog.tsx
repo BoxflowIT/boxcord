@@ -56,7 +56,6 @@ export default function ResourceDeleteDialog({
       cancelText="Avbryt"
       variant="danger"
       onConfirm={handleConfirm}
-      onCancel={onClose}
       onClose={onClose}
       isLoading={isDeleting}
     />

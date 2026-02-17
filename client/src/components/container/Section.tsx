@@ -1,5 +1,4 @@
 // Section - Content section with optional title and description
-import React from 'react';
 
 interface SectionProps {
   title?: string;

@@ -1,5 +1,4 @@
 // Reusable Radio Options Component
-import React from 'react';
 
 interface RadioOption {
   value: string;

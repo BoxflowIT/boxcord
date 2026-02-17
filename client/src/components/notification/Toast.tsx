@@ -1,5 +1,5 @@
 // Toast Notification - Temporary notification popup
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CloseIcon } from '../ui/Icons';
 
 export type ToastVariant = 'info' | 'success' | 'warning' | 'error';
