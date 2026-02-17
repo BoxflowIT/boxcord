@@ -256,9 +256,32 @@ export class DirectMessageService {
         cursor: { id: params.cursor },
         skip: 1
       }),
-      include: {
-        attachments: true,
-        reactions: true
+      select: {
+        id: true,
+        channelId: true,
+        content: true,
+        authorId: true,
+        edited: true,
+        createdAt: true,
+        updatedAt: true,
+        attachments: {
+          select: {
+            id: true,
+            messageId: true,
+            fileName: true,
+            fileUrl: true,
+            fileType: true,
+            fileSize: true
+          }
+        },
+        reactions: {
+          select: {
+            id: true,
+            messageId: true,
+            emoji: true,
+            userId: true
+          }
+        }
       }
     });
 

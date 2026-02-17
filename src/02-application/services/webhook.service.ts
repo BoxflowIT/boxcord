@@ -41,7 +41,7 @@ export interface StaffEventData {
 
 export class WebhookService {
   constructor(
-    private readonly prisma: PrismaClient,
+    private readonly prisma: ExtendedPrismaClient,
     private io?: SocketServer
   ) {}
 
