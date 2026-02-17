@@ -15,6 +15,8 @@ import { jwtPlugin } from './plugins/jwt.js';
 import { setupSocketHandlers } from './plugins/socket.js';
 import { errorHandler } from './plugins/error-handler.js';
 import cachePlugin from './plugins/cache.js';
+import securityPlugin from './plugins/security.js';
+import rateLimitPlugin from './plugins/rate-limit.js';
 import { registerRoutes } from './routes/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -42,6 +44,14 @@ async function main() {
     origin: process.env.CORS_ORIGIN ?? true,
     credentials: true
   });
+
+  // Security headers (helmet)
+  if (isProd) {
+    await app.register(securityPlugin);
+  }
+
+  // Rate limiting
+  await app.register(rateLimitPlugin);
 
   // Compression for responses (gzip/brotli)
   await app.register(compress, {
@@ -110,8 +120,8 @@ async function main() {
     // Explicit transport config to help with WebSocket upgrades
     transports: ['polling', 'websocket'],
     allowUpgrades: true,
-    pingTimeout: 90000, // 90s innan timeout (längre = färre reconnects)
-    pingInterval: 45000 // Ping var 45:e sekund (längre = färre requests)
+    pingTimeout: 90000, // 90s before timeout (longer = fewer reconnects)
+    pingInterval: 45000 // Ping every 45 seconds (longer = fewer requests)
   });
 
   // Setup socket handlers (not as Fastify plugin)
