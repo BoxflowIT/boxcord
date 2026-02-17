@@ -1,5 +1,5 @@
 // Channel Service - Application Layer
-import type { PrismaClient } from '@prisma/client';
+import type { ExtendedPrismaClient } from '../../03-infrastructure/database/client.js';
 import type {
   Channel,
   CreateChannelInput
@@ -15,7 +15,7 @@ import {
 } from '../../00-core/errors.js';
 
 export class ChannelService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly prisma: ExtendedPrismaClient) {}
 
   async getWorkspaceChannels(
     workspaceId: string,

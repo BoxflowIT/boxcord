@@ -1,6 +1,6 @@
 // File Upload Service - Application Layer
 // Handles file attachments for messages
-import type { PrismaClient } from '@prisma/client';
+import type { ExtendedPrismaClient } from '../../03-infrastructure/database/client.js';
 import { randomUUID } from 'crypto';
 import { writeFile, mkdir, unlink } from 'fs/promises';
 import { join, extname } from 'path';
@@ -49,7 +49,7 @@ export class FileService {
   private uploadDir: string;
   private baseUrl: string;
 
-  constructor(private readonly prisma: PrismaClient) {
+  constructor(private readonly prisma: ExtendedPrismaClient) {
     this.uploadDir = process.env.UPLOAD_DIR ?? './uploads';
     this.baseUrl = process.env.BASE_URL ?? 'http://localhost:3001';
   }

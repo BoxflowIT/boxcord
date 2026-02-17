@@ -1,5 +1,5 @@
 // User Service optimization - batch fetch initial data
-import type { PrismaClient } from '@prisma/client';
+import type { ExtendedPrismaClient } from '../../03-infrastructure/database/client.js';
 
 export interface InitialData {
   workspaces: Array<{
@@ -28,7 +28,7 @@ export interface InitialData {
  * Reduces API calls from 3+ to 1 on initial load
  */
 export async function getInitialData(
-  prisma: PrismaClient,
+  prisma: ExtendedPrismaClient,
   userId: string
 ): Promise<InitialData> {
   const [workspacesData, currentUser, onlineUsers] = await Promise.all([

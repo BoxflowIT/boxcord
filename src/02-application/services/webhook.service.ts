@@ -1,5 +1,5 @@
 // Boxtime Webhook Service - Handles incoming events from Boxtime
-import type { PrismaClient } from '@prisma/client';
+import type { ExtendedPrismaClient } from '../../03-infrastructure/database/client.js';
 import type { Server as SocketServer } from 'socket.io';
 
 // Webhook event types from Boxtime

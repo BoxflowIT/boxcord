@@ -1,5 +1,5 @@
 // Message Service - Application Layer
-import type { PrismaClient } from '@prisma/client';
+import type { ExtendedPrismaClient } from '../../03-infrastructure/database/client.js';
 import type { PaginationParams, PaginatedResult } from '../../00-core/types.js';
 import type {
   Message,
@@ -39,7 +39,7 @@ export interface MessageWithExtras extends Message {
 }
 
 export class MessageService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly prisma: ExtendedPrismaClient) {}
 
   async getChannelMessages(
     channelId: string,
