@@ -1,4 +1,6 @@
 // Reusable Workspace Icon Component
+import { useState, useRef, useEffect } from 'react';
+
 interface WorkspaceIconProps {
   id: string;
   name: string;
@@ -7,6 +9,7 @@ interface WorkspaceIconProps {
   onSelect: () => void;
   onEdit: (e: React.MouseEvent) => void;
   onDelete: (e: React.MouseEvent) => void;
+  onLeave: (e: React.MouseEvent) => void;
 }
 
 export default function WorkspaceIcon({
@@ -15,21 +18,42 @@ export default function WorkspaceIcon({
   isActive,
   onSelect,
   onEdit,
-  onDelete
+  onDelete,
+  onLeave
 }: WorkspaceIconProps) {
+  const [showMenu, setShowMenu] = useState(false);
+  const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMenu]);
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setMenuPos({ x: e.clientX, y: e.clientY });
+    setShowMenu(true);
+  };
+
   return (
     <div className="relative group">
       <button
         onClick={onSelect}
         onDoubleClick={onEdit}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          onDelete(e);
-        }}
+        onContextMenu={handleContextMenu}
         className={
           isActive ? 'workspace-icon-active' : 'workspace-icon-inactive'
         }
-        title={`${name}\nDubbelklick: redigera\nHögerklick: ta bort`}
+        title={`${name}\nDubbelklick: redigera\nHögerklick: meny`}
       >
         {iconUrl ? (
           <img src={iconUrl} alt="" className="w-full h-full object-cover" />
@@ -37,6 +61,44 @@ export default function WorkspaceIcon({
           name.charAt(0).toUpperCase()
         )}
       </button>
+
+      {/* Context Menu */}
+      {showMenu && (
+        <div
+          ref={menuRef}
+          className="fixed z-50 bg-boxflow-darker border border-boxflow-hover rounded-lg shadow-xl py-1 min-w-[160px]"
+          style={{ left: menuPos.x, top: menuPos.y }}
+        >
+          <button
+            className="w-full px-3 py-2 text-left text-sm text-boxflow-light hover:bg-boxflow-hover transition-colors"
+            onClick={(e) => {
+              setShowMenu(false);
+              onEdit(e);
+            }}
+          >
+            ✏️ Redigera
+          </button>
+          <button
+            className="w-full px-3 py-2 text-left text-sm text-yellow-400 hover:bg-boxflow-hover transition-colors"
+            onClick={(e) => {
+              setShowMenu(false);
+              onLeave(e);
+            }}
+          >
+            🚪 Lämna server
+          </button>
+          <div className="border-t border-boxflow-hover my-1" />
+          <button
+            className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-boxflow-hover transition-colors"
+            onClick={(e) => {
+              setShowMenu(false);
+              onDelete(e);
+            }}
+          >
+            🗑️ Ta bort
+          </button>
+        </div>
+      )}
     </div>
   );
 }

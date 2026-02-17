@@ -84,8 +84,10 @@ export default function MentionAutocomplete({
 }
 
 // Hook for parsing mentions in rendered messages
+// Matches @email (like @anna@boxflow.se) or @username
 export function parseMentions(content: string): (string | JSX.Element)[] {
-  const mentionRegex = /@(\w+)/g;
+  // Match @email format or @word format
+  const mentionRegex = /@([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[\w]+)/g;
   const parts: (string | JSX.Element)[] = [];
   let lastIndex = 0;
   let match;
@@ -96,10 +98,16 @@ export function parseMentions(content: string): (string | JSX.Element)[] {
       parts.push(content.slice(lastIndex, match.index));
     }
 
+    // Format display: show name part of email or full username
+    const mentionText = match[1];
+    const displayName = mentionText.includes('@')
+      ? `@${mentionText.split('@')[0]}` // Show @anna instead of @anna@boxflow.se
+      : `@${mentionText}`;
+
     // Add the mention as a styled element
     parts.push(
-      <span key={match.index} className="mention-link">
-        {match[0]}
+      <span key={match.index} className="mention-link" title={mentionText.includes('@') ? mentionText : undefined}>
+        {displayName}
       </span>
     );
 

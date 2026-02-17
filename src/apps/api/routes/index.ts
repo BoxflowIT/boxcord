@@ -13,6 +13,7 @@ import { fileRoutes } from './file.routes.js';
 import { pushRoutes } from './push.routes.js';
 import { webhookRoutes } from './webhook.routes.js';
 import { chatbotRoutes } from './chatbot.routes.js';
+import { inviteRoutes } from './invite.routes.js';
 
 export async function registerRoutes(app: FastifyInstance) {
   // Ensure uploads directory exists
@@ -40,6 +41,7 @@ export async function registerRoutes(app: FastifyInstance) {
       await api.register(fileRoutes, { prefix: '/files' });
       await api.register(pushRoutes, { prefix: '/push' });
       await api.register(chatbotRoutes, { prefix: '/chatbot' });
+      await api.register(inviteRoutes, { prefix: '/invites' });
     },
     { prefix: '/api/v1' }
   );

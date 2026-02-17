@@ -3,6 +3,8 @@ import { useAuthStore } from '../store/auth';
 import { logger } from '../utils/logger';
 import type {
   Workspace,
+  WorkspaceInvite,
+  InvitePreview,
   Channel,
   Message,
   User,
@@ -91,6 +93,29 @@ export const api = {
     request<Workspace>(`/workspaces/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data)
+    }),
+  leaveWorkspace: (id: string) =>
+    request<void>(`/workspaces/${id}/leave`, { method: 'POST' }),
+
+  // Workspace Invites
+  createInvite: (
+    workspaceId: string,
+    options?: { maxUses?: number; expiresInDays?: number }
+  ) =>
+    request<WorkspaceInvite>(`/workspaces/${workspaceId}/invites`, {
+      method: 'POST',
+      body: JSON.stringify(options ?? {})
+    }),
+  getWorkspaceInvites: (workspaceId: string) =>
+    request<WorkspaceInvite[]>(`/workspaces/${workspaceId}/invites`),
+  deleteInvite: (workspaceId: string, inviteId: string) =>
+    request<void>(`/workspaces/${workspaceId}/invites/${inviteId}`, {
+      method: 'DELETE'
+    }),
+  previewInvite: (code: string) => request<InvitePreview>(`/invites/${code}`),
+  joinWithInvite: (code: string) =>
+    request<{ workspace: Workspace }>(`/invites/${code}/join`, {
+      method: 'POST'
     }),
 
   // Channels

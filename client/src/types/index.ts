@@ -113,6 +113,27 @@ export interface Workspace {
   updatedAt?: string;
 }
 
+export interface WorkspaceInvite {
+  id: string;
+  workspaceId: string;
+  code: string;
+  createdBy: string;
+  maxUses: number | null;
+  uses: number;
+  expiresAt: string | null;
+  createdAt: string;
+}
+
+export interface InvitePreview {
+  code: string;
+  workspace: {
+    id: string;
+    name: string;
+    description?: string;
+    iconUrl?: string;
+  };
+}
+
 // ============================================================================
 // REACTION TYPES
 // ============================================================================

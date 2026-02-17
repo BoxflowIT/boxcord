@@ -3,7 +3,9 @@ import type { PrismaClient } from '@prisma/client';
 import type {
   Workspace,
   WorkspaceMember,
-  CreateWorkspaceInput
+  WorkspaceInvite,
+  CreateWorkspaceInput,
+  CreateInviteInput
 } from '../../01-domain/entities/workspace.js';
 import { NotFoundError, ForbiddenError } from '../../00-core/errors.js';
 
@@ -104,6 +106,27 @@ export class WorkspaceService {
     return !!membership;
   }
 
+  async leaveWorkspace(workspaceId: string, userId: string): Promise<void> {
+    const membership = await this.prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId, userId } }
+    });
+
+    if (!membership) {
+      throw new NotFoundError('Membership', `${workspaceId}/${userId}`);
+    }
+
+    // Owners can't leave - must delete workspace or transfer ownership
+    if (membership.role === 'OWNER') {
+      throw new ForbiddenError(
+        'Owners cannot leave the workspace. Delete it or transfer ownership first.'
+      );
+    }
+
+    await this.prisma.workspaceMember.delete({
+      where: { workspaceId_userId: { workspaceId, userId } }
+    });
+  }
+
   async updateWorkspace(
     workspaceId: string,
     requesterId: string,
@@ -174,6 +197,172 @@ export class WorkspaceService {
       await tx.workspace.delete({
         where: { id: workspaceId }
       });
+    });
+  }
+
+  // ============================================
+  // INVITE METHODS
+  // ============================================
+
+  private generateInviteCode(): string {
+    // Generate 8-character alphanumeric code
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  }
+
+  async createInvite(input: CreateInviteInput): Promise<WorkspaceInvite> {
+    // Check user has permission to create invites
+    const membership = await this.prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: {
+          workspaceId: input.workspaceId,
+          userId: input.createdBy
+        }
+      }
+    });
+
+    if (!membership || !['OWNER', 'ADMIN'].includes(membership.role)) {
+      throw new ForbiddenError('Only owners and admins can create invites');
+    }
+
+    // Generate unique code
+    let code = this.generateInviteCode();
+    let attempts = 0;
+    while (attempts < 5) {
+      const existing = await this.prisma.workspaceInvite.findUnique({
+        where: { code }
+      });
+      if (!existing) break;
+      code = this.generateInviteCode();
+      attempts++;
+    }
+
+    const expiresAt = input.expiresInDays
+      ? new Date(Date.now() + input.expiresInDays * 24 * 60 * 60 * 1000)
+      : null;
+
+    return this.prisma.workspaceInvite.create({
+      data: {
+        workspaceId: input.workspaceId,
+        code,
+        createdBy: input.createdBy,
+        maxUses: input.maxUses ?? null,
+        expiresAt
+      }
+    });
+  }
+
+  async getWorkspaceInvites(
+    workspaceId: string,
+    userId: string
+  ): Promise<WorkspaceInvite[]> {
+    // Check membership
+    const membership = await this.prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId, userId } }
+    });
+
+    if (!membership) {
+      throw new ForbiddenError('Not a member of this workspace');
+    }
+
+    return this.prisma.workspaceInvite.findMany({
+      where: { workspaceId },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  async getInviteByCode(
+    code: string
+  ): Promise<(WorkspaceInvite & { workspace: Workspace }) | null> {
+    const invite = await this.prisma.workspaceInvite.findUnique({
+      where: { code },
+      include: { workspace: true }
+    });
+
+    if (!invite) return null;
+
+    // Check if expired
+    if (invite.expiresAt && invite.expiresAt < new Date()) {
+      return null;
+    }
+
+    // Check if max uses reached
+    if (invite.maxUses && invite.uses >= invite.maxUses) {
+      return null;
+    }
+
+    return invite;
+  }
+
+  async useInvite(
+    code: string,
+    userId: string
+  ): Promise<{ workspace: Workspace; member: WorkspaceMember }> {
+    const invite = await this.getInviteByCode(code);
+
+    if (!invite) {
+      throw new NotFoundError('Invite', code);
+    }
+
+    // Check if already a member
+    const existingMember = await this.prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: { workspaceId: invite.workspaceId, userId }
+      }
+    });
+
+    if (existingMember) {
+      // Already member, just return workspace
+      return { workspace: invite.workspace, member: existingMember };
+    }
+
+    // Add as member and increment uses in transaction
+    const [member] = await this.prisma.$transaction([
+      this.prisma.workspaceMember.create({
+        data: {
+          workspaceId: invite.workspaceId,
+          userId,
+          role: 'MEMBER'
+        }
+      }),
+      this.prisma.workspaceInvite.update({
+        where: { id: invite.id },
+        data: { uses: { increment: 1 } }
+      })
+    ]);
+
+    return { workspace: invite.workspace, member };
+  }
+
+  async deleteInvite(
+    inviteId: string,
+    userId: string
+  ): Promise<void> {
+    const invite = await this.prisma.workspaceInvite.findUnique({
+      where: { id: inviteId }
+    });
+
+    if (!invite) {
+      throw new NotFoundError('Invite', inviteId);
+    }
+
+    // Check permission
+    const membership = await this.prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: { workspaceId: invite.workspaceId, userId }
+      }
+    });
+
+    if (!membership || !['OWNER', 'ADMIN'].includes(membership.role)) {
+      throw new ForbiddenError('Only owners and admins can delete invites');
+    }
+
+    await this.prisma.workspaceInvite.delete({
+      where: { id: inviteId }
     });
   }
 }

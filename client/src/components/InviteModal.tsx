@@ -1,0 +1,155 @@
+// Invite Modal - Create and manage workspace invites
+import { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from './ui/dialog';
+import { Button } from './ui/button';
+import { api } from '../services/api';
+import type { WorkspaceInvite } from '../types';
+
+interface InviteModalProps {
+  isOpen: boolean;
+  workspaceId: string;
+  workspaceName: string;
+  onClose: () => void;
+}
+
+export default function InviteModal({
+  isOpen,
+  workspaceId,
+  workspaceName,
+  onClose
+}: InviteModalProps) {
+  const [invites, setInvites] = useState<WorkspaceInvite[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadInvites();
+    }
+  }, [isOpen, workspaceId]);
+
+  const loadInvites = async () => {
+    setLoading(true);
+    try {
+      const data = await api.getWorkspaceInvites(workspaceId);
+      setInvites(data);
+    } catch (err) {
+      console.error('Failed to load invites:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createInvite = async () => {
+    setCreating(true);
+    try {
+      const invite = await api.createInvite(workspaceId);
+      setInvites([invite, ...invites]);
+    } catch (err) {
+      console.error('Failed to create invite:', err);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const deleteInvite = async (inviteId: string) => {
+    try {
+      await api.deleteInvite(workspaceId, inviteId);
+      setInvites(invites.filter((i) => i.id !== inviteId));
+    } catch (err) {
+      console.error('Failed to delete invite:', err);
+    }
+  };
+
+  const copyInviteLink = (code: string) => {
+    const link = `${window.location.origin}/join/${code}`;
+    navigator.clipboard.writeText(link);
+    setCopied(code);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  const formatExpiry = (expiresAt: string | null) => {
+    if (!expiresAt) return 'Aldrig';
+    const date = new Date(expiresAt);
+    return date.toLocaleDateString('sv-SE');
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Bjud in till {workspaceName}</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Create new invite button */}
+          <Button
+            onClick={createInvite}
+            disabled={creating}
+            className="w-full"
+          >
+            {creating ? 'Skapar...' : 'Skapa ny inbjudan'}
+          </Button>
+
+          {/* Existing invites */}
+          {loading ? (
+            <p className="text-center text-boxflow-muted py-4">Laddar...</p>
+          ) : invites.length === 0 ? (
+            <p className="text-center text-boxflow-muted py-4">
+              Inga aktiva inbjudningar
+            </p>
+          ) : (
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {invites.map((invite) => (
+                <div
+                  key={invite.id}
+                  className="flex items-center justify-between p-3 bg-boxflow-darker rounded-lg"
+                >
+                  <div className="flex-1 min-w-0">
+                    <code className="text-sm font-mono text-boxflow-primary">
+                      {invite.code}
+                    </code>
+                    <div className="text-xs text-boxflow-muted mt-1">
+                      Använd: {invite.uses}
+                      {invite.maxUses && ` / ${invite.maxUses}`}
+                      {' • '}
+                      Går ut: {formatExpiry(invite.expiresAt)}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 ml-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyInviteLink(invite.code)}
+                    >
+                      {copied === invite.code ? '✓ Kopierad' : 'Kopiera'}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteInvite(invite.id)}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      Ta bort
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Help text */}
+          <p className="text-xs text-boxflow-subtle text-center">
+            Dela inbjudningslänken med personer du vill bjuda in till servern.
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

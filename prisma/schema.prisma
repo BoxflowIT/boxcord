@@ -46,6 +46,7 @@ model Workspace {
 
     channels Channel[]
     members  WorkspaceMember[]
+    invites  WorkspaceInvite[]
 
     @@map("workspaces")
 }
@@ -61,6 +62,22 @@ model WorkspaceMember {
 
     @@unique([workspaceId, userId])
     @@map("workspace_members")
+}
+
+model WorkspaceInvite {
+    id          String    @id @default(uuid())
+    workspaceId String    @map("workspace_id")
+    code        String    @unique // Short invite code like "abc123"
+    createdBy   String    @map("created_by") // User who created the invite
+    maxUses     Int?      @map("max_uses") // null = unlimited
+    uses        Int       @default(0) // How many times used
+    expiresAt   DateTime? @map("expires_at") // null = never expires
+    createdAt   DateTime  @default(now()) @map("created_at")
+
+    workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+    @@index([code])
+    @@map("workspace_invites")
 }
 
 model Channel {

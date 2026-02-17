@@ -17,6 +17,8 @@ import { useModalWithData } from '../hooks/useModalState';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import EditModal from './EditModal';
 import CreateModal from './CreateModal';
+import InviteModal from './InviteModal';
+import JoinServerModal from './JoinServerModal';
 import DMList from './DMList';
 import WorkspaceSidebar from './sidebar/WorkspaceSidebar';
 import ChannelSection from './sidebar/ChannelSection';
@@ -51,6 +53,8 @@ export default function Sidebar({
   // Modal state
   const [showNewChannel, setShowNewChannel] = useState(false);
   const [showNewWorkspace, setShowNewWorkspace] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
 
   const editChannelModal = useModalWithData<{
     id: string;
@@ -65,6 +69,7 @@ export default function Sidebar({
   }>();
   const deleteChannelModal = useModalWithData<{ id: string; name: string }>();
   const deleteWorkspaceModal = useModalWithData<{ id: string; name: string }>();
+  const leaveWorkspaceModal = useModalWithData<{ id: string; name: string }>();
 
   // Handlers (declared before operations hooks)
   const handleWorkspaceSelect = (workspace: Workspace | null) => {
@@ -153,6 +158,27 @@ export default function Sidebar({
     }
   };
 
+  const handleLeaveWorkspace = (
+    workspace: Workspace | null,
+    e: React.MouseEvent
+  ) => {
+    e.stopPropagation();
+    if (workspace) {
+      leaveWorkspaceModal.open({ id: workspace.id, name: workspace.name });
+    }
+  };
+
+  const handleLeaveConfirmWorkspace = async () => {
+    if (!leaveWorkspaceModal.data) return;
+
+    try {
+      await workspaceOps.leaveWorkspace(leaveWorkspaceModal.data.id);
+      leaveWorkspaceModal.close();
+    } catch {
+      // Error already logged in hook
+    }
+  };
+
   const handleEditChannel = (channel: Channel | null, e: React.MouseEvent) => {
     e.stopPropagation();
     if (channel) {
@@ -224,17 +250,40 @@ export default function Sidebar({
           onWorkspaceSelect={handleWorkspaceSelect}
           onEditWorkspace={handleEditWorkspace}
           onDeleteWorkspace={handleDeleteWorkspace}
+          onLeaveWorkspace={handleLeaveWorkspace}
           onCreateWorkspace={() => setShowNewWorkspace(true)}
+          onJoinServer={() => setShowJoinModal(true)}
           onSettingsClick={onSettingsClick}
         />
 
         {/* Channel list */}
         <div className="sidebar-main">
-          {/* Workspace header */}
-          <div className="panel-header">
-            <h2 className="text-heading truncate">
+          {/* Workspace header with invite button */}
+          <div className="panel-header flex items-center justify-between">
+            <h2 className="text-heading truncate flex-1">
               {currentWorkspace?.name ?? 'Välj workspace'}
             </h2>
+            {currentWorkspace && (
+              <button
+                onClick={() => setShowInviteModal(true)}
+                className="p-1.5 hover:bg-boxflow-hover rounded transition-colors text-boxflow-muted hover:text-white"
+                title="Bjud in"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                  />
+                </svg>
+              </button>
+            )}
           </div>
 
           {/* Channels */}
@@ -331,6 +380,42 @@ export default function Sidebar({
         }
         onConfirm={handleDeleteConfirmWorkspace}
         onCancel={deleteWorkspaceModal.close}
+      />
+
+      <DeleteConfirmModal
+        isOpen={leaveWorkspaceModal.isOpen}
+        title="Lämna server"
+        message={
+          <>
+            Är du säker på att du vill lämna{' '}
+            <strong>{leaveWorkspaceModal.data?.name}</strong>? Du kan gå med igen
+            med en inbjudningslänk.
+          </>
+        }
+        confirmText="Lämna"
+        onConfirm={handleLeaveConfirmWorkspace}
+        onCancel={leaveWorkspaceModal.close}
+      />
+
+      {/* Invite Modal */}
+      {currentWorkspace && (
+        <InviteModal
+          isOpen={showInviteModal}
+          workspaceId={currentWorkspace.id}
+          workspaceName={currentWorkspace.name}
+          onClose={() => setShowInviteModal(false)}
+        />
+      )}
+
+      {/* Join Server Modal */}
+      <JoinServerModal
+        isOpen={showJoinModal}
+        onJoin={(workspace) => {
+          handleWorkspaceSelect(workspace);
+          // Refresh workspaces list
+          window.location.reload();
+        }}
+        onClose={() => setShowJoinModal(false)}
       />
     </>
   );

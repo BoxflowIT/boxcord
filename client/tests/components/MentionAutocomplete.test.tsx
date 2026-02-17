@@ -46,9 +46,20 @@ describe('parseMentions', () => {
   });
 
   it('handles consecutive mentions', () => {
-    const result = parseMentions('@one@two');
+    const result = parseMentions('@one @two');
     // Should match @one and @two as separate mentions
-    expect(result.length).toBe(2);
+    expect(result.length).toBe(3); // @one, ' ', @two
+    expect(typeof result[0]).toBe('object');
+    expect(result[1]).toBe(' ');
+    expect(typeof result[2]).toBe('object');
+  });
+
+  it('handles email-based mentions', () => {
+    const result = parseMentions('Hej @anna@boxflow.se!');
+    expect(result.length).toBe(3);
+    expect(result[0]).toBe('Hej ');
+    expect(typeof result[1]).toBe('object'); // The mention element
+    expect(result[2]).toBe('!');
   });
 
   it('handles empty string', () => {

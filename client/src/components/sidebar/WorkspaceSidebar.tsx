@@ -1,5 +1,5 @@
 // Reusable Workspace Sidebar (Left icon column)
-import { PlusIcon, SettingsIcon } from '../ui/Icons';
+import { PlusIcon, SettingsIcon, JoinIcon } from '../ui/Icons';
 import WorkspaceIcon from './WorkspaceIcon';
 import type { Workspace } from '../../types';
 
@@ -9,7 +9,9 @@ interface WorkspaceSidebarProps {
   onWorkspaceSelect: (workspace: Workspace) => void;
   onEditWorkspace: (workspace: Workspace, e: React.MouseEvent) => void;
   onDeleteWorkspace: (workspace: Workspace, e: React.MouseEvent) => void;
+  onLeaveWorkspace: (workspace: Workspace, e: React.MouseEvent) => void;
   onCreateWorkspace: () => void;
+  onJoinServer: () => void;
   onSettingsClick?: () => void;
 }
 
@@ -19,7 +21,9 @@ export default function WorkspaceSidebar({
   onWorkspaceSelect,
   onEditWorkspace,
   onDeleteWorkspace,
+  onLeaveWorkspace,
   onCreateWorkspace,
+  onJoinServer,
   onSettingsClick
 }: WorkspaceSidebarProps) {
   return (
@@ -34,15 +38,24 @@ export default function WorkspaceSidebar({
           onSelect={() => onWorkspaceSelect(workspace)}
           onEdit={(e) => onEditWorkspace(workspace, e)}
           onDelete={(e) => onDeleteWorkspace(workspace, e)}
+          onLeave={(e) => onLeaveWorkspace(workspace, e)}
         />
       ))}
 
       <button
         onClick={onCreateWorkspace}
         className="workspace-icon-add"
-        title="Lägg till workspace"
+        title="Skapa server"
       >
         <PlusIcon size="lg" />
+      </button>
+
+      <button
+        onClick={onJoinServer}
+        className="workspace-icon-add"
+        title="Gå med i server"
+      >
+        <JoinIcon size="lg" />
       </button>
 
       <div className="flex-1" />
