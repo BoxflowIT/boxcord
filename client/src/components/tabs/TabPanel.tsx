@@ -1,4 +1,5 @@
 // Tab Panel - Content panel for tabs
+import { cn } from '../../utils/classNames';
 
 interface TabPanelProps {
   children: React.ReactNode;
@@ -23,7 +24,7 @@ export default function TabPanel({
 
   return (
     <div
-      className={`${!isActive && keepMounted ? 'hidden' : ''} ${className}`}
+      className={cn(!isActive && keepMounted && 'hidden', className)}
       role="tabpanel"
       aria-hidden={!isActive}
     >

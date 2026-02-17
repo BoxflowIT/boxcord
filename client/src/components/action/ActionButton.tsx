@@ -1,4 +1,5 @@
 // Action Button - Generic action button with icon
+import { cn } from '../../utils/classNames';
 
 interface ActionButtonProps {
   icon: React.ReactNode;
@@ -29,7 +30,7 @@ export default function ActionButton({
   return (
     <button
       onClick={onClick}
-      className={`${variantClasses[variant]} ${className}`}
+      className={cn(variantClasses[variant], className)}
       title={title}
       disabled={disabled}
     >

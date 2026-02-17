@@ -1,5 +1,6 @@
 // Add Button - Reusable + button for adding items
 import { PlusIcon } from '../ui/Icons';
+import { cn } from '../../utils/classNames';
 
 interface AddButtonProps {
   onClick: () => void;
@@ -16,15 +17,15 @@ export default function AddButton({
   size = 'sm',
   className = ''
 }: AddButtonProps) {
-  const variantClass =
-    variant === 'workspace' ? 'workspace-icon-add' : 'btn-icon-primary';
-
   const iconSize = variant === 'workspace' ? 'lg' : size;
 
   return (
     <button
       onClick={onClick}
-      className={`${variantClass} ${className}`}
+      className={cn(
+        variant === 'workspace' ? 'workspace-icon-add' : 'btn-icon-primary',
+        className
+      )}
       title={title}
     >
       <PlusIcon size={iconSize} />
