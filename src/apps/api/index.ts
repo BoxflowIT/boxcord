@@ -14,6 +14,7 @@ import {
 import { jwtPlugin } from './plugins/jwt.js';
 import { setupSocketHandlers } from './plugins/socket.js';
 import { errorHandler } from './plugins/error-handler.js';
+import cachePlugin from './plugins/cache.js';
 import { registerRoutes } from './routes/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -51,6 +52,9 @@ async function main() {
 
   // JWT authentication
   await app.register(jwtPlugin);
+
+  // Cache plugin for performance
+  await app.register(cachePlugin);
 
   // Custom error handler
   app.setErrorHandler(errorHandler);

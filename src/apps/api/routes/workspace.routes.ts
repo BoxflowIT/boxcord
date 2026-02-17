@@ -12,16 +12,18 @@ export async function workspaceRoutes(app: FastifyInstance) {
   });
 
   // Get user's workspaces
-  app.get('/', async (request) => {
+  app.get('/', async (request, reply) => {
     const workspaces = await workspaceService.getUserWorkspaces(
       request.user.id
     );
+    reply.cache({ maxAge: 300, staleWhileRevalidate: 600 }); // 5min cache, 10min stale
     return { success: true, data: workspaces };
   });
 
   // Get single workspace
-  app.get<{ Params: { id: string } }>('/:id', async (request) => {
+  app.get<{ Params: { id: string } }>('/:id', async (request, reply) => {
     const workspace = await workspaceService.getWorkspace(request.params.id);
+    reply.cache({ maxAge: 300, staleWhileRevalidate: 600 });
     return { success: true, data: workspace };
   });
 
@@ -39,12 +41,16 @@ export async function workspaceRoutes(app: FastifyInstance) {
   );
 
   // Get workspace members
-  app.get<{ Params: { id: string } }>('/:id/members', async (request) => {
-    const members = await workspaceService.getWorkspaceMembers(
-      request.params.id
-    );
-    return { success: true, data: members };
-  });
+  app.get<{ Params: { id: string } }>(
+    '/:id/members',
+    async (request, reply) => {
+      const members = await workspaceService.getWorkspaceMembers(
+        request.params.id
+      );
+      reply.cache({ maxAge: 60, staleWhileRevalidate: 300 }); // 1min cache, 5min stale
+      return { success: true, data: members };
+    }
+  );
 
   // Add member to workspace
   app.post<{

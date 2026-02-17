@@ -14,7 +14,7 @@ export async function messageRoutes(app: FastifyInstance) {
   // Get messages for a channel (with cursor pagination)
   app.get<{
     Querystring: { channelId: string; cursor?: string; limit?: string };
-  }>('/', async (request) => {
+  }>('/', async (request, reply) => {
     const result = await messageService.getChannelMessages(
       request.query.channelId,
       {
@@ -24,6 +24,7 @@ export async function messageRoutes(app: FastifyInstance) {
           : undefined
       }
     );
+    reply.cache({ maxAge: 30, staleWhileRevalidate: 120 }); // 30s cache, 2min stale
     return { success: true, data: result };
   });
 

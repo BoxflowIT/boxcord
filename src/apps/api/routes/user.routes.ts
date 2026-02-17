@@ -15,7 +15,7 @@ export async function userRoutes(app: FastifyInstance) {
   });
 
   // Get current user (creates/updates local profile)
-  app.get('/me', async (request) => {
+  app.get('/me', async (request, reply) => {
     // Upsert local user on each request (without role - role is admin-managed)
     const localUser = await userService.upsertUser({
       id: request.user.id,
@@ -34,18 +34,21 @@ export async function userRoutes(app: FastifyInstance) {
           firstName: boxtimeUser.firstName,
           lastName: boxtimeUser.lastName
         });
+        reply.cache({ maxAge: 300, staleWhileRevalidate: 600 }); // 5min cache
         return { success: true, data: updated };
       }
     } catch {
       // Boxtime unavailable, continue with local data
     }
 
+    reply.cache({ maxAge: 300, staleWhileRevalidate: 600 }); // 5min cache
     return { success: true, data: localUser };
   });
 
   // Get user by ID
-  app.get<{ Params: { id: string } }>('/:id', async (request) => {
+  app.get<{ Params: { id: string } }>('/:id', async (request, reply) => {
     const user = await userService.getUser(request.params.id);
+    reply.cache({ maxAge: 300, staleWhileRevalidate: 600 });
     return { success: true, data: user };
   });
 

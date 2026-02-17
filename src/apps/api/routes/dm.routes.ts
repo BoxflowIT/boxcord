@@ -12,8 +12,9 @@ export async function dmRoutes(app: FastifyInstance) {
   });
 
   // Get user's DM channels
-  app.get('/channels', async (request) => {
+  app.get('/channels', async (request, reply) => {
     const channels = await dmService.getUserChannels(request.user.id);
+    reply.cache({ maxAge: 60, staleWhileRevalidate: 300 }); // 1min cache, 5min stale
     return { success: true, data: channels };
   });
 
