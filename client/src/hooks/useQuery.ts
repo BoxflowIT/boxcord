@@ -5,11 +5,11 @@ import { api } from '../services/api';
 // Cache duration constants (in milliseconds)
 // Discord-style: Long cache times since WebSocket keeps data fresh
 const CACHE_TIMES = {
-  WORKSPACES: { stale: 30 * 60 * 1000, gc: 60 * 60 * 1000 }, // 30min stale, 1h gc (rarely change)
-  CHANNELS: { stale: 30 * 60 * 1000, gc: 60 * 60 * 1000 }, // 30min stale, 1h gc (rarely change)
+  WORKSPACES: { stale: Infinity, gc: 60 * 60 * 1000 }, // Never stale (socket updates), 1h gc
+  CHANNELS: { stale: Infinity, gc: 60 * 60 * 1000 }, // Never stale (socket updates), 1h gc
   MESSAGES: { stale: Infinity, gc: 10 * 60 * 1000 }, // Never stale (WebSocket keeps fresh!), 10min gc
-  USERS: { stale: 10 * 60 * 1000, gc: 30 * 60 * 1000 }, // 10min stale, 30min gc
-  CURRENT_USER: { stale: 30 * 60 * 1000, gc: 60 * 60 * 1000 } // 30min stale, 1h gc
+  USERS: { stale: Infinity, gc: 30 * 60 * 1000 }, // Never stale (socket updates), 30min gc
+  CURRENT_USER: { stale: Infinity, gc: 60 * 60 * 1000 } // Never stale, 1h gc
 } as const;
 
 // Query Keys for caching
