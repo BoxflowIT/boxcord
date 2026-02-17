@@ -1,4 +1,5 @@
 // Layout utility components for positioning and flow
+import { cn } from '../../utils/classNames';
 export { default as Card } from '../ui/Card';
 export { default as Badge } from '../ui/Badge';
 
@@ -24,7 +25,6 @@ export function Flex({
   wrap = false,
   className = ''
 }: FlexProps) {
-  const directionClass = direction === 'column' ? 'flex-col' : 'flex-row';
   const alignClass = {
     start: 'items-start',
     center: 'items-center',
@@ -44,11 +44,18 @@ export function Flex({
     md: 'gap-4',
     lg: 'gap-6'
   }[gap];
-  const wrapClass = wrap ? 'flex-wrap' : '';
 
   return (
     <div
-      className={`flex ${directionClass} ${alignClass} ${justifyClass} ${gapClass} ${wrapClass} ${className}`}
+      className={cn(
+        'flex',
+        direction === 'column' ? 'flex-col' : 'flex-row',
+        alignClass,
+        justifyClass,
+        gapClass,
+        wrap && 'flex-wrap',
+        className
+      )}
     >
       {children}
     </div>
@@ -77,7 +84,7 @@ export function Stack({
     xl: 'space-y-8'
   }[spacing];
 
-  return <div className={`${spacingClass} ${className}`}>{children}</div>;
+  return <div className={cn(spacingClass, className)}>{children}</div>;
 }
 
 interface GridProps {
@@ -105,9 +112,7 @@ export function Grid({
   }[gap];
 
   return (
-    <div className={`grid ${colsClass} ${gapClass} ${className}`}>
-      {children}
-    </div>
+    <div className={cn('grid', colsClass, gapClass, className)}>{children}</div>
   );
 }
 
@@ -131,7 +136,7 @@ export function Center({
     vertical: 'flex items-center'
   }[axis];
 
-  return <div className={`${flexClass} ${className}`}>{children}</div>;
+  return <div className={cn(flexClass, className)}>{children}</div>;
 }
 
 interface SpacerProps {

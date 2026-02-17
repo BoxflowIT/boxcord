@@ -1,4 +1,5 @@
 // Status Indicator - Shows online/away/busy/offline status dot
+import { cn } from '../../utils/classNames';
 
 export type UserStatus = 'ONLINE' | 'AWAY' | 'BUSY' | 'OFFLINE';
 
@@ -28,7 +29,7 @@ export default function StatusIndicator({
 }: StatusIndicatorProps) {
   return (
     <div
-      className={`${statusColors[status]} ${sizeClasses[size]} ${className}`}
+      className={cn(statusColors[status], sizeClasses[size], className)}
       title={status}
     />
   );
