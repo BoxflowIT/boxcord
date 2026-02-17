@@ -1,4 +1,5 @@
 // Reusable Radio Options Component
+import { cn } from '../../utils/classNames';
 
 interface RadioOption {
   value: string;
@@ -24,11 +25,13 @@ export function RadioOptions({
       {options.map((option) => (
         <label
           key={option.value}
-          className={`flex items-start p-3 bg-boxflow-darker rounded-lg border-2 transition-all ${
+          className={cn(
+            'flex items-start p-3 bg-boxflow-darker rounded-lg border-2 transition-all',
             value === option.value
               ? 'border-boxflow-primary bg-boxflow-primary/10'
-              : 'border-transparent hover:bg-boxflow-hover'
-          } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              : 'border-transparent hover:bg-boxflow-hover',
+            disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+          )}
         >
           <input
             type="radio"

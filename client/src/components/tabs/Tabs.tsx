@@ -1,5 +1,6 @@
 // Tabs - Tab navigation container
 import React, { useState } from 'react';
+import { cn } from '../../utils/classNames';
 
 export interface Tab {
   id: string;
@@ -57,18 +58,18 @@ export default function Tabs({
   const classes = variantClasses[variant];
 
   return (
-    <div className={`flex ${classes.container} ${className}`}>
+    <div className={cn('flex', classes.container, className)}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
           onClick={() => !tab.disabled && handleTabClick(tab.id)}
           disabled={tab.disabled}
-          className={`
-            flex items-center gap-2 font-medium text-sm
-            ${classes.tab}
-            ${activeTab === tab.id ? classes.active : classes.inactive}
-            ${tab.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-          `}
+          className={cn(
+            'flex items-center gap-2 font-medium text-sm',
+            classes.tab,
+            activeTab === tab.id ? classes.active : classes.inactive,
+            tab.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+          )}
         >
           {tab.icon}
           {tab.label}

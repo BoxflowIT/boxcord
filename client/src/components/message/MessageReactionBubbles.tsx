@@ -1,4 +1,5 @@
 // Reusable Message Reaction Bubbles Component
+import { cn } from '../../utils/classNames';
 
 export interface MessageReaction {
   emoji: string;
@@ -23,11 +24,12 @@ export function MessageReactionBubbles({
         <button
           key={reaction.emoji}
           onClick={() => onToggle(reaction.emoji)}
-          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-colors border ${
+          className={cn(
+            'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-colors border',
             reaction.hasReacted
               ? 'bg-boxflow-primary/20 text-boxflow-primary border-boxflow-primary'
               : 'bg-boxflow-darker hover:bg-boxflow-hover text-boxflow-muted border-transparent'
-          }`}
+          )}
         >
           <span>{reaction.emoji}</span>
           <span>{reaction.count}</span>

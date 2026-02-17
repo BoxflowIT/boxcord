@@ -1,6 +1,7 @@
 // Avatar With Status - Avatar with online status indicator
 import Avatar from '../ui/Avatar';
 import StatusIndicator, { UserStatus } from '../member/StatusIndicator';
+import { cn } from '../../utils/classNames';
 
 interface AvatarWithStatusProps {
   src?: string;
@@ -30,11 +31,11 @@ export default function AvatarWithStatus({
   className = ''
 }: AvatarWithStatusProps) {
   return (
-    <div className={`relative inline-block ${className}`}>
+    <div className={cn('relative inline-block', className)}>
       <Avatar size={size} src={src} alt={alt}>
         {initial}
       </Avatar>
-      <div className={`absolute ${positionClasses[statusPosition]}`}>
+      <div className={cn('absolute', positionClasses[statusPosition])}>
         <StatusIndicator status={status} size={statusSize} />
       </div>
     </div>
