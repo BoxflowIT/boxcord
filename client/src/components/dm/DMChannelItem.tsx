@@ -1,5 +1,6 @@
 // Reusable DM Channel Item Component
 import Avatar from '../ui/Avatar';
+import { cn } from '../../utils/classNames';
 
 interface DMChannelItemProps {
   id?: string;
@@ -24,11 +25,12 @@ export function DMChannelItem({
   return (
     <div
       onClick={onClick}
-      className={`flex-row px-2 py-2 rounded-lg cursor-pointer transition-colors ${
+      className={cn(
+        'flex-row px-2 py-2 rounded-lg cursor-pointer transition-colors',
         isActive
           ? 'bg-boxflow-hover text-white'
           : 'text-boxflow-muted hover:bg-boxflow-hover hover:text-white'
-      }`}
+      )}
     >
       <div className="relative">
         <Avatar size="sm" src={avatarUrl || undefined} alt={userName}>

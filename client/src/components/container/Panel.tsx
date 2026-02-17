@@ -1,4 +1,5 @@
 // Panel - Reusable panel container with header and content
+import { cn } from '../../utils/classNames';
 
 interface PanelProps {
   header?: React.ReactNode;
@@ -16,11 +17,14 @@ export default function Panel({
   contentClassName = ''
 }: PanelProps) {
   return (
-    <div className={`flex flex-col h-full ${className}`}>
+    <div className={cn('flex flex-col h-full', className)}>
       {header && <div className="panel-header">{header}</div>}
 
       <div
-        className={`panel-content flex-1 min-h-0 overflow-y-auto ${contentClassName}`}
+        className={cn(
+          'panel-content flex-1 min-h-0 overflow-y-auto',
+          contentClassName
+        )}
       >
         {children}
       </div>

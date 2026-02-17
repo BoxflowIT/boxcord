@@ -1,4 +1,5 @@
 // Skeleton - Loading skeleton placeholder
+import { cn } from '../../utils/classNames';
 
 interface SkeletonProps {
   variant?: 'text' | 'circular' | 'rectangular';
@@ -27,11 +28,11 @@ export default function Skeleton({
 
   return (
     <div
-      className={`
-        bg-boxflow-darker animate-pulse
-        ${variantClasses[variant]}
-        ${className}
-      `}
+      className={cn(
+        'bg-boxflow-darker animate-pulse',
+        variantClasses[variant],
+        className
+      )}
       style={{
         width: typeof width === 'number' ? `${width}px` : width,
         height: height
