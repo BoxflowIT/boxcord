@@ -18,8 +18,8 @@ html {
 
 body {
   font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #36393f;
-  color: #dcddde;
+  background-color: #313338;
+  color: #f2f3f5;
   font-size: 1rem;
 }
 
@@ -29,15 +29,20 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #2f3136;
+  background: #2b2d31;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #202225;
+  background: #1e1f22;
   border-radius: 4px;
+  transition: background 0.2s;
 }
 
 ::-webkit-scrollbar-thumb:hover {
+  background: #404249;
+}
+
+::-webkit-scrollbar-thumb:active {
   background: #5865f2;
 }
 
@@ -50,11 +55,11 @@ body {
 
   /* Sidebar/Panel Backgrounds */
   .sidebar-main {
-    @apply w-60 bg-boxflow-darker flex flex-col;
+    @apply w-60 bg-boxflow-darker flex flex-col shadow-2xl;
   }
 
   .sidebar-icon {
-    @apply w-[72px] bg-boxflow-darkest flex flex-col items-center py-3 gap-2;
+    @apply w-[72px] bg-boxflow-darkest flex flex-col items-center py-3 gap-2 border-r border-black/20;
   }
 
   .panel-header {
@@ -67,7 +72,7 @@ body {
 
   /* ========== Avatar Styles ========== */
   .avatar {
-    @apply rounded-full bg-boxflow-primary flex items-center justify-center text-white flex-shrink-0 font-semibold;
+    @apply rounded-full bg-boxflow-hover flex items-center justify-center text-white flex-shrink-0 font-semibold;
   }
 
   .avatar-sm {
@@ -96,7 +101,7 @@ body {
   }
 
   .btn-secondary {
-    @apply btn bg-boxflow-darker text-boxflow-light hover:bg-boxflow-dark border border-boxflow-border;
+    @apply btn bg-boxflow-darker text-boxflow-light hover:bg-boxflow-hover border border-boxflow-border;
   }
 
   .btn-success {
@@ -112,7 +117,7 @@ body {
   }
 
   .btn-icon {
-    @apply p-1.5 hover:bg-boxflow-dark rounded-lg text-boxflow-muted hover:text-boxflow-light transition-all;
+    @apply p-1.5 hover:bg-boxflow-hover rounded-lg text-boxflow-muted hover:text-boxflow-light transition-all;
   }
 
   .btn-icon-primary {
@@ -129,7 +134,7 @@ body {
   }
 
   .dropdown-item {
-    @apply w-full text-left px-4 py-2.5 hover:bg-boxflow-dark text-boxflow-light transition-colors;
+    @apply w-full text-left px-4 py-2.5 hover:bg-boxflow-hover text-boxflow-light transition-colors;
   }
 
   .dropdown-item-danger {
@@ -154,12 +159,12 @@ body {
   }
 
   .popup-list-item-default {
-    @apply text-boxflow-light hover:bg-boxflow-dark;
+    @apply text-boxflow-light hover:bg-boxflow-hover;
   }
 
   /* ========== Input/Form Styles ========== */
   .input-base {
-    @apply w-full bg-boxflow-darker text-boxflow-light border border-boxflow-border rounded-lg px-4 py-2.5 outline-none transition-all focus:border-boxflow-primary focus:ring-1 focus:ring-boxflow-primary/50 placeholder-boxflow-subtle;
+    @apply w-full bg-boxflow-darkest text-boxflow-light border border-boxflow-border/50 rounded-lg px-4 py-2.5 outline-none transition-all focus:border-boxflow-primary focus:bg-boxflow-darker focus:ring-2 focus:ring-boxflow-primary/30 placeholder-boxflow-subtle;
   }
 
   .textarea-base {
@@ -184,7 +189,7 @@ body {
   }
 
   .card-interactive {
-    @apply card hover:bg-boxflow-dark transition-colors cursor-pointer;
+    @apply card hover:bg-boxflow-hover transition-colors cursor-pointer;
   }
 
   /* ========== Text Styles ========== */
@@ -222,7 +227,7 @@ body {
 
   /* ========== Message Styles ========== */
   .message-container {
-    @apply group hover:bg-boxflow-dark/30 -mx-4 px-4 py-1 rounded-lg relative transition-colors;
+    @apply group hover:bg-boxflow-hover/40 -mx-4 px-4 py-1 rounded transition-colors duration-100;
   }
 
   .message-time {
@@ -358,24 +363,24 @@ body {
   }
 
   .workspace-icon-active {
-    @apply workspace-icon bg-boxflow-primary rounded-2xl;
+    @apply workspace-icon bg-gradient-to-br from-boxflow-primary to-boxflow-secondary rounded-2xl shadow-lg shadow-boxflow-primary/30;
   }
 
   .workspace-icon-inactive {
-    @apply workspace-icon bg-boxflow-dark hover:bg-boxflow-primary hover:rounded-2xl;
+    @apply workspace-icon bg-boxflow-hover hover:bg-boxflow-hover/80 hover:rounded-2xl transition-all duration-200;
   }
 
   .workspace-icon-add {
-    @apply workspace-icon bg-boxflow-dark hover:bg-boxflow-success text-boxflow-success hover:text-white;
+    @apply workspace-icon bg-boxflow-hover hover:bg-boxflow-success text-boxflow-success hover:text-white hover:rounded-2xl transition-all duration-200;
   }
 
   /* ========== Channel Item Styles ========== */
   .channel-item {
-    @apply flex items-center gap-2 flex-1 min-w-0 hover:bg-boxflow-dark/50 rounded-lg p-1 -m-1 transition-colors;
+    @apply flex items-center gap-2 flex-1 min-w-0 hover:bg-boxflow-hover rounded px-2 py-1 -mx-2 -my-1 transition-all duration-150;
   }
 
   .channel-item-active {
-    @apply channel-item bg-boxflow-dark/50;
+    @apply channel-item bg-boxflow-hover text-white font-medium;
   }
 
   /* ========== File/Attachment Styles ========== */
@@ -397,7 +402,7 @@ body {
 
   /* ========== Message Author Styles ========== */
   .message-author-avatar {
-    @apply w-10 h-10 rounded-full bg-boxflow-primary flex-shrink-0 flex items-center justify-center text-white font-bold;
+    @apply w-10 h-10 rounded-full bg-boxflow-hover flex-shrink-0 flex items-center justify-center text-white font-bold;
   }
 
   .message-author-name {
@@ -415,7 +420,7 @@ body {
 
   /* ========== Profile Styles ========== */
   .profile-avatar-large {
-    @apply w-24 h-24 rounded-full bg-boxflow-darker border-4 border-boxflow-dark flex items-center justify-center text-3xl font-bold text-white;
+    @apply w-24 h-24 rounded-full bg-boxflow-hover border-4 border-boxflow-dark flex items-center justify-center text-3xl font-bold text-white;
   }
 
   /* ========== Form Styles ========== */
@@ -426,10 +431,6 @@ body {
   /* ========== Tooltip/Popup Styles ========== */
   .tooltip {
     @apply absolute bottom-full left-0 mb-1 px-2 py-1 bg-red-500 text-white text-xs rounded whitespace-nowrap;
-  }
-
-  .emoji-picker-popup {
-    @apply absolute bottom-full left-0 mb-1 p-2 bg-boxflow-darkest rounded-lg shadow-lg flex gap-1 z-10;
   }
 
   /* ========== Mention/Link Styles ========== */
@@ -443,7 +444,7 @@ body {
   }
 
   .bot-avatar {
-    @apply w-8 h-8 rounded-full bg-boxflow-primary flex items-center justify-center text-white text-sm;
+    @apply w-8 h-8 rounded-full bg-boxflow-hover/80 flex items-center justify-center text-white text-sm;
   }
 
   /* ========== Welcome Page Styles ========== */
@@ -453,103 +454,85 @@ body {
 }
 
 /* ============================================
-   Light Theme Override
+   Light Theme Override - Modern Teams-inspired
    ============================================ */
 .light-theme {
-  /* Body background and text */
-  background-color: #f9fafb;
-  color: #1f2937;
+  background-color: #faf9f8;
+  color: #242424;
 }
 
 .light-theme body {
-  background-color: #f9fafb;
-  color: #1f2937;
+  background-color: #faf9f8;
+  color: #242424;
 }
 
-/* Override Discord/Boxflow dark colors */
-.light-theme .bg-discord-darkest,
-.light-theme .bg-boxflow-darkest {
-  background-color: #e5e7eb !important;
-}
-
-.light-theme .bg-discord-darker,
-.light-theme .bg-boxflow-darker {
-  background-color: #f3f4f6 !important;
-}
-
-.light-theme .bg-discord-dark,
-.light-theme .bg-boxflow-dark {
+/* Override boxflow color variables with light theme equivalents */
+.light-theme [class*="bg-boxflow-dark"] {
   background-color: #ffffff !important;
 }
 
-/* Text colors */
-.light-theme .text-white {
-  color: #111827 !important;
+.light-theme [class*="bg-boxflow-darker"] {
+  background-color: #f3f2f1 !important;
 }
 
-.light-theme .text-gray-400 {
-  color: #6b7280 !important;
+.light-theme [class*="bg-boxflow-darkest"] {
+  background-color: #e1dfdd !important;
 }
 
-.light-theme .text-gray-300 {
-  color: #4b5563 !important;
+.light-theme [class*="bg-boxflow-hover"] {
+  background-color: #edebe9 !important;
 }
 
-.light-theme .text-gray-500 {
-  color: #9ca3af !important;
+/* Override text colors */
+.light-theme [class*="text-boxflow-light"],
+.light-theme [class*="text-white"] {
+  color: #242424 !important;
 }
 
-.light-theme .text-boxflow-light,
-.light-theme .text-discord-light {
-  color: #374151 !important;
+.light-theme [class*="text-boxflow-muted"] {
+  color: #605e5c !important;
 }
 
-/* Borders */
-.light-theme .border-discord-darkest,
-.light-theme .border-boxflow-border {
-  border-color: #d1d5db !important;
+.light-theme [class*="text-boxflow-subtle"] {
+  color: #8a8886 !important;
 }
 
-/* Scrollbar light theme */
+/* Override borders */
+.light-theme [class*="border-boxflow-border"],
+.light-theme [class*="border-boxflow-darkest"],
+.light-theme [class*="border-boxflow-hover"] {
+  border-color: #e1dfdd !important;
+}
+
+/* Scrollbar */
 .light-theme ::-webkit-scrollbar-track {
-  background: #f3f4f6;
+  background: #f3f2f1;
 }
 
 .light-theme ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: #c8c6c4;
 }
 
 .light-theme ::-webkit-scrollbar-thumb:hover {
-  background: #5865f2;
+  background: #a19f9d;
 }
 
 /* Input fields */
-.light-theme .bg-discord-darker input,
-.light-theme .bg-boxflow-darker input,
 .light-theme input,
 .light-theme textarea {
   background-color: #ffffff !important;
-  color: #111827 !important;
-  border: 1px solid #d1d5db;
+  color: #242424 !important;
+  border-color: #e1dfdd !important;
 }
 
 .light-theme input::placeholder,
 .light-theme textarea::placeholder {
-  color: #9ca3af !important;
+  color: #8a8886 !important;
 }
 
-/* Buttons and hover states */
-.light-theme button:not(.bg-blue-500):not(.btn-primary):hover {
-  background-color: #e5e7eb !important;
-}
-
-/* Message hover */
-.light-theme .message-item:hover {
-  background-color: #f3f4f6 !important;
-}
-
-/* Workspace/Channel items */
-.light-theme [class*="hover:bg-"] {
-  transition: background-color 0.15s ease;
+/* Hover states */
+.light-theme [class*="hover:bg-boxflow-hover"]:hover,
+.light-theme [class*="hover:bg-boxflow-dark"]:hover {
+  background-color: #edebe9 !important;
 }
 

@@ -59,6 +59,18 @@ export async function userRoutes(app: FastifyInstance) {
     };
   }>('/me', async (request) => {
     const user = await userService.updateProfile(request.user.id, request.body);
+    
+    // Broadcast user profile update to all connected clients
+    if (app.io) {
+      app.io.emit('user:update', {
+        userId: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatarUrl: user.avatarUrl,
+        bio: user.bio
+      });
+    }
+    
     return { success: true, data: user };
   });
 

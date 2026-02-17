@@ -247,7 +247,7 @@ export default function DMView() {
         {loadingMessages ? (
           <LoadingState text="Laddar meddelanden..." />
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400">
+          <div className="flex flex-col items-center justify-center h-full text-[#b5bac1]">
             <Avatar size="lg" className="mb-4">
               {otherUser.firstName?.charAt(0) ?? otherUser.email.charAt(0)}
             </Avatar>
@@ -293,7 +293,7 @@ export default function DMView() {
 
       {/* Input */}
       <div className="px-4 pb-6">
-        <div className="bg-discord-darker rounded-lg flex items-center">
+        <div className="bg-boxflow-darker rounded-lg flex items-center shadow-lg">
           <FileUpload
             onFileSelect={handleFileSelect}
             disabled={uploading || sending}

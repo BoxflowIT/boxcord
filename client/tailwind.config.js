@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Discord-inspired color palette
+        // Modern Discord-inspired color palette
         'boxflow': {
           primary: '#5865f2',      // Discord blurple - primary brand
           secondary: '#4752c4',    // Darker blurple - hover states
@@ -12,19 +12,20 @@ export default {
           success: '#3ba55c',      // Green - success/online
           warning: '#faa61a',      // Orange - warnings
           danger: '#ed4245',       // Red - errors/delete
-          dark: '#36393f',         // Main dark background
-          darker: '#2f3136',       // Sidebar/darker panels
-          darkest: '#202225',      // Deepest dark for contrast
-          light: '#dcddde',        // Main text color
-          muted: '#b9bbbe',        // Secondary text
-          subtle: '#72767d',       // Tertiary text
-          border: '#202225',       // Border color
+          dark: '#313338',         // Main dark background (Discord 2023)
+          darker: '#2b2d31',       // Sidebar/darker panels (Discord 2023)
+          darkest: '#1e1f22',      // Deepest dark for contrast (Discord 2023)
+          light: '#f2f3f5',        // Main text color (brighter)
+          muted: '#b5bac1',        // Secondary text (adjusted)
+          subtle: '#80848e',       // Tertiary text (adjusted)
+          border: '#1e1f22',       // Border color
+          hover: '#404249',        // Hover state background
         },
         // Legacy discord colors (for gradual migration)
-        'discord-dark': '#36393f',
-        'discord-darker': '#2f3136',
-        'discord-darkest': '#202225',
-        'discord-light': '#dcddde',
+        'discord-dark': '#313338',
+        'discord-darker': '#2b2d31',
+        'discord-darkest': '#1e1f22',
+        'discord-light': '#f2f3f5',
         'discord-blurple': '#5865f2',
         'discord-green': '#3ba55c',
       },

@@ -7,6 +7,7 @@ interface User {
   email: string;
   firstName?: string;
   lastName?: string;
+  avatarUrl?: string;
   role: string;
 }
 
@@ -15,6 +16,7 @@ interface AuthState {
   user: User | null;
   isLoading: boolean;
   setAuth: (token: string, user: User) => void;
+  updateUser: (user: Partial<User>) => void;
   setLoading: (loading: boolean) => void;
   logout: () => void;
 }
@@ -26,6 +28,10 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isLoading: false,
       setAuth: (token, user) => set({ token, user }),
+      updateUser: (updatedFields) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, ...updatedFields } : null
+        })),
       setLoading: (loading) => set({ isLoading: loading }),
       logout: () => set({ token: null, user: null })
     }),

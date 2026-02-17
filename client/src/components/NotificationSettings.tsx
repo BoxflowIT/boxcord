@@ -89,7 +89,7 @@ export default function NotificationSettings() {
           onClick={handleToggle}
           disabled={loading}
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            subscribed ? 'bg-discord-blurple' : 'bg-gray-600'
+            subscribed ? 'bg-gradient-to-r from-[#5865f2] to-[#4752c4]' : 'bg-[#404249]'
           } ${loading ? 'opacity-50' : ''}`}
         >
           <span
@@ -104,7 +104,7 @@ export default function NotificationSettings() {
         <button
           onClick={handleTest}
           disabled={loading}
-          className="text-sm text-discord-blurple hover:underline disabled:opacity-50"
+          className="text-sm text-[#5865f2] hover:underline disabled:opacity-50"
         >
           Skicka testnotis
         </button>

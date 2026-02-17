@@ -72,10 +72,10 @@ export default function MessageReactions({
         <button
           key={reaction.emoji}
           onClick={() => handleToggle(reaction.emoji)}
-          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-colors ${
+          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-colors border ${
             reaction.hasReacted
-              ? 'bg-discord-blurple/30 text-discord-blurple border border-discord-blurple'
-              : 'bg-discord-darker hover:bg-discord-dark text-gray-300'
+              ? 'bg-boxflow-primary/20 text-boxflow-primary border-boxflow-primary'
+              : 'bg-boxflow-darker hover:bg-boxflow-hover text-boxflow-muted border-transparent'
           }`}
         >
           <span>{reaction.emoji}</span>
@@ -84,10 +84,10 @@ export default function MessageReactions({
       ))}
 
       {/* Add reaction button */}
-      <div className="relative">
+      <div className="relative inline-block">
         <button
           onClick={() => setShowPicker(!showPicker)}
-          className="p-1 rounded hover:bg-discord-darker text-gray-400 hover:text-white"
+          className="p-1.5 rounded-lg hover:bg-[#404249] text-[#80848e] hover:text-white transition-colors"
           title="Lägg till reaktion"
         >
           <EmojiIcon size="sm" />
@@ -95,12 +95,12 @@ export default function MessageReactions({
 
         {/* Quick emoji picker */}
         {showPicker && (
-          <div className="emoji-picker-popup">
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 bg-[#1e1f22] border border-[#404249] rounded-lg shadow-2xl flex gap-1 z-50">
             {QUICK_EMOJIS.map((emoji) => (
               <button
                 key={emoji}
                 onClick={() => handleToggle(emoji)}
-                className="p-1 hover:bg-discord-dark rounded text-lg"
+                className="p-1 hover:bg-[#404249] rounded-lg text-lg transition-colors"
               >
                 {emoji}
               </button>

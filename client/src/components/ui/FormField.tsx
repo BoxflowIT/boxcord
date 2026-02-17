@@ -13,15 +13,16 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
       <div>
         <label
           htmlFor={props.id}
-          className="block text-sm font-medium text-gray-300 mb-2"
+          className="block text-sm font-semibold text-[#b5bac1] mb-2"
         >
           {label} {required && <span className="text-red-400">*</span>}
         </label>
         <input
           ref={ref}
-          className={`w-full px-3 py-2 bg-discord-darkest border rounded text-white placeholder-gray-500 
-            focus:outline-none focus:ring-2 focus:ring-discord-blurple focus:border-transparent
-            ${error ? 'border-red-500' : 'border-discord-darker'}
+          className={`w-full px-4 py-3 bg-[#1e1f22] border rounded-lg text-white placeholder-[#80848e] 
+            focus:outline-none focus:ring-2 focus:ring-boxflow-primary focus:border-transparent focus:bg-boxflow-darker
+            transition-all duration-200
+            ${error ? 'border-red-500' : 'border-[#404249]'}
             ${props.disabled ? 'opacity-50 cursor-not-allowed' : ''}
             ${className}`}
           aria-invalid={error ? 'true' : 'false'}

@@ -111,7 +111,7 @@ export default function Chat() {
       />
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col bg-discord-dark">
+      <div className="flex-1 flex flex-col bg-boxflow-dark">
         <Routes>
           <Route
             path="channels/:channelId"

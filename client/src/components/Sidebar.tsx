@@ -396,7 +396,7 @@ export default function Sidebar({
           {/* User info */}
           <div className="user-bar">
             <button onClick={onProfileClick} className="user-bar-button">
-              <Avatar size="sm">
+              <Avatar size="sm" src={user?.avatarUrl} alt={user?.firstName || user?.email}>
                 {user?.firstName?.charAt(0) ?? user?.email?.charAt(0) ?? '?'}
               </Avatar>
               <div className="flex-1 min-w-0 text-left">

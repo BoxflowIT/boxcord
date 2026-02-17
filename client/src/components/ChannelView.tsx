@@ -350,15 +350,15 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
   return (
     <>
       {/* Header */}
-      <div className="h-12 px-4 flex items-center border-b border-discord-darkest shadow">
-        <span className="text-xl text-gray-400 mr-2">#</span>
+      <div className="h-12 px-4 flex items-center border-b border-[#1e1f22] shadow-lg">
+        <span className="text-xl text-[#80848e] mr-2">#</span>
         <h2 className="font-semibold text-white">
           {currentChannel?.name ?? 'Kanal'}
         </h2>
         {currentChannel?.description && (
           <>
-            <div className="w-px h-6 bg-gray-600 mx-4" />
-            <p className="text-sm text-gray-400 truncate flex-1">
+            <div className="w-px h-6 bg-[#404249] mx-4" />
+            <p className="text-sm text-[#b5bac1] truncate flex-1">
               {currentChannel.description}
             </p>
           </>
@@ -382,7 +382,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
         {loadingMessages ? (
           <LoadingState text="Laddar meddelanden..." />
         ) : channelMessages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400">
+          <div className="flex flex-col items-center justify-center h-full text-[#b5bac1]">
             <p className="text-xl mb-2">
               Välkommen till #{currentChannel?.name}!
             </p>
@@ -433,22 +433,22 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
             <div className="bot-avatar">🤖</div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-medium text-discord-blurple">
+                <span className="text-sm font-medium text-[#5865f2]">
                   Boxcord Bot
                 </span>
                 {botResponse.isPrivate && (
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-[#80848e]">
                     Endast synligt för dig
                   </span>
                 )}
               </div>
-              <div className="text-gray-200 text-sm whitespace-pre-wrap">
+              <div className="text-[#f2f3f5] text-sm whitespace-pre-wrap">
                 {botResponse.content}
               </div>
             </div>
             <button
               onClick={() => setBotResponse(null)}
-              className="text-gray-400 hover:text-white"
+              className="text-[#80848e] hover:text-white transition-colors"
             >
               ✕
             </button>
@@ -458,7 +458,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
 
       {/* Input */}
       <div className="px-4 pb-6">
-        <div className="bg-discord-darker rounded-lg flex items-center relative">
+        <div className="bg-boxflow-darker rounded-lg flex items-center relative shadow-lg">
           <FileUpload onFileSelect={handleFileSelect} disabled={uploading} />
           <textarea
             ref={textareaRef}
@@ -466,7 +466,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder={`Skicka meddelande i #${currentChannel?.name ?? 'kanal'}`}
-            className="flex-1 bg-transparent text-discord-light placeholder-gray-500 resize-none outline-none p-3 max-h-48"
+            className="flex-1 bg-transparent text-[#f2f3f5] placeholder-[#80848e] resize-none outline-none p-3 max-h-48"
             rows={1}
             disabled={uploading}
           />
