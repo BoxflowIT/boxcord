@@ -1,5 +1,6 @@
 // Avatar Group - Display multiple avatars in a stack
 import Avatar from '../ui/Avatar';
+import { cn } from '../../utils/classNames';
 
 interface AvatarGroupProps {
   avatars: Array<{
@@ -22,7 +23,7 @@ export default function AvatarGroup({
   const remaining = avatars.length - max;
 
   return (
-    <div className={`flex -space-x-2 ${className}`}>
+    <div className={cn('flex -space-x-2', className)}>
       {displayAvatars.map((avatar, index) => (
         <div key={index} className="ring-2 ring-boxflow-dark rounded-full">
           <Avatar size={size} src={avatar.src} alt={avatar.alt}>

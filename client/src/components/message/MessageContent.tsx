@@ -1,5 +1,6 @@
 // Reusable Message Content Component - Text content and attachments
 import { AttachmentPreview } from '../FileUpload';
+import { cn } from '../../utils/classNames';
 
 export interface MessageAttachment {
   id: string;
@@ -25,9 +26,10 @@ export function MessageContent({
   return (
     <>
       <p
-        className={`text-boxflow-light break-words ${
+        className={cn(
+          'text-boxflow-light break-words',
           compact ? 'text-sm leading-5' : 'text-base'
-        }`}
+        )}
       >
         {renderContent ? renderContent(content) : content}
       </p>

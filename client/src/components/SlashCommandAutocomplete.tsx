@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../services/api';
 import { useAutocompleteNavigation } from '../hooks/useAutocompleteNavigation';
+import { cn } from '../utils/classNames';
 
 interface SlashCommand {
   name: string;
@@ -94,11 +95,12 @@ export default function SlashCommandAutocomplete({
           <li
             key={cmd.name}
             onClick={() => handleItemClick(cmd)}
-            className={`popup-list-item ${
+            className={cn(
+              'popup-list-item',
               index === selectedIndex
                 ? 'popup-list-item-selected'
                 : 'popup-list-item-default'
-            }`}
+            )}
           >
             <div className="flex items-center gap-2">
               <span className="font-mono text-[#5865f2]">/{cmd.name}</span>

@@ -1,6 +1,7 @@
 // Avatar Upload - Avatar with upload overlay
 import React, { useState } from 'react';
 import Avatar from '../ui/Avatar';
+import { cn } from '../../utils/classNames';
 
 interface AvatarUploadProps {
   src?: string;
@@ -53,7 +54,7 @@ export default function AvatarUpload({
   };
 
   return (
-    <div className={`relative group ${className}`}>
+    <div className={cn('relative group', className)}>
       <Avatar size={size} src={src}>
         {initial}
       </Avatar>
@@ -64,14 +65,14 @@ export default function AvatarUpload({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`
-            absolute inset-0 rounded-full
-            bg-black/70 opacity-0 group-hover:opacity-100
-            transition-opacity flex flex-col items-center justify-center
-            cursor-pointer text-white text-xs
-            ${isDragging ? 'opacity-100 bg-black/80' : ''}
-            ${isUploading ? 'opacity-100 cursor-wait' : ''}
-          `}
+          className={cn(
+            'absolute inset-0 rounded-full',
+            'bg-black/70 opacity-0 group-hover:opacity-100',
+            'transition-opacity flex flex-col items-center justify-center',
+            'cursor-pointer text-white text-xs',
+            isDragging && 'opacity-100 bg-black/80',
+            isUploading && 'opacity-100 cursor-wait'
+          )}
         >
           {isUploading ? (
             <div className="spinner-ring w-6 h-6" />

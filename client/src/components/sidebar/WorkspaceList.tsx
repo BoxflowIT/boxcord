@@ -1,5 +1,6 @@
 // Reusable Workspace List Component (Icon sidebar)
 import { PlusIcon, HomeIcon } from '../ui/Icons';
+import { cn } from '../../utils/classNames';
 
 interface Workspace {
   id: string;
@@ -39,9 +40,10 @@ export function WorkspaceList({
         <button
           key={workspace.id}
           onClick={() => onSelectWorkspace(workspace.id)}
-          className={`sidebar-icon ${
-            currentWorkspaceId === workspace.id ? 'active' : ''
-          }`}
+          className={cn(
+            'sidebar-icon',
+            currentWorkspaceId === workspace.id && 'active'
+          )}
           title={workspace.name}
         >
           {workspace.iconUrl ? (

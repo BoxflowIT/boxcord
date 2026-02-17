@@ -1,5 +1,6 @@
 // Form Field Component - Reusable input with label
 import { forwardRef, InputHTMLAttributes } from 'react';
+import { cn } from '../../utils/classNames';
 
 interface FormFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -19,12 +20,14 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
         </label>
         <input
           ref={ref}
-          className={`w-full px-4 py-3 bg-[#1e1f22] border rounded-lg text-white placeholder-[#80848e] 
-            focus:outline-none focus:ring-2 focus:ring-boxflow-primary focus:border-transparent focus:bg-boxflow-darker
-            transition-all duration-200
-            ${error ? 'border-red-500' : 'border-[#404249]'}
-            ${props.disabled ? 'opacity-50 cursor-not-allowed' : ''}
-            ${className}`}
+          className={cn(
+            'w-full px-4 py-3 bg-[#1e1f22] border rounded-lg text-white placeholder-[#80848e]',
+            'focus:outline-none focus:ring-2 focus:ring-boxflow-primary focus:border-transparent focus:bg-boxflow-darker',
+            'transition-all duration-200',
+            error ? 'border-red-500' : 'border-[#404249]',
+            props.disabled && 'opacity-50 cursor-not-allowed',
+            className
+          )}
           aria-invalid={error ? 'true' : 'false'}
           aria-describedby={
             error

@@ -1,6 +1,7 @@
 // Reusable Channel Section Component
 import { PlusIcon, EditIcon, CloseIcon } from '../ui/Icons';
 import type { Channel } from '../../types';
+import { cn } from '../../utils/classNames';
 
 interface ChannelSectionProps {
   channels: Channel[];
@@ -35,16 +36,20 @@ export default function ChannelSection({
         return (
           <div
             key={channel.id}
-            className={`group w-full flex-row px-2 py-1 rounded-lg text-sm transition-colors cursor-pointer ${
+            className={cn(
+              'group w-full flex-row px-2 py-1 rounded-lg text-sm transition-colors cursor-pointer',
               currentChannelId === channel.id
                 ? 'nav-item-active'
                 : 'nav-item-default'
-            }`}
+            )}
             onClick={() => onChannelSelect(channel)}
           >
             <span className="text-lg">#</span>
             <span
-              className={`truncate flex-1 ${hasUnread ? 'text-white font-semibold' : ''}`}
+              className={cn(
+                'truncate flex-1',
+                hasUnread && 'text-white font-semibold'
+              )}
             >
               {channel.name}
             </span>

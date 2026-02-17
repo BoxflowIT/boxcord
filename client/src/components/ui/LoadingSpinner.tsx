@@ -1,4 +1,5 @@
 // Reusable Loading Spinner Component (inline, not fullscreen)
+import { cn } from '../../utils/classNames';
 
 interface LoadingSpinnerProps {
   /** Size variant */
@@ -26,13 +27,13 @@ export default function LoadingSpinner({
   text,
   centered = true
 }: LoadingSpinnerProps) {
-  const spinner = <div className={`spinner-ring ${sizeClasses[size]}`} />;
+  const spinner = <div className={cn('spinner-ring', sizeClasses[size])} />;
 
   if (centered) {
     return (
       <div className="flex flex-col items-center justify-center gap-3">
         {spinner}
-        {text && <p className={`text-muted ${textClasses[size]}`}>{text}</p>}
+        {text && <p className={cn('text-muted', textClasses[size])}>{text}</p>}
       </div>
     );
   }
@@ -41,7 +42,7 @@ export default function LoadingSpinner({
     <div className="inline-flex items-center gap-2">
       {spinner}
       {text && (
-        <span className={`text-muted ${textClasses[size]}`}>{text}</span>
+        <span className={cn('text-muted', textClasses[size])}>{text}</span>
       )}
     </div>
   );

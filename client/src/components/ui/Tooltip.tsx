@@ -1,5 +1,6 @@
 // Tooltip - Hover tooltip wrapper component
 import React, { useState } from 'react';
+import { cn } from '../../utils/classNames';
 
 interface TooltipProps {
   content: string;
@@ -43,7 +44,10 @@ export default function Tooltip({
       {children}
       {show && (
         <div
-          className={`absolute z-50 px-2 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap ${positionClasses[position]}`}
+          className={cn(
+            'absolute z-50 px-2 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap',
+            positionClasses[position]
+          )}
         >
           {content}
         </div>

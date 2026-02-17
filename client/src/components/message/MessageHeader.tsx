@@ -1,5 +1,6 @@
 // Reusable Message Header Component - Author name, timestamp, edited badge
 import { formatTime } from '../../lib/formatters';
+import { cn } from '../../utils/classNames';
 
 interface MessageHeaderProps {
   authorName: string;
@@ -17,9 +18,10 @@ export function MessageHeader({
   return (
     <div className="flex items-baseline gap-2">
       <span
-        className={`font-semibold text-boxflow-light ${
+        className={cn(
+          'font-semibold text-boxflow-light',
           compact ? 'text-sm' : 'text-base'
-        }`}
+        )}
       >
         {authorName}
       </span>
