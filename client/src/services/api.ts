@@ -133,6 +133,7 @@ export const api = {
     firstName?: string;
     lastName?: string;
     bio?: string;
+    avatarUrl?: string;
   }) =>
     request<User>('/users/me', {
       method: 'PATCH',

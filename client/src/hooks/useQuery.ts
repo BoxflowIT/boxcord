@@ -278,6 +278,7 @@ export function useUpdateProfile() {
       firstName?: string;
       lastName?: string;
       bio?: string;
+      avatarUrl?: string;
     }) => api.updateProfile(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.currentUser });

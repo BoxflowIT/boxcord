@@ -178,7 +178,7 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
                 key={channel.id}
                 onClick={() => onSelectDM(channel.id, otherUser)}
                 className={`list-item-interactive w-full ${
-                  selectedId === channel.id ? 'bg-discord-dark/50' : ''
+                  selectedId === channel.id ? 'bg-[#404249]/60' : ''
                 }`}
               >
                 <Avatar size="sm">

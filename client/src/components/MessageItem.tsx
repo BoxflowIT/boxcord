@@ -128,7 +128,7 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
         value={editContent}
         onChange={(e) => onEditContentChange(e.target.value)}
         onKeyDown={handleKeyDown}
-        className="w-full bg-discord-darker text-discord-light rounded p-2 resize-none outline-none"
+        className="w-full bg-boxflow-darkest text-boxflow-light rounded-lg p-3 resize-none outline-none focus:bg-boxflow-darker focus:ring-2 focus:ring-boxflow-primary/50 transition-all"
         rows={compact ? 2 : 3}
       />
       <div
@@ -138,18 +138,18 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
       >
         <button
           onClick={onSaveEdit}
-          className="px-3 py-1 bg-discord-blurple hover:bg-discord-blurple/80 text-white rounded"
+          className="px-3 py-1 bg-gradient-to-r from-[#5865f2] to-[#4752c4] hover:from-[#4752c4] hover:to-[#3c44a8] text-white rounded-lg shadow-lg shadow-[#5865f2]/25 transition-all"
         >
           Spara
         </button>
         <button
           onClick={onCancelEdit}
-          className="px-3 py-1 hover:bg-discord-darker text-gray-400 hover:text-white rounded"
+          className="px-3 py-1 hover:bg-[#404249] text-[#80848e] hover:text-white rounded-lg transition-colors"
         >
           Avbryt
         </button>
         {compact && (
-          <span className="text-gray-500 pt-1">
+          <span className="text-[#80848e] pt-1">
             Escape för att <strong>avbryta</strong> • Enter för att{' '}
             <strong>spara</strong>
           </span>
@@ -159,13 +159,13 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
   );
 
   const QuickReactionsBar = () => (
-    <div className="absolute top-0 right-4 hover-group-visible bg-boxflow-dark border border-boxflow-border rounded-lg shadow-lg px-2 py-1 flex items-center gap-1 -mt-3">
+    <div className="absolute -top-2 right-4 opacity-0 group-hover:opacity-100 bg-boxflow-darker border border-boxflow-hover rounded-lg shadow-xl px-2 py-1 flex items-center gap-1 z-50 transition-opacity duration-150">
       {/* Quick reactions */}
       {QUICK_REACTIONS.map((emoji) => (
         <button
           key={emoji}
           onClick={() => handleQuickReaction(emoji)}
-          className="p-1 hover:bg-boxflow-darker rounded text-lg transition-transform hover:scale-125"
+          className="p-1 hover:bg-[#404249] rounded text-lg transition-transform hover:scale-125"
           title={`Reagera med ${emoji}`}
         >
           {emoji}
@@ -173,14 +173,14 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
       ))}
 
       {/* Divider */}
-      <div className="w-px h-4 bg-boxflow-border mx-1" />
+      <div className="w-px h-4 bg-[#404249] mx-1" />
 
       {/* Edit/Delete for own messages */}
       {isOwnMessage && (
         <>
           <button
             onClick={() => onEdit(messageId, content)}
-            className="p-1 hover:bg-boxflow-darker rounded"
+            className="p-1 hover:bg-[#404249] rounded"
             title="Redigera"
           >
             <EditIcon size="sm" />
@@ -199,10 +199,13 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
 
   return (
     <div
-      className={`group hover:bg-discord-darker/30 -mx-4 px-4 rounded relative ${
+      className={`group relative hover:bg-[#404249]/40 -mx-4 px-4 rounded transition-all duration-100 ${
         compact ? 'py-0.5' : 'py-1'
       }`}
     >
+      {/* Message actions - Quick reactions bar (positioned absolutely) */}
+      {!isEditing && <QuickReactionsBar />}
+      
       {showHeader ? (
         <div className={`flex items-start gap-4 ${compact ? 'mt-2' : 'mt-4'}`}>
           <div className="message-author-avatar">{authorInitial}</div>
@@ -215,11 +218,11 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
               >
                 {authorName}
               </span>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-[#80848e]">
                 {formatTime(createdAt)}
               </span>
               {edited && (
-                <span className="text-xs text-gray-500">(redigerad)</span>
+                <span className="text-xs text-[#80848e]">(redigerad)</span>
               )}
             </div>
 
@@ -228,7 +231,7 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
             ) : (
               <>
                 <p
-                  className={`text-discord-light break-words ${
+                  className={`text-[#f2f3f5] break-words ${
                     compact ? 'text-sm leading-5' : 'text-base'
                   }`}
                 >
@@ -260,9 +263,6 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
               </>
             )}
           </div>
-
-          {/* Message actions - Quick reactions bar (Teams style) */}
-          {!isEditing && <QuickReactionsBar />}
         </div>
       ) : (
         // Compact mode (no header)
@@ -271,7 +271,7 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
             compact ? 'py-0' : 'py-0.5'
           }`}
         >
-          <span className="text-xs text-gray-500 opacity-0 group-hover:opacity-100 -ml-10 w-10 text-right">
+          <span className="text-xs text-[#80848e] opacity-0 group-hover:opacity-100 -ml-10 w-10 text-right">
             {formatTime(createdAt)}
           </span>
           <div className="flex-1">
@@ -280,7 +280,7 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
             ) : (
               <>
                 <p
-                  className={`text-discord-light break-words ${
+                  className={`text-[#f2f3f5] break-words ${
                     compact ? 'text-sm' : 'text-base'
                   }`}
                 >

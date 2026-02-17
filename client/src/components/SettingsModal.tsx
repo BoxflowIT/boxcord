@@ -1,6 +1,7 @@
 // Settings Modal Component
 import { useState, useEffect } from 'react';
 import { CloseIcon } from './ui/Icons';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 import {
   toggleNotificationSound,
   isNotificationSoundEnabled
@@ -18,18 +19,13 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [soundEnabled, setSoundEnabled] = useState(
     isNotificationSoundEnabled()
   );
-  const [theme, setTheme] = useState<'dark' | 'light'>(
-    (localStorage.getItem('theme') as 'dark' | 'light') || 'dark'
+  const [theme, setTheme] = useLocalStorage<'dark' | 'light'>('theme', 'dark');
+  const [compactMode, setCompactMode] = useLocalStorage('compactMode', false);
+  const [messageGrouping, setMessageGrouping] = useLocalStorage(
+    'messageGrouping',
+    true
   );
-  const [compactMode, setCompactMode] = useState(
-    localStorage.getItem('compactMode') === 'true'
-  );
-  const [messageGrouping, setMessageGrouping] = useState(
-    localStorage.getItem('messageGrouping') !== 'false'
-  );
-  const [fontSize, setFontSize] = useState(
-    localStorage.getItem('fontSize') || 'medium'
-  );
+  const [fontSize, setFontSize] = useLocalStorage('fontSize', 'medium');
 
   // Apply saved settings on mount
   useEffect(() => {
@@ -54,7 +50,6 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   const handleThemeChange = (newTheme: 'dark' | 'light') => {
     setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
     document.documentElement.classList.toggle(
       'light-theme',
       newTheme === 'light'
@@ -63,21 +58,14 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   const handleCompactModeToggle = (enabled: boolean) => {
     setCompactMode(enabled);
-    localStorage.setItem('compactMode', enabled.toString());
-    // Notify other components
-    window.dispatchEvent(new Event('settingsChanged'));
   };
 
   const handleMessageGroupingToggle = (enabled: boolean) => {
     setMessageGrouping(enabled);
-    localStorage.setItem('messageGrouping', enabled.toString());
-    // Notify other components
-    window.dispatchEvent(new Event('settingsChanged'));
   };
 
   const handleFontSizeChange = (size: string) => {
     setFontSize(size);
-    localStorage.setItem('fontSize', size);
     const root = document.documentElement;
     root.style.setProperty(
       '--base-font-size',
@@ -97,11 +85,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       onClick={onClose}
     >
       <div
-        className="bg-discord-dark rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex overflow-hidden"
+        className="bg-boxflow-dark rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex overflow-hidden border border-boxflow-hover/50"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Sidebar */}
-        <div className="w-64 bg-discord-darker flex-shrink-0 overflow-y-auto">
+        <div className="w-64 bg-boxflow-darker flex-shrink-0 overflow-y-auto border-r border-boxflow-darkest">
           <div className="p-4">
             <h2 className="text-xs font-semibold text-gray-400 uppercase mb-2">
               Settings
@@ -112,8 +100,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 onClick={() => setActiveTab(tab.id)}
                 className={`w-full text-left px-3 py-2 rounded mb-1 transition-colors ${
                   activeTab === tab.id
-                    ? 'bg-discord-dark text-white'
-                    : 'text-gray-300 hover:bg-discord-dark/50 hover:text-white'
+                    ? 'bg-[#404249] text-white font-medium rounded-lg'
+                    : 'text-[#b5bac1] hover:bg-[#404249]/50 hover:text-white rounded-lg'
                 }`}
               >
                 {tab.label}
@@ -131,7 +119,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </h2>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-discord-darker rounded transition-colors"
+              className="p-2 hover:bg-[#404249] rounded-lg transition-colors"
             >
               <CloseIcon className="w-6 h-6 text-gray-400" />
             </button>
@@ -170,20 +158,20 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleThemeChange('dark')}
-                        className={`px-4 py-2 rounded transition-colors ${
+                        className={`px-4 py-2 rounded-lg transition-colors ${
                           theme === 'dark'
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-discord-darker text-gray-300 hover:bg-discord-darkest'
+                            ? 'bg-[#484644] text-white shadow-md'
+                            : 'bg-[#404249] text-[#b5bac1] hover:bg-[#4e5158]'
                         }`}
                       >
                         Dark
                       </button>
                       <button
                         onClick={() => handleThemeChange('light')}
-                        className={`px-4 py-2 rounded transition-colors ${
+                        className={`px-4 py-2 rounded-lg transition-colors ${
                           theme === 'light'
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-discord-darker text-gray-300 hover:bg-discord-darkest'
+                            ? 'bg-[#484644] text-white shadow-md'
+                            : 'bg-[#404249] text-[#b5bac1] hover:bg-[#4e5158]'
                         }`}
                       >
                         Light
@@ -200,10 +188,10 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         <button
                           key={size}
                           onClick={() => handleFontSizeChange(size)}
-                          className={`px-4 py-2 rounded capitalize transition-colors ${
+                          className={`px-4 py-2 rounded-lg capitalize transition-colors ${
                             fontSize === size
-                              ? 'bg-blue-500 text-white'
-                              : 'bg-discord-darker text-gray-300 hover:bg-discord-darkest'
+                              ? 'bg-gradient-to-r from-[#5865f2] to-[#4752c4] text-white shadow-lg shadow-[#5865f2]/25'
+                              : 'bg-[#404249] text-[#b5bac1] hover:bg-[#4e5158]'
                           }`}
                         >
                           {size}
@@ -311,7 +299,7 @@ function Toggle({ enabled, onChange }: ToggleProps) {
     <button
       onClick={() => onChange(!enabled)}
       className={`relative w-12 h-6 rounded-full transition-colors ${
-        enabled ? 'bg-blue-500' : 'bg-gray-600'
+        enabled ? 'bg-gradient-to-r from-[#5865f2] to-[#4752c4]' : 'bg-[#404249]'
       }`}
     >
       <span
