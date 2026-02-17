@@ -1,5 +1,6 @@
 // Alert Banner - Inline alert/info banner
 import { CloseIcon } from '../ui/Icons';
+import { cn } from '../../utils/classNames';
 
 export type AlertVariant = 'info' | 'success' | 'warning' | 'error';
 
@@ -48,10 +49,12 @@ export default function AlertBanner({
 
   return (
     <div
-      className={`
-        ${classes.bg} ${classes.border} ${classes.text}
-        border-l-4 rounded px-4 py-3 flex items-start gap-3
-      `}
+      className={cn(
+        classes.bg,
+        classes.border,
+        classes.text,
+        'border-l-4 rounded px-4 py-3 flex items-start gap-3'
+      )}
     >
       {icon && <div className="flex-shrink-0 mt-0.5">{icon}</div>}
       <div className="flex-1 text-sm">{message}</div>

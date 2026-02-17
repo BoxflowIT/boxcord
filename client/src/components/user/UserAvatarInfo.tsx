@@ -1,5 +1,6 @@
 // User Avatar Info - Compact user info with avatar
 import Avatar from '../ui/Avatar';
+import { cn } from '../../utils/classNames';
 
 interface UserAvatarInfoProps {
   avatarUrl?: string;
@@ -30,7 +31,10 @@ export default function UserAvatarInfo({
   return (
     <Container
       onClick={onClick}
-      className={`flex items-center gap-3 min-w-0 ${onClick ? 'cursor-pointer hover:opacity-80' : ''}`}
+      className={cn(
+        'flex items-center gap-3 min-w-0',
+        onClick && 'cursor-pointer hover:opacity-80'
+      )}
     >
       <div className="relative">
         <Avatar size={sizes.avatar} src={avatarUrl}>
@@ -39,11 +43,15 @@ export default function UserAvatarInfo({
         {badge && <div className="absolute -bottom-1 -right-1">{badge}</div>}
       </div>
       <div className="flex-1 min-w-0 text-left">
-        <p className={`${sizes.name} font-medium text-boxflow-light truncate`}>
+        <p
+          className={cn(sizes.name, 'font-medium text-boxflow-light truncate')}
+        >
           {name}
         </p>
         {subtitle && (
-          <p className={`${sizes.subtitle} text-subtle truncate`}>{subtitle}</p>
+          <p className={cn(sizes.subtitle, 'text-subtle truncate')}>
+            {subtitle}
+          </p>
         )}
       </div>
     </Container>

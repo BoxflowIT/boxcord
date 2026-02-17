@@ -1,6 +1,7 @@
 // Toast Notification - Temporary notification popup
 import { useEffect, useState } from 'react';
 import { CloseIcon } from '../ui/Icons';
+import { cn } from '../../utils/classNames';
 
 export type ToastVariant = 'info' | 'success' | 'warning' | 'error';
 
@@ -45,12 +46,12 @@ export default function Toast({
 
   return (
     <div
-      className={`
-        ${variantClasses[variant]}
-        border-l-4 rounded-lg shadow-lg px-4 py-3 flex items-center gap-3
-        transition-all duration-300
-        ${isLeaving ? 'opacity-0 translate-x-full' : 'opacity-100 translate-x-0'}
-      `}
+      className={cn(
+        variantClasses[variant],
+        'border-l-4 rounded-lg shadow-lg px-4 py-3 flex items-center gap-3',
+        'transition-all duration-300',
+        isLeaving ? 'opacity-0 translate-x-full' : 'opacity-100 translate-x-0'
+      )}
     >
       <p className="flex-1 text-white font-medium">{message}</p>
       {showClose && (

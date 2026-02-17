@@ -1,4 +1,5 @@
 // Reusable Toggle Switch Component
+import { cn } from '../../utils/classNames';
 
 interface ToggleSwitchProps {
   enabled: boolean;
@@ -23,14 +24,19 @@ export function ToggleSwitch({
       aria-checked={enabled}
       onClick={() => onChange(!enabled)}
       disabled={disabled}
-      className={`${sizeClasses} relative inline-flex items-center rounded-full transition-colors ${
-        enabled ? 'bg-boxflow-primary' : 'bg-boxflow-hover'
-      } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+      className={cn(
+        sizeClasses,
+        'relative inline-flex items-center rounded-full transition-colors',
+        enabled ? 'bg-boxflow-primary' : 'bg-boxflow-hover',
+        disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+      )}
     >
       <span
-        className={`${dotClasses} inline-block rounded-full bg-white transition-transform ${
+        className={cn(
+          dotClasses,
+          'inline-block rounded-full bg-white transition-transform',
           enabled ? 'translate-x-6' : 'translate-x-1'
-        }`}
+        )}
       />
     </button>
   );

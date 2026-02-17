@@ -1,5 +1,6 @@
 // Reusable Role Selector Component (for admins)
 import { RoleBadge, type UserRole } from './RoleBadge';
+import { cn } from '../../utils/classNames';
 
 interface RoleSelectorProps {
   currentRole: UserRole;
@@ -36,11 +37,12 @@ export function RoleSelector({
             key={role}
             onClick={() => onChange(role)}
             disabled={disabled}
-            className={`px-4 py-2 rounded-lg border transition-colors ${
+            className={cn(
+              'px-4 py-2 rounded-lg border transition-colors',
               currentRole === role
                 ? 'bg-boxflow-primary text-white border-boxflow-primary'
                 : 'bg-boxflow-darker text-boxflow-muted border-boxflow-border hover:bg-boxflow-hover'
-            }`}
+            )}
           >
             <RoleBadge role={role} />
           </button>

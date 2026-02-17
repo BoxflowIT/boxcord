@@ -1,5 +1,6 @@
 // Toast Container - Container for managing multiple toasts
 import Toast, { ToastVariant } from './Toast';
+import { cn } from '../../utils/classNames';
 
 export interface ToastItem {
   id: string;
@@ -38,7 +39,10 @@ export default function ToastContainer({
 
   return (
     <div
-      className={`fixed ${positionClasses[position]} z-50 flex flex-col gap-2 max-w-md`}
+      className={cn(
+        'fixed z-50 flex flex-col gap-2 max-w-md',
+        positionClasses[position]
+      )}
     >
       {toasts.map((toast) => (
         <Toast
