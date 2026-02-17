@@ -6,8 +6,11 @@ import { logger } from '../utils/logger';
 import { useAuthStore } from '../store/auth';
 import { useOnlineUsers } from '../hooks/useQuery';
 import ProfileModal from './ProfileModal';
-import Avatar from './ui/Avatar';
-import { ChatIcon, SearchIcon, CloseIcon } from './ui/Icons';
+import MemberListHeader from './member/MemberListHeader';
+import MemberSearch from './member/MemberSearch';
+import MemberSection from './member/MemberSection';
+import MemberListItem from './member/MemberListItem';
+import type { UserStatus } from './member/StatusIndicator';
 
 interface User {
   id: string;
@@ -88,13 +91,6 @@ export default function MemberList() {
     };
   }, []);
 
-  const statusColors: Record<string, string> = {
-    ONLINE: 'status-online',
-    AWAY: 'status-away',
-    BUSY: 'status-busy',
-    OFFLINE: 'status-offline'
-  };
-
   const handleUserClick = (userId: string) => {
     setSelectedUserId(userId);
     setShowProfile(true);
@@ -142,38 +138,19 @@ export default function MemberList() {
 
   return (
     <div className="sidebar-main border-l border-boxflow-border">
-      {/* Header */}
-      <div className="panel-header">
-        <h3 className="text-subtle uppercase font-semibold flex-1">
-          Medlemmar — {filteredUsers.length}
-        </h3>
-        <button
-          onClick={() => {
-            setShowSearch(!showSearch);
-            if (showSearch) setSearchQuery('');
-          }}
-          className="btn-icon"
-          title="Sök medlemmar"
-        >
-          {showSearch ? <CloseIcon size="sm" /> : <SearchIcon size="sm" />}
-        </button>
-      </div>
+      <MemberListHeader
+        memberCount={filteredUsers.length}
+        showSearch={showSearch}
+        onSearchToggle={() => {
+          setShowSearch(!showSearch);
+          if (showSearch) setSearchQuery('');
+        }}
+      />
 
-      {/* Search input */}
       {showSearch && (
-        <div className="px-4 py-2 border-b border-boxflow-border">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Sök efter namn eller e-post..."
-            className="w-full bg-boxflow-dark text-boxflow-light border border-boxflow-border rounded px-3 py-2 text-sm outline-none focus:border-boxflow-primary"
-            autoFocus
-          />
-        </div>
+        <MemberSearch value={searchQuery} onChange={setSearchQuery} />
       )}
 
-      {/* User list */}
       <div className="panel-content">
         {filteredUsers.length === 0 ? (
           <div className="text-muted px-2">
@@ -185,60 +162,43 @@ export default function MemberList() {
             if (!roleUsers || roleUsers.length === 0) return null;
 
             return (
-              <div key={role} className="mb-4">
-                <h4 className="text-subtle uppercase font-semibold px-2 mb-1">
-                  {roleLabels[role]} — {roleUsers.length}
-                </h4>
-                {roleUsers.map((user) => (
-                  <div key={user.id} className="group list-item-interactive">
-                    <button
+              <MemberSection
+                key={role}
+                title={roleLabels[role]}
+                count={roleUsers.length}
+              >
+                {roleUsers.map((user) => {
+                  const displayName =
+                    user.firstName && user.lastName
+                      ? `${user.firstName} ${user.lastName}`
+                      : (user.firstName ?? user.email.split('@')[0]);
+
+                  return (
+                    <MemberListItem
+                      key={user.id}
+                      userId={user.id}
+                      avatarUrl={user.avatarUrl}
+                      displayName={displayName}
+                      customStatus={user.presence?.customStatus}
+                      status={
+                        (user.presence?.status ?? 'OFFLINE') as UserStatus
+                      }
+                      isCurrentUser={user.id === currentUser?.id}
                       onClick={() => handleUserClick(user.id)}
-                      className="flex-1 flex items-center gap-3 min-w-0"
-                    >
-                      {/* Avatar with status */}
-                      <div className="relative">
-                        <Avatar size="sm" src={user.avatarUrl}>
-                          {(user.firstName?.[0] ?? user.email[0]).toUpperCase()}
-                        </Avatar>
-                        <div
-                          className={`absolute bottom-0 right-0 ${statusColors[user.presence?.status ?? 'OFFLINE']}`}
-                        />
-                      </div>
-
-                      {/* Name and custom status */}
-                      <div className="flex-1 min-w-0 text-left">
-                        <p className="text-sm text-boxflow-light truncate">
-                          {user.firstName && user.lastName
-                            ? `${user.firstName} ${user.lastName}`
-                            : (user.firstName ?? user.email.split('@')[0])}
-                        </p>
-                        {user.presence?.customStatus && (
-                          <p className="text-subtle truncate">
-                            {user.presence.customStatus}
-                          </p>
-                        )}
-                      </div>
-                    </button>
-
-                    {/* DM button - only show for other users */}
-                    {user.id !== currentUser?.id && (
-                      <button
-                        onClick={(e) => handleStartDM(user.id, e)}
-                        className="btn-icon-primary hover-group-visible"
-                        title="Skicka direktmeddelande"
-                      >
-                        <ChatIcon size="sm" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
+                      onStartDM={
+                        user.id !== currentUser?.id
+                          ? (e) => handleStartDM(user.id, e)
+                          : undefined
+                      }
+                    />
+                  );
+                })}
+              </MemberSection>
             );
           })
         )}
       </div>
 
-      {/* Profile Modal */}
       <ProfileModal
         userId={selectedUserId ?? undefined}
         isOpen={showProfile}

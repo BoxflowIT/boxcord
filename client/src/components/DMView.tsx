@@ -20,7 +20,8 @@ import FileUpload from './FileUpload';
 import EmojiPicker from './ui/EmojiPicker';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import { LoadingState } from './ui/LoadingSpinner';
-import Avatar from './ui/Avatar';
+import { DMHeader } from './dm/DMHeader';
+import DMEmptyState from './dm/DMEmptyState';
 import {
   groupReactionsByEmoji,
   shouldShowMessageHeader
@@ -219,28 +220,24 @@ export default function DMView() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="h-12 px-4 flex items-center border-b border-discord-darkest shadow">
-        <Avatar size="sm" className="mr-3">
-          {otherUser.firstName?.charAt(0) ?? otherUser.email.charAt(0)}
-        </Avatar>
-        <h2 className="font-semibold text-white">
-          {otherUser.firstName ?? otherUser.email}
-        </h2>
-      </div>
+      <DMHeader
+        userName={otherUser.firstName ?? otherUser.email}
+        userInitial={(
+          otherUser.firstName?.charAt(0) ?? otherUser.email.charAt(0)
+        ).toUpperCase()}
+      />
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {loadingMessages ? (
           <LoadingState text="Laddar meddelanden..." />
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-[#b5bac1]">
-            <Avatar size="lg" className="mb-4">
-              {otherUser.firstName?.charAt(0) ?? otherUser.email.charAt(0)}
-            </Avatar>
-            <p className="text-xl mb-2">
-              {otherUser.firstName ?? otherUser.email}
-            </p>
-          </div>
+          <DMEmptyState
+            userName={otherUser.firstName ?? otherUser.email}
+            userInitial={(
+              otherUser.firstName?.charAt(0) ?? otherUser.email.charAt(0)
+            ).toUpperCase()}
+          />
         ) : (
           messages.map((message) => {
             const isOwn = message.authorId === user?.id;

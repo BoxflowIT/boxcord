@@ -12,6 +12,7 @@ import {
 } from '../hooks/useQuery';
 import { useImageUpload } from '../hooks/useImageUpload';
 import NotificationSettings from './NotificationSettings';
+import { RoleManagement, AccountDeletion } from './profile';
 
 interface ProfileModalProps {
   userId?: string; // If provided, show other user's profile
@@ -37,8 +38,6 @@ export default function ProfileModal({
     useUpdateUserRole();
 
   const [editing, setEditing] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const { uploading: uploadingImage, handleFileInput } = useImageUpload({
     maxSizeMB: 5
   });
@@ -97,7 +96,6 @@ export default function ProfileModal({
   };
 
   const handleDelete = async () => {
-    setDeleting(true);
     try {
       await api.deleteAccount();
       // Sign out from Cognito
@@ -107,8 +105,7 @@ export default function ProfileModal({
       navigate('/login');
     } catch (err) {
       logger.error('Failed to delete account:', err);
-    } finally {
-      setDeleting(false);
+      throw err; // Re-throw so AccountDeletion can handle it
     }
   };
 
@@ -320,53 +317,14 @@ export default function ProfileModal({
 
               {/* Role Management - Only SUPER_ADMIN can change roles */}
               {!isOwnProfile && currentUser?.role === 'SUPER_ADMIN' && (
-                <div className="pt-4 border-t border-discord-darkest">
-                  <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">
-                    Rollhantering
-                  </h3>
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-400 mb-2">
-                      Nuvarande roll:{' '}
-                      <span className="text-white font-semibold">
-                        {profile.role}
-                      </span>
-                    </p>
-                    <div className="flex gap-2">
-                      {profile.role !== 'STAFF' && (
-                        <button
-                          onClick={() => handleChangeRole('STAFF')}
-                          disabled={changingRole}
-                          className="flex-1 px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded disabled:opacity-50"
-                        >
-                          Gör till Staff
-                        </button>
-                      )}
-                      {profile.role !== 'ADMIN' && (
-                        <button
-                          onClick={() => handleChangeRole('ADMIN')}
-                          disabled={changingRole}
-                          className="flex-1 px-3 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded disabled:opacity-50"
-                        >
-                          Gör till Admin
-                        </button>
-                      )}
-                      {profile.role !== 'SUPER_ADMIN' && (
-                        <button
-                          onClick={() => handleChangeRole('SUPER_ADMIN')}
-                          disabled={changingRole}
-                          className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded disabled:opacity-50"
-                        >
-                          Gör till Super Admin
-                        </button>
-                      )}
-                    </div>
-                    {changingRole && (
-                      <p className="text-xs text-gray-400 italic">
-                        Ändrar roll...
-                      </p>
-                    )}
-                  </div>
-                </div>
+                <RoleManagement
+                  userId={profile.id}
+                  currentRole={
+                    profile.role as 'SUPER_ADMIN' | 'ADMIN' | 'STAFF' | 'USER'
+                  }
+                  onChangeRole={handleChangeRole}
+                  isChanging={changingRole}
+                />
               )}
 
               {/* Notification Settings - Own profile only */}
@@ -407,39 +365,7 @@ export default function ProfileModal({
                   </div>
 
                   {/* Delete Account */}
-                  {!editing && (
-                    <div className="pt-4 border-t border-discord-darkest">
-                      {showDeleteConfirm ? (
-                        <div className="space-y-2">
-                          <p className="text-red-400 text-sm">
-                            Är du säker? Detta kan inte ångras.
-                          </p>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => setShowDeleteConfirm(false)}
-                              className="flex-1 px-4 py-2 bg-discord-darker hover:bg-discord-darkest text-white rounded"
-                            >
-                              Avbryt
-                            </button>
-                            <button
-                              onClick={handleDelete}
-                              disabled={deleting}
-                              className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded disabled:opacity-50"
-                            >
-                              {deleting ? 'Raderar...' : 'Radera konto'}
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setShowDeleteConfirm(true)}
-                          className="w-full px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded transition-colors"
-                        >
-                          Radera mitt konto
-                        </button>
-                      )}
-                    </div>
-                  )}
+                  {!editing && <AccountDeletion onDelete={handleDelete} />}
                 </div>
               )}
 

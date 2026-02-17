@@ -6,7 +6,8 @@ import { useAuthStore } from '../store/auth';
 import { useDMChannels } from '../hooks/useQuery';
 import { formatRelativeTime } from '../utils/dateTime';
 import Avatar from './ui/Avatar';
-import { PlusIcon, CloseIcon } from './ui/Icons';
+import DMListHeader from './dm/DMListHeader';
+import DMSearchPanel from './dm/DMSearchPanel';
 
 interface DMChannel {
   id: string;
@@ -93,66 +94,20 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
 
   return (
     <div className="flex flex-col min-h-0 border-t border-discord-darkest">
-      {/* Header */}
-      <div className="px-3 py-2 flex items-center justify-between flex-shrink-0">
-        <span className="text-xs font-semibold text-gray-400 uppercase">
-          Direktmeddelanden
-        </span>
-        <button
-          onClick={() => setShowNewDM(true)}
-          className="text-gray-400 hover:text-white"
-          title="Nytt meddelande"
-        >
-          <PlusIcon size="sm" />
-        </button>
-      </div>
+      <DMListHeader onNewDM={() => setShowNewDM(true)} />
 
-      {/* New DM search */}
       {showNewDM && (
-        <div className="p-2 border-b border-discord-darkest flex-shrink-0">
-          <div className="flex-row mb-2">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Sök användare..."
-              className="input-base text-sm flex-1"
-              autoFocus
-            />
-            <button
-              onClick={() => {
-                setShowNewDM(false);
-                setSearchQuery('');
-                setSearchResults([]);
-              }}
-              className="text-gray-400 hover:text-white p-1"
-              title="Stäng"
-            >
-              <CloseIcon size="sm" />
-            </button>
-          </div>
-          {searchResults.length > 0 && (
-            <div className="mt-1 max-h-40 overflow-y-auto">
-              {searchResults.map((u) => (
-                <button
-                  key={u.id}
-                  onClick={() => handleStartDM(u)}
-                  className="list-item-interactive w-full text-left"
-                >
-                  <Avatar size="sm">
-                    {u.firstName?.charAt(0) ?? u.email.charAt(0)}
-                  </Avatar>
-                  <div>
-                    <p className="text-body text-sm">
-                      {u.firstName} {u.lastName}
-                    </p>
-                    <p className="text-subtle">{u.email}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <DMSearchPanel
+          searchQuery={searchQuery}
+          searchResults={searchResults}
+          onSearchChange={handleSearch}
+          onSelectUser={handleStartDM}
+          onClose={() => {
+            setShowNewDM(false);
+            setSearchQuery('');
+            setSearchResults([]);
+          }}
+        />
       )}
 
       {/* DM list */}
