@@ -1,10 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, DependencyList } from 'react';
 
 export interface UseAutoScrollOptions {
   /**
    * Dependencies array - when these change, scroll to bottom
    */
-  dependencies: any[];
+  dependencies: DependencyList;
   /**
    * Scroll behavior
    */
