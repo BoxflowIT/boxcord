@@ -1,8 +1,8 @@
 // @mentions Autocomplete Component
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { api } from '../services/api';
+import { useRef, useCallback } from 'react';
 import { useAutocompleteNavigation } from '../hooks/useAutocompleteNavigation';
-import Avatar from './ui/Avatar';
+import { useMentionSearch } from '../hooks/useMentionSearch';
+import MentionListItem from './ui/MentionListItem';
 
 export interface MentionItem {
   id: string;
@@ -25,40 +25,22 @@ export default function MentionAutocomplete({
   onClose,
   position
 }: MentionAutocompleteProps) {
-  const [results, setResults] = useState<MentionItem[]>([]);
-  const [loading, setLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Find the @mention being typed
-  const getMentionQuery = useCallback(() => {
-    const textBeforeCursor = inputValue.slice(0, cursorPosition);
-    const atIndex = textBeforeCursor.lastIndexOf('@');
-
-    if (atIndex === -1) return null;
-
-    // Check if there's a space between @ and cursor
-    const textAfterAt = textBeforeCursor.slice(atIndex + 1);
-    if (textAfterAt.includes(' ')) return null;
-
-    // Check if @ is at start or preceded by space
-    if (atIndex > 0 && inputValue[atIndex - 1] !== ' ') return null;
-
-    return {
-      query: textAfterAt,
-      startPos: atIndex,
-      endPos: cursorPosition
-    };
-  }, [inputValue, cursorPosition]);
+  // Search for mentions using custom hook
+  const { results, loading, mentionQuery } = useMentionSearch({
+    inputValue,
+    cursorPosition
+  });
 
   // Handle selection with mention position
   const handleSelectItem = useCallback(
     (item: MentionItem) => {
-      const mention = getMentionQuery();
-      if (mention) {
-        onSelect(item, mention.startPos, mention.endPos);
+      if (mentionQuery) {
+        onSelect(item, mentionQuery.startPos, mentionQuery.endPos);
       }
     },
-    [getMentionQuery, onSelect]
+    [mentionQuery, onSelect]
   );
 
   // Use shared autocomplete navigation hook
@@ -69,39 +51,6 @@ export default function MentionAutocomplete({
     containerRef,
     enabled: results.length > 0
   });
-
-  useEffect(() => {
-    const mention = getMentionQuery();
-
-    if (!mention || mention.query.length < 1) {
-      setResults([]);
-      return;
-    }
-
-    const searchUsers = async () => {
-      setLoading(true);
-      try {
-        const users = await api.searchUsers(mention.query);
-        setResults(
-          users.map((user) => ({
-            id: user.id,
-            display:
-              user.firstName && user.lastName
-                ? `${user.firstName} ${user.lastName}`
-                : user.email.split('@')[0],
-            value: `@${user.email}` // Full email for push notifications
-          }))
-        );
-      } catch {
-        setResults([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const debounce = setTimeout(searchUsers, 200);
-    return () => clearTimeout(debounce);
-  }, [inputValue, cursorPosition, getMentionQuery]);
 
   if (results.length === 0 && !loading) return null;
 
@@ -121,21 +70,12 @@ export default function MentionAutocomplete({
       ) : (
         <ul className="py-1">
           {results.map((item, index) => (
-            <li
+            <MentionListItem
               key={item.id}
+              item={item}
+              selected={index === selectedIndex}
               onClick={() => handleItemClick(item)}
-              className={`popup-list-item flex items-center gap-3 ${
-                index === selectedIndex
-                  ? 'popup-list-item-selected'
-                  : 'popup-list-item-default'
-              }`}
-            >
-              <Avatar size="sm">{item.display[0].toUpperCase()}</Avatar>
-              <div>
-                <div className="font-medium">{item.display}</div>
-                <div className="text-subtle">{item.value}</div>
-              </div>
-            </li>
+            />
           ))}
         </ul>
       )}

@@ -1,26 +1,15 @@
 // File Upload Component
 import { useRef, useState } from 'react';
-import { AttachmentIcon, DocumentIcon, DownloadIcon } from './ui/Icons';
+import { AttachmentIcon } from './ui/Icons';
+import { validateFile, ALLOWED_FILE_TYPES } from '../utils/fileUtils';
+import ImageAttachment from './attachments/ImageAttachment';
+import VideoAttachment from './attachments/VideoAttachment';
+import FileAttachment from './attachments/FileAttachment';
 
 interface FileUploadProps {
   onFileSelect: (file: File) => void;
   disabled?: boolean;
 }
-
-const MAX_SIZE = 25 * 1024 * 1024; // 25MB
-const ALLOWED_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'video/mp4',
-  'video/webm',
-  'application/pdf',
-  'text/plain',
-  'text/csv',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-];
 
 export default function FileUpload({
   onFileSelect,
@@ -37,18 +26,14 @@ export default function FileUpload({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const { valid, error: validationError } = validateFile(file);
+
+    if (!valid) {
+      setError(validationError);
+      return;
+    }
+
     setError(null);
-
-    if (file.size > MAX_SIZE) {
-      setError('Filen är för stor (max 25MB)');
-      return;
-    }
-
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      setError('Filtypen stöds inte');
-      return;
-    }
-
     onFileSelect(file);
 
     // Reset input
@@ -64,7 +49,7 @@ export default function FileUpload({
         type="file"
         onChange={handleChange}
         className="hidden"
-        accept={ALLOWED_TYPES.join(',')}
+        accept={ALLOWED_FILE_TYPES.join(',')}
         disabled={disabled}
       />
       <button
@@ -97,51 +82,16 @@ export function AttachmentPreview({
   const isImage = fileType.startsWith('image/');
   const isVideo = fileType.startsWith('video/');
 
-  const formatSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
   if (isImage) {
-    return (
-      <a
-        href={fileUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block max-w-md"
-      >
-        <img
-          src={fileUrl}
-          alt={fileName}
-          className="rounded-lg max-h-80 object-contain"
-        />
-      </a>
-    );
+    return <ImageAttachment fileUrl={fileUrl} fileName={fileName} />;
   }
 
   if (isVideo) {
-    return (
-      <video src={fileUrl} controls className="rounded-lg max-w-md max-h-80" />
-    );
+    return <VideoAttachment fileUrl={fileUrl} />;
   }
 
   // Generic file
   return (
-    <a
-      href={fileUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="file-attachment"
-    >
-      <div className="file-icon-container">
-        <DocumentIcon className="text-white" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-boxflow-primary truncate">{fileName}</p>
-        <p className="text-xs text-gray-400">{formatSize(fileSize)}</p>
-      </div>
-      <DownloadIcon className="text-gray-400" />
-    </a>
+    <FileAttachment fileName={fileName} fileUrl={fileUrl} fileSize={fileSize} />
   );
 }
