@@ -1,52 +1,52 @@
 # Test Scripts
 
-Denna mapp innehåller utility-scripts för att testa Boxcord-funktionalitet under utveckling.
+This folder contains utility scripts for testing Boxcord functionality during development.
 
-## Tillgängliga Scripts
+## Available Scripts
 
 ### send-dm.cjs
 
-Skickar ett test-DM från Anna (user-2) till Jens.
+Sends a test DM from Anna (user-2) to Jens.
 
-**Användning:**
+**Usage:**
 
 ```bash
 node scripts/send-dm.cjs
 ```
 
-**Vad den gör:**
+**What it does:**
 
-- Skapar/hittar en DM-kanal mellan user-2 och Jens
-- Skickar ett testmeddelande
-- Använder mock-token för autentisering (endast dev)
+- Creates/finds a DM channel between user-2 and Jens
+- Sends a test message
+- Uses mock token for authentication (dev only)
 
 ### send-mention.cjs
 
-Skickar en @mention i en kanal för att testa mention-notifikationer.
+Sends an @mention in a channel to test mention notifications.
 
-**Användning:**
+**Usage:**
 
 ```bash
 node scripts/send-mention.cjs
 ```
 
-**Vad den gör:**
+**What it does:**
 
-- Skickar ett meddelande med @mention till Jens
-- Testar push-notifikationer för mentions
-- Använder mock-token för autentisering (endast dev)
+- Sends a message with @mention to Jens
+- Tests push notifications for mentions
+- Uses mock token for authentication (dev only)
 
-## Konfiguration
+## Configuration
 
-Scripts förutsätter att:
+Scripts assume that:
 
-- Backend körs på `http://localhost:3001`
-- `ALLOW_MOCK_TOKENS=true` i backend `.env`
-- Jens's user ID är: `f02cf92c-d0e1-70d4-02de-db967a695a11`
+- Backend is running on `http://localhost:3001`
+- `ALLOW_MOCK_TOKENS=true` in backend `.env`
+- Jens's user ID is: `f02cf92c-d0e1-70d4-02de-db967a695a11`
 
 ## Mock Tokens
 
-Mock tokens används endast i development-miljö och har följande format:
+Mock tokens are only used in development environment and have the following format:
 
 ```javascript
 {
@@ -57,4 +57,4 @@ Mock tokens används endast i development-miljö och har följande format:
 }
 ```
 
-**OBS:** Mock tokens fungerar INTE i produktion.
+**NOTE:** Mock tokens do NOT work in production.
