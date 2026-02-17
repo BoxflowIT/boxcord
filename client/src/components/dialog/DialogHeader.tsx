@@ -1,5 +1,6 @@
 // Dialog Header - Reusable dialog header
 import { CloseIcon } from '../ui/Icons';
+import { cn } from '../../utils/classNames';
 
 interface DialogHeaderProps {
   title: string;
@@ -16,7 +17,10 @@ export default function DialogHeader({
 }: DialogHeaderProps) {
   return (
     <div
-      className={`flex items-start justify-between p-6 border-b border-boxflow-border ${className}`}
+      className={cn(
+        'flex items-start justify-between p-6 border-b border-boxflow-border',
+        className
+      )}
     >
       <div className="flex-1">
         <h2 className="text-xl font-bold text-white">{title}</h2>

@@ -1,5 +1,6 @@
 // Channel Name - Display channel name with prefix
 import ChannelIcon from './ChannelIcon';
+import { cn } from '../../utils/classNames';
 
 interface ChannelNameProps {
   name: string;
@@ -17,7 +18,7 @@ export default function ChannelName({
   className = ''
 }: ChannelNameProps) {
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div className={cn('flex items-center gap-2', className)}>
       {showIcon && <ChannelIcon type={type} size="sm" />}
       <span className="font-medium">
         {!showIcon && type === 'text' && prefix}

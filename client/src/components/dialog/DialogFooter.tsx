@@ -1,4 +1,5 @@
 // Dialog Footer - Reusable dialog footer with actions
+import { cn } from '../../utils/classNames';
 
 interface DialogFooterProps {
   children: React.ReactNode;
@@ -20,7 +21,11 @@ export default function DialogFooter({
 }: DialogFooterProps) {
   return (
     <div
-      className={`flex gap-3 ${alignClasses[align]} p-6 border-t border-boxflow-border ${className}`}
+      className={cn(
+        'flex gap-3 p-6 border-t border-boxflow-border',
+        alignClasses[align],
+        className
+      )}
     >
       {children}
     </div>
