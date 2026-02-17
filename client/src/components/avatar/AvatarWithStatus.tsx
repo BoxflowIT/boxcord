@@ -1,5 +1,4 @@
 // Avatar With Status - Avatar with online status indicator
-import React from 'react';
 import Avatar from '../ui/Avatar';
 import StatusIndicator, { UserStatus } from '../member/StatusIndicator';
 

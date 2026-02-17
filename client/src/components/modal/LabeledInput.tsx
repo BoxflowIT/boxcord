@@ -1,5 +1,4 @@
 // Labeled Input - Input field with label on top
-import React from 'react';
 import { Input } from '../ui/input';
 
 interface LabeledInputProps {

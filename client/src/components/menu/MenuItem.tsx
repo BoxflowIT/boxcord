@@ -1,5 +1,4 @@
 // Menu Item - Individual menu item
-import React from 'react';
 
 interface MenuItemProps {
   icon?: React.ReactNode;

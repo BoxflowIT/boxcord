@@ -1,5 +1,4 @@
 // Reusable Workspace Header Component
-import React from 'react';
 import { ChevronDownIcon } from '../ui/Icons';
 
 interface WorkspaceHeaderProps {

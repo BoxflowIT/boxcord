@@ -1,5 +1,4 @@
 // Skeleton - Loading skeleton placeholder
-import React from 'react';
 
 interface SkeletonProps {
   variant?: 'text' | 'circular' | 'rectangular';

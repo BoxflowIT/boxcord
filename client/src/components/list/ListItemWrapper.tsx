@@ -1,5 +1,4 @@
 // List Item Wrapper - Generic list item with hover and click
-import React from 'react';
 
 interface ListItemWrapperProps {
   children: React.ReactNode;

@@ -1,5 +1,4 @@
 // Reusable Role Badge Component
-import React from 'react';
 
 export type UserRole = 'OWNER' | 'ADMIN' | 'MEMBER';
 

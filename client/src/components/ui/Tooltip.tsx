@@ -22,7 +22,7 @@ export default function Tooltip({
   delay = 300
 }: TooltipProps) {
   const [show, setShow] = useState(false);
-  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [timeoutId, setTimeoutId] = useState<number | null>(null);
 
   const handleMouseEnter = () => {
     const id = setTimeout(() => setShow(true), delay);

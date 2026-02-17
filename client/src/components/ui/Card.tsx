@@ -1,5 +1,4 @@
 // Card - Flexible card container with optional header and footer
-import React from 'react';
 
 interface CardProps {
   children: React.ReactNode;

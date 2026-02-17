@@ -1,5 +1,4 @@
 // Split View - Two-panel split layout
-import React from 'react';
 
 interface SplitViewProps {
   left: React.ReactNode;

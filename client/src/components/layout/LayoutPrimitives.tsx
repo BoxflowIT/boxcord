@@ -1,6 +1,6 @@
 // Layout utility components for positioning and flow
-export { default as Card } from './Card';
-export { default as Badge } from './Badge';
+export { default as Card } from '../ui/Card';
+export { default as Badge } from '../ui/Badge';
 
 interface FlexProps {
   children: React.ReactNode;

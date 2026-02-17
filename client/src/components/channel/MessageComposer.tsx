@@ -3,8 +3,15 @@ import { api } from '../../services/api';
 import { logger } from '../../utils/logger';
 import FileUpload from '../FileUpload';
 import EmojiPicker from '../ui/EmojiPicker';
-import MentionAutocomplete, { parseMentions } from '../MentionAutocomplete';
+import MentionAutocomplete from '../MentionAutocomplete';
+import type { MentionItem } from '../MentionAutocomplete';
 import SlashCommandAutocomplete from '../SlashCommandAutocomplete';
+
+interface SlashCommand {
+  name: string;
+  description: string;
+  usage: string;
+}
 
 interface MessageComposerProps {
   channelId: string;
@@ -118,37 +125,30 @@ export default function MessageComposer({
   );
 
   const handleMentionSelect = useCallback(
-    (userId: string, userName: string) => {
+    (mention: MentionItem, startPos: number, endPos: number) => {
       if (!textareaRef.current) return;
 
       const textarea = textareaRef.current;
-      const beforeCursor = inputValue.substring(0, cursorPosition);
-      const afterCursor = inputValue.substring(cursorPosition);
+      const beforeMention = inputValue.substring(0, startPos);
+      const afterMention = inputValue.substring(endPos);
 
-      const mentionMatch = beforeCursor.match(/@(\w*)$/);
-      if (!mentionMatch) return;
-
-      const beforeMention = beforeCursor.substring(
-        0,
-        beforeCursor.length - mentionMatch[0].length
-      );
-      const newValue = `${beforeMention}@${userName} ${afterCursor}`;
+      const newValue = `${beforeMention}${mention.value} ${afterMention}`;
 
       setInputValue(newValue);
       setShowMentions(false);
 
       // Set cursor after mention
-      const newCursorPos = beforeMention.length + userName.length + 2;
+      const newCursorPos = startPos + mention.value.length + 1;
       setTimeout(() => {
         textarea.focus();
         textarea.setSelectionRange(newCursorPos, newCursorPos);
       }, 0);
     },
-    [inputValue, cursorPosition]
+    [inputValue]
   );
 
-  const handleCommandSelect = useCallback((command: string) => {
-    setInputValue(command + ' ');
+  const handleCommandSelect = useCallback((command: SlashCommand) => {
+    setInputValue(`/${command.name} `);
     setShowSlashCommands(false);
     textareaRef.current?.focus();
   }, []);
@@ -158,8 +158,9 @@ export default function MessageComposer({
     textareaRef.current?.focus();
   }, []);
 
-  const handleFileUpload = useCallback((fileUrl: string) => {
-    setInputValue((prev) => prev + `\n${fileUrl}`);
+  const handleFileSelect = useCallback((file: File) => {
+    // Handle file upload here - you might want to upload it and get a URL
+    logger.info('File selected:', file.name);
   }, []);
 
   return (
@@ -168,12 +169,11 @@ export default function MessageComposer({
       {showMentions && (
         <div className="absolute bottom-full mb-2 left-0 right-0">
           <MentionAutocomplete
+            inputValue={inputValue}
+            cursorPosition={cursorPosition}
             onSelect={handleMentionSelect}
             onClose={() => setShowMentions(false)}
-            searchQuery={
-              inputValue.substring(0, cursorPosition).match(/@(\w*)$/)?.[1] ??
-              ''
-            }
+            position={{ top: 0, left: 0 }}
           />
         </div>
       )}
@@ -181,9 +181,9 @@ export default function MessageComposer({
       {showSlashCommands && (
         <div className="absolute bottom-full mb-2 left-0 right-0">
           <SlashCommandAutocomplete
+            inputValue={inputValue.substring(1)}
             onSelect={handleCommandSelect}
             onClose={() => setShowSlashCommands(false)}
-            searchQuery={inputValue.substring(1)}
           />
         </div>
       )}
@@ -202,7 +202,7 @@ export default function MessageComposer({
 
         {/* Actions */}
         <div className="flex items-center gap-2 mt-2">
-          <FileUpload onFileUploaded={handleFileUpload} compact />
+          <FileUpload onFileSelect={handleFileSelect} />
           <EmojiPicker onEmojiSelect={handleEmojiSelect} />
           <button
             onClick={handleSend}

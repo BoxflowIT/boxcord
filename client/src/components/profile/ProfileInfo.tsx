@@ -1,5 +1,4 @@
 // Reusable Profile Info Display Component
-import React from 'react';
 
 interface ProfileInfoProps {
   firstName?: string;

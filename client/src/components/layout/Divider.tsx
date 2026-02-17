@@ -1,5 +1,4 @@
 // Reusable Divider Component
-import React from 'react';
 
 interface DividerProps {
   orientation?: 'horizontal' | 'vertical';

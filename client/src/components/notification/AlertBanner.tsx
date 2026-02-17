@@ -1,5 +1,4 @@
 // Alert Banner - Inline alert/info banner
-import React from 'react';
 import { CloseIcon } from '../ui/Icons';
 
 export type AlertVariant = 'info' | 'success' | 'warning' | 'error';

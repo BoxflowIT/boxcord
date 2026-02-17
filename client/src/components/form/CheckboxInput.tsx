@@ -1,5 +1,4 @@
 // Checkbox Input - Checkbox with label
-import React from 'react';
 
 interface CheckboxInputProps {
   checked: boolean;

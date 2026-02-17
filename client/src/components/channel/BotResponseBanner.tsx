@@ -1,38 +1,39 @@
-// Reusable Bot Response Component (Ephemeral messages)
-
-interface BotResponseProps {
+interface BotResponseBannerProps {
   content: string;
-  isPrivate?: boolean;
+  isPrivate: boolean;
   onDismiss: () => void;
 }
 
-export function BotResponse({
+/**
+ * Ephemeral bot response banner
+ */
+export default function BotResponseBanner({
   content,
-  isPrivate = false,
+  isPrivate,
   onDismiss
-}: BotResponseProps) {
+}: BotResponseBannerProps) {
   return (
     <div className="px-4 pb-2">
       <div className="bot-response">
         <div className="bot-avatar">🤖</div>
         <div className="flex-1">
-          <div className="flex-row mb-1">
-            <span className="text-sm font-medium text-boxflow-primary">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-sm font-medium text-[#5865f2]">
               Boxcord Bot
             </span>
             {isPrivate && (
-              <span className="text-xs text-boxflow-muted">
+              <span className="text-xs text-[#80848e]">
                 Endast synligt för dig
               </span>
             )}
           </div>
-          <div className="text-boxflow-light text-sm whitespace-pre-wrap">
+          <div className="text-[#f2f3f5] text-sm whitespace-pre-wrap">
             {content}
           </div>
         </div>
         <button
           onClick={onDismiss}
-          className="text-boxflow-muted hover:text-white transition-colors"
+          className="text-[#80848e] hover:text-white transition-colors"
         >
           ✕
         </button>

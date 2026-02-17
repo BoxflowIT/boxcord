@@ -1,5 +1,5 @@
 // List Container - Generic scrollable list container
-import React from 'react';
+import { Children } from 'react';
 
 interface ListContainerProps {
   children: React.ReactNode;
@@ -18,7 +18,7 @@ export default function ListContainer({
   maxHeight = 'auto',
   className = ''
 }: ListContainerProps) {
-  const isEmpty = React.Children.count(children) === 0;
+  const isEmpty = Children.count(children) === 0;
 
   return (
     <div className={`flex flex-col ${className}`}>

@@ -1,5 +1,4 @@
 // Reusable Workspace List Component (Icon sidebar)
-import React from 'react';
 import { PlusIcon, HomeIcon } from '../ui/Icons';
 
 interface Workspace {

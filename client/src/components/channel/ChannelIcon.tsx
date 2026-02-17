@@ -1,5 +1,4 @@
 // Channel Icon - Display channel type icon
-import React from 'react';
 
 interface ChannelIconProps {
   type?: 'text' | 'voice' | 'announcement';

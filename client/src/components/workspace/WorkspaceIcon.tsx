@@ -1,5 +1,4 @@
 // Workspace Icon - Display workspace icon or initial
-import React from 'react';
 
 interface WorkspaceIconProps {
   name: string;

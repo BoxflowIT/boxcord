@@ -1,5 +1,4 @@
 // Panel - Reusable panel container with header and content
-import React from 'react';
 
 interface PanelProps {
   header?: React.ReactNode;

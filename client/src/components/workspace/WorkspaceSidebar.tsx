@@ -1,5 +1,4 @@
 // Workspace Sidebar - Vertical workspace list
-import React from 'react';
 import WorkspaceButton from './WorkspaceButton';
 import AddButton from './AddButton';
 

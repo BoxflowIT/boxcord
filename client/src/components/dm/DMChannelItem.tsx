@@ -1,9 +1,8 @@
 // Reusable DM Channel Item Component
-import React from 'react';
 import Avatar from '../ui/Avatar';
 
 interface DMChannelItemProps {
-  id: string;
+  id?: string;
   userName: string;
   userInitial: string;
   avatarUrl?: string | null;
@@ -14,7 +13,6 @@ interface DMChannelItemProps {
 }
 
 export function DMChannelItem({
-  id,
   userName,
   userInitial,
   avatarUrl,

@@ -1,5 +1,4 @@
 // Add Button - Reusable + button for adding items
-import React from 'react';
 import { PlusIcon } from '../ui/Icons';
 
 interface AddButtonProps {

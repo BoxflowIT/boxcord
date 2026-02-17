@@ -1,5 +1,4 @@
 // Member Search Input - Search bar for filtering members
-import React from 'react';
 
 interface MemberSearchProps {
   value: string;

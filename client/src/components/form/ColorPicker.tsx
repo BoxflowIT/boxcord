@@ -1,5 +1,4 @@
 // Color Picker Input - Simple color picker
-import React from 'react';
 
 interface ColorPickerProps {
   value: string;

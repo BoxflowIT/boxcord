@@ -1,5 +1,4 @@
 // Reusable Settings Tab Button Component
-import React from 'react';
 
 interface SettingsTabButtonProps {
   label: string;

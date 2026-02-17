@@ -1,5 +1,4 @@
 // Reusable Role Selector Component (for admins)
-import React from 'react';
 import { RoleBadge, type UserRole } from './RoleBadge';
 
 interface RoleSelectorProps {

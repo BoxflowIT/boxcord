@@ -1,5 +1,4 @@
 // Reusable Setting Item Component with label and control
-import React from 'react';
 
 interface SettingItemProps {
   label: string;

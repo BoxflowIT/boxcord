@@ -1,9 +1,7 @@
 // Workspace Button - Clickable workspace with all interactions
-import React from 'react';
-import WorkspaceIcon from './WorkspaceIcon';
 
 interface WorkspaceButtonProps {
-  id: string;
+  id?: string;
   name: string;
   iconUrl?: string;
   isActive: boolean;
@@ -13,7 +11,6 @@ interface WorkspaceButtonProps {
 }
 
 export default function WorkspaceButton({
-  id,
   name,
   iconUrl,
   isActive,

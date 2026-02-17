@@ -1,5 +1,4 @@
 // Loading Spinner - Small inline spinner for button/inline loading states
-import React from 'react';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';

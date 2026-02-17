@@ -1,5 +1,4 @@
 // Reusable Profile Actions Component (Edit, Save, Logout, Delete)
-import React from 'react';
 import { Button } from '../form';
 
 interface ProfileActionsProps {

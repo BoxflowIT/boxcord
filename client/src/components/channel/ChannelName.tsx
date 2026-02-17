@@ -1,5 +1,4 @@
 // Channel Name - Display channel name with prefix
-import React from 'react';
 import ChannelIcon from './ChannelIcon';
 
 interface ChannelNameProps {

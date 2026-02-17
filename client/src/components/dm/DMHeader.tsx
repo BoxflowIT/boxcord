@@ -1,5 +1,4 @@
 // Reusable DM Header Component
-import React from 'react';
 import Avatar from '../ui/Avatar';
 
 interface DMHeaderProps {

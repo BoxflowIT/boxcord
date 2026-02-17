@@ -1,5 +1,4 @@
 // Reusable Toggle Switch Component
-import React from 'react';
 
 interface ToggleSwitchProps {
   enabled: boolean;

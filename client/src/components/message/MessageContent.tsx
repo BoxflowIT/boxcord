@@ -1,5 +1,4 @@
 // Reusable Message Content Component - Text content and attachments
-import React from 'react';
 import { AttachmentPreview } from '../FileUpload';
 
 export interface MessageAttachment {

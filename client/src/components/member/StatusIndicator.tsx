@@ -1,5 +1,4 @@
 // Status Indicator - Shows online/away/busy/offline status dot
-import React from 'react';
 
 export type UserStatus = 'ONLINE' | 'AWAY' | 'BUSY' | 'OFFLINE';
 

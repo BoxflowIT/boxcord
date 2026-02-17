@@ -1,5 +1,4 @@
 // Member Section - Role-based grouping header
-import React from 'react';
 
 interface MemberSectionProps {
   title: string;

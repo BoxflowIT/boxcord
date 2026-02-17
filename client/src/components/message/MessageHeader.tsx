@@ -1,5 +1,4 @@
 // Reusable Message Header Component - Author name, timestamp, edited badge
-import React from 'react';
 import { formatTime } from '../../lib/formatters';
 
 interface MessageHeaderProps {

@@ -1,5 +1,4 @@
 // Select Input - Dropdown select input
-import React from 'react';
 
 interface SelectOption {
   value: string;
