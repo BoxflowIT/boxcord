@@ -128,7 +128,8 @@ const users = await boxtimeService.searchUsers('john', token);
 
 ### Recent Improvements
 
-**🎨 className Refactoring (Completed)**
+#### className Refactoring (Completed)
+
 - ✅ All 61 components migrated from template literals to `cn()` utility
 - ✅ Consistent className composition across entire codebase
 - ✅ Improved code readability and maintainability
@@ -136,6 +137,7 @@ const users = await boxtimeService.searchUsers('john', token);
 - ✅ 34/34 tests passing (100% coverage maintained)
 
 **Pattern Example:**
+
 ```typescript
 // Before:
 className={`base ${condition ? 'true' : 'false'} ${className}`}
@@ -145,13 +147,3 @@ className={cn('base', condition && 'true', !condition && 'false', className)}
 ```
 
 See [COMPONENTS.md](client/COMPONENTS.md) for detailed component documentation.
-
-## Next Steps
-
-- [ ] Implement Cognito callback for production auth
-- [ ] Add file upload (S3)
-- [x] Implement @mentions with Boxtime users
-- [x] Add push notifications
-- [x] Integrate with Boxtime webhooks for automatic messages
-- [x] Add chatbot support
-- [x] Refactor all components to use cn() utility

@@ -91,7 +91,6 @@ export class PushService {
 
     // Check if VAPID keys are configured
     if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
-      // eslint-disable-next-line no-console
       console.warn(
         '[PUSH] VAPID keys not configured. Skipping push notifications.'
       );
@@ -120,7 +119,6 @@ export class PushService {
           );
           return { success: true };
         } catch (error) {
-          // eslint-disable-next-line no-console
           console.error(`[PUSH] Failed to send to ${sub.endpoint}:`, error);
 
           // If subscription is invalid (410 Gone), we should remove it

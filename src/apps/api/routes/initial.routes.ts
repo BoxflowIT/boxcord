@@ -11,8 +11,8 @@ export async function initialDataRoutes(app: FastifyInstance) {
    */
   app.get('/api/v1/initial', {
     onRequest: [app.authenticate],
-    handler: async (request, reply) => {
-      const userId = request.user.sub;
+    handler: async (request) => {
+      const userId = request.user.id;
       const data = await getInitialData(prisma, userId);
       return data;
     }
