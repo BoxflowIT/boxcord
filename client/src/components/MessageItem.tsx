@@ -2,6 +2,7 @@
 import React, { memo } from 'react';
 import { formatTime } from '../lib/formatters';
 import { useMessageReactions } from '../hooks/useMessageReactions';
+import { cn } from '../utils/classNames';
 import {
   MessageAvatar,
   MessageHeader,
@@ -81,9 +82,11 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
 
   return (
     <div
-      className={`group relative hover:bg-boxflow-hover/40 -mx-4 px-4 rounded transition-all duration-100 ${
+      className={cn(
+        'group relative hover:bg-boxflow-hover/40',
+        '-mx-4 px-4 rounded transition-all duration-100',
         compact ? 'py-0.5' : 'py-1'
-      }`}
+      )}
     >
       {/* Message actions - Quick reactions bar (hover) */}
       {!isEditing && (
@@ -96,7 +99,9 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
       )}
 
       {showHeader ? (
-        <div className={`flex items-start gap-4 ${compact ? 'mt-2' : 'mt-4'}`}>
+        <div
+          className={cn('flex items-start gap-4', compact ? 'mt-2' : 'mt-4')}
+        >
           <MessageAvatar
             avatarUrl={authorAvatarUrl}
             initial={authorInitial}
@@ -139,9 +144,10 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
       ) : (
         // Compact mode (no header)
         <div
-          className={`flex items-start gap-4 pl-14 ${
+          className={cn(
+            'flex items-start gap-4 pl-14',
             compact ? 'py-0' : 'py-0.5'
-          }`}
+          )}
         >
           <span className="text-xs text-boxflow-muted opacity-0 group-hover:opacity-100 -ml-10 w-10 text-right">
             {formatTime(createdAt)}

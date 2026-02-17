@@ -1,6 +1,7 @@
 // Push Notification Settings Component
 import { useState, useEffect } from 'react';
 import { pushService } from '../services/push';
+import ToggleSwitch from './ui/ToggleSwitch';
 
 export default function NotificationSettings() {
   const [supported, setSupported] = useState(true);
@@ -77,36 +78,19 @@ export default function NotificationSettings() {
 
   return (
     <div className="card">
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <h3 className="text-heading">Push-notiser</h3>
-          <p className="text-muted">
-            Få notiser om nya meddelanden och omnämnanden
-          </p>
-        </div>
-
-        <button
-          onClick={handleToggle}
-          disabled={loading}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            subscribed
-              ? 'bg-gradient-to-r from-[#5865f2] to-[#4752c4]'
-              : 'bg-[#404249]'
-          } ${loading ? 'opacity-50' : ''}`}
-        >
-          <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-              subscribed ? 'translate-x-6' : 'translate-x-1'
-            }`}
-          />
-        </button>
-      </div>
+      <ToggleSwitch
+        checked={subscribed}
+        onChange={handleToggle}
+        disabled={loading}
+        label="Push-notiser"
+        description="Få notiser om nya meddelanden och omnämnanden"
+      />
 
       {subscribed && (
         <button
           onClick={handleTest}
           disabled={loading}
-          className="text-sm text-[#5865f2] hover:underline disabled:opacity-50"
+          className="text-sm text-[#5865f2] hover:underline disabled:opacity-50 mt-3"
         >
           Skicka testnotis
         </button>

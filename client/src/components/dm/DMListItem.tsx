@@ -1,5 +1,6 @@
 // DM List Item Component
 import { formatRelativeTime } from '../../utils/dateTime';
+import { cn } from '../../utils/classNames';
 import Avatar from '../ui/Avatar';
 
 interface UserInfo {
@@ -35,14 +36,18 @@ export default function DMListItem({
   return (
     <button
       onClick={onClick}
-      className={`list-item-interactive w-full ${
-        isSelected ? 'bg-[#404249]/60' : ''
-      }`}
+      className={cn(
+        'list-item-interactive w-full',
+        isSelected && 'bg-[#404249]/60'
+      )}
     >
       <Avatar size="sm">{initial}</Avatar>
       <div className="flex-1 min-w-0 text-left">
         <p
-          className={`text-sm truncate ${hasUnread ? 'text-white font-semibold' : 'text-body'}`}
+          className={cn(
+            'text-sm truncate',
+            hasUnread ? 'text-white font-semibold' : 'text-body'
+          )}
         >
           {displayName}
         </p>
