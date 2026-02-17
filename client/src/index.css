@@ -143,7 +143,7 @@ body {
 
   /* ========== Button Styles ========== */
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
+    @apply px-4 py-2 rounded-lg font-medium transition-interactive;
   }
 
   .btn-primary {
@@ -155,27 +155,32 @@ body {
   }
 
   .btn-success {
-    @apply btn bg-boxflow-success text-white hover:brightness-110;
+    @apply btn bg-boxflow-success text-white hover-brightness;
   }
 
   .btn-danger {
-    @apply btn bg-boxflow-danger text-white hover:brightness-110;
+    @apply btn bg-boxflow-danger text-white hover-brightness;
   }
 
   .btn-warning {
-    @apply btn bg-boxflow-warning text-boxflow-dark hover:brightness-110;
+    @apply btn bg-boxflow-warning text-boxflow-dark hover-brightness;
   }
 
+  /* Icon button base */
   .btn-icon {
-    @apply p-1.5 hover:bg-boxflow-hover rounded-lg text-boxflow-muted hover:text-boxflow-light transition-all;
+    @apply p-1.5 rounded-lg text-boxflow-muted transition-interactive;
+  }
+
+  .btn-icon-default {
+    @apply btn-icon hover:bg-boxflow-hover hover:text-boxflow-light;
   }
 
   .btn-icon-primary {
-    @apply p-1.5 hover:bg-boxflow-primary/20 rounded-lg text-boxflow-muted hover:text-boxflow-primary transition-all;
+    @apply btn-icon hover:bg-boxflow-primary/20 hover:text-boxflow-primary;
   }
 
   .btn-icon-danger {
-    @apply p-1.5 hover:bg-boxflow-danger/20 rounded-lg text-boxflow-muted hover:text-boxflow-danger transition-all;
+    @apply btn-icon hover:bg-boxflow-danger/20 hover:text-boxflow-danger;
   }
 
   /* ========== Dropdown Menu Styles ========== */
@@ -201,20 +206,22 @@ body {
   }
 
   .popup-list-item {
-    @apply px-4 py-2.5 cursor-pointer transition-colors;
+    @apply px-4 py-2.5 cursor-pointer transition-interactive;
   }
 
   .popup-list-item-selected {
-    @apply bg-boxflow-primary text-white;
+    @apply popup-list-item bg-boxflow-primary text-white;
   }
 
   .popup-list-item-default {
-    @apply text-boxflow-light hover:bg-boxflow-hover;
+    @apply popup-list-item text-boxflow-light hover:bg-boxflow-hover;
   }
 
   /* ========== Input/Form Styles ========== */
   .input-base {
-    @apply w-full bg-boxflow-darkest text-boxflow-light border border-boxflow-border/50 rounded-lg px-4 py-2.5 outline-none transition-all focus:border-boxflow-primary focus:bg-boxflow-darker focus:ring-2 focus:ring-boxflow-primary/30 placeholder-boxflow-subtle;
+    @apply w-full bg-boxflow-darkest text-boxflow-light border border-boxflow-border/50 rounded-lg px-4 py-2.5;
+    @apply outline-none transition-interactive placeholder-boxflow-subtle;
+    @apply focus:border-boxflow-primary focus:bg-boxflow-darker focus:ring-2 focus:ring-boxflow-primary/30;
   }
 
   .textarea-base {
@@ -226,11 +233,14 @@ body {
   }
 
   .input-message {
-    @apply w-full bg-boxflow-darkest text-boxflow-light rounded-lg p-3 resize-none outline-none focus:bg-boxflow-darker focus:ring-2 focus:ring-boxflow-primary/50 transition-all placeholder-boxflow-subtle;
+    @apply w-full bg-boxflow-darkest text-boxflow-light rounded-lg p-3 resize-none;
+    @apply outline-none transition-interactive placeholder-boxflow-subtle;
+    @apply focus:bg-boxflow-darker focus:ring-2 focus:ring-boxflow-primary/50;
   }
 
   .input-search {
-    @apply w-full bg-boxflow-dark text-boxflow-light border border-boxflow-border rounded px-3 py-2 text-sm outline-none focus:border-boxflow-primary transition-colors;
+    @apply w-full bg-boxflow-dark text-boxflow-light border border-boxflow-border rounded px-3 py-2 text-sm;
+    @apply outline-none transition-interactive focus:border-boxflow-primary;
   }
 
   .label-base {
@@ -275,7 +285,7 @@ body {
 
   /* Message actions - hover bar with reactions and edit/delete */
   .message-actions {
-    @apply absolute -top-8 left-0 opacity-0 transition-opacity duration-150;
+    @apply absolute -top-8 left-0 opacity-0 transition-interactive;
     @apply bg-boxflow-darker border border-boxflow-hover rounded-lg shadow-xl;
     @apply px-2 py-1 flex items-center gap-1 z-50;
   }
@@ -299,7 +309,7 @@ body {
   }
 
   .card-interactive {
-    @apply card hover:bg-boxflow-hover transition-colors cursor-pointer;
+    @apply card hover:bg-boxflow-hover transition-interactive cursor-pointer;
   }
 
   /* ========== Text Styles ========== */
@@ -337,11 +347,11 @@ body {
 
   /* ========== Message Styles ========== */
   .message-container {
-    @apply group hover:bg-boxflow-hover/40 -mx-4 px-4 py-1 rounded transition-colors duration-100;
+    @apply group hover:bg-boxflow-hover/40 -mx-4 px-4 py-1 rounded transition-interactive;
   }
 
   .message-time {
-    @apply text-xs text-boxflow-subtle opacity-0 group-hover:opacity-100 transition-opacity;
+    @apply text-xs text-boxflow-subtle hover-group-visible;
   }
 
   .message-edited {
@@ -387,7 +397,7 @@ body {
 
   /* ========== List/Navigation Items ========== */
   .nav-item {
-    @apply px-3 py-2 rounded-lg transition-all cursor-pointer;
+    @apply px-3 py-2 rounded-lg transition-interactive cursor-pointer;
   }
 
   .nav-item-default {
@@ -399,7 +409,7 @@ body {
   }
 
   .list-item-interactive {
-    @apply flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-boxflow-dark/50 transition-colors cursor-pointer;
+    @apply flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-boxflow-dark/50 transition-interactive cursor-pointer;
   }
 
   /* ========== Modal/Dialog Styles ========== */
@@ -476,7 +486,7 @@ body {
   /* ========== Workspace Icon Styles ========== */
   .workspace-icon {
     @apply w-12 h-12 rounded-full flex items-center justify-center text-white font-bold overflow-hidden;
-    @apply transition-all duration-200;
+    @apply transition-interactive;
   }
 
   .workspace-icon-active {
@@ -495,7 +505,7 @@ body {
 
   /* ========== Channel Item Styles ========== */
   .channel-item {
-    @apply flex items-center gap-2 flex-1 min-w-0 rounded px-2 py-1 transition-all duration-150;
+    @apply flex items-center gap-2 flex-1 min-w-0 rounded px-2 py-1 transition-interactive;
   }
 
   .channel-item-default {
@@ -508,7 +518,7 @@ body {
 
   /* ========== File/Attachment Styles ========== */
   .file-attachment {
-    @apply flex items-center gap-3 p-3 bg-boxflow-darker rounded-lg max-w-sm hover:bg-boxflow-dark transition-colors;
+    @apply flex items-center gap-3 p-3 bg-boxflow-darker rounded-lg max-w-sm hover:bg-boxflow-dark transition-interactive;
   }
 
   .file-icon-container {
@@ -538,7 +548,7 @@ body {
   }
 
   .user-bar-button {
-    @apply flex items-center gap-2 flex-1 min-w-0 hover:bg-boxflow-dark/50 rounded-lg p-1 -m-1 transition-colors;
+    @apply flex items-center gap-2 flex-1 min-w-0 hover:bg-boxflow-dark/50 rounded-lg p-1 -m-1 transition-interactive;
   }
 
   /* ========== Profile Styles ========== */
