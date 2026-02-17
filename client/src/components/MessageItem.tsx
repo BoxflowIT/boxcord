@@ -1,15 +1,10 @@
 // Message Item Component - Reusable message display
 import React, { memo } from 'react';
-import { formatTime } from '../lib/formatters';
 import { useMessageReactions } from '../hooks/useMessageReactions';
 import { cn } from '../utils/classNames';
 import {
-  MessageAvatar,
-  MessageHeader,
-  MessageContent,
-  MessageReactionBubbles,
-  MessageActions,
-  MessageEditForm,
+  MessageWithHeader,
+  MessageCompact,
   type MessageAttachment,
   type MessageReaction
 } from './message';
@@ -88,96 +83,52 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
         compact ? 'py-0.5' : 'py-1'
       )}
     >
-      {/* Message actions - Quick reactions bar (hover) */}
-      {!isEditing && (
-        <MessageActions
-          onQuickReaction={handleToggleReaction}
+      {showHeader ? (
+        <MessageWithHeader
+          messageId={messageId}
+          content={content}
+          createdAt={createdAt}
+          edited={edited}
+          attachments={attachments}
+          reactions={reactions}
+          compact={compact}
+          authorName={authorName}
+          authorInitial={authorInitial}
+          authorAvatarUrl={authorAvatarUrl}
+          isEditing={isEditing}
+          isOwnMessage={isOwnMessage}
+          editContent={editContent}
+          editTextareaRef={editTextareaRef}
+          onEditContentChange={onEditContentChange}
+          onSaveEdit={onSaveEdit}
+          onCancelEdit={onCancelEdit}
           onEdit={() => onEdit(messageId, content)}
           onDelete={() => onDelete(messageId)}
-          isOwnMessage={isOwnMessage}
+          onQuickReaction={handleToggleReaction}
+          onToggleReaction={handleToggleReaction}
+          renderContent={renderContent}
         />
-      )}
-
-      {showHeader ? (
-        <div
-          className={cn('flex items-start gap-4', compact ? 'mt-2' : 'mt-4')}
-        >
-          <MessageAvatar
-            avatarUrl={authorAvatarUrl}
-            initial={authorInitial}
-            userName={authorName}
-            size="md"
-          />
-          <div className="flex-1 min-w-0">
-            <MessageHeader
-              authorName={authorName}
-              createdAt={createdAt}
-              edited={edited}
-              compact={compact}
-            />
-
-            {isEditing ? (
-              <MessageEditForm
-                value={editContent}
-                onChange={onEditContentChange}
-                onSave={onSaveEdit}
-                onCancel={onCancelEdit}
-                textareaRef={editTextareaRef}
-                compact={compact}
-              />
-            ) : (
-              <>
-                <MessageContent
-                  content={content}
-                  attachments={attachments}
-                  compact={compact}
-                  renderContent={renderContent}
-                />
-                <MessageReactionBubbles
-                  reactions={reactions}
-                  onToggle={handleToggleReaction}
-                />
-              </>
-            )}
-          </div>
-        </div>
       ) : (
-        // Compact mode (no header)
-        <div
-          className={cn(
-            'flex items-start gap-4 pl-14',
-            compact ? 'py-0' : 'py-0.5'
-          )}
-        >
-          <span className="text-xs text-boxflow-muted opacity-0 group-hover:opacity-100 -ml-10 w-10 text-right">
-            {formatTime(createdAt)}
-          </span>
-          <div className="flex-1">
-            {isEditing ? (
-              <MessageEditForm
-                value={editContent}
-                onChange={onEditContentChange}
-                onSave={onSaveEdit}
-                onCancel={onCancelEdit}
-                textareaRef={editTextareaRef}
-                compact={compact}
-              />
-            ) : (
-              <>
-                <MessageContent
-                  content={content}
-                  attachments={attachments}
-                  compact={compact}
-                  renderContent={renderContent}
-                />
-                <MessageReactionBubbles
-                  reactions={reactions}
-                  onToggle={handleToggleReaction}
-                />
-              </>
-            )}
-          </div>
-        </div>
+        <MessageCompact
+          messageId={messageId}
+          content={content}
+          createdAt={createdAt}
+          attachments={attachments}
+          reactions={reactions}
+          compact={compact}
+          isEditing={isEditing}
+          isOwnMessage={isOwnMessage}
+          editContent={editContent}
+          editTextareaRef={editTextareaRef}
+          onEditContentChange={onEditContentChange}
+          onSaveEdit={onSaveEdit}
+          onCancelEdit={onCancelEdit}
+          onEdit={() => onEdit(messageId, content)}
+          onDelete={() => onDelete(messageId)}
+          onQuickReaction={handleToggleReaction}
+          onToggleReaction={handleToggleReaction}
+          renderContent={renderContent}
+        />
       )}
     </div>
   );

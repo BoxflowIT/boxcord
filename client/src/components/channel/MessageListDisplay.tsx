@@ -78,9 +78,10 @@ export default function MessageListDisplay({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-      {messages.map((message) => (
-        <MessageItem
+    <div className="flex-1 overflow-y-auto p-4">
+      <div className="max-w-4xl mx-auto space-y-4">
+        {messages.map((message) => (
+          <MessageItem
           key={message.id}
           messageId={message.id}
           content={message.content}
@@ -118,6 +119,7 @@ export default function MessageListDisplay({
         />
       ))}
       <div ref={messagesEndRef} />
+      </div>
     </div>
   );
 }

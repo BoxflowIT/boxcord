@@ -5,6 +5,9 @@ export { MessageContent } from './MessageContent';
 export { MessageReactionBubbles } from './MessageReactionBubbles';
 export { MessageActions } from './MessageActions';
 export { MessageEditForm } from './MessageEditForm';
+export { MessageBody } from './MessageBody';
+export { MessageWithHeader } from './MessageWithHeader';
+export { MessageCompact } from './MessageCompact';
 
 // Re-export types
 export type { MessageAttachment } from './MessageContent';
