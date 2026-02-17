@@ -1,5 +1,6 @@
 // Search Input - Reusable search input with icon
 import { SearchIcon } from './Icons';
+import { cn } from '../../utils/classNames';
 
 interface SearchInputProps {
   value: string;
@@ -17,7 +18,7 @@ export default function SearchInput({
   className = ''
 }: SearchInputProps) {
   return (
-    <div className={`relative ${className}`}>
+    <div className={cn('relative', className)}>
       <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
         <SearchIcon size="sm" />
       </div>

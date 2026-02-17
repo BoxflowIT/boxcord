@@ -1,4 +1,5 @@
 // Loading Spinner - Small inline spinner for button/inline loading states
+import { cn } from '../../utils/classNames';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
@@ -15,5 +16,5 @@ export default function LoadingSpinner({
   size = 'md',
   className = ''
 }: LoadingSpinnerProps) {
-  return <div className={`spinner-ring ${sizeClasses[size]} ${className}`} />;
+  return <div className={cn('spinner-ring', sizeClasses[size], className)} />;
 }

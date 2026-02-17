@@ -1,4 +1,5 @@
 // Empty State Message - Shows when no items are found
+import { cn } from '../../utils/classNames';
 
 interface EmptyMessageProps {
   message: string;
@@ -12,7 +13,7 @@ export default function EmptyMessage({
   className = ''
 }: EmptyMessageProps) {
   return (
-    <div className={`text-muted px-2 py-4 text-center ${className}`}>
+    <div className={cn('text-muted px-2 py-4 text-center', className)}>
       {icon && (
         <div className="mb-2 flex justify-center opacity-50">{icon}</div>
       )}

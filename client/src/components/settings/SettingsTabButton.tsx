@@ -1,4 +1,5 @@
 // Reusable Settings Tab Button Component
+import { cn } from '../../utils/classNames';
 
 interface SettingsTabButtonProps {
   label: string;
@@ -14,11 +15,12 @@ export function SettingsTabButton({
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+      className={cn(
+        'w-full text-left px-3 py-2 rounded-lg text-sm transition-colors',
         isActive
           ? 'bg-boxflow-hover text-white font-medium'
           : 'text-boxflow-muted hover:bg-boxflow-hover/50 hover:text-white'
-      }`}
+      )}
     >
       {label}
     </button>
