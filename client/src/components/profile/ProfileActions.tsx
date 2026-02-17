@@ -1,0 +1,69 @@
+// Reusable Profile Actions Component (Edit, Save, Logout, Delete)
+import React from 'react';
+import { Button } from '../form';
+
+interface ProfileActionsProps {
+  isOwnProfile: boolean;
+  isEditing: boolean;
+  saving?: boolean;
+  onEdit: () => void;
+  onSave: () => void;
+  onCancel: () => void;
+  onLogout?: () => void;
+  onDelete?: () => void;
+}
+
+export function ProfileActions({
+  isOwnProfile,
+  isEditing,
+  saving = false,
+  onEdit,
+  onSave,
+  onCancel,
+  onLogout,
+  onDelete
+}: ProfileActionsProps) {
+  if (!isOwnProfile) return null;
+
+  return (
+    <div className="p-4 border-t border-boxflow-border space-y-2">
+      {isEditing ? (
+        <div className="flex-row">
+          <Button
+            variant="primary"
+            onClick={onSave}
+            loading={saving}
+            disabled={saving}
+            fullWidth
+          >
+            Spara ändringar
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={onCancel}
+            disabled={saving}
+            fullWidth
+          >
+            Avbryt
+          </Button>
+        </div>
+      ) : (
+        <>
+          <Button variant="secondary" onClick={onEdit} fullWidth>
+            Redigera profil
+          </Button>
+          {onLogout && (
+            <Button variant="ghost" onClick={onLogout} fullWidth>
+              Logga ut
+            </Button>
+          )}
+          {onDelete && (
+            <Button variant="danger" onClick={onDelete} fullWidth>
+              Radera konto
+            </Button>
+          )}
+        </>
+      )}
+    </div>
+  );
+}

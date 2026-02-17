@@ -13,13 +13,15 @@ interface Reaction {
 interface MessageReactionsProps {
   messageId: string;
   initialReactions?: Reaction[];
+  isDM?: boolean; // Is this a DM message? (uses different reaction endpoint)
 }
 
 const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🎉', '🔥', '👀'];
 
 export default function MessageReactions({
   messageId,
-  initialReactions = []
+  initialReactions = [],
+  isDM = false
 }: MessageReactionsProps) {
   const [reactions, setReactions] = useState<Reaction[]>(initialReactions);
   const [showPicker, setShowPicker] = useState(false);
@@ -31,7 +33,9 @@ export default function MessageReactions({
 
   const handleToggle = async (emoji: string) => {
     try {
-      const { added } = await api.toggleReaction(messageId, emoji);
+      const { added } = isDM
+        ? await api.toggleDMReaction(messageId, emoji)
+        : await api.toggleReaction(messageId, emoji);
 
       setReactions((prev) => {
         const existing = prev.find((r) => r.emoji === emoji);

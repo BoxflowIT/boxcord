@@ -59,7 +59,7 @@ export async function userRoutes(app: FastifyInstance) {
     };
   }>('/me', async (request) => {
     const user = await userService.updateProfile(request.user.id, request.body);
-    
+
     // Broadcast user profile update to all connected clients
     if (app.io) {
       app.io.emit('user:update', {
@@ -70,7 +70,7 @@ export async function userRoutes(app: FastifyInstance) {
         bio: user.bio
       });
     }
-    
+
     return { success: true, data: user };
   });
 

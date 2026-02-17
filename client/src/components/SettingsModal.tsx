@@ -299,7 +299,9 @@ function Toggle({ enabled, onChange }: ToggleProps) {
     <button
       onClick={() => onChange(!enabled)}
       className={`relative w-12 h-6 rounded-full transition-colors ${
-        enabled ? 'bg-gradient-to-r from-[#5865f2] to-[#4752c4]' : 'bg-[#404249]'
+        enabled
+          ? 'bg-gradient-to-r from-[#5865f2] to-[#4752c4]'
+          : 'bg-[#404249]'
       }`}
     >
       <span

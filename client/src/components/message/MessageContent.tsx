@@ -1,0 +1,52 @@
+// Reusable Message Content Component - Text content and attachments
+import React from 'react';
+import { AttachmentPreview } from '../FileUpload';
+
+export interface MessageAttachment {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  fileType: string;
+  fileSize: number;
+}
+
+interface MessageContentProps {
+  content: string;
+  attachments?: MessageAttachment[];
+  compact?: boolean;
+  renderContent?: (content: string) => React.ReactNode;
+}
+
+export function MessageContent({
+  content,
+  attachments = [],
+  compact = false,
+  renderContent
+}: MessageContentProps) {
+  return (
+    <>
+      <p
+        className={`text-boxflow-light break-words ${
+          compact ? 'text-sm leading-5' : 'text-base'
+        }`}
+      >
+        {renderContent ? renderContent(content) : content}
+      </p>
+
+      {/* Attachments */}
+      {attachments.length > 0 && (
+        <div className="mt-2 space-y-2">
+          {attachments.map((att) => (
+            <AttachmentPreview
+              key={att.id}
+              fileName={att.fileName}
+              fileUrl={att.fileUrl}
+              fileType={att.fileType}
+              fileSize={att.fileSize}
+            />
+          ))}
+        </div>
+      )}
+    </>
+  );
+}

@@ -84,7 +84,7 @@ export default function EditModal({
                 placeholder="https://example.com/icon.png"
               />
               {iconUrl && (
-                <div className="mt-2 flex items-center gap-2">
+                <div className="mt-2 flex-row">
                   <img
                     src={iconUrl}
                     alt="Preview"

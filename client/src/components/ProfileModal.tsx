@@ -176,7 +176,7 @@ export default function ProfileModal({
                 profile?.email?.charAt(0) ??
                 '?')
               )}
-              
+
               {/* Edit overlay - hover to show camera */}
               {editing && (
                 <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer">
@@ -204,7 +204,9 @@ export default function ProfileModal({
                       />
                     </svg>
                     <span className="text-sm font-bold">
-                      {uploadingImage ? 'Laddar...' : 'Klicka för att byta bild'}
+                      {uploadingImage
+                        ? 'Laddar...'
+                        : 'Klicka för att byta bild'}
                     </span>
                   </label>
                   <input
@@ -217,7 +219,7 @@ export default function ProfileModal({
                 </div>
               )}
             </div>
-            
+
             {/* Remove button */}
             {editing && formData.avatarUrl && (
               <button
@@ -240,7 +242,7 @@ export default function ProfileModal({
                 </svg>
               </button>
             )}
-            
+
             {profile?.presence && (
               <div
                 className={`absolute bottom-1 right-1 w-6 h-6 rounded-full border-4 border-discord-dark ${statusColors[profile.presence.status] ?? statusColors.OFFLINE}`}

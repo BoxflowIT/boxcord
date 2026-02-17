@@ -342,49 +342,59 @@ class SocketService {
     });
 
     // User profile updates
-    this.socket.on('user:update', (data: {
-      userId: string;
-      firstName?: string | null;
-      lastName?: string | null;
-      avatarUrl?: string | null;
-      bio?: string | null;
-    }) => {
-      const currentUserId = useAuthStore.getState().user?.id;
-      
-      // If it's the current user, update auth store
-      if (currentUserId === data.userId) {
-        const { updateUser } = useAuthStore.getState();
-        updateUser({
-          firstName: data.firstName,
-          lastName: data.lastName,
-          avatarUrl: data.avatarUrl,
-          bio: data.bio
-        });
+    this.socket.on(
+      'user:update',
+      (data: {
+        userId: string;
+        firstName?: string | null;
+        lastName?: string | null;
+        avatarUrl?: string | null;
+        bio?: string | null;
+      }) => {
+        const currentUserId = useAuthStore.getState().user?.id;
+
+        // If it's the current user, update auth store
+        if (currentUserId === data.userId) {
+          const { updateUser } = useAuthStore.getState();
+          updateUser({
+            firstName: data.firstName,
+            lastName: data.lastName,
+            avatarUrl: data.avatarUrl,
+            bio: data.bio
+          });
+        }
+
+        // Optimistically update React Query caches instead of invalidating
+        if (queryClient) {
+          // Update online users cache
+          queryClient.setQueryData(['users', 'online'], (oldData: any) => {
+            if (!oldData) return oldData;
+            return oldData.map((u: any) =>
+              u.id === data.userId
+                ? {
+                    ...u,
+                    firstName:
+                      data.firstName !== undefined
+                        ? data.firstName
+                        : u.firstName,
+                    lastName:
+                      data.lastName !== undefined ? data.lastName : u.lastName,
+                    avatarUrl:
+                      data.avatarUrl !== undefined
+                        ? data.avatarUrl
+                        : u.avatarUrl,
+                    bio: data.bio !== undefined ? data.bio : u.bio
+                  }
+                : u
+            );
+          });
+
+          // Also invalidate to ensure consistency
+          queryClient.invalidateQueries({ queryKey: ['users'] });
+          queryClient.invalidateQueries({ queryKey: queryKeys.currentUser });
+        }
       }
-      
-      // Optimistically update React Query caches instead of invalidating
-      if (queryClient) {
-        // Update online users cache
-        queryClient.setQueryData(['users', 'online'], (oldData: any) => {
-          if (!oldData) return oldData;
-          return oldData.map((u: any) =>
-            u.id === data.userId
-              ? {
-                  ...u,
-                  firstName: data.firstName !== undefined ? data.firstName : u.firstName,
-                  lastName: data.lastName !== undefined ? data.lastName : u.lastName,
-                  avatarUrl: data.avatarUrl !== undefined ? data.avatarUrl : u.avatarUrl,
-                  bio: data.bio !== undefined ? data.bio : u.bio
-                }
-              : u
-          );
-        });
-        
-        // Also invalidate to ensure consistency
-        queryClient.invalidateQueries({ queryKey: ['users'] });
-        queryClient.invalidateQueries({ queryKey: queryKeys.currentUser });
-      }
-    });
+    );
 
     // Errors
     this.socket.on('error', (error: { message: string }) => {

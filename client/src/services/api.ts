@@ -191,6 +191,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ emoji })
     }),
+  toggleDMReaction: (messageId: string, emoji: string) =>
+    request<{ added: boolean }>(`/reactions/dm/${messageId}`, {
+      method: 'POST',
+      body: JSON.stringify({ emoji })
+    }),
   getReactions: (messageId: string) =>
     request<ReactionCount[]>(`/reactions/messages/${messageId}`),
 

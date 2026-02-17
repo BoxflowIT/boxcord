@@ -347,7 +347,7 @@ export default function Sidebar({
                   return (
                     <div
                       key={channel.id}
-                      className={`group w-full flex items-center gap-2 px-2 py-1 rounded-lg text-sm transition-colors cursor-pointer ${
+                      className={`group w-full flex-row px-2 py-1 rounded-lg text-sm transition-colors cursor-pointer ${
                         currentChannel?.id === channel.id
                           ? 'nav-item-active'
                           : 'nav-item-default'
@@ -396,7 +396,11 @@ export default function Sidebar({
           {/* User info */}
           <div className="user-bar">
             <button onClick={onProfileClick} className="user-bar-button">
-              <Avatar size="sm" src={user?.avatarUrl} alt={user?.firstName || user?.email}>
+              <Avatar
+                size="sm"
+                src={user?.avatarUrl}
+                alt={user?.firstName || user?.email}
+              >
                 {user?.firstName?.charAt(0) ?? user?.email?.charAt(0) ?? '?'}
               </Avatar>
               <div className="flex-1 min-w-0 text-left">
