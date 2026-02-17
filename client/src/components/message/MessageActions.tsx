@@ -19,7 +19,7 @@ export function MessageActions({
   quickReactions = DEFAULT_QUICK_REACTIONS
 }: MessageActionsProps) {
   return (
-    <div className="action-bar">
+    <>
       {/* Quick reactions */}
       {quickReactions.map((emoji) => (
         <button
@@ -58,6 +58,6 @@ export function MessageActions({
           )}
         </>
       )}
-    </div>
+    </>
   );
 }

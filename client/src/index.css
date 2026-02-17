@@ -218,8 +218,26 @@ body {
   }
 
   /* ========== Action Bars & Hovers ========== */
+  /* Message body container - enables scoped hover */
+  .message-body {
+    @apply relative inline-block max-w-full;
+  }
+
+  /* Message actions - hover bar with reactions and edit/delete */
+  .message-actions {
+    @apply absolute -top-8 left-0 opacity-0 transition-opacity duration-150;
+    @apply bg-boxflow-darker border border-boxflow-hover rounded-lg shadow-xl;
+    @apply px-2 py-1 flex items-center gap-1 z-50;
+  }
+
+  /* Show actions on hover - scoped to message body only */
+  .message-body:hover .message-actions {
+    @apply opacity-100;
+  }
+
+  /* Legacy action-bar class for backward compatibility */
   .action-bar {
-    @apply absolute -top-2 right-4 opacity-0 group-hover:opacity-100 bg-boxflow-darker border border-boxflow-hover rounded-lg shadow-xl px-2 py-1 flex items-center gap-1 z-50 transition-opacity duration-150;
+    @apply absolute -top-8 left-0 opacity-0 group-hover:opacity-100 bg-boxflow-darker border border-boxflow-hover rounded-lg shadow-xl px-2 py-1 flex items-center gap-1 z-50 transition-opacity duration-150 w-auto;
   }
 
   .message-input-container {
