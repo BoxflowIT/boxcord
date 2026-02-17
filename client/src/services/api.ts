@@ -79,7 +79,8 @@ export const api = {
   // Workspaces
   getWorkspaces: () => request<Workspace[]>('/workspaces'),
   getWorkspace: (id: string) => request<Workspace>(`/workspaces/${id}`),
-  getWorkspaceMembers: (id: string) => request<User[]>(`/workspaces/${id}/members`),
+  getWorkspaceMembers: (id: string) =>
+    request<User[]>(`/workspaces/${id}/members`),
   createWorkspace: (name: string, description?: string) =>
     request<Workspace>('/workspaces', {
       method: 'POST',

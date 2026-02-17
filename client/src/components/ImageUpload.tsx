@@ -122,12 +122,11 @@ export default function ImageUpload({
         </div>
       </div>
 
-      {error && (
-        <p className="text-xs text-red-400 mt-1">{error}</p>
-      )}
+      {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
 
       <p className="text-xs text-boxflow-subtle">
-        Rekommenderad storlek: {IMAGE_UPLOAD.RECOMMENDED_SIZE}. Max {IMAGE_UPLOAD.MAX_SIZE_MB}MB.
+        Rekommenderad storlek: {IMAGE_UPLOAD.RECOMMENDED_SIZE}. Max{' '}
+        {IMAGE_UPLOAD.MAX_SIZE_MB}MB.
       </p>
     </div>
   );
