@@ -56,7 +56,7 @@ export default function MemberList() {
       setUsers((prevUsers) => {
         const existingUser = prevUsers.find((u) => u.id === data.userId);
         if (!existingUser) return prevUsers;
-        
+
         return prevUsers.map((u) =>
           u.id === data.userId
             ? {

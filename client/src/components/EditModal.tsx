@@ -86,10 +86,10 @@ export default function EditModal({
       }
 
       // Wait for onSave to complete
-      await onSave({ 
-        name, 
-        description, 
-        ...(showIcon ? { iconUrl: finalIconUrl } : {}) 
+      await onSave({
+        name,
+        description,
+        ...(showIcon ? { iconUrl: finalIconUrl } : {})
       });
     } catch (err) {
       logger.error('Failed to save:', err);
@@ -140,9 +140,7 @@ export default function EditModal({
               />
             </div>
           )}
-          {uploadError && (
-            <p className="text-sm text-red-400">{uploadError}</p>
-          )}
+          {uploadError && <p className="text-sm text-red-400">{uploadError}</p>}
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onCancel} disabled={uploading}>
