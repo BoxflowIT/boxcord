@@ -1,4 +1,5 @@
 // Action Group - Group of action buttons with spacing
+import { cn } from '../../utils/classNames';
 
 interface ActionGroupProps {
   children: React.ReactNode;
@@ -35,12 +36,15 @@ export default function ActionGroup({
   align = 'start',
   className = ''
 }: ActionGroupProps) {
-  const flexDirection = orientation === 'vertical' ? 'flex-col' : 'flex-row';
-  const spacingClass = spacingClasses[orientation][spacing];
-
   return (
     <div
-      className={`flex ${flexDirection} ${spacingClass} ${alignClasses[align]} ${className}`}
+      className={cn(
+        'flex',
+        orientation === 'vertical' ? 'flex-col' : 'flex-row',
+        spacingClasses[orientation][spacing],
+        alignClasses[align],
+        className
+      )}
     >
       {children}
     </div>
