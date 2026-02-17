@@ -25,9 +25,10 @@ model User {
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
 
-    presence       UserPresence?
-    messages       Message[]
-    dmParticipants DirectMessageParticipant[]
+    presence             UserPresence?
+    messages             Message[]
+    dmParticipants       DirectMessageParticipant[]
+    workspaceMemberships WorkspaceMember[]
 
     @@map("users")
 }
@@ -59,8 +60,11 @@ model WorkspaceMember {
     joinedAt    DateTime   @default(now()) @map("joined_at")
 
     workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+    user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     @@unique([workspaceId, userId])
+    @@index([userId])
+    @@index([workspaceId])
     @@map("workspace_members")
 }
 
@@ -95,6 +99,7 @@ model Channel {
     members   ChannelMember[]
 
     @@unique([workspaceId, name])
+    @@index([workspaceId])
     @@map("channels")
 }
 
@@ -108,6 +113,8 @@ model ChannelMember {
     channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
     @@unique([channelId, userId])
+    @@index([channelId])
+    @@index([userId])
     @@map("channel_members")
 }
 
@@ -135,6 +142,7 @@ model Message {
     reactions   Reaction[]
 
     @@index([channelId, createdAt])
+    @@index([authorId])
     @@map("messages")
 }
 
@@ -149,6 +157,7 @@ model Attachment {
 
     message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
+    @@index([messageId])
     @@map("attachments")
 }
 
@@ -162,6 +171,7 @@ model Reaction {
     message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
     @@unique([messageId, userId, emoji])
+    @@index([messageId])
     @@map("reactions")
 }
 
@@ -189,6 +199,8 @@ model DirectMessageParticipant {
     user    User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     @@unique([channelId, userId])
+    @@index([userId])
+    @@index([channelId])
     @@map("dm_participants")
 }
 

@@ -58,37 +58,26 @@ export class WorkspaceService {
   }
 
   async getWorkspaceMembers(workspaceId: string) {
-    // Get all members of a workspace
+    // Get all members with user data in one query (optimized)
     const members = await this.prisma.workspaceMember.findMany({
-      where: { workspaceId }
+      where: { workspaceId },
+      include: {
+        user: {
+          include: { presence: true }
+        }
+      },
+      orderBy: {
+        user: {
+          firstName: 'asc'
+        }
+      }
     });
 
-    // Fetch user details for all members
-    const userIds = members.map((m) => m.userId);
-    const users = await this.prisma.user.findMany({
-      where: { id: { in: userIds } },
-      include: { presence: true }
-    });
-
-    // Create a map for quick user lookup
-    const userMap = new Map(users.map((u) => [u.id, u]));
-
-    // Return users with their workspace role, sorted by firstName
-    return members
-      .map((member) => {
-        const user = userMap.get(member.userId);
-        if (!user) return null;
-        return {
-          ...user,
-          workspaceRole: member.role
-        };
-      })
-      .filter((u) => u !== null)
-      .sort((a, b) => {
-        const aName = a.firstName || a.email;
-        const bName = b.firstName || b.email;
-        return aName.localeCompare(bName);
-      });
+    // Return users with their workspace role
+    return members.map((member) => ({
+      ...member.user,
+      workspaceRole: member.role
+    }));
   }
 
   async addMember(
