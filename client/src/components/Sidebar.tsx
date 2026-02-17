@@ -9,17 +9,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
-import { api } from '../services/api';
 import { signOut } from '../services/cognito';
-import { logger } from '../utils/logger';
-import {
-  useWorkspaces,
-  useChannels,
-  useCreateWorkspace,
-  useCreateChannel,
-  useDeleteWorkspace,
-  useDeleteChannel
-} from '../hooks/useQuery';
+import { useWorkspaces, useChannels } from '../hooks/useQuery';
+import { useWorkspaceOperations } from '../hooks/useWorkspaceOperations';
+import { useChannelOperations } from '../hooks/useChannelOperations';
+import { useModalWithData } from '../hooks/useModalState';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import EditModal from './EditModal';
 import CreateModal from './CreateModal';
@@ -52,40 +46,27 @@ export default function Sidebar({
   const { data: workspaces = [] } = useWorkspaces();
   const { data: channels = [] } = useChannels(currentWorkspace?.id);
 
-  // Mutations
-  const createWorkspaceMutation = useCreateWorkspace();
-  const createChannelMutation = useCreateChannel();
-  const deleteWorkspaceMutation = useDeleteWorkspace();
-  const deleteChannelMutation = useDeleteChannel();
-
   const { user, logout } = useAuthStore();
+
+  // Modal state
   const [showNewChannel, setShowNewChannel] = useState(false);
   const [showNewWorkspace, setShowNewWorkspace] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
 
-  // Edit state
-  const [editingChannel, setEditingChannel] = useState<{
+  const editChannelModal = useModalWithData<{
     id: string;
     name: string;
     description: string;
-  } | null>(null);
-  const [editingWorkspace, setEditingWorkspace] = useState<{
+  }>();
+  const editWorkspaceModal = useModalWithData<{
     id: string;
     name: string;
     description: string;
     iconUrl: string;
-  } | null>(null);
+  }>();
+  const deleteChannelModal = useModalWithData<{ id: string; name: string }>();
+  const deleteWorkspaceModal = useModalWithData<{ id: string; name: string }>();
 
-  // Delete state
-  const [deleteChannel, setDeleteChannel] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
-  const [deleteWorkspace, setDeleteWorkspace] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
-
+  // Handlers (declared before operations hooks)
   const handleWorkspaceSelect = (workspace: Workspace | null) => {
     setCurrentWorkspace(workspace);
     // Channels loaded automatically by useChannels() hook
@@ -98,36 +79,35 @@ export default function Sidebar({
     }
   };
 
-  const handleCreateWorkspace = async (name: string) => {
-    if (isCreating) return;
+  // Operations
+  const workspaceOps = useWorkspaceOperations({
+    workspaces,
+    currentWorkspace,
+    onWorkspaceSelect: handleWorkspaceSelect
+  });
 
-    setIsCreating(true);
+  const channelOps = useChannelOperations({
+    channels,
+    currentWorkspaceId: currentWorkspace?.id,
+    currentChannel,
+    onChannelSelect: handleChannelSelect
+  });
+
+  const handleCreateWorkspace = async (name: string) => {
     try {
-      const workspace = await createWorkspaceMutation.mutateAsync({ name });
+      await workspaceOps.createWorkspace(name);
       setShowNewWorkspace(false);
-      handleWorkspaceSelect(workspace); // Switch to new workspace
-    } catch (err) {
-      logger.error('Failed to create workspace:', err);
-    } finally {
-      setIsCreating(false);
+    } catch {
+      // Error already logged in hook
     }
   };
 
   const handleCreateChannel = async (name: string) => {
-    if (!currentWorkspace || isCreating) return;
-
-    setIsCreating(true);
     try {
-      const channel = await createChannelMutation.mutateAsync({
-        workspaceId: currentWorkspace.id,
-        name
-      });
+      await channelOps.createChannel(name);
       setShowNewChannel(false);
-      handleChannelSelect(channel);
-    } catch (err) {
-      logger.error('Failed to create channel:', err);
-    } finally {
-      setIsCreating(false);
+    } catch {
+      // Error already logged in hook
     }
   };
 
@@ -137,28 +117,18 @@ export default function Sidebar({
   ) => {
     e.stopPropagation();
     if (channel) {
-      setDeleteChannel({ id: channel.id, name: channel.name });
+      deleteChannelModal.open({ id: channel.id, name: channel.name });
     }
   };
 
   const handleDeleteConfirmChannel = async () => {
-    if (!deleteChannel) return;
+    if (!deleteChannelModal.data) return;
 
     try {
-      await deleteChannelMutation.mutateAsync(deleteChannel.id);
-      setDeleteChannel(null);
-
-      // Navigate away if current channel was deleted
-      if (currentChannel?.id === deleteChannel.id) {
-        const remaining = channels.filter((c) => c.id !== deleteChannel.id);
-        if (remaining.length > 0) {
-          handleChannelSelect(remaining[0]);
-        } else {
-          navigate('/chat');
-        }
-      }
-    } catch (err) {
-      logger.error('Failed to delete channel:', err);
+      await channelOps.deleteChannel(deleteChannelModal.data.id);
+      deleteChannelModal.close();
+    } catch {
+      // Error already logged in hook
     }
   };
 
@@ -168,35 +138,25 @@ export default function Sidebar({
   ) => {
     e.stopPropagation();
     if (workspace) {
-      setDeleteWorkspace({ id: workspace.id, name: workspace.name });
+      deleteWorkspaceModal.open({ id: workspace.id, name: workspace.name });
     }
   };
 
   const handleDeleteConfirmWorkspace = async () => {
-    if (!deleteWorkspace) return;
+    if (!deleteWorkspaceModal.data) return;
 
     try {
-      await deleteWorkspaceMutation.mutateAsync(deleteWorkspace.id);
-      setDeleteWorkspace(null);
-
-      // Navigate away if current workspace was deleted
-      if (currentWorkspace?.id === deleteWorkspace.id) {
-        const remaining = workspaces.filter((w) => w.id !== deleteWorkspace.id);
-        if (remaining.length > 0) {
-          handleWorkspaceSelect(remaining[0]);
-        } else {
-          navigate('/chat');
-        }
-      }
-    } catch (err) {
-      logger.error('Failed to delete workspace:', err);
+      await workspaceOps.deleteWorkspace(deleteWorkspaceModal.data.id);
+      deleteWorkspaceModal.close();
+    } catch {
+      // Error already logged in hook
     }
   };
 
   const handleEditChannel = (channel: Channel | null, e: React.MouseEvent) => {
     e.stopPropagation();
     if (channel) {
-      setEditingChannel({
+      editChannelModal.open({
         id: channel.id,
         name: channel.name,
         description: channel.description || ''
@@ -208,13 +168,12 @@ export default function Sidebar({
     name: string;
     description: string;
   }) => {
-    if (!editingChannel) return;
+    if (!editChannelModal.data) return;
     try {
-      await api.updateChannel(editingChannel.id, data);
-      // React Query will update cache via invalidation
-      setEditingChannel(null);
-    } catch (err) {
-      logger.error('Failed to update channel:', err);
+      await channelOps.updateChannel(editChannelModal.data.id, data);
+      editChannelModal.close();
+    } catch {
+      // Error already logged in hook
     }
   };
 
@@ -224,7 +183,7 @@ export default function Sidebar({
   ) => {
     e.stopPropagation();
     if (workspace) {
-      setEditingWorkspace({
+      editWorkspaceModal.open({
         id: workspace.id,
         name: workspace.name,
         description: workspace.description || '',
@@ -238,13 +197,12 @@ export default function Sidebar({
     description: string;
     iconUrl?: string;
   }) => {
-    if (!editingWorkspace) return;
+    if (!editWorkspaceModal.data) return;
     try {
-      await api.updateWorkspace(editingWorkspace.id, data);
-      // React Query will update cache via invalidation
-      setEditingWorkspace(null);
-    } catch (err) {
-      logger.error('Failed to update workspace:', err);
+      await workspaceOps.updateWorkspace(editWorkspaceModal.data.id, data);
+      editWorkspaceModal.close();
+    } catch {
+      // Error already logged in hook
     }
   };
 
@@ -329,50 +287,50 @@ export default function Sidebar({
       />
 
       <EditModal
-        isOpen={!!editingChannel}
+        isOpen={editChannelModal.isOpen}
         title="Redigera kanal"
-        name={editingChannel?.name || ''}
-        description={editingChannel?.description || ''}
+        name={editChannelModal.data?.name || ''}
+        description={editChannelModal.data?.description || ''}
         onSave={handleSaveChannel}
-        onCancel={() => setEditingChannel(null)}
+        onCancel={editChannelModal.close}
       />
 
       <EditModal
-        isOpen={!!editingWorkspace}
+        isOpen={editWorkspaceModal.isOpen}
         title="Redigera server"
-        name={editingWorkspace?.name || ''}
-        description={editingWorkspace?.description || ''}
-        iconUrl={editingWorkspace?.iconUrl || ''}
+        name={editWorkspaceModal.data?.name || ''}
+        description={editWorkspaceModal.data?.description || ''}
+        iconUrl={editWorkspaceModal.data?.iconUrl || ''}
         showIcon
         onSave={handleSaveWorkspace}
-        onCancel={() => setEditingWorkspace(null)}
+        onCancel={editWorkspaceModal.close}
       />
 
       <DeleteConfirmModal
-        isOpen={!!deleteChannel}
+        isOpen={deleteChannelModal.isOpen}
         title="Ta bort kanal"
         message={
           <>
             Är du säker på att du vill ta bort{' '}
-            <strong>{deleteChannel?.name}</strong>?
+            <strong>{deleteChannelModal.data?.name}</strong>?
           </>
         }
         onConfirm={handleDeleteConfirmChannel}
-        onCancel={() => setDeleteChannel(null)}
+        onCancel={deleteChannelModal.close}
       />
 
       <DeleteConfirmModal
-        isOpen={!!deleteWorkspace}
+        isOpen={deleteWorkspaceModal.isOpen}
         title="Ta bort server"
         message={
           <>
             Är du säker på att du vill ta bort{' '}
-            <strong>{deleteWorkspace?.name}</strong>? Alla kanaler och
+            <strong>{deleteWorkspaceModal.data?.name}</strong>? Alla kanaler och
             meddelanden kommer att raderas.
           </>
         }
         onConfirm={handleDeleteConfirmWorkspace}
-        onCancel={() => setDeleteWorkspace(null)}
+        onCancel={deleteWorkspaceModal.close}
       />
     </>
   );
