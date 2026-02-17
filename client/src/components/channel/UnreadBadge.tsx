@@ -1,4 +1,5 @@
 // Unread Badge - Show unread count
+import { cn } from '../../utils/classNames';
 
 interface UnreadBadgeProps {
   count: number;
@@ -26,14 +27,14 @@ export default function UnreadBadge({
 
   return (
     <span
-      className={`
-        inline-flex items-center justify-center
-        min-w-[20px] h-5 px-1.5
-        text-xs font-semibold rounded-full
-        ${variantClasses[variant]}
-        ${pulse ? 'animate-pulse' : ''}
-        ${className}
-      `}
+      className={cn(
+        'inline-flex items-center justify-center',
+        'min-w-[20px] h-5 px-1.5',
+        'text-xs font-semibold rounded-full',
+        variantClasses[variant],
+        pulse && 'animate-pulse',
+        className
+      )}
     >
       {displayCount}
     </span>

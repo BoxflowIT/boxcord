@@ -1,4 +1,5 @@
 // Checkbox Input - Checkbox with label
+import { cn } from '../../utils/classNames';
 
 interface CheckboxInputProps {
   checked: boolean;
@@ -19,9 +20,11 @@ export default function CheckboxInput({
 }: CheckboxInputProps) {
   return (
     <label
-      className={`flex items-start gap-3 cursor-pointer ${
-        disabled ? 'opacity-50 cursor-not-allowed' : ''
-      } ${className}`}
+      className={cn(
+        'flex items-start gap-3 cursor-pointer',
+        disabled && 'opacity-50 cursor-not-allowed',
+        className
+      )}
     >
       <input
         type="checkbox"
