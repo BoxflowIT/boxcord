@@ -10,12 +10,6 @@ export const prisma =
   new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
     datasourceUrl: process.env.DATABASE_URL,
-    // Optimized connection pooling for Railway
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL
-      }
-    },
     // Performance optimizations
     errorFormat: 'minimal', // Smaller error payloads
     transactionOptions: {
