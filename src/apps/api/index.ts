@@ -79,7 +79,9 @@ async function main() {
     await prisma.$queryRaw`SELECT 1`;
     app.log.info('🔥 Database connection warmed up');
   } catch (err) {
-    app.log.warn(`Database warmup failed, but continuing... ${err instanceof Error ? err.message : String(err)}`);
+    app.log.warn(
+      `Database warmup failed, but continuing... ${err instanceof Error ? err.message : String(err)}`
+    );
   }
 
   // Setup Socket.io before starting server

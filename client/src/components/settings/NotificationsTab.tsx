@@ -33,10 +33,7 @@ function Toggle({ enabled, onChange }: ToggleProps) {
   return (
     <button
       onClick={() => onChange(!enabled)}
-      className={cn(
-        'toggle-track w-12 h-6',
-        enabled && 'toggle-track-checked'
-      )}
+      className={cn('toggle-track w-12 h-6', enabled && 'toggle-track-checked')}
     >
       <span
         className={cn(

@@ -259,7 +259,9 @@ export function setupSocketHandlers(
                       data.content
                     );
                   } catch (pushErr) {
-                    app.log.error(`Failed to send push notification: ${pushErr instanceof Error ? pushErr.message : String(pushErr)}`);
+                    app.log.error(
+                      `Failed to send push notification: ${pushErr instanceof Error ? pushErr.message : String(pushErr)}`
+                    );
                   }
                 }
               }
@@ -416,7 +418,9 @@ export function setupSocketHandlers(
                   data.content
                 );
               } catch (pushErr) {
-                app.log.error(`Failed to send DM push notification: ${pushErr instanceof Error ? pushErr.message : String(pushErr)}`);
+                app.log.error(
+                  `Failed to send DM push notification: ${pushErr instanceof Error ? pushErr.message : String(pushErr)}`
+                );
               }
             }
           }

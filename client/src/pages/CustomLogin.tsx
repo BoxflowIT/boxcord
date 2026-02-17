@@ -114,10 +114,7 @@ export default function CustomLogin() {
         {error && <Alert type="error" message={error} />}
 
         <div className="text-right">
-          <Link
-            to="/forgot-password"
-            className="text-sm text-link"
-          >
+          <Link to="/forgot-password" className="text-sm text-link">
             Glömt lösenord?
           </Link>
         </div>

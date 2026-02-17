@@ -366,27 +366,32 @@ class SocketService {
         // Optimistically update React Query caches instead of invalidating
         if (queryClient) {
           // Update online users cache
-          queryClient.setQueryData(['users', 'online'], (oldData: User[] | undefined) => {
-            if (!oldData) return oldData;
-            return oldData.map((u) =>
-              u.id === data.userId
-                ? {
-                    ...u,
-                    firstName:
-                      data.firstName !== undefined
-                        ? data.firstName
-                        : u.firstName,
-                    lastName:
-                      data.lastName !== undefined ? data.lastName : u.lastName,
-                    avatarUrl:
-                      data.avatarUrl !== undefined
-                        ? data.avatarUrl
-                        : u.avatarUrl,
-                    bio: data.bio !== undefined ? data.bio : u.bio
-                  }
-                : u
-            );
-          });
+          queryClient.setQueryData(
+            ['users', 'online'],
+            (oldData: User[] | undefined) => {
+              if (!oldData) return oldData;
+              return oldData.map((u) =>
+                u.id === data.userId
+                  ? {
+                      ...u,
+                      firstName:
+                        data.firstName !== undefined
+                          ? data.firstName
+                          : u.firstName,
+                      lastName:
+                        data.lastName !== undefined
+                          ? data.lastName
+                          : u.lastName,
+                      avatarUrl:
+                        data.avatarUrl !== undefined
+                          ? data.avatarUrl
+                          : u.avatarUrl,
+                      bio: data.bio !== undefined ? data.bio : u.bio
+                    }
+                  : u
+              );
+            }
+          );
 
           // Also invalidate to ensure consistency
           queryClient.invalidateQueries({ queryKey: ['users'] });

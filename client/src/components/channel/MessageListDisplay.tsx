@@ -84,44 +84,44 @@ export default function MessageListDisplay({
       <div className="max-w-4xl mx-auto space-y-4">
         {messages.map((message) => (
           <MessageItem
-          key={message.id}
-          messageId={message.id}
-          content={message.content}
-          createdAt={message.createdAt}
-          edited={message.edited}
-          attachments={message.attachments}
-          reactionCounts={message.reactionCounts}
-          showHeader={message.showHeader}
-          isEditing={editingMessageId === message.id}
-          isOwnMessage={message.authorId === currentUserId}
-          authorName={
-            message.authorId === currentUserId
-              ? 'Du'
-              : message.author?.firstName && message.author?.lastName
-                ? `${message.author.firstName} ${message.author.lastName}`
-                : (message.author?.firstName ?? message.authorId.slice(0, 8))
-          }
-          authorInitial={(
-            message.author?.firstName?.[0] ?? message.authorId[0]
-          ).toUpperCase()}
-          authorAvatarUrl={
-            message.authorId === currentUserId
-              ? currentUserAvatar
-              : message.author?.avatarUrl
-          }
-          editContent={editingMessageId === message.id ? editContent : ''}
-          editTextareaRef={editTextareaRef}
-          onEditContentChange={onEditContentChange}
-          onSaveEdit={onSaveEdit}
-          onCancelEdit={onCancelEdit}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          renderContent={(content) => parseMentions(content)}
-          compact={compactMode}
-          isDM={isDM}
-        />
-      ))}
-      <div ref={messagesEndRef} />
+            key={message.id}
+            messageId={message.id}
+            content={message.content}
+            createdAt={message.createdAt}
+            edited={message.edited}
+            attachments={message.attachments}
+            reactionCounts={message.reactionCounts}
+            showHeader={message.showHeader}
+            isEditing={editingMessageId === message.id}
+            isOwnMessage={message.authorId === currentUserId}
+            authorName={
+              message.authorId === currentUserId
+                ? 'Du'
+                : message.author?.firstName && message.author?.lastName
+                  ? `${message.author.firstName} ${message.author.lastName}`
+                  : (message.author?.firstName ?? message.authorId.slice(0, 8))
+            }
+            authorInitial={(
+              message.author?.firstName?.[0] ?? message.authorId[0]
+            ).toUpperCase()}
+            authorAvatarUrl={
+              message.authorId === currentUserId
+                ? currentUserAvatar
+                : message.author?.avatarUrl
+            }
+            editContent={editingMessageId === message.id ? editContent : ''}
+            editTextareaRef={editTextareaRef}
+            onEditContentChange={onEditContentChange}
+            onSaveEdit={onSaveEdit}
+            onCancelEdit={onCancelEdit}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            renderContent={(content) => parseMentions(content)}
+            compact={compactMode}
+            isDM={isDM}
+          />
+        ))}
+        <div ref={messagesEndRef} />
       </div>
     </div>
   );

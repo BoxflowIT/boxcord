@@ -87,7 +87,8 @@ export default function MentionAutocomplete({
 // Matches @email (like @anna@boxflow.se) or @username
 export function parseMentions(content: string): (string | JSX.Element)[] {
   // Match @email format or @word format
-  const mentionRegex = /@([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[\w]+)/g;
+  const mentionRegex =
+    /@([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[\w]+)/g;
   const parts: (string | JSX.Element)[] = [];
   let lastIndex = 0;
   let match;
@@ -106,7 +107,11 @@ export function parseMentions(content: string): (string | JSX.Element)[] {
 
     // Add the mention as a styled element
     parts.push(
-      <span key={match.index} className="mention-link" title={mentionText.includes('@') ? mentionText : undefined}>
+      <span
+        key={match.index}
+        className="mention-link"
+        title={mentionText.includes('@') ? mentionText : undefined}
+      >
         {displayName}
       </span>
     );

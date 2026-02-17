@@ -30,7 +30,9 @@ export function AuthLayout({
         {children}
 
         {footer && (
-          <p className="text-center text-sm text-boxflow-subtle mt-6">{footer}</p>
+          <p className="text-center text-sm text-boxflow-subtle mt-6">
+            {footer}
+          </p>
         )}
       </div>
     </div>
