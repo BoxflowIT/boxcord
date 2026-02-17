@@ -338,10 +338,7 @@ export class WorkspaceService {
     return { workspace: invite.workspace, member };
   }
 
-  async deleteInvite(
-    inviteId: string,
-    userId: string
-  ): Promise<void> {
+  async deleteInvite(inviteId: string, userId: string): Promise<void> {
     const invite = await this.prisma.workspaceInvite.findUnique({
       where: { id: inviteId }
     });

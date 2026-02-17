@@ -65,9 +65,7 @@ export default function JoinPage() {
               Ogiltig inbjudan
             </h1>
             <p className="text-boxflow-muted mb-6">{error}</p>
-            <Button onClick={() => navigate('/chat')}>
-              Gå till chatten
-            </Button>
+            <Button onClick={() => navigate('/chat')}>Gå till chatten</Button>
           </div>
         ) : preview ? (
           <div className="text-center">

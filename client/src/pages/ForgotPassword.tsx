@@ -125,10 +125,7 @@ export default function ForgotPassword() {
           </Button>
 
           <div className="text-center">
-            <Link
-              to="/login"
-              className="text-sm text-link"
-            >
+            <Link to="/login" className="text-sm text-link">
               Tillbaka till inloggning
             </Link>
           </div>

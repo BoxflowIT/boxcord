@@ -388,8 +388,8 @@ export default function Sidebar({
         message={
           <>
             Är du säker på att du vill lämna{' '}
-            <strong>{leaveWorkspaceModal.data?.name}</strong>? Du kan gå med igen
-            med en inbjudningslänk.
+            <strong>{leaveWorkspaceModal.data?.name}</strong>? Du kan gå med
+            igen med en inbjudningslänk.
           </>
         }
         confirmText="Lämna"

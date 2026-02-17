@@ -53,7 +53,10 @@ export function MessageBody({
         compact={compact}
         renderContent={renderContent}
       />
-      <MessageReactionBubbles reactions={reactions} onToggle={onToggleReaction} />
+      <MessageReactionBubbles
+        reactions={reactions}
+        onToggle={onToggleReaction}
+      />
     </div>
   );
 }

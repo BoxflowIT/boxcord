@@ -1,11 +1,6 @@
 // Invite Modal - Create and manage workspace invites
 import { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
-} from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { api } from '../services/api';
 import type { WorkspaceInvite } from '../types';
@@ -89,11 +84,7 @@ export default function InviteModal({
 
         <div className="space-y-4">
           {/* Create new invite button */}
-          <Button
-            onClick={createInvite}
-            disabled={creating}
-            className="w-full"
-          >
+          <Button onClick={createInvite} disabled={creating} className="w-full">
             {creating ? 'Skapar...' : 'Skapa ny inbjudan'}
           </Button>
 

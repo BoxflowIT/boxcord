@@ -153,10 +153,7 @@ export default function JoinServerModal({
           <Button variant="ghost" onClick={handleClose}>
             Avbryt
           </Button>
-          <Button
-            onClick={handleJoin}
-            disabled={!preview || joining}
-          >
+          <Button onClick={handleJoin} disabled={!preview || joining}>
             {joining ? 'Går med...' : 'Gå med i server'}
           </Button>
         </DialogFooter>
