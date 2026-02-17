@@ -1,4 +1,5 @@
 // List Item Wrapper - Generic list item with hover and click
+import { cn } from '../../utils/classNames';
 
 interface ListItemWrapperProps {
   children: React.ReactNode;
@@ -17,15 +18,16 @@ export default function ListItemWrapper({
 }: ListItemWrapperProps) {
   const Component = onClick ? 'button' : 'div';
 
-  const baseClasses = 'w-full px-3 py-2 rounded transition-colors';
-  const hoverClasses = hoverable ? 'hover:bg-boxflow-hover' : '';
-  const activeClasses = active ? 'bg-boxflow-hover' : '';
-  const clickClasses = onClick ? 'cursor-pointer text-left' : '';
-
   return (
     <Component
       onClick={onClick}
-      className={`${baseClasses} ${hoverClasses} ${activeClasses} ${clickClasses} ${className}`}
+      className={cn(
+        'w-full px-3 py-2 rounded transition-colors',
+        hoverable && 'hover:bg-boxflow-hover',
+        active && 'bg-boxflow-hover',
+        onClick && 'cursor-pointer text-left',
+        className
+      )}
     >
       {children}
     </Component>

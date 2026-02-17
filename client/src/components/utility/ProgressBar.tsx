@@ -1,4 +1,5 @@
 // Progress Bar - Linear progress indicator
+import { cn } from '../../utils/classNames';
 
 interface ProgressBarProps {
   value: number;
@@ -40,10 +41,17 @@ export default function ProgressBar({
         </div>
       )}
       <div
-        className={`w-full bg-boxflow-darker rounded-full overflow-hidden ${sizeClasses[size]}`}
+        className={cn(
+          'w-full bg-boxflow-darker rounded-full overflow-hidden',
+          sizeClasses[size]
+        )}
       >
         <div
-          className={`${variantClasses[variant]} ${sizeClasses[size]} rounded-full transition-all duration-300`}
+          className={cn(
+            variantClasses[variant],
+            sizeClasses[size],
+            'rounded-full transition-all duration-300'
+          )}
           style={{ width: `${percentage}%` }}
         />
       </div>
