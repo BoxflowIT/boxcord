@@ -16,6 +16,23 @@ export const prisma =
       maxWait: 2000, // 2s max wait for transaction lock
       timeout: 5000 // 5s transaction timeout
     }
+  }).$extends({
+    query: {
+      $allOperations({ operation, model, args, query }) {
+        // Add connection pool optimization
+        const start = Date.now();
+        const result = query(args);
+        result.then(() => {
+          const duration = Date.now() - start;
+          if (duration > 1000) {
+            console.warn(
+              `Slow query detected: ${model}.${operation} took ${duration}ms`
+            );
+          }
+        });
+        return result;
+      }
+    }
   });
 
 if (process.env.NODE_ENV !== 'production') {

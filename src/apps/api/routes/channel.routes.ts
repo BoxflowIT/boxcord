@@ -13,17 +13,22 @@ export async function channelRoutes(app: FastifyInstance) {
   });
 
   // Get channels for a workspace
-  app.get<{ Querystring: { workspaceId: string } }>('/', async (request) => {
-    const channels = await channelService.getWorkspaceChannels(
-      request.query.workspaceId,
-      request.user.id
-    );
-    return { success: true, data: channels };
-  });
+  app.get<{ Querystring: { workspaceId: string } }>(
+    '/',
+    async (request, reply) => {
+      const channels = await channelService.getWorkspaceChannels(
+        request.query.workspaceId,
+        request.user.id
+      );
+      reply.cache({ maxAge: 60, staleWhileRevalidate: 300 }); // 1min cache, 5min stale
+      return { success: true, data: channels };
+    }
+  );
 
   // Get single channel
-  app.get<{ Params: { id: string } }>('/:id', async (request) => {
+  app.get<{ Params: { id: string } }>('/:id', async (request, reply) => {
     const channel = await channelService.getChannel(request.params.id);
+    reply.cache({ maxAge: 300, staleWhileRevalidate: 600 });
     return { success: true, data: channel };
   });
 
