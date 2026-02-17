@@ -36,6 +36,7 @@ interface MessageListDisplayProps {
   editContent: string;
   editTextareaRef: React.RefObject<HTMLTextAreaElement>;
   compactMode: boolean;
+  isDM?: boolean;
   onEditContentChange: (value: string) => void;
   onSaveEdit: () => void;
   onCancelEdit: () => void;
@@ -54,6 +55,7 @@ export default function MessageListDisplay({
   editContent,
   editTextareaRef,
   compactMode,
+  isDM = false,
   onEditContentChange,
   onSaveEdit,
   onCancelEdit,
@@ -116,6 +118,7 @@ export default function MessageListDisplay({
           onDelete={onDelete}
           renderContent={(content) => parseMentions(content)}
           compact={compactMode}
+          isDM={isDM}
         />
       ))}
       <div ref={messagesEndRef} />

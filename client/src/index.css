@@ -235,11 +235,6 @@ body {
     @apply opacity-100;
   }
 
-  /* Legacy action-bar class for backward compatibility */
-  .action-bar {
-    @apply absolute -top-8 left-0 opacity-0 group-hover:opacity-100 bg-boxflow-darker border border-boxflow-hover rounded-lg shadow-xl px-2 py-1 flex items-center gap-1 z-50 transition-opacity duration-150 w-auto;
-  }
-
   .message-input-container {
     @apply bg-boxflow-darker rounded-lg flex items-center relative shadow-lg;
   }
@@ -357,9 +352,9 @@ body {
     @apply flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-boxflow-dark/50 transition-colors cursor-pointer;
   }
 
-  /* ========== Modal/Overlay Styles ========== */
+  /* ========== Modal/Dialog Styles ========== */
   .modal-overlay {
-    @apply fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm;
+    @apply fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm p-4;
   }
 
   .modal-content {
@@ -407,11 +402,12 @@ body {
 
   /* ========== Utility Classes ========== */
   .hover-group-visible {
-    @apply opacity-0 group-hover:opacity-100 transition-opacity;
+    @apply opacity-0 group-hover:opacity-100 transition-opacity duration-150;
   }
 
   .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-boxflow-primary focus:ring-offset-2 focus:ring-offset-boxflow-darker;
+    @apply focus:outline-none focus:ring-2 focus:ring-boxflow-primary;
+    @apply focus:ring-offset-2 focus:ring-offset-boxflow-darker;
   }
 
   .divider {
@@ -422,26 +418,38 @@ body {
     @apply w-px bg-boxflow-border mx-2;
   }
 
+  /* Smooth transitions for interactive elements */
+  .transition-interactive {
+    @apply transition-all duration-150 ease-in-out;
+  }
+
   /* ========== Workspace Icon Styles ========== */
   .workspace-icon {
-    @apply w-12 h-12 rounded-full flex items-center justify-center text-white font-bold transition-all overflow-hidden;
+    @apply w-12 h-12 rounded-full flex items-center justify-center text-white font-bold overflow-hidden;
+    @apply transition-all duration-200;
   }
 
   .workspace-icon-active {
-    @apply workspace-icon bg-gradient-to-br from-boxflow-primary to-boxflow-secondary rounded-2xl shadow-lg shadow-boxflow-primary/30;
+    @apply workspace-icon rounded-2xl shadow-lg shadow-boxflow-primary/30;
+    @apply bg-gradient-to-br from-boxflow-primary to-boxflow-secondary;
   }
 
   .workspace-icon-inactive {
-    @apply workspace-icon bg-boxflow-hover hover:bg-boxflow-hover/80 hover:rounded-2xl transition-all duration-200;
+    @apply workspace-icon bg-boxflow-hover hover:bg-boxflow-hover/80 hover:rounded-2xl;
   }
 
   .workspace-icon-add {
-    @apply workspace-icon bg-boxflow-hover hover:bg-boxflow-success text-boxflow-success hover:text-white hover:rounded-2xl transition-all duration-200;
+    @apply workspace-icon bg-boxflow-hover text-boxflow-success hover:rounded-2xl;
+    @apply hover:bg-boxflow-success hover:text-white;
   }
 
   /* ========== Channel Item Styles ========== */
   .channel-item {
-    @apply flex items-center gap-2 flex-1 min-w-0 hover:bg-boxflow-hover rounded px-2 py-1 -mx-2 -my-1 transition-all duration-150;
+    @apply flex items-center gap-2 flex-1 min-w-0 rounded px-2 py-1 transition-all duration-150;
+  }
+
+  .channel-item-default {
+    @apply channel-item hover:bg-boxflow-hover;
   }
 
   .channel-item-active {

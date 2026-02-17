@@ -208,6 +208,7 @@ export default function DMView() {
         editContent={editContent}
         editTextareaRef={editTextareaRef}
         compactMode={compactMode}
+        isDM={true}
         onEditContentChange={setEditContent}
         onSaveEdit={saveEdit}
         onCancelEdit={handleCancelEdit}
