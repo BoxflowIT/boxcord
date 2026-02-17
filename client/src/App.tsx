@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import Spinner from './components/ui/Spinner';
 import CustomLogin from './pages/CustomLogin';
 import ForgotPassword from './pages/ForgotPassword';
+import JoinPage from './pages/JoinPage';
 import Chat from './pages/Chat';
 
 // Create QueryClient with optimized settings
@@ -53,6 +54,12 @@ function App() {
       <Routes>
         <Route path="/login" element={<CustomLogin />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route
+          path="/join/:code"
+          element={
+            isAuthenticated ? <JoinPage /> : <Navigate to="/login" replace />
+          }
+        />
         <Route
           path="/chat/*"
           element={

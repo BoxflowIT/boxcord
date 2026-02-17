@@ -19,8 +19,26 @@ export interface WorkspaceMember {
   joinedAt: Date;
 }
 
+export interface WorkspaceInvite {
+  id: string;
+  workspaceId: string;
+  code: string;
+  createdBy: string;
+  maxUses: number | null;
+  uses: number;
+  expiresAt: Date | null;
+  createdAt: Date;
+}
+
 export interface CreateWorkspaceInput {
   name: string;
   description?: string;
   ownerId: string;
+}
+
+export interface CreateInviteInput {
+  workspaceId: string;
+  createdBy: string;
+  maxUses?: number;
+  expiresInDays?: number;
 }

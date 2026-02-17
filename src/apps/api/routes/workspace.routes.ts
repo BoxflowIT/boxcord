@@ -71,6 +71,12 @@ export async function workspaceRoutes(app: FastifyInstance) {
     return reply.status(204).send();
   });
 
+  // Leave workspace (current user leaves)
+  app.post<{ Params: { id: string } }>('/:id/leave', async (request, reply) => {
+    await workspaceService.leaveWorkspace(request.params.id, request.user.id);
+    return reply.status(204).send();
+  });
+
   // Delete workspace
   app.delete<{ Params: { id: string } }>('/:id', async (request, reply) => {
     await workspaceService.deleteWorkspace(request.params.id, request.user.id);
@@ -88,5 +94,43 @@ export async function workspaceRoutes(app: FastifyInstance) {
       request.body
     );
     return { success: true, data: workspace };
+  });
+
+  // ============================================
+  // INVITE ROUTES
+  // ============================================
+
+  // Create invite for workspace
+  app.post<{
+    Params: { id: string };
+    Body: { maxUses?: number; expiresInDays?: number };
+  }>('/:id/invites', async (request, reply) => {
+    const invite = await workspaceService.createInvite({
+      workspaceId: request.params.id,
+      createdBy: request.user.id,
+      maxUses: request.body.maxUses,
+      expiresInDays: request.body.expiresInDays
+    });
+    return reply.status(201).send({ success: true, data: invite });
+  });
+
+  // Get workspace invites
+  app.get<{ Params: { id: string } }>('/:id/invites', async (request) => {
+    const invites = await workspaceService.getWorkspaceInvites(
+      request.params.id,
+      request.user.id
+    );
+    return { success: true, data: invites };
+  });
+
+  // Delete invite
+  app.delete<{
+    Params: { id: string; inviteId: string };
+  }>('/:id/invites/:inviteId', async (request, reply) => {
+    await workspaceService.deleteInvite(
+      request.params.inviteId,
+      request.user.id
+    );
+    return reply.status(204).send();
   });
 }
