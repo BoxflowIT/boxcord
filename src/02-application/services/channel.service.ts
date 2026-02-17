@@ -45,37 +45,48 @@ export class ChannelService {
       orderBy: { name: 'asc' }
     });
 
-    // Calculate unread count for each channel
-    return Promise.all(
-      channels.map(async (channel) => {
-        const member = channel.members[0];
-        const lastReadAt = member?.lastReadAt;
+    if (channels.length === 0) {
+      return [];
+    }
 
-        let unreadCount = 0;
-        if (lastReadAt) {
-          // Count messages after last read time (excluding own messages)
-          unreadCount = await this.prisma.message.count({
-            where: {
-              channelId: channel.id,
-              createdAt: { gt: lastReadAt },
-              authorId: { not: userId }
-            }
-          });
-        } else {
-          // If never read, count all messages (excluding own messages)
-          unreadCount = await this.prisma.message.count({
-            where: {
-              channelId: channel.id,
-              authorId: { not: userId }
-            }
-          });
-        }
-
-        // Remove internal fields before returning
-        const { members, _count, ...channelData } = channel;
-        return { ...channelData, unreadCount };
-      })
+    // OPTIMIZED: Get all unread counts in a single query using groupBy
+    const channelIds = channels.map((c) => c.id);
+    const memberMap = new Map(
+      channels.map((c) => [c.id, c.members[0]?.lastReadAt])
     );
+
+    // Build OR conditions for each channel's unread messages
+    const unreadConditions = channels.map((channel) => {
+      const lastReadAt = memberMap.get(channel.id);
+      return {
+        channelId: channel.id,
+        authorId: { not: userId },
+        ...(lastReadAt && { createdAt: { gt: lastReadAt } })
+      };
+    });
+
+    // Single query to get all unread counts
+    const unreadMessages = await this.prisma.message.groupBy({
+      by: ['channelId'],
+      where: {
+        OR: unreadConditions
+      },
+      _count: { id: true }
+    });
+
+    // Create lookup map for unread counts
+    const unreadMap = new Map(
+      unreadMessages.map((m) => [m.channelId, m._count.id])
+    );
+
+    // Combine channels with unread counts
+    return channels.map((channel) => {
+      const { members, _count, ...channelData } = channel;
+      return {
+        ...channelData,
+        unreadCount: unreadMap.get(channel.id) ?? 0
+      };
+    });
   }
 
   async getChannel(channelId: string): Promise<Channel> {

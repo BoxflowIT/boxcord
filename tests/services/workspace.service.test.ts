@@ -125,31 +125,63 @@ describe('WorkspaceService', () => {
 
   describe('getWorkspaceMembers', () => {
     it('should return members for a workspace', async () => {
-      const members = [
-        { id: 'm1', userId: 'user-1', workspaceId: 'ws-1', role: 'OWNER' as const, joinedAt: new Date() },
-        { id: 'm2', userId: 'user-2', workspaceId: 'ws-1', role: 'MEMBER' as const, joinedAt: new Date() },
-      ];
-
-      const users = [
-        { id: 'user-1', email: 'user1@test.com', firstName: 'User', lastName: 'One', role: 'STAFF', presence: null, createdAt: new Date(), updatedAt: new Date() },
-        { id: 'user-2', email: 'user2@test.com', firstName: 'User', lastName: 'Two', role: 'STAFF', presence: null, createdAt: new Date(), updatedAt: new Date() },
+      const membersWithUsers = [
+        {
+          id: 'm1',
+          userId: 'user-1',
+          workspaceId: 'ws-1',
+          role: 'OWNER' as const,
+          joinedAt: new Date(),
+          user: {
+            id: 'user-1',
+            email: 'user1@test.com',
+            firstName: 'User',
+            lastName: 'One',
+            role: 'STAFF',
+            presence: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        },
+        {
+          id: 'm2',
+          userId: 'user-2',
+          workspaceId: 'ws-1',
+          role: 'MEMBER' as const,
+          joinedAt: new Date(),
+          user: {
+            id: 'user-2',
+            email: 'user2@test.com',
+            firstName: 'User',
+            lastName: 'Two',
+            role: 'STAFF',
+            presence: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        },
       ];
 
       vi.mocked(mockPrisma.workspaceMember.findMany).mockResolvedValue(
-        members as any
-      );
-
-      vi.mocked(mockPrisma.user.findMany).mockResolvedValue(
-        users as any
+        membersWithUsers as any
       );
 
       const result = await workspaceService.getWorkspaceMembers('ws-1');
 
       expect(result).toHaveLength(2);
       expect(result[0]).toHaveProperty('workspaceRole');
-      expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
-        where: { id: { in: ['user-1', 'user-2'] } },
-        include: { presence: true }
+      expect(mockPrisma.workspaceMember.findMany).toHaveBeenCalledWith({
+        where: { workspaceId: 'ws-1' },
+        include: {
+          user: {
+            include: { presence: true }
+          }
+        },
+        orderBy: {
+          user: {
+            firstName: 'asc'
+          }
+        }
       });
     });
   });
