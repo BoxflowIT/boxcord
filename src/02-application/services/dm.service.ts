@@ -1,5 +1,5 @@
 // Direct Message Service - Application Layer
-import type { PrismaClient } from '@prisma/client';
+import type { ExtendedPrismaClient } from '../../03-infrastructure/database/client.js';
 import type { PaginationParams, PaginatedResult } from '../../00-core/types.js';
 import {
   NotFoundError,
@@ -53,7 +53,7 @@ export interface DMChannel {
 }
 
 export class DirectMessageService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly prisma: ExtendedPrismaClient) {}
 
   // Get or create DM channel between two users
   async getOrCreateChannel(

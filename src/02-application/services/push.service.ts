@@ -1,5 +1,5 @@
 // Push Notification Service - Application Layer
-import type { PrismaClient } from '@prisma/client';
+import type { ExtendedPrismaClient } from '../../03-infrastructure/database/client.js';
 import webPush from 'web-push';
 
 // Configure VAPID keys
@@ -28,7 +28,7 @@ export interface NotificationPayload {
 }
 
 export class PushService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly prisma: ExtendedPrismaClient) {}
 
   // Subscribe to push notifications
   async subscribe(

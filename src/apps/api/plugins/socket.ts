@@ -1,7 +1,7 @@
 // Socket.io Plugin - Real-time messaging
 import type { FastifyInstance } from 'fastify';
 import type { Server, Socket } from 'socket.io';
-import type { PrismaClient } from '@prisma/client';
+import type { ExtendedPrismaClient } from '../../../03-infrastructure/database/client.js';
 import { SOCKET_EVENTS } from '../../../00-core/constants.js';
 import { MessageService } from '../../../02-application/services/message.service.js';
 import { PushService } from '../../../02-application/services/push.service.js';
@@ -32,7 +32,7 @@ function decodeBase64Url(str: string): string {
 export function setupSocketHandlers(
   io: Server,
   app: FastifyInstance,
-  prisma: PrismaClient
+  prisma: ExtendedPrismaClient
 ) {
   const messageService = new MessageService(prisma);
   const pushService = new PushService(prisma);

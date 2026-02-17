@@ -1,6 +1,7 @@
 // User Service - Application Layer
 // Manages local user profiles (synced from Boxtime)
-import type { PrismaClient, UserStatus } from '@prisma/client';
+import type { ExtendedPrismaClient } from '../../03-infrastructure/database/client.js';
+import type { UserStatus } from '@prisma/client';
 import { NotFoundError, ValidationError } from '../../00-core/errors.js';
 
 export interface LocalUser {
@@ -31,7 +32,7 @@ export interface UserWithPresence extends LocalUser {
 }
 
 export class UserService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly prisma: ExtendedPrismaClient) {}
 
   // Get or create user (called on login/first interaction)
   // Note: Role is ONLY set on create, not updated on subsequent logins

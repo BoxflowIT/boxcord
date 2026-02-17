@@ -1,5 +1,5 @@
 // Reaction Service - Application Layer
-import type { PrismaClient } from '@prisma/client';
+import type { ExtendedPrismaClient } from '../../03-infrastructure/database/client.js';
 import { NotFoundError, ConflictError } from '../../00-core/errors.js';
 
 // Common emojis for quick access
@@ -12,7 +12,7 @@ export interface ReactionCount {
 }
 
 export class ReactionService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly prisma: ExtendedPrismaClient) {}
 
   // Add reaction to channel message
   async addReaction(

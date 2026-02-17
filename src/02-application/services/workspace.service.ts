@@ -1,5 +1,5 @@
 // Workspace Service - Application Layer
-import type { PrismaClient } from '@prisma/client';
+import type { ExtendedPrismaClient } from '../../03-infrastructure/database/client.js';
 import type {
   Workspace,
   WorkspaceMember,
@@ -10,7 +10,7 @@ import type {
 import { NotFoundError, ForbiddenError } from '../../00-core/errors.js';
 
 export class WorkspaceService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly prisma: ExtendedPrismaClient) {}
 
   async getUserWorkspaces(userId: string): Promise<Workspace[]> {
     const memberships = await this.prisma.workspaceMember.findMany({

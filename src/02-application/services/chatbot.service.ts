@@ -1,5 +1,5 @@
 // Chatbot Service - Slash Commands and Bot Responses
-import type { PrismaClient } from '@prisma/client';
+import type { ExtendedPrismaClient } from '../../03-infrastructure/database/client.js';
 import type { Server as SocketServer } from 'socket.io';
 
 // Slash command types
@@ -28,7 +28,7 @@ export class ChatbotService {
   private commands: Map<string, SlashCommand> = new Map();
 
   constructor(
-    private readonly prisma: PrismaClient,
+    private readonly prisma: ExtendedPrismaClient,
     private io?: SocketServer
   ) {
     this.registerDefaultCommands();
