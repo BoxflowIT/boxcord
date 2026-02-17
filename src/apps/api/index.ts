@@ -1,6 +1,7 @@
 // Boxcord API - Main Entry Point
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import compress from '@fastify/compress';
 import fastifyStatic from '@fastify/static';
 import { Server } from 'socket.io';
 import { fileURLToPath } from 'url';
@@ -27,13 +28,25 @@ async function main() {
   const app = Fastify({
     logger: {
       level: process.env.NODE_ENV === 'production' ? 'info' : 'debug'
-    }
+    },
+    // Connection pooling
+    connectionTimeout: 10000,
+    keepAliveTimeout: 65000,
+    // Request payload optimization
+    bodyLimit: 10 * 1024 * 1024 // 10MB max
   });
 
   // Register plugins
   await app.register(cors, {
     origin: process.env.CORS_ORIGIN ?? true,
     credentials: true
+  });
+
+  // Compression for responses (gzip/brotli)
+  await app.register(compress, {
+    global: true,
+    threshold: 1024, // Only compress responses > 1KB
+    encodings: ['gzip', 'deflate']
   });
 
   // JWT authentication

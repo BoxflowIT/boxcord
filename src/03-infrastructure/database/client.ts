@@ -9,8 +9,19 @@ export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
-    // Connection pool settings for Railway proxy
-    datasourceUrl: process.env.DATABASE_URL
+    datasourceUrl: process.env.DATABASE_URL,
+    // Optimized connection pooling for Railway
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL
+      }
+    },
+    // Performance optimizations
+    errorFormat: 'minimal', // Smaller error payloads
+    transactionOptions: {
+      maxWait: 2000, // 2s max wait for transaction lock
+      timeout: 5000 // 5s transaction timeout
+    }
   });
 
 if (process.env.NODE_ENV !== 'production') {

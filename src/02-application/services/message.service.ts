@@ -62,8 +62,18 @@ export class MessageService {
         author: {
           select: { id: true, firstName: true, lastName: true, email: true }
         },
-        attachments: true,
-        reactions: true,
+        attachments: {
+          select: {
+            id: true,
+            fileName: true,
+            fileUrl: true,
+            fileType: true,
+            fileSize: true
+          }
+        },
+        reactions: {
+          select: { id: true, emoji: true, userId: true }
+        },
         _count: { select: { replies: true } }
       }
     });

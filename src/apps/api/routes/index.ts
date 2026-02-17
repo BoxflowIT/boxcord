@@ -14,6 +14,7 @@ import { pushRoutes } from './push.routes.js';
 import { webhookRoutes } from './webhook.routes.js';
 import { chatbotRoutes } from './chatbot.routes.js';
 import { inviteRoutes } from './invite.routes.js';
+import { initialDataRoutes } from './initial.routes.js';
 
 export async function registerRoutes(app: FastifyInstance) {
   // Ensure uploads directory exists
@@ -32,6 +33,7 @@ export async function registerRoutes(app: FastifyInstance) {
   // All API routes under /api/v1
   await app.register(
     async (api) => {
+      await api.register(initialDataRoutes); // No prefix, handles /initial
       await api.register(workspaceRoutes, { prefix: '/workspaces' });
       await api.register(channelRoutes, { prefix: '/channels' });
       await api.register(messageRoutes, { prefix: '/messages' });
