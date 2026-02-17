@@ -16,16 +16,12 @@ import { useAuthStore } from '../store/auth';
 import { useMessages, useChannels, queryKeys } from '../hooks/useQuery';
 import { useMessageActions } from '../hooks/useMessageActions';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { MessageItem } from './MessageItem';
-import FileUpload from './FileUpload';
-import EmojiPicker from './ui/EmojiPicker';
-import MentionAutocomplete, { parseMentions } from './MentionAutocomplete';
-import SlashCommandAutocomplete from './SlashCommandAutocomplete';
+import { useChannelInput } from '../hooks/useChannelInput';
 import DeleteConfirmModal from './DeleteConfirmModal';
-import { LoadingState } from './ui/LoadingSpinner';
 import { ChannelHeader } from './channel/ChannelHeader';
 import { BotResponseBanner } from './channel';
-import ChannelEmptyState from './channel/ChannelEmptyState';
+import MessageListDisplay from './channel/MessageListDisplay';
+import ChannelInputSection from './channel/ChannelInputSection';
 import {
   groupReactionsByEmoji,
   shouldShowMessageHeader
@@ -83,9 +79,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     });
   }, [messagesData?.items, user?.id, messageGrouping]);
 
-  const [inputValue, setInputValue] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [cursorPosition, setCursorPosition] = useState(0);
   const [showMentions, setShowMentions] = useState(false);
   const [showSlashCommands, setShowSlashCommands] = useState(false);
   const [botResponse, setBotResponse] = useState<{
@@ -93,8 +87,21 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     isPrivate: boolean;
   } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const typingTimeoutRef = useRef<number>();
+
+  const {
+    inputValue,
+    cursorPosition,
+    textareaRef,
+    handleInputChange,
+    handleMentionSelect,
+    handleSlashCommandSelect,
+    handleEmojiSelect,
+    clearInput
+  } = useChannelInput({
+    channelId,
+    onShowMentions: setShowMentions,
+    onShowSlashCommands: setShowSlashCommands
+  });
 
   // Stable callbacks for message actions - WebSocket ONLY (no API calls)
   const handleEditChannelMessage = useCallback(
@@ -173,7 +180,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     if (!inputValue.trim() || !channelId) return;
 
     const content = inputValue.trim();
-    setInputValue('');
+    clearInput();
 
     // Handle slash commands
     if (content.startsWith('/')) {
@@ -228,79 +235,6 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    const cursor = e.target.selectionStart ?? 0;
-    setInputValue(value);
-    setCursorPosition(cursor);
-
-    // Check if we should show slash command autocomplete
-    // Only show if "/" is at the start of the input
-    if (value.startsWith('/') && !value.includes(' ')) {
-      setShowSlashCommands(true);
-      setShowMentions(false);
-    } else {
-      setShowSlashCommands(false);
-
-      // Check if we should show mention autocomplete
-      const textBeforeCursor = value.slice(0, cursor);
-      const atIndex = textBeforeCursor.lastIndexOf('@');
-      if (atIndex !== -1) {
-        const textAfterAt = textBeforeCursor.slice(atIndex + 1);
-        // Show if @ is at start or after space, and no space after @
-        const isValidAt = atIndex === 0 || value[atIndex - 1] === ' ';
-        setShowMentions(isValidAt && !textAfterAt.includes(' '));
-      } else {
-        setShowMentions(false);
-      }
-    }
-
-    // Send typing indicator (debounced)
-    if (channelId) {
-      clearTimeout(typingTimeoutRef.current);
-      typingTimeoutRef.current = window.setTimeout(() => {
-        socketService.sendTyping(channelId);
-      }, 500);
-    }
-  };
-
-  const handleMentionSelect = useCallback(
-    (mention: { value: string }, startPos: number, endPos: number) => {
-      // Replace the @query with the selected mention
-      const newValue =
-        inputValue.slice(0, startPos) +
-        mention.value +
-        ' ' +
-        inputValue.slice(endPos);
-      setInputValue(newValue);
-      setShowMentions(false);
-
-      // Set cursor after the mention
-      const newCursorPos = startPos + mention.value.length + 1;
-      setTimeout(() => {
-        textareaRef.current?.focus();
-        textareaRef.current?.setSelectionRange(newCursorPos, newCursorPos);
-      }, 0);
-    },
-    [inputValue]
-  );
-
-  const handleSlashCommandSelect = useCallback(
-    (command: { name: string; usage: string }) => {
-      // Replace input with the command usage template
-      setInputValue(`/${command.name} `);
-      setShowSlashCommands(false);
-
-      // Focus and place cursor at end
-      setTimeout(() => {
-        textareaRef.current?.focus();
-        const len = command.name.length + 2;
-        textareaRef.current?.setSelectionRange(len, len);
-      }, 0);
-    },
-    []
-  );
-
   const handleFileSelect = async (file: File) => {
     if (!channelId) return;
 
@@ -317,24 +251,6 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     }
   };
 
-  const handleEmojiSelect = useCallback(
-    (emoji: string) => {
-      const cursorPos =
-        textareaRef.current?.selectionStart ?? inputValue.length;
-      const newValue =
-        inputValue.slice(0, cursorPos) + emoji + inputValue.slice(cursorPos);
-      setInputValue(newValue);
-
-      // Focus and place cursor after emoji
-      setTimeout(() => {
-        textareaRef.current?.focus();
-        const newCursorPos = cursorPos + emoji.length;
-        textareaRef.current?.setSelectionRange(newCursorPos, newCursorPos);
-      }, 0);
-    },
-    [inputValue]
-  );
-
   return (
     <>
       {/* Header */}
@@ -345,54 +261,23 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
       />
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {loadingMessages ? (
-          <LoadingState text="Laddar meddelanden..." />
-        ) : channelMessages.length === 0 ? (
-          <ChannelEmptyState channelName={currentChannel?.name ?? 'kanal'} />
-        ) : (
-          channelMessages.map((message) => (
-            <MessageItem
-              key={message.id}
-              messageId={message.id}
-              content={message.content}
-              createdAt={message.createdAt}
-              edited={message.edited}
-              attachments={message.attachments}
-              reactionCounts={message.reactionCounts}
-              showHeader={message.showHeader}
-              isEditing={editingMessageId === message.id}
-              isOwnMessage={message.authorId === user?.id}
-              authorName={
-                message.authorId === user?.id
-                  ? 'Du'
-                  : message.author?.firstName && message.author?.lastName
-                    ? `${message.author.firstName} ${message.author.lastName}`
-                    : (message.author?.firstName ??
-                      message.authorId.slice(0, 8))
-              }
-              authorInitial={(
-                message.author?.firstName?.[0] ?? message.authorId[0]
-              ).toUpperCase()}
-              authorAvatarUrl={
-                message.authorId === user?.id
-                  ? user?.avatarUrl
-                  : message.author?.avatarUrl
-              }
-              editContent={editingMessageId === message.id ? editContent : ''}
-              editTextareaRef={editTextareaRef}
-              onEditContentChange={setEditContent}
-              onSaveEdit={saveEdit}
-              onCancelEdit={handleCancelEdit}
-              onEdit={handleEditMessage}
-              onDelete={handleDeleteMessage}
-              renderContent={(content) => parseMentions(content)}
-              compact={compactMode}
-            />
-          ))
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+      <MessageListDisplay
+        messages={channelMessages}
+        loading={loadingMessages}
+        channelName={currentChannel?.name}
+        currentUserId={user?.id}
+        currentUserAvatar={user?.avatarUrl}
+        editingMessageId={editingMessageId}
+        editContent={editContent}
+        editTextareaRef={editTextareaRef}
+        compactMode={compactMode}
+        onEditContentChange={setEditContent}
+        onSaveEdit={saveEdit}
+        onCancelEdit={handleCancelEdit}
+        onEdit={handleEditMessage}
+        onDelete={handleDeleteMessage}
+        messagesEndRef={messagesEndRef}
+      />
 
       {/* Ephemeral bot response */}
       {botResponse && (
@@ -406,38 +291,23 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
       )}
 
       {/* Input */}
-      <div className="px-4 pb-6">
-        <div className="message-input-container">
-          <FileUpload onFileSelect={handleFileSelect} disabled={uploading} />
-          <textarea
-            ref={textareaRef}
-            value={inputValue}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            placeholder={`Skicka meddelande i #${currentChannel?.name ?? 'kanal'}`}
-            className="flex-1 bg-transparent text-[#f2f3f5] placeholder-[#80848e] resize-none outline-none p-3 max-h-48"
-            rows={1}
-            disabled={uploading}
-          />
-          <EmojiPicker onEmojiSelect={handleEmojiSelect} />
-          {showMentions && (
-            <MentionAutocomplete
-              inputValue={inputValue}
-              cursorPosition={cursorPosition}
-              onSelect={handleMentionSelect}
-              onClose={() => setShowMentions(false)}
-              position={{ top: 0, left: 50 }}
-            />
-          )}
-          {showSlashCommands && (
-            <SlashCommandAutocomplete
-              inputValue={inputValue}
-              onSelect={handleSlashCommandSelect}
-              onClose={() => setShowSlashCommands(false)}
-            />
-          )}
-        </div>
-      </div>
+      <ChannelInputSection
+        channelName={currentChannel?.name}
+        inputValue={inputValue}
+        cursorPosition={cursorPosition}
+        uploading={uploading}
+        showMentions={showMentions}
+        showSlashCommands={showSlashCommands}
+        textareaRef={textareaRef}
+        onInputChange={handleInputChange}
+        onKeyDown={handleKeyDown}
+        onFileSelect={handleFileSelect}
+        onEmojiSelect={handleEmojiSelect}
+        onMentionSelect={handleMentionSelect}
+        onSlashCommandSelect={handleSlashCommandSelect}
+        onCloseMentions={() => setShowMentions(false)}
+        onCloseSlashCommands={() => setShowSlashCommands(false)}
+      />
 
       {/* Delete Message Confirmation Modal */}
       <DeleteConfirmModal
