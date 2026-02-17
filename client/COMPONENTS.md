@@ -186,6 +186,20 @@ Visar kanalnamn med ikon.
 />
 ```
 
+### MessageComposer
+Komplett message input med mentions, slash commands, emojis och file uploads.
+```tsx
+<MessageComposer 
+  channelId="channel-123"
+  workspaceId="workspace-456"
+  placeholder="Skriv meddelande..."
+  onSend={handleSendMessage}
+  onTyping={() => socket.emit('typing')}
+  onStopTyping={() => socket.emit('stop-typing')}
+  onBotResponse={setBotResponse}
+/>
+```
+
 ## 🔖 Sidebar Components
 
 ### WorkspaceHeader
@@ -382,6 +396,24 @@ Färgväljare med förvalda färger.
 />
 ```
 
+### ResourceForm
+Generisk form för att skapa/redigera resurser (channels, workspaces).
+```tsx
+<ResourceForm 
+  fields={[
+    { name: 'name', label: 'Namn', type: 'text', required: true, maxLength: 50 },
+    { name: 'description', label: 'Beskrivning', type: 'textarea', maxLength: 200 },
+    { name: 'iconUrl', label: 'Ikon URL', type: 'url' }
+  ]}
+  initialValues={{ name: 'general', description: '' }}
+  onSubmit={async (vals) => await api.post('/channels', vals)}
+  onCancel={handleCancel}
+  submitText="Skapa"
+  cancelText="Avbryt"
+  isLoading={creating}
+/>
+```
+
 ## 🎨 Layout Components
 
 ### EmptyState
@@ -401,6 +433,54 @@ En separator-linje.
 <Divider orientation="horizontal" spacing="md" />
 <Divider orientation="vertical" spacing="sm" />
 ```
+
+### Flex
+Flexible box layout komponent.
+```tsx
+<Flex direction="row" align="center" justify="between" gap="md" wrap={false}>
+  <div>Item 1</div>
+  <div>Item 2</div>
+</Flex>
+```
+Props: direction (row/column), align (start/center/end/stretch), justify (start/center/end/between/around), gap (none/sm/md/lg), wrap
+
+### Stack
+Vertikal stack layout.
+```tsx
+<Stack spacing="md">
+  <div>Item 1</div>
+  <div>Item 2</div>
+  <div>Item 3</div>
+</Stack>
+```
+Spacing: none, sm, md, lg, xl
+
+### Grid
+CSS Grid layout komponent.
+```tsx
+<Grid cols={3} gap="md">
+  <div>Item 1</div>
+  <div>Item 2</div>
+  <div>Item 3</div>
+</Grid>
+```
+Cols: 1, 2, 3, 4, 6, 12
+
+### Center
+Centrera innehåll.
+```tsx
+<Center axis="both">
+  <Spinner />
+</Center>
+```
+Axis: both, horizontal, vertical
+
+### Spacer
+Lägg till mellanrum mellan element.
+```tsx
+<Spacer size="md" axis="vertical" />
+```
+Size: sm, md, lg, xl; Axis: horizontal, vertical
 
 ## 👤 Profile Components
 
@@ -622,6 +702,20 @@ Visar meddelande när inga items hittas.
   icon={<SearchIcon />}
 />
 ```
+
+### ResourceDeleteDialog
+Generisk delete confirmation dialog för vilken resurs som helst.
+```tsx
+<ResourceDeleteDialog 
+  isOpen={deleteModal.isOpen}
+  resourceType="channel"
+  resourceName={deleteModal.data?.name ?? ''}
+  onConfirm={async () => await deleteChannel(deleteModal.data.id)}
+  onClose={deleteModal.close}
+  dangerMessage="Detta går inte att ångra!" 
+/>
+```
+Resource types: `channel`, `workspace`, `message`, `user`
 
 ## 🎨 Additional UI Components
 
@@ -1117,6 +1211,83 @@ Progress-indikator.
 4. **Testbara** - Varje komponent kan testas separat
 5. **Type-safe** - TypeScript typer genom hela projektet
 6. **Konsekvent design** - Alla komponenter följer samma mönster
+
+## 🪝 Custom Hooks
+
+### useFormState
+Återanvändbar form state management.
+```tsx
+const { values, errors, setValue, handleSubmit } = useFormState({
+  initialValues: { name: '', email: '' },
+  validate: (vals) => {
+    const errs = {};
+    if (!vals.name) errs.name = 'Required';
+    return errs;
+  },
+  onSubmit: async (vals) => {
+    await api.post('/users', vals);
+  }
+});
+```
+
+### useModalState
+Modal state management med callbacks.
+```tsx
+const modal = useModalState({
+  onOpen: () => console.log('opened'),
+  onClose: () => console.log('closed')
+});
+
+// Usage: modal.isOpen, modal.open(), modal.close()
+```
+
+### useModalWithData
+Modal med data (för edit/delete).
+```tsx
+const deleteModal = useModalWithData<{ id: string; name: string }>();
+
+// Open with data
+deleteModal.open({ id: '123', name: 'Test' });
+
+// Access data
+if (deleteModal.isOpen) {
+  console.log(deleteModal.data);
+}
+```
+
+### useAppNavigation
+Type-safe navigation.
+```tsx
+const { goToChannel, goToDM, goToHome } = useAppNavigation();
+
+goToChannel('channel-123');
+goToDM('dm-456');
+```
+
+### useTypingIndicator
+Typing indicator management.
+```tsx
+const { startTyping, stopTyping } = useTypingIndicator({
+  onStartTyping: () => socket.emit('typing', channelId),
+  onStopTyping: () => socket.emit('stop-typing', channelId),
+  timeout: 3000
+});
+
+// Call startTyping() on input change
+```
+
+### useAutoScroll
+Auto-scroll när dependencies ändras.
+```tsx
+const scrollRef = useAutoScroll({
+  dependencies: [messages.length],
+  behavior: 'smooth',
+  enabled: true
+});
+
+// Attach to element
+<div ref={scrollRef} />
+```
 
 ## 📦 Import
 

@@ -10,3 +10,4 @@ export { default as CheckboxInput } from './CheckboxInput';
 export { default as FileInputButton } from './FileInputButton';
 export { default as SliderInput } from './SliderInput';
 export { default as ColorPicker } from './ColorPicker';
+export { default as ResourceForm } from './ResourceForm';
