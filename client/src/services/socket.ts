@@ -10,7 +10,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
 import { queryKeys } from '../hooks/useQuery';
-import type { Message, PaginatedMessages, Channel } from '../types';
+import type { Message, PaginatedMessages, Channel, User } from '../types';
 import { logger } from '../utils/logger';
 import { playMessageNotification } from '../utils/notificationSound';
 
@@ -366,9 +366,9 @@ class SocketService {
         // Optimistically update React Query caches instead of invalidating
         if (queryClient) {
           // Update online users cache
-          queryClient.setQueryData(['users', 'online'], (oldData: any) => {
+          queryClient.setQueryData(['users', 'online'], (oldData: User[] | undefined) => {
             if (!oldData) return oldData;
-            return oldData.map((u: any) =>
+            return oldData.map((u) =>
               u.id === data.userId
                 ? {
                     ...u,
