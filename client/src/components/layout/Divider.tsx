@@ -1,4 +1,5 @@
 // Reusable Divider Component
+import { cn } from '../../utils/classNames';
 
 interface DividerProps {
   orientation?: 'horizontal' | 'vertical';
@@ -17,11 +18,11 @@ export function Divider({
 
   if (orientation === 'vertical') {
     return (
-      <div className={`w-px bg-boxflow-border ${spacingClasses[spacing]}`} />
+      <div className={cn('w-px bg-boxflow-border', spacingClasses[spacing])} />
     );
   }
 
   return (
-    <div className={`h-px bg-boxflow-border ${spacingClasses[spacing]}`} />
+    <div className={cn('h-px bg-boxflow-border', spacingClasses[spacing])} />
   );
 }

@@ -1,5 +1,6 @@
 // Reusable Text Area Component
 import React, { forwardRef } from 'react';
+import { cn } from '../../utils/classNames';
 
 interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
@@ -14,7 +15,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
         {label && <label className="label-base">{label}</label>}
         <textarea
           ref={ref}
-          className={`textarea-base ${error ? 'input-error' : ''} ${className}`}
+          className={cn('textarea-base', error && 'input-error', className)}
           {...props}
         />
         {error && <p className="text-xs text-boxflow-danger mt-1">{error}</p>}

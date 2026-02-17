@@ -1,5 +1,6 @@
 // Reusable Dropdown Menu Component
 import { ReactNode } from 'react';
+import { cn } from '../../utils/classNames';
 
 interface DropdownMenuProps {
   /** Whether the menu is open */
@@ -32,7 +33,7 @@ export function DropdownMenu({
 }: DropdownMenuProps) {
   if (!isOpen) return null;
 
-  return <div className={`dropdown-menu ${className}`}>{children}</div>;
+  return <div className={cn('dropdown-menu', className)}>{children}</div>;
 }
 
 /**
@@ -49,7 +50,7 @@ export function DropdownMenuItem({
     variant === 'danger' ? 'dropdown-item-danger' : 'dropdown-item';
 
   return (
-    <button className={`${variantClass} ${className}`} onClick={onClick}>
+    <button className={cn(variantClass, className)} onClick={onClick}>
       {children}
     </button>
   );

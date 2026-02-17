@@ -1,4 +1,5 @@
 // List Header - Generic list section header
+import { cn } from '../../utils/classNames';
 
 interface ListHeaderProps {
   title: string;
@@ -14,7 +15,9 @@ export default function ListHeader({
   className = ''
 }: ListHeaderProps) {
   return (
-    <div className={`flex items-center justify-between px-2 mb-1 ${className}`}>
+    <div
+      className={cn('flex items-center justify-between px-2 mb-1', className)}
+    >
       <span className="text-subtle uppercase font-semibold text-xs">
         {title}
         {count !== undefined && ` — ${count}`}

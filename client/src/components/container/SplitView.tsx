@@ -1,4 +1,5 @@
 // Split View - Two-panel split layout
+import { cn } from '../../utils/classNames';
 
 interface SplitViewProps {
   left: React.ReactNode;
@@ -14,7 +15,7 @@ export default function SplitView({
   className = ''
 }: SplitViewProps) {
   return (
-    <div className={`flex h-full ${className}`}>
+    <div className={cn('flex h-full', className)}>
       <div
         className="flex-shrink-0 border-r border-boxflow-border"
         style={{ width: leftWidth }}

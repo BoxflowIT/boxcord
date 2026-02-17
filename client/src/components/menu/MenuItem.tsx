@@ -1,4 +1,5 @@
 // Menu Item - Individual menu item
+import { cn } from '../../utils/classNames';
 
 interface MenuItemProps {
   icon?: React.ReactNode;
@@ -28,14 +29,14 @@ export default function MenuItem({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`
-        w-full flex items-center gap-3 px-3 py-2 text-sm text-left
-        transition-colors
-        ${variantClasses[variant]}
-        ${selected ? 'bg-boxflow-hover' : ''}
-        ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-        ${className}
-      `}
+      className={cn(
+        'w-full flex items-center gap-3 px-3 py-2 text-sm text-left',
+        'transition-colors',
+        variantClasses[variant],
+        selected && 'bg-boxflow-hover',
+        disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+        className
+      )}
     >
       {icon && <span className="flex-shrink-0">{icon}</span>}
       <span className="flex-1">{label}</span>

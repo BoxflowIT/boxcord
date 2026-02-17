@@ -1,4 +1,5 @@
 // Spinner Overlay - Full screen loading overlay
+import { cn } from '../../utils/classNames';
 
 interface SpinnerOverlayProps {
   message?: string;
@@ -11,9 +12,10 @@ export default function SpinnerOverlay({
 }: SpinnerOverlayProps) {
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center ${
+      className={cn(
+        'fixed inset-0 z-50 flex flex-col items-center justify-center',
         transparent ? 'bg-black/30' : 'bg-boxflow-dark/90'
-      }`}
+      )}
     >
       <div className="spinner-ring w-12 h-12 mb-4" />
       <p className="text-boxflow-light text-lg">{message}</p>
