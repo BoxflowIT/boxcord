@@ -23,7 +23,9 @@ import MentionAutocomplete, { parseMentions } from './MentionAutocomplete';
 import SlashCommandAutocomplete from './SlashCommandAutocomplete';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import { LoadingState } from './ui/LoadingSpinner';
-import { UsersIcon } from './ui/Icons';
+import { ChannelHeader } from './channel/ChannelHeader';
+import { BotResponseBanner } from './channel';
+import ChannelEmptyState from './channel/ChannelEmptyState';
 import {
   groupReactionsByEmoji,
   shouldShowMessageHeader
@@ -336,43 +338,18 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
   return (
     <>
       {/* Header */}
-      <div className="h-12 px-4 flex items-center border-b border-[#1e1f22] shadow-lg">
-        <span className="text-xl text-[#80848e] mr-2">#</span>
-        <h2 className="font-semibold text-white">
-          {currentChannel?.name ?? 'Kanal'}
-        </h2>
-        {currentChannel?.description && (
-          <>
-            <div className="w-px h-6 bg-[#404249] mx-4" />
-            <p className="text-sm text-[#b5bac1] truncate flex-1">
-              {currentChannel.description}
-            </p>
-          </>
-        )}
-        {!currentChannel?.description && <div className="flex-1" />}
-
-        {/* Toggle member list button */}
-        {onToggleMemberList && (
-          <button
-            onClick={onToggleMemberList}
-            className="btn-icon"
-            title="Visa/dölj medlemslista"
-          >
-            <UsersIcon />
-          </button>
-        )}
-      </div>
+      <ChannelHeader
+        channelName={currentChannel?.name ?? 'Kanal'}
+        channelDescription={currentChannel?.description}
+        onToggleMemberList={onToggleMemberList}
+      />
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {loadingMessages ? (
           <LoadingState text="Laddar meddelanden..." />
         ) : channelMessages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-[#b5bac1]">
-            <p className="text-xl mb-2">
-              Välkommen till #{currentChannel?.name}!
-            </p>
-          </div>
+          <ChannelEmptyState channelName={currentChannel?.name ?? 'kanal'} />
         ) : (
           channelMessages.map((message) => (
             <MessageItem
@@ -420,30 +397,11 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
       {/* Ephemeral bot response */}
       {botResponse && (
         <div className="px-4 pb-2">
-          <div className="bot-response">
-            <div className="bot-avatar">🤖</div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-medium text-[#5865f2]">
-                  Boxcord Bot
-                </span>
-                {botResponse.isPrivate && (
-                  <span className="text-xs text-[#80848e]">
-                    Endast synligt för dig
-                  </span>
-                )}
-              </div>
-              <div className="text-[#f2f3f5] text-sm whitespace-pre-wrap">
-                {botResponse.content}
-              </div>
-            </div>
-            <button
-              onClick={() => setBotResponse(null)}
-              className="text-[#80848e] hover:text-white transition-colors"
-            >
-              ✕
-            </button>
-          </div>
+          <BotResponseBanner
+            content={botResponse.content}
+            isPrivate={botResponse.isPrivate}
+            onDismiss={() => setBotResponse(null)}
+          />
         </div>
       )}
 

@@ -24,14 +24,9 @@ import DeleteConfirmModal from './DeleteConfirmModal';
 import EditModal from './EditModal';
 import CreateModal from './CreateModal';
 import DMList from './DMList';
-import Avatar from './ui/Avatar';
-import {
-  PlusIcon,
-  EditIcon,
-  CloseIcon,
-  LogoutIcon,
-  SettingsIcon
-} from './ui/Icons';
+import WorkspaceSidebar from './sidebar/WorkspaceSidebar';
+import ChannelSection from './sidebar/ChannelSection';
+import UserBar from './sidebar/UserBar';
 import type { Workspace, Channel } from '../types';
 
 interface SidebarProps {
@@ -265,57 +260,15 @@ export default function Sidebar({
     <>
       <div className="flex h-full">
         {/* Workspace list */}
-        <div className="sidebar-icon">
-          {workspaces.map((workspace) => (
-            <div key={workspace.id} className="relative group">
-              <button
-                onClick={() => handleWorkspaceSelect(workspace)}
-                onDoubleClick={(e) => handleEditWorkspace(workspace, e)}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  handleDeleteWorkspace(workspace, e);
-                }}
-                className={
-                  currentWorkspace?.id === workspace.id
-                    ? 'workspace-icon-active'
-                    : 'workspace-icon-inactive'
-                }
-                title={`${workspace.name}\nDubbelklick: redigera\nHögerklick: ta bort`}
-              >
-                {workspace.iconUrl ? (
-                  <img
-                    src={workspace.iconUrl}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  workspace.name.charAt(0).toUpperCase()
-                )}
-              </button>
-            </div>
-          ))}
-
-          {/* Add workspace button */}
-          <button
-            onClick={() => setShowNewWorkspace(true)}
-            className="workspace-icon-add"
-            title="Lägg till workspace"
-          >
-            <PlusIcon size="lg" />
-          </button>
-
-          {/* Spacer to push settings to bottom */}
-          <div className="flex-1" />
-
-          {/* Settings button */}
-          <button
-            onClick={onSettingsClick}
-            className="workspace-icon-add"
-            title="Settings"
-          >
-            <SettingsIcon size="lg" />
-          </button>
-        </div>
+        <WorkspaceSidebar
+          workspaces={workspaces}
+          currentWorkspaceId={currentWorkspace?.id}
+          onWorkspaceSelect={handleWorkspaceSelect}
+          onEditWorkspace={handleEditWorkspace}
+          onDeleteWorkspace={handleDeleteWorkspace}
+          onCreateWorkspace={() => setShowNewWorkspace(true)}
+          onSettingsClick={onSettingsClick}
+        />
 
         {/* Channel list */}
         <div className="sidebar-main">
@@ -329,60 +282,14 @@ export default function Sidebar({
           {/* Channels */}
           <div className="panel-content flex-1 min-h-0 overflow-y-auto">
             {currentWorkspace && (
-              <>
-                <div className="flex items-center justify-between px-2 mb-1">
-                  <span className="text-subtle uppercase font-semibold">
-                    Text Kanaler
-                  </span>
-                  <button
-                    onClick={() => setShowNewChannel(true)}
-                    className="btn-icon-primary"
-                  >
-                    <PlusIcon size="sm" />
-                  </button>
-                </div>
-
-                {channels.map((channel) => {
-                  const hasUnread = (channel.unreadCount ?? 0) > 0;
-                  return (
-                    <div
-                      key={channel.id}
-                      className={`group w-full flex-row px-2 py-1 rounded-lg text-sm transition-colors cursor-pointer ${
-                        currentChannel?.id === channel.id
-                          ? 'nav-item-active'
-                          : 'nav-item-default'
-                      }`}
-                      onClick={() => handleChannelSelect(channel)}
-                    >
-                      <span className="text-lg">#</span>
-                      <span
-                        className={`truncate flex-1 ${hasUnread ? 'text-white font-semibold' : ''}`}
-                      >
-                        {channel.name}
-                      </span>
-                      {hasUnread && (
-                        <span className="px-1.5 py-0.5 text-xs font-bold bg-white text-discord-dark rounded-full">
-                          {channel.unreadCount}
-                        </span>
-                      )}
-                      <button
-                        onClick={(e) => handleEditChannel(channel, e)}
-                        className="btn-icon hover-group-visible"
-                        title="Redigera kanal"
-                      >
-                        <EditIcon size="sm" />
-                      </button>
-                      <button
-                        onClick={(e) => handleDeleteChannel(channel, e)}
-                        className="btn-icon-danger hover-group-visible"
-                        title="Ta bort kanal"
-                      >
-                        <CloseIcon size="sm" />
-                      </button>
-                    </div>
-                  );
-                })}
-              </>
+              <ChannelSection
+                channels={channels}
+                currentChannelId={currentChannel?.id}
+                onChannelSelect={handleChannelSelect}
+                onEditChannel={handleEditChannel}
+                onDeleteChannel={handleDeleteChannel}
+                onCreateChannel={() => setShowNewChannel(true)}
+              />
             )}
           </div>
 
@@ -394,30 +301,11 @@ export default function Sidebar({
           />
 
           {/* User info */}
-          <div className="user-bar">
-            <button onClick={onProfileClick} className="user-bar-button">
-              <Avatar
-                size="sm"
-                src={user?.avatarUrl}
-                alt={user?.firstName || user?.email}
-              >
-                {user?.firstName?.charAt(0) ?? user?.email?.charAt(0) ?? '?'}
-              </Avatar>
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-sm font-medium text-boxflow-light truncate">
-                  {user?.firstName ?? user?.email}
-                </p>
-                <p className="text-subtle truncate">{user?.role}</p>
-              </div>
-            </button>
-            <button
-              onClick={handleLogout}
-              className="btn-icon"
-              title="Logga ut"
-            >
-              <LogoutIcon />
-            </button>
-          </div>
+          <UserBar
+            user={user}
+            onProfileClick={onProfileClick}
+            onLogout={handleLogout}
+          />
         </div>
       </div>
 
