@@ -15,6 +15,7 @@ import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
 import { useMessages, useChannels, queryKeys } from '../hooks/useQuery';
 import { useMessageActions } from '../hooks/useMessageActions';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 import { MessageItem } from './MessageItem';
 import FileUpload from './FileUpload';
 import EmojiPicker from './ui/EmojiPicker';
@@ -39,24 +40,9 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
-  // Read appearance settings (reactive state)
-  const [compactMode, setCompactMode] = useState(
-    localStorage.getItem('compactMode') === 'true'
-  );
-  const [messageGrouping, setMessageGrouping] = useState(
-    localStorage.getItem('messageGrouping') !== 'false'
-  );
-
-  // Listen for settings changes
-  useEffect(() => {
-    const handleSettingsChange = () => {
-      setCompactMode(localStorage.getItem('compactMode') === 'true');
-      setMessageGrouping(localStorage.getItem('messageGrouping') !== 'false');
-    };
-    window.addEventListener('settingsChanged', handleSettingsChange);
-    return () =>
-      window.removeEventListener('settingsChanged', handleSettingsChange);
-  }, []);
+  // Read appearance settings (reactive state with auto-sync)
+  const [compactMode] = useLocalStorage('compactMode', false);
+  const [messageGrouping] = useLocalStorage('messageGrouping', true);
 
   // React Query - single source of truth for server data
   const { data: messagesData, isLoading: loadingMessages } =
@@ -411,6 +397,11 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
               authorInitial={(
                 message.author?.firstName?.[0] ?? message.authorId[0]
               ).toUpperCase()}
+              authorAvatarUrl={
+                message.authorId === user?.id
+                  ? user?.avatarUrl
+                  : message.author?.avatarUrl
+              }
               editContent={editingMessageId === message.id ? editContent : ''}
               editTextareaRef={editTextareaRef}
               onEditContentChange={setEditContent}
@@ -458,7 +449,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
 
       {/* Input */}
       <div className="px-4 pb-6">
-        <div className="bg-boxflow-darker rounded-lg flex items-center relative shadow-lg">
+        <div className="message-input-container">
           <FileUpload onFileSelect={handleFileSelect} disabled={uploading} />
           <textarea
             ref={textareaRef}

@@ -110,7 +110,7 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
       {/* New DM search */}
       {showNewDM && (
         <div className="p-2 border-b border-discord-darkest flex-shrink-0">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex-row mb-2">
             <input
               type="text"
               value={searchQuery}
@@ -196,7 +196,7 @@ export default function DMList({ onSelectDM, selectedId }: DMListProps) {
                     </p>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex-row">
                   {channel.lastMessage && (
                     <span className="text-subtle">
                       {formatRelativeTime(channel.lastMessage.createdAt)}

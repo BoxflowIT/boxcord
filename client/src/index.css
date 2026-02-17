@@ -175,8 +175,55 @@ body {
     @apply border-boxflow-danger focus:border-boxflow-danger focus:ring-boxflow-danger/50;
   }
 
+  .input-message {
+    @apply w-full bg-boxflow-darkest text-boxflow-light rounded-lg p-3 resize-none outline-none focus:bg-boxflow-darker focus:ring-2 focus:ring-boxflow-primary/50 transition-all placeholder-boxflow-subtle;
+  }
+
+  .input-search {
+    @apply w-full bg-boxflow-dark text-boxflow-light border border-boxflow-border rounded px-3 py-2 text-sm outline-none focus:border-boxflow-primary transition-colors;
+  }
+
   .label-base {
     @apply block text-sm font-medium text-boxflow-muted mb-1.5;
+  }
+
+  /* ========== Flex Layout Utilities ========== */
+  .flex-row {
+    @apply flex items-center gap-2;
+  }
+
+  .flex-row-3 {
+    @apply flex items-center gap-3;
+  }
+
+  .flex-col-centered {
+    @apply flex flex-col items-center justify-center;
+  }
+
+  /* ========== Modal Styles ========== */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4;
+  }
+
+  .modal-container {
+    @apply bg-boxflow-dark rounded-2xl shadow-2xl border border-boxflow-hover/50 overflow-hidden;
+  }
+
+  .modal-panel {
+    @apply bg-boxflow-dark rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-boxflow-hover/50;
+  }
+
+  .modal-panel-lg {
+    @apply bg-boxflow-dark rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex overflow-hidden border border-boxflow-hover/50;
+  }
+
+  /* ========== Action Bars & Hovers ========== */
+  .action-bar {
+    @apply absolute -top-2 right-4 opacity-0 group-hover:opacity-100 bg-boxflow-darker border border-boxflow-hover rounded-lg shadow-xl px-2 py-1 flex items-center gap-1 z-50 transition-opacity duration-150;
+  }
+
+  .message-input-container {
+    @apply bg-boxflow-darker rounded-lg flex items-center relative shadow-lg;
   }
 
   /* ========== Card/Panel Styles ========== */

@@ -1,25 +1,21 @@
 // Message Item Component - Reusable message display
 import React, { memo, useState } from 'react';
 import { formatTime } from '../lib/formatters';
-import MessageReactions from './MessageReactions';
-import { AttachmentPreview } from './FileUpload';
-import { EditIcon, TrashIcon } from './ui/Icons';
 import { api } from '../services/api';
 import { logger } from '../utils/logger';
+import {
+  MessageAvatar,
+  MessageHeader,
+  MessageContent,
+  MessageReactionBubbles,
+  MessageActions,
+  MessageEditForm,
+  type MessageAttachment,
+  type MessageReaction
+} from './message';
 
-export interface MessageAttachment {
-  id: string;
-  fileName: string;
-  fileUrl: string;
-  fileType: string;
-  fileSize: number;
-}
-
-export interface MessageReaction {
-  emoji: string;
-  count: number;
-  hasReacted: boolean;
-}
+// Re-export types for backward compatibility
+export type { MessageAttachment, MessageReaction };
 
 export interface MessageItemProps {
   messageId: string;
@@ -35,6 +31,7 @@ export interface MessageItemProps {
   // Display options
   authorName: string;
   authorInitial: string;
+  authorAvatarUrl?: string | null;
 
   // Edit state
   editContent: string;
@@ -50,9 +47,8 @@ export interface MessageItemProps {
   // Optional customization
   renderContent?: (content: string) => React.ReactNode;
   compact?: boolean; // Use compact styling (like ChannelView)
+  isDM?: boolean; // Is this a DM message? (uses different reaction endpoint)
 }
-
-const QUICK_REACTIONS = ['👍', '❤️', '😂', '🎉', '🔥'];
 
 const MessageItemComponent: React.FC<MessageItemProps> = ({
   messageId,
@@ -66,6 +62,7 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
   isOwnMessage,
   authorName,
   authorInitial,
+  authorAvatarUrl,
   editContent,
   editTextareaRef,
   onEditContentChange,
@@ -74,13 +71,16 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
   onEdit,
   onDelete,
   renderContent,
-  compact = false
+  compact = false,
+  isDM = false
 }) => {
   const [localReactions, setLocalReactions] = useState(reactionCounts);
 
   const handleQuickReaction = async (emoji: string) => {
     try {
-      const { added } = await api.toggleReaction(messageId, emoji);
+      const { added } = isDM
+        ? await api.toggleDMReaction(messageId, emoji)
+        : await api.toggleReaction(messageId, emoji);
       setLocalReactions((prev) => {
         const existing = prev.find((r) => r.emoji === emoji);
         if (existing) {
@@ -110,156 +110,60 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
       logger.error('Failed to add quick reaction:', err);
     }
   };
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      onSaveEdit();
-    } else if (e.key === 'Escape') {
-      onCancelEdit();
-    }
-  };
-
-  // IMPORTANT: This is a JSX element, NOT a function component!
-  // Using a function component here would cause remount on every render, losing focus
-  const editTextareaElement = (
-    <div className="mt-1">
-      <textarea
-        ref={editTextareaRef}
-        value={editContent}
-        onChange={(e) => onEditContentChange(e.target.value)}
-        onKeyDown={handleKeyDown}
-        className="w-full bg-boxflow-darkest text-boxflow-light rounded-lg p-3 resize-none outline-none focus:bg-boxflow-darker focus:ring-2 focus:ring-boxflow-primary/50 transition-all"
-        rows={compact ? 2 : 3}
-      />
-      <div
-        className={
-          compact ? 'flex gap-2 mt-1 text-xs' : 'flex gap-2 mt-2 text-xs'
-        }
-      >
-        <button
-          onClick={onSaveEdit}
-          className="px-3 py-1 bg-gradient-to-r from-[#5865f2] to-[#4752c4] hover:from-[#4752c4] hover:to-[#3c44a8] text-white rounded-lg shadow-lg shadow-[#5865f2]/25 transition-all"
-        >
-          Spara
-        </button>
-        <button
-          onClick={onCancelEdit}
-          className="px-3 py-1 hover:bg-[#404249] text-[#80848e] hover:text-white rounded-lg transition-colors"
-        >
-          Avbryt
-        </button>
-        {compact && (
-          <span className="text-[#80848e] pt-1">
-            Escape för att <strong>avbryta</strong> • Enter för att{' '}
-            <strong>spara</strong>
-          </span>
-        )}
-      </div>
-    </div>
-  );
-
-  const QuickReactionsBar = () => (
-    <div className="absolute -top-2 right-4 opacity-0 group-hover:opacity-100 bg-boxflow-darker border border-boxflow-hover rounded-lg shadow-xl px-2 py-1 flex items-center gap-1 z-50 transition-opacity duration-150">
-      {/* Quick reactions */}
-      {QUICK_REACTIONS.map((emoji) => (
-        <button
-          key={emoji}
-          onClick={() => handleQuickReaction(emoji)}
-          className="p-1 hover:bg-[#404249] rounded text-lg transition-transform hover:scale-125"
-          title={`Reagera med ${emoji}`}
-        >
-          {emoji}
-        </button>
-      ))}
-
-      {/* Divider */}
-      <div className="w-px h-4 bg-[#404249] mx-1" />
-
-      {/* Edit/Delete for own messages */}
-      {isOwnMessage && (
-        <>
-          <button
-            onClick={() => onEdit(messageId, content)}
-            className="p-1 hover:bg-[#404249] rounded"
-            title="Redigera"
-          >
-            <EditIcon size="sm" />
-          </button>
-          <button
-            onClick={() => onDelete(messageId)}
-            className="p-1 hover:bg-red-500/20 rounded text-red-400"
-            title="Ta bort"
-          >
-            <TrashIcon size="sm" />
-          </button>
-        </>
-      )}
-    </div>
-  );
 
   return (
     <div
-      className={`group relative hover:bg-[#404249]/40 -mx-4 px-4 rounded transition-all duration-100 ${
+      className={`group relative hover:bg-boxflow-hover/40 -mx-4 px-4 rounded transition-all duration-100 ${
         compact ? 'py-0.5' : 'py-1'
       }`}
     >
-      {/* Message actions - Quick reactions bar (positioned absolutely) */}
-      {!isEditing && <QuickReactionsBar />}
-      
+      {/* Message actions - Quick reactions bar (hover) */}
+      {!isEditing && (
+        <MessageActions
+          onQuickReaction={handleQuickReaction}
+          onEdit={() => onEdit(messageId, content)}
+          onDelete={() => onDelete(messageId)}
+          isOwnMessage={isOwnMessage}
+        />
+      )}
+
       {showHeader ? (
         <div className={`flex items-start gap-4 ${compact ? 'mt-2' : 'mt-4'}`}>
-          <div className="message-author-avatar">{authorInitial}</div>
+          <MessageAvatar
+            avatarUrl={authorAvatarUrl}
+            initial={authorInitial}
+            userName={authorName}
+            size="md"
+          />
           <div className="flex-1 min-w-0">
-            <div className="flex items-baseline gap-2">
-              <span
-                className={`message-author-name ${
-                  compact ? 'text-sm' : 'text-base'
-                }`}
-              >
-                {authorName}
-              </span>
-              <span className="text-xs text-[#80848e]">
-                {formatTime(createdAt)}
-              </span>
-              {edited && (
-                <span className="text-xs text-[#80848e]">(redigerad)</span>
-              )}
-            </div>
+            <MessageHeader
+              authorName={authorName}
+              createdAt={createdAt}
+              edited={edited}
+              compact={compact}
+            />
 
             {isEditing ? (
-              editTextareaElement
+              <MessageEditForm
+                value={editContent}
+                onChange={onEditContentChange}
+                onSave={onSaveEdit}
+                onCancel={onCancelEdit}
+                textareaRef={editTextareaRef}
+                compact={compact}
+              />
             ) : (
               <>
-                <p
-                  className={`text-[#f2f3f5] break-words ${
-                    compact ? 'text-sm leading-5' : 'text-base'
-                  }`}
-                >
-                  {renderContent ? renderContent(content) : content}
-                </p>
-
-                {/* Attachments */}
-                {attachments.length > 0 && (
-                  <div className="mt-2 space-y-2">
-                    {attachments.map((att) => (
-                      <AttachmentPreview
-                        key={att.id}
-                        fileName={att.fileName}
-                        fileUrl={att.fileUrl}
-                        fileType={att.fileType}
-                        fileSize={att.fileSize}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {/* Reactions */}
-                {localReactions.length > 0 && (
-                  <MessageReactions
-                    messageId={messageId}
-                    initialReactions={localReactions}
-                  />
-                )}
+                <MessageContent
+                  content={content}
+                  attachments={attachments}
+                  compact={compact}
+                  renderContent={renderContent}
+                />
+                <MessageReactionBubbles
+                  reactions={localReactions}
+                  onToggle={handleQuickReaction}
+                />
               </>
             )}
           </div>
@@ -271,46 +175,34 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
             compact ? 'py-0' : 'py-0.5'
           }`}
         >
-          <span className="text-xs text-[#80848e] opacity-0 group-hover:opacity-100 -ml-10 w-10 text-right">
+          <span className="text-xs text-boxflow-muted opacity-0 group-hover:opacity-100 -ml-10 w-10 text-right">
             {formatTime(createdAt)}
           </span>
           <div className="flex-1">
             {isEditing ? (
-              editTextareaElement
+              <MessageEditForm
+                value={editContent}
+                onChange={onEditContentChange}
+                onSave={onSaveEdit}
+                onCancel={onCancelEdit}
+                textareaRef={editTextareaRef}
+                compact={compact}
+              />
             ) : (
               <>
-                <p
-                  className={`text-[#f2f3f5] break-words ${
-                    compact ? 'text-sm' : 'text-base'
-                  }`}
-                >
-                  {renderContent ? renderContent(content) : content}
-                </p>
-                {attachments.length > 0 && (
-                  <div className="mt-2 space-y-2">
-                    {attachments.map((att) => (
-                      <AttachmentPreview
-                        key={att.id}
-                        fileName={att.fileName}
-                        fileUrl={att.fileUrl}
-                        fileType={att.fileType}
-                        fileSize={att.fileSize}
-                      />
-                    ))}
-                  </div>
-                )}
-                {localReactions.length > 0 && (
-                  <MessageReactions
-                    messageId={messageId}
-                    initialReactions={localReactions}
-                  />
-                )}
+                <MessageContent
+                  content={content}
+                  attachments={attachments}
+                  compact={compact}
+                  renderContent={renderContent}
+                />
+                <MessageReactionBubbles
+                  reactions={localReactions}
+                  onToggle={handleQuickReaction}
+                />
               </>
             )}
           </div>
-
-          {/* Message actions - Quick reactions bar (Teams style) */}
-          {!isEditing && <QuickReactionsBar />}
         </div>
       )}
     </div>
@@ -339,7 +231,9 @@ const areEqual = (
   if (prevProps.isOwnMessage !== nextProps.isOwnMessage) return false;
   if (prevProps.authorName !== nextProps.authorName) return false;
   if (prevProps.authorInitial !== nextProps.authorInitial) return false;
+  if (prevProps.authorAvatarUrl !== nextProps.authorAvatarUrl) return false;
   if (prevProps.compact !== nextProps.compact) return false;
+  if (prevProps.isDM !== nextProps.isDM) return false;
 
   // Shallow compare arrays by reference (they should be memoized in parent)
   if (prevProps.attachments !== nextProps.attachments) return false;

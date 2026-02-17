@@ -89,7 +89,9 @@ export default function NotificationSettings() {
           onClick={handleToggle}
           disabled={loading}
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            subscribed ? 'bg-gradient-to-r from-[#5865f2] to-[#4752c4]' : 'bg-[#404249]'
+            subscribed
+              ? 'bg-gradient-to-r from-[#5865f2] to-[#4752c4]'
+              : 'bg-[#404249]'
           } ${loading ? 'opacity-50' : ''}`}
         >
           <span

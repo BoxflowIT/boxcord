@@ -21,7 +21,9 @@ export function AuthLayout({
           <div className="w-20 h-20 bg-gradient-to-br from-[#5865f2] to-[#4752c4] rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg shadow-[#5865f2]/20">
             <span className="text-5xl font-bold text-white">B</span>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">{title}</h1>
+          <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
+            {title}
+          </h1>
           <p className="text-[#b5bac1] text-sm">{description}</p>
         </div>
 

@@ -1,0 +1,11 @@
+// Export all message components for easy import
+export { MessageAvatar } from './MessageAvatar';
+export { MessageHeader } from './MessageHeader';
+export { MessageContent } from './MessageContent';
+export { MessageReactionBubbles } from './MessageReactionBubbles';
+export { MessageActions } from './MessageActions';
+export { MessageEditForm } from './MessageEditForm';
+
+// Re-export types
+export type { MessageAttachment } from './MessageContent';
+export type { MessageReaction } from './MessageReactionBubbles';

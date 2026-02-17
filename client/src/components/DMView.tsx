@@ -14,6 +14,7 @@ import { socketService } from '../services/socket';
 import { useAuthStore } from '../store/auth';
 import { useDMMessages, useDMChannels, queryKeys } from '../hooks/useQuery';
 import { useMessageActions } from '../hooks/useMessageActions';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 import { MessageItem } from './MessageItem';
 import FileUpload from './FileUpload';
 import EmojiPicker from './ui/EmojiPicker';
@@ -30,24 +31,9 @@ export default function DMView() {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
-  // Read appearance settings (reactive state)
-  const [compactMode, setCompactMode] = useState(
-    localStorage.getItem('compactMode') === 'true'
-  );
-  const [messageGrouping, setMessageGrouping] = useState(
-    localStorage.getItem('messageGrouping') !== 'false'
-  );
-
-  // Listen for settings changes
-  useEffect(() => {
-    const handleSettingsChange = () => {
-      setCompactMode(localStorage.getItem('compactMode') === 'true');
-      setMessageGrouping(localStorage.getItem('messageGrouping') !== 'false');
-    };
-    window.addEventListener('settingsChanged', handleSettingsChange);
-    return () =>
-      window.removeEventListener('settingsChanged', handleSettingsChange);
-  }, []);
+  // Read appearance settings (reactive state with auto-sync)
+  const [compactMode] = useLocalStorage('compactMode', false);
+  const [messageGrouping] = useLocalStorage('messageGrouping', true);
 
   const { data: dmChannels } = useDMChannels();
 
@@ -257,10 +243,11 @@ export default function DMView() {
           </div>
         ) : (
           messages.map((message) => {
-            const authorInitial =
-              message.authorId === user?.id
-                ? (user?.firstName?.charAt(0) ?? user?.email?.charAt(0))
-                : (otherUser.firstName?.charAt(0) ?? otherUser.email.charAt(0));
+            const isOwn = message.authorId === user?.id;
+            const authorInitial = isOwn
+              ? (user?.firstName?.charAt(0) ?? user?.email?.charAt(0))
+              : (otherUser.firstName?.charAt(0) ?? otherUser.email.charAt(0));
+            const authorAvatar = isOwn ? user?.avatarUrl : otherUser.avatarUrl;
 
             return (
               <MessageItem
@@ -273,9 +260,10 @@ export default function DMView() {
                 reactionCounts={message.reactionCounts}
                 showHeader={message.showHeader}
                 isEditing={editingMessageId === message.id}
-                isOwnMessage={message.authorId === user?.id}
+                isOwnMessage={isOwn}
                 authorName={getUserName(message.authorId)}
                 authorInitial={authorInitial.toUpperCase()}
+                authorAvatarUrl={authorAvatar}
                 editContent={editingMessageId === message.id ? editContent : ''}
                 editTextareaRef={editTextareaRef}
                 onEditContentChange={setEditContent}
@@ -284,6 +272,7 @@ export default function DMView() {
                 onEdit={handleEditMessage}
                 onDelete={handleDeleteMessage}
                 compact={compactMode}
+                isDM={true}
               />
             );
           })
@@ -293,7 +282,7 @@ export default function DMView() {
 
       {/* Input */}
       <div className="px-4 pb-6">
-        <div className="bg-boxflow-darker rounded-lg flex items-center shadow-lg">
+        <div className="message-input-container">
           <FileUpload
             onFileSelect={handleFileSelect}
             disabled={uploading || sending}
