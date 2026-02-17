@@ -1,10 +1,6 @@
 // Settings Modal Component
-import { useState, useEffect } from 'react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
-import {
-  toggleNotificationSound,
-  isNotificationSoundEnabled
-} from '../utils/notificationSound';
+import { useState } from 'react';
+import { useSettings } from '../hooks/useSettings';
 import SettingsTabSidebar, {
   type SettingsTab,
   tabs
@@ -21,62 +17,9 @@ interface SettingsModalProps {
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('notifications');
-  const [soundEnabled, setSoundEnabled] = useState(
-    isNotificationSoundEnabled()
-  );
-  const [theme, setTheme] = useLocalStorage<'dark' | 'light'>('theme', 'dark');
-  const [compactMode, setCompactMode] = useLocalStorage('compactMode', false);
-  const [messageGrouping, setMessageGrouping] = useLocalStorage(
-    'messageGrouping',
-    true
-  );
-  const [fontSize, setFontSize] = useLocalStorage('fontSize', 'medium');
-
-  // Apply saved settings on mount
-  useEffect(() => {
-    // Apply theme
-    document.documentElement.classList.toggle('light-theme', theme === 'light');
-
-    // Apply font size
-    const root = document.documentElement;
-    root.style.setProperty(
-      '--base-font-size',
-      fontSize === 'small' ? '14px' : fontSize === 'large' ? '18px' : '16px'
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { settings, handlers } = useSettings();
 
   if (!isOpen) return null;
-
-  const handleSoundToggle = (enabled: boolean) => {
-    setSoundEnabled(enabled);
-    toggleNotificationSound(enabled);
-  };
-
-  const handleThemeChange = (newTheme: 'dark' | 'light') => {
-    setTheme(newTheme);
-    document.documentElement.classList.toggle(
-      'light-theme',
-      newTheme === 'light'
-    );
-  };
-
-  const handleCompactModeToggle = (enabled: boolean) => {
-    setCompactMode(enabled);
-  };
-
-  const handleMessageGroupingToggle = (enabled: boolean) => {
-    setMessageGrouping(enabled);
-  };
-
-  const handleFontSizeChange = (size: string) => {
-    setFontSize(size);
-    const root = document.documentElement;
-    root.style.setProperty(
-      '--base-font-size',
-      size === 'small' ? '14px' : size === 'large' ? '18px' : '16px'
-    );
-  };
 
   return (
     <div
@@ -98,21 +41,21 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           <div className="flex-1 overflow-y-auto p-6">
             {activeTab === 'notifications' && (
               <NotificationsTab
-                soundEnabled={soundEnabled}
-                onSoundToggle={handleSoundToggle}
+                soundEnabled={settings.soundEnabled}
+                onSoundToggle={handlers.onSoundToggle}
               />
             )}
 
             {activeTab === 'appearance' && (
               <AppearanceTab
-                theme={theme}
-                fontSize={fontSize}
-                compactMode={compactMode}
-                messageGrouping={messageGrouping}
-                onThemeChange={handleThemeChange}
-                onFontSizeChange={handleFontSizeChange}
-                onCompactModeToggle={handleCompactModeToggle}
-                onMessageGroupingToggle={handleMessageGroupingToggle}
+                theme={settings.theme}
+                fontSize={settings.fontSize}
+                compactMode={settings.compactMode}
+                messageGrouping={settings.messageGrouping}
+                onThemeChange={handlers.onThemeChange}
+                onFontSizeChange={handlers.onFontSizeChange}
+                onCompactModeToggle={handlers.onCompactModeToggle}
+                onMessageGroupingToggle={handlers.onMessageGroupingToggle}
               />
             )}
 

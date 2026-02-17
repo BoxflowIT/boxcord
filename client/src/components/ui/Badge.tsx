@@ -1,4 +1,5 @@
 // Badge - Small label for counts, status, or categories
+import { cn } from '../../utils/classNames';
 
 interface BadgeProps {
   children: React.ReactNode;
@@ -29,11 +30,15 @@ export default function Badge({
   rounded = true,
   className = ''
 }: BadgeProps) {
-  const roundedClass = rounded ? 'rounded-full' : 'rounded';
-
   return (
     <span
-      className={`inline-flex items-center font-medium ${variantClasses[variant]} ${sizeClasses[size]} ${roundedClass} ${className}`}
+      className={cn(
+        'inline-flex items-center font-medium',
+        variantClasses[variant],
+        sizeClasses[size],
+        rounded ? 'rounded-full' : 'rounded',
+        className
+      )}
     >
       {children}
     </span>

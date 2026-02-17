@@ -1,5 +1,6 @@
 // Reusable Avatar Component
 import { ReactNode } from 'react';
+import { cn } from '../../utils/classNames';
 
 interface AvatarProps {
   /** Avatar content - usually initials or icon */
@@ -37,10 +38,10 @@ export default function Avatar({
       <img
         src={src}
         alt={alt || 'Avatar'}
-        className={`${sizeClass} ${className}`}
+        className={cn(sizeClass, className)}
       />
     );
   }
 
-  return <div className={`${sizeClass} ${className}`}>{children}</div>;
+  return <div className={cn(sizeClass, className)}>{children}</div>;
 }

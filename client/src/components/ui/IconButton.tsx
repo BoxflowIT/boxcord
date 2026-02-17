@@ -1,5 +1,6 @@
 // Reusable Icon Button Component
 import { ReactNode } from 'react';
+import { cn } from '../../utils/classNames';
 
 interface IconButtonProps {
   /** Icon or button content */
@@ -29,12 +30,13 @@ export default function IconButton({
   'aria-label': ariaLabel,
   disabled = false
 }: IconButtonProps) {
-  const variantClass = variant === 'danger' ? 'btn-icon-danger' : 'btn-icon';
-
   return (
     <button
       onClick={onClick}
-      className={`${variantClass} ${className}`}
+      className={cn(
+        variant === 'danger' ? 'btn-icon-danger' : 'btn-icon',
+        className
+      )}
       aria-label={ariaLabel}
       disabled={disabled}
     >
