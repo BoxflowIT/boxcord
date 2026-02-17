@@ -15,13 +15,11 @@ import { useAuthStore } from '../store/auth';
 import { useDMMessages, useDMChannels, queryKeys } from '../hooks/useQuery';
 import { useMessageActions } from '../hooks/useMessageActions';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { MessageItem } from './MessageItem';
-import FileUpload from './FileUpload';
-import EmojiPicker from './ui/EmojiPicker';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import { LoadingState } from './ui/LoadingSpinner';
 import { DMHeader } from './dm/DMHeader';
-import DMEmptyState from './dm/DMEmptyState';
+import MessageListDisplay from './channel/MessageListDisplay';
+import DMInputSection from './dm/DMInputSection';
 import {
   groupReactionsByEmoji,
   shouldShowMessageHeader
@@ -208,10 +206,26 @@ export default function DMView() {
     }, 0);
   };
 
-  const getUserName = (authorId: string) => {
-    if (authorId === user?.id) return 'Du';
-    return otherUser?.firstName ?? otherUser?.email ?? 'Unknown';
-  };
+  // Transform messages to match MessageListDisplay expected format
+  const displayMessages = useMemo(() => {
+    const getUserName = (authorId: string) => {
+      if (authorId === user?.id) return 'Du';
+      return otherUser?.firstName ?? otherUser?.email ?? 'Unknown';
+    };
+
+    const getAvatar = (userId: string) => {
+      if (userId === user?.id) return user?.avatarUrl;
+      return otherUser?.avatarUrl;
+    };
+
+    return messages.map((message) => ({
+      ...message,
+      author: {
+        firstName: getUserName(message.authorId),
+        avatarUrl: getAvatar(message.authorId)
+      }
+    }));
+  }, [messages, user, otherUser]);
 
   if (!otherUser || loadingUser) {
     return <LoadingState text="Laddar användare..." />;
@@ -228,78 +242,36 @@ export default function DMView() {
       />
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {loadingMessages ? (
-          <LoadingState text="Laddar meddelanden..." />
-        ) : messages.length === 0 ? (
-          <DMEmptyState
-            userName={otherUser.firstName ?? otherUser.email}
-            userInitial={(
-              otherUser.firstName?.charAt(0) ?? otherUser.email.charAt(0)
-            ).toUpperCase()}
-          />
-        ) : (
-          messages.map((message) => {
-            const isOwn = message.authorId === user?.id;
-            const authorInitial = isOwn
-              ? (user?.firstName?.charAt(0) ?? user?.email?.charAt(0))
-              : (otherUser.firstName?.charAt(0) ?? otherUser.email.charAt(0));
-            const authorAvatar = isOwn ? user?.avatarUrl : otherUser.avatarUrl;
-
-            return (
-              <MessageItem
-                key={message.id}
-                messageId={message.id}
-                content={message.content}
-                createdAt={message.createdAt}
-                edited={message.edited}
-                attachments={message.attachments}
-                reactionCounts={message.reactionCounts}
-                showHeader={message.showHeader}
-                isEditing={editingMessageId === message.id}
-                isOwnMessage={isOwn}
-                authorName={getUserName(message.authorId)}
-                authorInitial={authorInitial.toUpperCase()}
-                authorAvatarUrl={authorAvatar}
-                editContent={editingMessageId === message.id ? editContent : ''}
-                editTextareaRef={editTextareaRef}
-                onEditContentChange={setEditContent}
-                onSaveEdit={saveEdit}
-                onCancelEdit={handleCancelEdit}
-                onEdit={handleEditMessage}
-                onDelete={handleDeleteMessage}
-                compact={compactMode}
-                isDM={true}
-              />
-            );
-          })
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+      <MessageListDisplay
+        messages={displayMessages}
+        loading={loadingMessages}
+        channelName={otherUser.firstName ?? otherUser.email}
+        currentUserId={user?.id}
+        currentUserAvatar={user?.avatarUrl}
+        editingMessageId={editingMessageId}
+        editContent={editContent}
+        editTextareaRef={editTextareaRef}
+        compactMode={compactMode}
+        onEditContentChange={setEditContent}
+        onSaveEdit={saveEdit}
+        onCancelEdit={handleCancelEdit}
+        onEdit={handleEditMessage}
+        onDelete={handleDeleteMessage}
+        messagesEndRef={messagesEndRef}
+      />
 
       {/* Input */}
-      <div className="px-4 pb-6">
-        <div className="message-input-container">
-          <FileUpload
-            onFileSelect={handleFileSelect}
-            disabled={uploading || sending}
-          />
-          <textarea
-            ref={textareaRef}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={`Meddelande @${otherUser?.firstName ?? otherUser?.email}`}
-            className="flex-1 bg-transparent text-discord-light placeholder-gray-500 resize-none outline-none p-3 max-h-48"
-            rows={1}
-            disabled={uploading || sending}
-          />
-          <EmojiPicker onEmojiSelect={handleEmojiSelect} />
-          {sending && (
-            <div className="px-3 text-boxflow-muted text-sm">Skickar...</div>
-          )}
-        </div>
-      </div>
+      <DMInputSection
+        userName={otherUser.firstName ?? otherUser.email}
+        inputValue={inputValue}
+        uploading={uploading}
+        sending={sending}
+        textareaRef={textareaRef}
+        onInputChange={(e) => setInputValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onFileSelect={handleFileSelect}
+        onEmojiSelect={handleEmojiSelect}
+      />
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
