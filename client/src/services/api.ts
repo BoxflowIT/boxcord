@@ -53,7 +53,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 async function uploadFile(
   path: string,
   file: File
-): Promise<MessageAttachment> {
+): Promise<MessageAttachment | { url: string; fileName: string }> {
   const token = useAuthStore.getState().token;
   const formData = new FormData();
   formData.append('file', file);
@@ -79,6 +79,7 @@ export const api = {
   // Workspaces
   getWorkspaces: () => request<Workspace[]>('/workspaces'),
   getWorkspace: (id: string) => request<Workspace>(`/workspaces/${id}`),
+  getWorkspaceMembers: (id: string) => request<User[]>(`/workspaces/${id}/members`),
   createWorkspace: (name: string, description?: string) =>
     request<Workspace>('/workspaces', {
       method: 'POST',
@@ -225,6 +226,7 @@ export const api = {
     request<ReactionCount[]>(`/reactions/messages/${messageId}`),
 
   // Files
+  uploadFile: (file: File) => uploadFile('/files', file),
   uploadMessageFile: (messageId: string, file: File) =>
     uploadFile(`/files/messages/${messageId}`, file),
   uploadDMFile: (messageId: string, file: File) =>

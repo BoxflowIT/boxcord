@@ -16,6 +16,7 @@ const CACHE_TIMES = {
 export const queryKeys = {
   workspaces: ['workspaces'] as const,
   workspace: (id: string) => ['workspace', id] as const,
+  workspaceMembers: (id: string) => ['workspaceMembers', id] as const,
   channels: (workspaceId: string) => ['channels', workspaceId] as const,
   messages: (channelId: string, cursor?: string) =>
     ['messages', channelId, cursor] as const,
@@ -63,6 +64,19 @@ export function useOnlineUsers() {
   return useQuery({
     queryKey: queryKeys.onlineUsers,
     queryFn: () => api.getOnlineUsers(),
+    staleTime: CACHE_TIMES.USERS.stale,
+    gcTime: CACHE_TIMES.USERS.gc
+  });
+}
+
+// Workspace members - filtered by workspace
+export function useWorkspaceMembers(workspaceId: string | undefined) {
+  return useQuery({
+    queryKey: workspaceId
+      ? queryKeys.workspaceMembers(workspaceId)
+      : ['workspaceMembers-null'],
+    queryFn: () => (workspaceId ? api.getWorkspaceMembers(workspaceId) : []),
+    enabled: !!workspaceId,
     staleTime: CACHE_TIMES.USERS.stale,
     gcTime: CACHE_TIMES.USERS.gc
   });

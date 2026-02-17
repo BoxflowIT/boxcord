@@ -45,6 +45,8 @@ export function useWorkspaceOperations({
   ) => {
     try {
       await api.updateWorkspace(id, data);
+      // Invalidate workspaces query to refresh UI
+      await queryClient.invalidateQueries({ queryKey: queryKeys.workspaces });
     } catch (err) {
       logger.error('Failed to update workspace:', err);
       throw err;

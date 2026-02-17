@@ -10,8 +10,10 @@ export const prisma =
   new PrismaClient({
     log:
       process.env.NODE_ENV === 'development'
-        ? ['query', 'error', 'warn']
-        : ['error']
+        ? ['error', 'warn']
+        : ['error'],
+    // Connection pool settings for Railway proxy
+    datasourceUrl: process.env.DATABASE_URL
   });
 
 if (process.env.NODE_ENV !== 'production') {
