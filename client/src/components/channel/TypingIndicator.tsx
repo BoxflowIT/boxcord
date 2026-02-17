@@ -1,5 +1,6 @@
 // Typing Indicator - Show who's typing
 import { useEffect, useState } from 'react';
+import { cn } from '../../utils/classNames';
 
 interface TypingIndicatorProps {
   users: string[];
@@ -38,7 +39,10 @@ export default function TypingIndicator({
 
   return (
     <div
-      className={`flex items-center gap-2 text-sm text-muted italic px-4 py-2 ${className}`}
+      className={cn(
+        'flex items-center gap-2 text-sm text-muted italic px-4 py-2',
+        className
+      )}
     >
       <span className="flex gap-1">
         <span

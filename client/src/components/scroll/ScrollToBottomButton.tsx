@@ -1,4 +1,5 @@
 // Scroll To Bottom Button - Floating button to scroll to bottom
+import { cn } from '../../utils/classNames';
 
 interface ScrollToBottomButtonProps {
   onClick: () => void;
@@ -18,15 +19,15 @@ export default function ScrollToBottomButton({
   return (
     <button
       onClick={onClick}
-      className={`
-        fixed bottom-24 right-8 z-10
-        w-12 h-12 rounded-full
-        bg-boxflow-primary hover:bg-boxflow-primary/90
-        text-white shadow-lg
-        flex items-center justify-center
-        transition-all duration-200
-        ${className}
-      `}
+      className={cn(
+        'fixed bottom-24 right-8 z-10',
+        'w-12 h-12 rounded-full',
+        'bg-boxflow-primary hover:bg-boxflow-primary/90',
+        'text-white shadow-lg',
+        'flex items-center justify-center',
+        'transition-all duration-200',
+        className
+      )}
       title="Scrolla till botten"
     >
       {unreadCount && unreadCount > 0 ? (

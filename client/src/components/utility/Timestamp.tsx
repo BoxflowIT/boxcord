@@ -1,4 +1,5 @@
 // Timestamp - Format and display timestamp
+import { cn } from '../../utils/classNames';
 
 interface TimestampProps {
   date: string | Date;
@@ -60,7 +61,7 @@ export default function Timestamp({
     <time
       dateTime={dateObj.toISOString()}
       title={dateObj.toLocaleString('sv-SE')}
-      className={`text-xs text-muted ${className}`}
+      className={cn('text-xs text-muted', className)}
     >
       {formatTimestamp()}
     </time>

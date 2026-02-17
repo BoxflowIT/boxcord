@@ -1,5 +1,6 @@
 // Dropdown Menu - Reusable dropdown menu
 import React, { useState, useRef, useEffect } from 'react';
+import { cn } from '../../utils/classNames';
 
 interface DropdownMenuProps {
   trigger: React.ReactNode;
@@ -38,16 +39,17 @@ export default function DropdownMenu({
   }, [isOpen]);
 
   return (
-    <div ref={menuRef} className={`relative ${className}`}>
+    <div ref={menuRef} className={cn('relative', className)}>
       <div onClick={() => setIsOpen(!isOpen)}>{trigger}</div>
 
       {isOpen && (
         <div
-          className={`
-            absolute ${alignClasses[align]} top-full mt-1 z-50
-            min-w-[200px] py-1
-            bg-boxflow-darker border border-boxflow-border rounded-lg shadow-xl
-          `}
+          className={cn(
+            'absolute top-full mt-1 z-50',
+            'min-w-[200px] py-1',
+            'bg-boxflow-darker border border-boxflow-border rounded-lg shadow-xl',
+            alignClasses[align]
+          )}
         >
           <div onClick={() => setIsOpen(false)}>{children}</div>
         </div>

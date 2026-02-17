@@ -1,4 +1,5 @@
 import { EditIcon, CloseIcon } from '../ui/Icons';
+import { cn } from '../../utils/classNames';
 
 interface EnhancedChannelListItemProps {
   name: string;
@@ -24,14 +25,18 @@ export default function EnhancedChannelListItem({
 
   return (
     <div
-      className={`group w-full flex-row px-2 py-1 rounded-lg text-sm transition-colors cursor-pointer ${
+      className={cn(
+        'group w-full flex-row px-2 py-1 rounded-lg text-sm transition-colors cursor-pointer',
         isActive ? 'nav-item-active' : 'nav-item-default'
-      }`}
+      )}
       onClick={onClick}
     >
       <span className="text-lg">#</span>
       <span
-        className={`truncate flex-1 ${hasUnread ? 'text-white font-semibold' : ''}`}
+        className={cn(
+          'truncate flex-1',
+          hasUnread && 'text-white font-semibold'
+        )}
       >
         {name}
       </span>
