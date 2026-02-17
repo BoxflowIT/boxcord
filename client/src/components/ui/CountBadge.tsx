@@ -1,4 +1,5 @@
 // Count Badge - Shows a numerical count (e.g., unread messages, online users)
+import { cn } from '../../utils/classNames';
 
 interface CountBadgeProps {
   count: number;
@@ -27,7 +28,11 @@ export default function CountBadge({
 
   return (
     <span
-      className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold rounded-full ${variantClasses[variant]} ${className}`}
+      className={cn(
+        'inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold rounded-full',
+        variantClasses[variant],
+        className
+      )}
     >
       {displayCount}
     </span>

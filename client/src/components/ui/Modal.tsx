@@ -1,6 +1,7 @@
 // Reusable Modal Component
 import { ReactNode } from 'react';
 import { CloseIcon } from './Icons';
+import { cn } from '../../utils/classNames';
 
 interface ModalProps {
   isOpen: boolean;
@@ -36,7 +37,10 @@ export default function Modal({
       onClick={onClose}
     >
       <div
-        className={`bg-boxflow-dark rounded-2xl shadow-2xl ${maxWidthClasses[maxWidth]} w-full max-h-[90vh] overflow-hidden border border-boxflow-hover/50`}
+        className={cn(
+          'bg-boxflow-dark rounded-2xl shadow-2xl w-full max-h-[90vh] overflow-hidden border border-boxflow-hover/50',
+          maxWidthClasses[maxWidth]
+        )}
         onClick={(e) => e.stopPropagation()}
       >
         {(title || showCloseButton) && (

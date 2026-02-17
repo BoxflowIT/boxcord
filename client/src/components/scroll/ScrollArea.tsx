@@ -1,5 +1,6 @@
 // Scroll Area - Custom scrollable area with styled scrollbar
 import React, { useRef, useEffect } from 'react';
+import { cn } from '../../utils/classNames';
 
 interface ScrollAreaProps {
   children: React.ReactNode;
@@ -29,7 +30,7 @@ export default function ScrollArea({
       ref={scrollRef}
       onScroll={onScroll}
       style={{ maxHeight }}
-      className={`overflow-y-auto scrollbar-thin ${className}`}
+      className={cn('overflow-y-auto scrollbar-thin', className)}
     >
       {children}
     </div>

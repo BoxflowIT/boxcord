@@ -1,4 +1,6 @@
 // Alert Component - Success/Error messages
+import { cn } from '../../utils/classNames';
+
 interface AlertProps {
   type: 'error' | 'success' | 'info' | 'warning';
   message: string;
@@ -14,7 +16,7 @@ const alertStyles = {
 export function Alert({ type, message }: AlertProps) {
   return (
     <div
-      className={`p-3 border rounded text-sm ${alertStyles[type]}`}
+      className={cn('p-3 border rounded text-sm', alertStyles[type])}
       role="alert"
     >
       {message}

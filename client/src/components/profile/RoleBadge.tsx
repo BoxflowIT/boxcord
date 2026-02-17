@@ -1,4 +1,5 @@
 // Reusable Role Badge Component
+import { cn } from '../../utils/classNames';
 
 export type UserRole = 'OWNER' | 'ADMIN' | 'MEMBER';
 
@@ -28,7 +29,11 @@ export function RoleBadge({ role, size = 'sm' }: RoleBadgeProps) {
 
   return (
     <span
-      className={`inline-flex items-center rounded-full border font-medium ${config.color} ${sizeClass}`}
+      className={cn(
+        'inline-flex items-center rounded-full border font-medium',
+        config.color,
+        sizeClass
+      )}
     >
       {config.label}
     </span>

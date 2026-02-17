@@ -1,4 +1,5 @@
 // Card - Flexible card container with optional header and footer
+import { cn } from '../../utils/classNames';
 
 interface CardProps {
   children: React.ReactNode;
@@ -24,7 +25,10 @@ export default function Card({
 }: CardProps) {
   return (
     <div
-      className={`bg-boxflow-darker border border-boxflow-border rounded-lg overflow-hidden ${className}`}
+      className={cn(
+        'bg-boxflow-darker border border-boxflow-border rounded-lg overflow-hidden',
+        className
+      )}
     >
       {header && (
         <div className="border-b border-boxflow-border px-4 py-3 font-semibold">
