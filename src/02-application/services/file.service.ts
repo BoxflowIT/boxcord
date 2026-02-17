@@ -115,6 +115,29 @@ export class FileService {
     };
   }
 
+  // Upload general file (for workspace icons, etc.) - no database record
+  async uploadGeneral(input: AttachmentInput): Promise<string> {
+    // Only validate file type for images (workspace icons)
+    if (!ALLOWED_IMAGE_TYPES.includes(input.fileType)) {
+      throw new ValidationError('Only image files are allowed');
+    }
+
+    if (input.fileSize > 5 * 1024 * 1024) {
+      // 5MB for icons
+      throw new ValidationError('File size must be less than 5MB');
+    }
+
+    await this.ensureUploadDir();
+
+    const ext = extname(input.fileName) || this.getExtFromType(input.fileType);
+    const storedName = `${randomUUID()}${ext}`;
+    const filePath = join(this.uploadDir, storedName);
+
+    await writeFile(filePath, input.buffer);
+
+    return `${this.baseUrl}/uploads/${storedName}`;
+  }
+
   // Upload file for DM
   async uploadForDM(
     messageId: string,

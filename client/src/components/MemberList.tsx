@@ -1,13 +1,16 @@
 // Member List Component - Shows online/offline users grouped by role
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/auth';
-import { useOnlineUsers } from '../hooks/useQuery';
+import { useChatStore } from '../store/chat';
+import { useWorkspaceMembers } from '../hooks/useQuery';
 import {
   useMemberListData,
   ROLE_LABELS,
   type MemberUser
 } from '../hooks/useMemberListData';
 import { useDMOperations } from '../hooks/useDMOperations';
+import { socketService } from '../services/socket';
+import { getUserDisplayName } from '../utils/user';
 import ProfileModal from './ProfileModal';
 import MemberListHeader from './member/MemberListHeader';
 import MemberSearch from './member/MemberSearch';
@@ -17,7 +20,8 @@ import type { UserStatus } from './member/StatusIndicator';
 
 export default function MemberList() {
   const { user: currentUser } = useAuthStore();
-  const { data: onlineUsers } = useOnlineUsers();
+  const { currentWorkspace } = useChatStore();
+  const { data: workspaceMembers } = useWorkspaceMembers(currentWorkspace?.id);
   const { startDM } = useDMOperations();
 
   const [users, setUsers] = useState<MemberUser[]>([]);
@@ -32,54 +36,49 @@ export default function MemberList() {
   });
 
   useEffect(() => {
-    if (!onlineUsers) return;
+    if (!workspaceMembers) return;
 
     // Always include current user if not in list
-    if (currentUser && !onlineUsers.some((u) => u.id === currentUser.id)) {
+    if (currentUser && !workspaceMembers.some((u) => u.id === currentUser.id)) {
       const currentUserWithPresence = {
         ...currentUser,
         presence: { status: 'ONLINE', lastSeen: new Date().toISOString() }
       };
-      setUsers([currentUserWithPresence, ...onlineUsers]);
+      setUsers([currentUserWithPresence, ...workspaceMembers]);
     } else {
-      setUsers(onlineUsers);
+      setUsers(workspaceMembers);
     }
-  }, [onlineUsers, currentUser]);
+  }, [workspaceMembers, currentUser]);
 
   useEffect(() => {
     // Listen for presence updates via WebSocket
     const handlePresenceUpdate = (data: { userId: string; status: string }) => {
       setUsers((prevUsers) => {
         const existingUser = prevUsers.find((u) => u.id === data.userId);
-        if (existingUser) {
-          return prevUsers.map((u) =>
-            u.id === data.userId
-              ? {
-                  ...u,
-                  presence: {
-                    ...u.presence,
-                    status: data.status,
-                    lastSeen:
-                      data.status === 'OFFLINE'
-                        ? new Date().toISOString()
-                        : u.presence?.lastSeen
-                  }
+        if (!existingUser) return prevUsers;
+        
+        return prevUsers.map((u) =>
+          u.id === data.userId
+            ? {
+                ...u,
+                presence: {
+                  ...u.presence,
+                  status: data.status,
+                  lastSeen:
+                    data.status === 'OFFLINE'
+                      ? new Date().toISOString()
+                      : u.presence?.lastSeen
                 }
-              : u
-          );
-        }
-        return prevUsers;
+              }
+            : u
+        );
       });
     };
 
-    import('../services/socket').then(({ socketService }) => {
-      socketService.onPresenceUpdate('memberList', handlePresenceUpdate);
-    });
+    socketService.onPresenceUpdate('memberList', handlePresenceUpdate);
 
     return () => {
-      import('../services/socket').then(({ socketService }) => {
-        socketService.offPresenceUpdate('memberList');
-      });
+      socketService.offPresenceUpdate('memberList');
     };
   }, []);
 
@@ -111,7 +110,7 @@ export default function MemberList() {
       <div className="panel-content">
         {filteredUsers.length === 0 ? (
           <div className="text-muted px-2">
-            {searchQuery ? 'Inga användare hittades' : 'Inga användare online'}
+            {searchQuery ? 'Inga användare hittades' : 'Inga medlemmar'}
           </div>
         ) : (
           roleOrder.map((role) => {
@@ -125,10 +124,7 @@ export default function MemberList() {
                 count={roleUsers.length}
               >
                 {roleUsers.map((user) => {
-                  const displayName =
-                    user.firstName && user.lastName
-                      ? `${user.firstName} ${user.lastName}`
-                      : (user.firstName ?? user.email.split('@')[0]);
+                  const displayName = getUserDisplayName(user);
 
                   return (
                     <MemberListItem

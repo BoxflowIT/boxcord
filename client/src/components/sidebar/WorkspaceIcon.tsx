@@ -48,12 +48,11 @@ export default function WorkspaceIcon({
     <div className="relative group">
       <button
         onClick={onSelect}
-        onDoubleClick={onEdit}
         onContextMenu={handleContextMenu}
         className={
           isActive ? 'workspace-icon-active' : 'workspace-icon-inactive'
         }
-        title={`${name}\nDubbelklick: redigera\nHögerklick: meny`}
+        title={`${name}\nHögerklick: meny`}
       >
         {iconUrl ? (
           <img src={iconUrl} alt="" className="w-full h-full object-cover" />
@@ -66,36 +65,45 @@ export default function WorkspaceIcon({
       {showMenu && (
         <div
           ref={menuRef}
-          className="fixed z-50 bg-boxflow-darker border border-boxflow-hover rounded-lg shadow-xl py-1 min-w-[160px]"
+          className="fixed z-50 bg-boxflow-darkest border border-boxflow-border rounded-md shadow-2xl py-1.5 min-w-[180px]"
           style={{ left: menuPos.x, top: menuPos.y }}
         >
           <button
-            className="w-full px-3 py-2 text-left text-sm text-boxflow-light hover:bg-boxflow-hover transition-colors"
+            className="w-full px-3 py-2 text-left text-sm text-boxflow-light hover:bg-boxflow-primary hover:text-white transition-colors flex items-center gap-2"
             onClick={(e) => {
               setShowMenu(false);
               onEdit(e);
             }}
           >
-            ✏️ Redigera
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            <span>Redigera server</span>
           </button>
           <button
-            className="w-full px-3 py-2 text-left text-sm text-yellow-400 hover:bg-boxflow-hover transition-colors"
+            className="w-full px-3 py-2 text-left text-sm text-boxflow-light hover:bg-boxflow-primary hover:text-white transition-colors flex items-center gap-2"
             onClick={(e) => {
               setShowMenu(false);
               onLeave(e);
             }}
           >
-            🚪 Lämna server
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span>Lämna server</span>
           </button>
-          <div className="border-t border-boxflow-hover my-1" />
+          <div className="border-t border-boxflow-border my-1" />
           <button
-            className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-boxflow-hover transition-colors"
+            className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-600 hover:text-white transition-colors flex items-center gap-2"
             onClick={(e) => {
               setShowMenu(false);
               onDelete(e);
             }}
           >
-            🗑️ Ta bort
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            <span>Ta bort server</span>
           </button>
         </div>
       )}

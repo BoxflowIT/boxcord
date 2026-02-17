@@ -20,6 +20,32 @@ export async function fileRoutes(app: FastifyInstance) {
     await app.authenticate(request);
   });
 
+  // Upload general file (for workspace icons, etc.)
+  app.post('/', async (request, reply) => {
+    const file = await request.file();
+
+    if (!file) {
+      return reply.status(400).send({
+        success: false,
+        error: { code: 'NO_FILE', message: 'No file uploaded' }
+      });
+    }
+
+    const buffer = await file.toBuffer();
+
+    // Save to uploads directory with unique filename
+    const fileUrl = await fileService.uploadGeneral({
+      fileName: file.filename,
+      fileType: file.mimetype,
+      fileSize: buffer.length,
+      buffer
+    });
+
+    return reply
+      .status(201)
+      .send({ success: true, data: { url: fileUrl, fileName: file.filename } });
+  });
+
   // Upload file for channel message
   app.post<{ Params: { messageId: string } }>(
     '/messages/:messageId',
