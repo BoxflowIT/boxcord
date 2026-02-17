@@ -1,5 +1,6 @@
 // Reusable Button Component with variants
 import React, { forwardRef } from 'react';
+import { cn } from '../../utils/classNames';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
@@ -39,15 +40,18 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       lg: 'px-6 py-3 text-base'
     };
 
-    const widthClass = fullWidth ? 'w-full' : '';
-    const disabledClass =
-      disabled || loading ? 'opacity-50 cursor-not-allowed' : '';
-
     return (
       <button
         ref={ref}
         disabled={disabled || loading}
-        className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${widthClass} ${disabledClass} ${className}`}
+        className={cn(
+          baseClasses,
+          variantClasses[variant],
+          sizeClasses[size],
+          fullWidth && 'w-full',
+          (disabled || loading) && 'opacity-50 cursor-not-allowed',
+          className
+        )}
         {...props}
       >
         {loading ? (

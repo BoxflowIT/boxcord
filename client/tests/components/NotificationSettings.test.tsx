@@ -59,7 +59,7 @@ describe('NotificationSettings', () => {
     render(<NotificationSettings />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button')).toBeInTheDocument();
+      expect(screen.getByRole('switch')).toBeInTheDocument();
     });
   });
 
@@ -75,10 +75,10 @@ describe('NotificationSettings', () => {
     render(<NotificationSettings />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button')).toBeInTheDocument();
+      expect(screen.getByRole('switch')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button'));
+    fireEvent.click(screen.getByRole('switch'));
 
     await waitFor(() => {
       expect(pushService.subscribe).toHaveBeenCalled();
@@ -100,9 +100,8 @@ describe('NotificationSettings', () => {
       expect(screen.getByText(/testnotis/i)).toBeInTheDocument();
     });
 
-    // Click the toggle button (first button)
-    const buttons = screen.getAllByRole('button');
-    fireEvent.click(buttons[0]);
+    // Click the toggle switch
+    fireEvent.click(screen.getByRole('switch'));
 
     await waitFor(() => {
       expect(pushService.unsubscribe).toHaveBeenCalled();

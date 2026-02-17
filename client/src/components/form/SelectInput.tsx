@@ -1,4 +1,5 @@
 // Select Input - Dropdown select input
+import { cn } from '../../utils/classNames';
 
 interface SelectOption {
   value: string;
@@ -36,7 +37,13 @@ export default function SelectInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="w-full bg-boxflow-dark text-boxflow-light border border-boxflow-border rounded px-3 py-2 text-sm outline-none focus:border-boxflow-primary disabled:opacity-50 disabled:cursor-not-allowed"
+        className={cn(
+          'w-full bg-boxflow-dark text-boxflow-light',
+          'border border-boxflow-border rounded',
+          'px-3 py-2 text-sm outline-none',
+          'focus:border-boxflow-primary',
+          'disabled:opacity-50 disabled:cursor-not-allowed'
+        )}
       >
         {placeholder && (
           <option value="" disabled>
