@@ -2,12 +2,12 @@
 // Chat system for Boxflow integrated with Boxtime
 
 generator client {
-    provider = "prisma-client-js"
+    provider        = "prisma-client-js"
+    previewFeatures = ["fullTextSearchPostgres"]
 }
 
 datasource db {
     provider = "postgresql"
-    url      = env("DATABASE_URL")
 }
 
 // ============================================
@@ -232,6 +232,7 @@ model DMAttachment {
 
     message DirectMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
+    @@index([messageId])
     @@map("dm_attachments")
 }
 
@@ -245,6 +246,7 @@ model DMReaction {
     message DirectMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
     @@unique([messageId, userId, emoji])
+    @@index([messageId])
     @@map("dm_reactions")
 }
 

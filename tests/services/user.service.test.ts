@@ -49,8 +49,18 @@ describe('UserService', () => {
           email: 'test@example.com',
           firstName: undefined,
           lastName: undefined,
-          role: undefined,
         },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          avatarUrl: true,
+          bio: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true
+        }
       });
       expect(result).toEqual(expectedUser);
     });
@@ -111,7 +121,18 @@ describe('UserService', () => {
 
       expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
         where: { id: 'user-1' },
-        include: { presence: true },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          avatarUrl: true,
+          bio: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true,
+          presence: true
+        }
       });
       expect(result).toEqual(user);
     });
@@ -138,7 +159,18 @@ describe('UserService', () => {
 
       expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
         where: { id: { in: ['user-1', 'user-2'] } },
-        include: { presence: true },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          avatarUrl: true,
+          bio: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true,
+          presence: true
+        }
       });
       expect(result).toHaveLength(2);
     });

@@ -57,6 +57,17 @@ export class UserService {
         email: data.email,
         firstName: data.firstName ?? undefined,
         lastName: data.lastName ?? undefined
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        bio: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true
       }
     });
   }
@@ -64,7 +75,18 @@ export class UserService {
   async getUser(userId: string): Promise<UserWithPresence> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: { presence: true }
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        bio: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+        presence: true
+      }
     });
 
     if (!user) {
@@ -77,7 +99,18 @@ export class UserService {
   async getUsersByIds(userIds: string[]): Promise<UserWithPresence[]> {
     return this.prisma.user.findMany({
       where: { id: { in: userIds } },
-      include: { presence: true }
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        bio: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+        presence: true
+      }
     });
   }
 
@@ -97,6 +130,17 @@ export class UserService {
         lastName: input.lastName,
         avatarUrl: input.avatarUrl,
         bio: input.bio
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        bio: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true
       }
     });
   }
@@ -111,7 +155,18 @@ export class UserService {
         ]
       },
       take: limit,
-      orderBy: { firstName: 'asc' }
+      orderBy: { firstName: 'asc' },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        role: true,
+        bio: true,
+        createdAt: true,
+        updatedAt: true
+      }
     });
   }
 
@@ -153,7 +208,18 @@ export class UserService {
           status: { not: 'OFFLINE' }
         }
       },
-      include: { presence: true },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        bio: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+        presence: true
+      },
       orderBy: { firstName: 'asc' }
     });
   }
@@ -180,7 +246,18 @@ export class UserService {
 
     return this.prisma.user.update({
       where: { id: userId },
-      data: { role: newRole }
+      data: { role: newRole },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        bio: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true
+      }
     });
   }
 
