@@ -10,6 +10,56 @@
 
 :root {
   --base-font-size: 16px;
+  
+  /* Color system - Dark theme (default) */
+  --color-bg-darkest: #1e1f22;
+  --color-bg-darker: #2b2d31;
+  --color-bg-dark: #313338;
+  --color-bg-hover: #404249;
+  
+  --color-text-light: #f2f3f5;
+  --color-text-normal: #dbdee1;
+  --color-text-muted: #949ba4;
+  --color-text-subtle: #80848e;
+  
+  --color-border: #3f4147;
+  --color-border-hover: #4e5058;
+  
+  --color-primary: #5865f2;
+  --color-secondary: #7289da;
+  --color-success: #43b581;
+  --color-danger: #f04747;
+  --color-warning: #faa61a;
+  
+  /* Scrollbar colors */
+  --scrollbar-track: #2b2d31;
+  --scrollbar-thumb: #1e1f22;
+  --scrollbar-thumb-hover: #404249;
+  --scrollbar-thumb-active: #5865f2;
+}
+
+/* Light theme overrides - Teams inspired */
+.light-theme {
+  --color-bg-darkest: #edebe9;
+  --color-bg-darker: #f3f2f1;
+  --color-bg-dark: #ffffff;
+  --color-bg-hover: #f3f2f1;
+  
+  --color-text-light: #242424;
+  --color-text-normal: #242424;
+  --color-text-muted: #605e5c;
+  --color-text-subtle: #8a8886;
+  
+  --color-border: #e1dfdd;
+  --color-border-hover: #c8c6c4;
+  
+  /* Primary colors stay the same */
+  
+  /* Scrollbar colors for light theme */
+  --scrollbar-track: #f3f2f1;
+  --scrollbar-thumb: #c8c6c4;
+  --scrollbar-thumb-hover: #a19f9d;
+  --scrollbar-thumb-active: #5865f2;
 }
 
 html {
@@ -18,32 +68,32 @@ html {
 
 body {
   font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #313338;
-  color: #f2f3f5;
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-light);
   font-size: 1rem;
 }
 
-/* Scrollbar styling - Discord theme */
+/* Scrollbar styling - Uses CSS variables */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #2b2d31;
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e1f22;
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
   transition: background 0.2s;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #404249;
+  background: var(--scrollbar-thumb-hover);
 }
 
 ::-webkit-scrollbar-thumb:active {
-  background: #5865f2;
+  background: var(--scrollbar-thumb-active);
 }
 
 /* ============================================
@@ -524,88 +574,22 @@ body {
   .welcome-icon {
     @apply w-20 h-20 bg-boxflow-primary rounded-full flex items-center justify-center mx-auto mb-6;
   }
+
+  /* ========== Utility Animation Classes ========== */
+  .hover-lift {
+    @apply transition-interactive hover:-translate-y-0.5 hover:shadow-lg;
+  }
+
+  .hover-scale {
+    @apply transition-interactive hover:scale-105;
+  }
+
+  .hover-brightness {
+    @apply transition-interactive hover:brightness-110;
+  }
 }
 
 /* ============================================
-   Light Theme Override - Modern Teams-inspired
+   Light Theme - Powered by CSS Variables
+   No !important needed - clean override pattern
    ============================================ */
-.light-theme {
-  background-color: #faf9f8;
-  color: #242424;
-}
-
-.light-theme body {
-  background-color: #faf9f8;
-  color: #242424;
-}
-
-/* Override boxflow color variables with light theme equivalents */
-.light-theme [class*="bg-boxflow-dark"] {
-  background-color: #ffffff !important;
-}
-
-.light-theme [class*="bg-boxflow-darker"] {
-  background-color: #f3f2f1 !important;
-}
-
-.light-theme [class*="bg-boxflow-darkest"] {
-  background-color: #e1dfdd !important;
-}
-
-.light-theme [class*="bg-boxflow-hover"] {
-  background-color: #edebe9 !important;
-}
-
-/* Override text colors */
-.light-theme [class*="text-boxflow-light"],
-.light-theme [class*="text-white"] {
-  color: #242424 !important;
-}
-
-.light-theme [class*="text-boxflow-muted"] {
-  color: #605e5c !important;
-}
-
-.light-theme [class*="text-boxflow-subtle"] {
-  color: #8a8886 !important;
-}
-
-/* Override borders */
-.light-theme [class*="border-boxflow-border"],
-.light-theme [class*="border-boxflow-darkest"],
-.light-theme [class*="border-boxflow-hover"] {
-  border-color: #e1dfdd !important;
-}
-
-/* Scrollbar */
-.light-theme ::-webkit-scrollbar-track {
-  background: #f3f2f1;
-}
-
-.light-theme ::-webkit-scrollbar-thumb {
-  background: #c8c6c4;
-}
-
-.light-theme ::-webkit-scrollbar-thumb:hover {
-  background: #a19f9d;
-}
-
-/* Input fields */
-.light-theme input,
-.light-theme textarea {
-  background-color: #ffffff !important;
-  color: #242424 !important;
-  border-color: #e1dfdd !important;
-}
-
-.light-theme input::placeholder,
-.light-theme textarea::placeholder {
-  color: #8a8886 !important;
-}
-
-/* Hover states */
-.light-theme [class*="hover:bg-boxflow-hover"]:hover,
-.light-theme [class*="hover:bg-boxflow-dark"]:hover {
-  background-color: #edebe9 !important;
-}
-
