@@ -1,10 +1,13 @@
 // Member List Component - Shows online/offline users grouped by role
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { api } from '../services/api';
-import { logger } from '../utils/logger';
 import { useAuthStore } from '../store/auth';
 import { useOnlineUsers } from '../hooks/useQuery';
+import {
+  useMemberListData,
+  ROLE_LABELS,
+  type MemberUser
+} from '../hooks/useMemberListData';
+import { useDMOperations } from '../hooks/useDMOperations';
 import ProfileModal from './ProfileModal';
 import MemberListHeader from './member/MemberListHeader';
 import MemberSearch from './member/MemberSearch';
@@ -12,30 +15,21 @@ import MemberSection from './member/MemberSection';
 import MemberListItem from './member/MemberListItem';
 import type { UserStatus } from './member/StatusIndicator';
 
-interface User {
-  id: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  avatarUrl?: string;
-  role: string;
-  presence?: {
-    status: string;
-    customStatus?: string;
-    lastSeen?: string;
-  };
-}
-
 export default function MemberList() {
-  const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
-  // React Query hook for auto caching
   const { data: onlineUsers } = useOnlineUsers();
-  const [users, setUsers] = useState<User[]>([]);
+  const { startDM } = useDMOperations();
+
+  const [users, setUsers] = useState<MemberUser[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const { filteredUsers, groupedByRole, roleOrder } = useMemberListData({
+    users,
+    searchQuery
+  });
 
   useEffect(() => {
     if (!onlineUsers) return;
@@ -53,12 +47,11 @@ export default function MemberList() {
   }, [onlineUsers, currentUser]);
 
   useEffect(() => {
-    // Listen for presence updates via WebSocket instead of polling
+    // Listen for presence updates via WebSocket
     const handlePresenceUpdate = (data: { userId: string; status: string }) => {
       setUsers((prevUsers) => {
         const existingUser = prevUsers.find((u) => u.id === data.userId);
         if (existingUser) {
-          // Update existing user's status
           return prevUsers.map((u) =>
             u.id === data.userId
               ? {
@@ -79,7 +72,6 @@ export default function MemberList() {
       });
     };
 
-    // Import socketService dynamically to avoid circular dependencies
     import('../services/socket').then(({ socketService }) => {
       socketService.onPresenceUpdate('memberList', handlePresenceUpdate);
     });
@@ -98,43 +90,8 @@ export default function MemberList() {
 
   const handleStartDM = async (userId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    try {
-      const channel = await api.getOrCreateDM(userId);
-      navigate(`/chat/dm/${channel.id}`);
-    } catch (err) {
-      logger.error('Failed to create DM channel:', err);
-    }
+    await startDM(userId);
   };
-
-  // Group users by role, then by status within each role
-  const roleOrder = ['SUPER_ADMIN', 'ADMIN', 'STAFF'];
-  const roleLabels: Record<string, string> = {
-    SUPER_ADMIN: 'Super Admin',
-    ADMIN: 'Administratörer',
-    STAFF: 'Personal'
-  };
-
-  // Filter users based on search query
-  const filteredUsers = searchQuery
-    ? users.filter((user) => {
-        const fullName = `${user.firstName ?? ''} ${user.lastName ?? ''}`
-          .toLowerCase()
-          .trim();
-        const email = user.email.toLowerCase();
-        const query = searchQuery.toLowerCase();
-        return fullName.includes(query) || email.includes(query);
-      })
-    : users;
-
-  const groupedByRole = filteredUsers.reduce(
-    (acc, user) => {
-      const role = user.role || 'STAFF';
-      if (!acc[role]) acc[role] = [];
-      acc[role].push(user);
-      return acc;
-    },
-    {} as Record<string, User[]>
-  );
 
   return (
     <div className="sidebar-main border-l border-boxflow-border">
@@ -164,7 +121,7 @@ export default function MemberList() {
             return (
               <MemberSection
                 key={role}
-                title={roleLabels[role]}
+                title={ROLE_LABELS[role]}
                 count={roleUsers.length}
               >
                 {roleUsers.map((user) => {
