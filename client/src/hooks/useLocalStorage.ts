@@ -30,7 +30,7 @@ export function useLocalStorage<T>(
     [key]
   );
 
-  // Sync with other tabs/windows
+  // Sync with other tabs/windows AND same-tab changes
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === key && e.newValue) {
@@ -42,8 +42,24 @@ export function useLocalStorage<T>(
       }
     };
 
+    // Listen for changes from other components in the same tab
+    const handleSettingsChanged = () => {
+      try {
+        const item = localStorage.getItem(key);
+        if (item) {
+          setValue(JSON.parse(item) as T);
+        }
+      } catch {
+        // Ignore parse errors
+      }
+    };
+
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('settingsChanged', handleSettingsChanged);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('settingsChanged', handleSettingsChanged);
+    };
   }, [key]);
 
   return [value, setStoredValue];
