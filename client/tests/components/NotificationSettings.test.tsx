@@ -27,9 +27,7 @@ describe('NotificationSettings', () => {
     render(<NotificationSettings />);
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/stöder inte push-notiser/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/stöder inte push-notiser/i)).toBeInTheDocument();
     });
   });
 
