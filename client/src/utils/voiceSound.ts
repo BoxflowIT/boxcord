@@ -1,9 +1,15 @@
 // Voice channel sound effects using Web Audio API
+import { useAudioSettingsStore } from '../store/audioSettingsStore';
 
 // Create audio context
 const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
 let audioContext: AudioContext | null = null;
 let ringingInterval: number | null = null;
+
+// Get sound effects volume from settings
+function getSoundEffectsVolume(): number {
+  return useAudioSettingsStore.getState().soundEffectsVolume;
+}
 
 // Initialize audio context on first use
 function getAudioContext(): AudioContext {
@@ -29,6 +35,9 @@ async function generateJoinSound() {
     oscillator.connect(gainNode);
     gainNode.connect(ctx.destination);
 
+    // Get user's sound effects volume setting
+    const userVolume = getSoundEffectsVolume();
+
     // Rising tone
     oscillator.frequency.setValueAtTime(659.25, ctx.currentTime); // E5
     oscillator.frequency.exponentialRampToValueAtTime(
@@ -36,10 +45,16 @@ async function generateJoinSound() {
       ctx.currentTime + 0.1
     ); // A5
 
-    // Volume envelope: fade in quickly, fade out smoothly
+    // Volume envelope: fade in quickly, fade out smoothly (multiplied by user volume)
     gainNode.gain.setValueAtTime(0, ctx.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.02);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+    gainNode.gain.linearRampToValueAtTime(
+      0.15 * userVolume,
+      ctx.currentTime + 0.02
+    );
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.01 * userVolume,
+      ctx.currentTime + 0.15
+    );
 
     oscillator.type = 'sine';
     oscillator.start(ctx.currentTime);
@@ -65,6 +80,9 @@ async function generateLeaveSound() {
     oscillator.connect(gainNode);
     gainNode.connect(ctx.destination);
 
+    // Get user's sound effects volume setting
+    const userVolume = getSoundEffectsVolume();
+
     // Falling tone
     oscillator.frequency.setValueAtTime(880, ctx.currentTime); // A5
     oscillator.frequency.exponentialRampToValueAtTime(
@@ -72,10 +90,16 @@ async function generateLeaveSound() {
       ctx.currentTime + 0.1
     ); // E5
 
-    // Volume envelope: fade in quickly, fade out smoothly
+    // Volume envelope: fade in quickly, fade out smoothly (multiplied by user volume)
     gainNode.gain.setValueAtTime(0, ctx.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.02);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+    gainNode.gain.linearRampToValueAtTime(
+      0.15 * userVolume,
+      ctx.currentTime + 0.02
+    );
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.01 * userVolume,
+      ctx.currentTime + 0.15
+    );
 
     oscillator.type = 'sine';
     oscillator.start(ctx.currentTime);
@@ -118,6 +142,9 @@ async function generateRingTone() {
     oscillator2.connect(gainNode);
     gainNode.connect(ctx.destination);
 
+    // Get user's sound effects volume setting
+    const userVolume = getSoundEffectsVolume();
+
     // Two-tone ring (like a phone)
     oscillator1.frequency.value = 440; // A4
     oscillator2.frequency.value = 480; // Slightly higher for harmony
@@ -127,8 +154,11 @@ async function generateRingTone() {
     // Ring pattern: 0.4s on, 0.2s off (creates ring-ring effect)
     const duration = 0.4;
     gainNode.gain.setValueAtTime(0, ctx.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.05);
-    gainNode.gain.setValueAtTime(0.12, ctx.currentTime + duration);
+    gainNode.gain.linearRampToValueAtTime(
+      0.12 * userVolume,
+      ctx.currentTime + 0.05
+    );
+    gainNode.gain.setValueAtTime(0.12 * userVolume, ctx.currentTime + duration);
     gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + duration + 0.05);
 
     oscillator1.start(ctx.currentTime);
