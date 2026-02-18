@@ -44,16 +44,15 @@ class EmailService {
     }
 
     try {
-      const emailData: any = {
+      const emailData: sgMail.MailDataRequired = {
         from: config.SENDGRID_FROM_EMAIL!,
         to,
         subject,
+        text: text || '',
+        ...(html && { html }),
+        ...(cc && { cc }),
+        ...(bcc && { bcc })
       };
-
-      if (text) emailData.text = text;
-      if (html) emailData.html = html;
-      if (cc) emailData.cc = cc;
-      if (bcc) emailData.bcc = bcc;
 
       await sgMail.send(emailData);
 
@@ -72,7 +71,7 @@ class EmailService {
     mentionedBy: string,
     channelName: string,
     messagePreview: string,
-    messageUrl: string,
+    messageUrl: string
   ): Promise<void> {
     await this.sendEmail({
       to: userEmail,
@@ -89,7 +88,7 @@ class EmailService {
             View Message
           </a>
         </div>
-      `,
+      `
     });
   }
 
@@ -100,7 +99,7 @@ class EmailService {
     userEmail: string,
     senderName: string,
     messagePreview: string,
-    dmUrl: string,
+    dmUrl: string
   ): Promise<void> {
     await this.sendEmail({
       to: userEmail,
@@ -117,7 +116,7 @@ class EmailService {
             Reply
           </a>
         </div>
-      `,
+      `
     });
   }
 
@@ -128,7 +127,7 @@ class EmailService {
     userEmail: string,
     workspaceName: string,
     invitedBy: string,
-    inviteUrl: string,
+    inviteUrl: string
   ): Promise<void> {
     await this.sendEmail({
       to: userEmail,
@@ -143,7 +142,7 @@ class EmailService {
             Accept Invitation
           </a>
         </div>
-      `,
+      `
     });
   }
 

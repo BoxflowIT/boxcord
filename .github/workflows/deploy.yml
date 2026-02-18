@@ -15,14 +15,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
       - name: Deploy to Railway
-        uses: bervProject/railway-deploy@main
-        with:
-          railway_token: ${{ secrets.RAILWAY_TOKEN }}
-          service: boxcord
+        run: railway up
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: Notify deployment
         if: success()
         run: |
           echo "✅ Deployment to Railway successful"
-          echo "URL: https://boxcord.up.railway.app"
+          echo "Check Railway dashboard for deployment status"

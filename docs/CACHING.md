@@ -7,7 +7,9 @@ Vi använder **@tanstack/react-query** för att automatiskt cacha API-anrop och 
 ## ✅ Vad vi har implementerat
 
 ### 1. Global QueryClient Setup
+
 **Fil:** `client/src/App.tsx`
+
 - QueryClientProvider wraps hela appen
 - Globala cache-inställningar:
   - `staleTime: 2 minuter` - Data är "fresh" i 2 minuter
@@ -17,89 +19,109 @@ Vi använder **@tanstack/react-query** för att automatiskt cacha API-anrop och 
   - Automatisk refetch när internet kopplas på igen
 
 ### 2. Custom Hooks
+
 **Fil:** `client/src/hooks/useQuery.ts`
 
-#### Tillgängliga hooks:
+#### Tillgängliga hooks
 
 **useWorkspaces()**
+
 - Cachas i 5 minuter
 - Automatisk refetch var 30:e sekund
 - Används i: Chat.tsx
 
 **useChannels(workspaceId)**
+
 - Cachas i 5 minuter per workspace
 - Automatisk refetch var 30:e sekund
 - Används i: Chat.tsx
 
 **useDMChannels()**
+
 - Cachas i 3 minuter
 - Automatisk refetch var 20:e sekund
 - Används av: DMList.tsx
 
 **useOnlineUsers()**
+
 - Cachas i 30 sekunder
 - Automatisk refetch var 15:e sekund
 - Används av: MemberList.tsx
 
 **useCurrentUser()**
+
 - Cachas i 10 minuter
 - Används av: ProfileModal.tsx
 
 **useUser(userId)**
+
 - Cachas i 5 minuter per användare
 - Används av: ProfileModal.tsx
 
 **useUsers(userIds[])**
+
 - Cachas i 5 minuter per batch
 - Hämtar flera users samtidigt
 - Används av: DMList.tsx för att hämta alla DM participants i ett svep
 
 **useReactions(messageId)**
+
 - Cachas i 30 sekunder
 - Uppdateras även i realtid via WebSocket
 - Används av: MessageReactions.tsx
 
 **useMessages(channelId, cursor?)**
+
 - Cachas i 1 minut
 - Uppdateras i realtid via WebSocket
 - Används av: WelcomeView.tsx
 
 **useCreateChannel()**
+
 - Invaliderar channels cache för specifik workspace
 - Automatisk refetch av channels
 
 **useDeleteWorkspace()**
+
 - Invaliderar workspaces cache efter borttagen workspace
 
 **useDeleteChannel()**
+
 - Invaliderar alla channels queries efter borttagen channel
 
 **useUpdateProfile()**
+
 - Invaliderar current user cache efter profiländring
 - Automatisk refetch av användare
 - Används av: ProfileModal.tsx
 
 **useUpdateUserRole()**
+
 - Invaliderar user cache för specifik användare
 - Invaliderar online users cache
 - Används av: ProfileModal.tsx för admin-funktioner
 
 **useCreateChannel()**
+
 - Invaliderar channels cache för specifik workspace
 - Automatisk refetch av channels
 
 **useDeleteWorkspace()**
+
 - Invaliderar workspaces cache efter borttagen workspace
 
 **useDeleteChannel()**
+
 - Invaliderar alla channels queries efter borttagen channel
 
 ## 🚀 Fördelar
 
 ### 1. **Deduplicering**
+
 Om två komponenter anropar samma endpoint samtidigt → **endast 1 request skickas!**
 
 **Exempel:**
+
 ```tsx
 // Båda dessa anrop dedupliceras automatiskt
 const { data: ws1 } = useWorkspaces(); // Component A
@@ -108,9 +130,11 @@ const { data: ws2 } = useWorkspaces(); // Component B
 ```
 
 ### 2. **Instant Loading från Cache**
+
 När data redan finns i cache → **instant visning, ingen laddning!**
 
 **Exempel:**
+
 ```tsx
 // Första gången: laddar från API
 const { data, isLoading } = useWorkspaces();
@@ -122,9 +146,11 @@ const { data, isLoading } = useWorkspaces();
 ```
 
 ### 3. **Background Refetch**
+
 Data uppdateras i bakgrunden utan att visa spinner
 
 **Exempel:**
+
 ```tsx
 // Data visas direkt från cache (2 min gamla)
 const { data } = useWorkspaces();
@@ -135,6 +161,7 @@ const { data } = useWorkspaces();
 ```
 
 ### 4. **Automatisk Uppdatering**
+
 - När användaren fokuserar på fliken igen
 - När internet kopplas på igen
 - Med konfigurerade intervall (15-30 sek)
@@ -154,7 +181,8 @@ const { data } = useWorkspaces();
 
 ## 📊 Före vs Efter
 
-### FÖRE (utan caching):
+### FÖRE (utan caching)
+
 ```
 Chat.tsx: api.getWorkspaces()      → Request 1
 WelcomeView: api.getWorkspaces()   → Request 2 (duplicat!) 
@@ -173,7 +201,8 @@ MemberList: api.getOnlineUsers()   → Request 12
 Total: 12+ requests (hälften duplicerade!)
 ```
 
-### EFTER (med React Query):
+### EFTER (med React Query)
+
 ```
 Chat.tsx: useWorkspaces()          → Request 1 → cache
 WelcomeView: useWorkspaces()       → ✅ från cache (0 requests)
@@ -199,6 +228,7 @@ npm install @tanstack/react-query-devtools
 ```
 
 Lägg till i App.tsx:
+
 ```tsx
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
@@ -211,6 +241,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 ## 🎯 Best Practices
 
 1. **Använd hooks istället för direkta API-anrop**
+
    ```tsx
    // ❌ Gammal metod
    useEffect(() => {
@@ -222,6 +253,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
    ```
 
 2. **Invalidera cache efter mutations**
+
    ```tsx
    const { mutate } = useCreateWorkspace();
    mutate({ name: 'New' }, {
@@ -232,6 +264,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
    ```
 
 3. **Använd enabled för conditional queries**
+
    ```tsx
    const { data } = useChannels(workspaceId, {
      enabled: !!workspaceId // Kör bara om workspaceId finns

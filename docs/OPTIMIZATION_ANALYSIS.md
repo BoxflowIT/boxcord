@@ -7,6 +7,7 @@
 #### 1. **Dubbel State Management - React Query + Zustand** 🚨
 
 **Problem:**
+
 ```typescript
 // Zustand store:
 messages: Message[]  // Global array med ALLA messages
@@ -26,12 +27,14 @@ socket.on('message:new', (msg) => {
 ```
 
 **Konsekvens:**
+
 - Dubbel memory usage
 - Sync-problem mellan stores
 - Extra complexity
 - Svårt att debugga
 
 **Lösning:**
+
 ```typescript
 // Option A: Använd BARA React Query (rekommenderat för chat)
 ✅ React Query för ALL data (messages, channels, workspaces)
@@ -47,6 +50,7 @@ socket.on('message:new', (msg) => {
 #### 2. **Messages Global State = Memory Leak Risk** 🚨
 
 **Problem:**
+
 ```typescript
 // chatStore.ts - ALLA messages i EN array
 messages: Message[]  // växer oändligt!
@@ -57,12 +61,14 @@ messages: Message[]  // växer oändligt!
 ```
 
 **Konsekvens:**
+
 - Efter 1h chattande: ~10,000 messages i minnet
 - Efter 1 dag: ~100,000+ messages
 - Browser blir långsam
 - Memory leak
 
 **Lösning:**
+
 ```typescript
 // React Query's automatic garbage collection
 useMessages(channelId) {
@@ -80,6 +86,7 @@ queryKeys.messages(channelId)  // Isolerad per channel
 #### 3. **Type Duplication** 🟡
 
 **Problem:**
+
 ```typescript
 // store/chat.ts
 export interface Message { id, content, ... }
@@ -91,6 +98,7 @@ export interface Message { id, content, ... }
 ```
 
 **Lösning:**
+
 ```typescript
 // types/message.ts (single source of truth)
 export interface Message { ... }
@@ -104,6 +112,7 @@ import type { Message } from '../types/message';
 #### 4. **Ingen Error Handling UI** 🟡
 
 **Problem:**
+
 ```typescript
 try {
   await api.createChannel(...);
@@ -113,12 +122,14 @@ try {
 ```
 
 **Saknas:**
+
 - Error Boundaries
 - Toast notifications
 - Retry buttons
 - User feedback
 
 **Lösning:**
+
 ```typescript
 // Add error handling med toast
 import { toast } from 'react-hot-toast';
@@ -133,6 +144,7 @@ onError: (error) => {
 #### 5. **För Många useState (Overcomplex Components)** 🟡
 
 **Problem:**
+
 ```typescript
 // Sidebar.tsx - 12 useState hooks! 😱
 const [showNewChannel, setShowNewChannel] = useState(false);
@@ -146,6 +158,7 @@ const [deleteWorkspace, setDeleteWorkspace] = useState(null);
 ```
 
 **Lösning:**
+
 ```typescript
 // useReducer för state machine
 type ModalState = 
@@ -164,6 +177,7 @@ const [modalState, dispatch] = useReducer(modalReducer, { type: 'idle' });
 #### 6. **Ingen WebRTC Infrastructure** 🚨
 
 **Saknas:**
+
 - Media permissions (camera/mic)
 - Peer connection management  
 - Signaling via WebSocket
@@ -173,6 +187,7 @@ const [modalState, dispatch] = useReducer(modalReducer, { type: 'idle' });
 - Call state management
 
 **Behövs:**
+
 ```typescript
 // client/src/services/webrtc.ts
 class WebRTCService {
@@ -194,6 +209,7 @@ socket.on('call:ended', handleCallEnd);
 ```
 
 **Database schema för calls:**
+
 ```prisma
 model Call {
   id          String   @id @default(cuid())
@@ -223,6 +239,7 @@ model CallParticipant {
 #### 7. **Flytta från Zustand till React Query** (Rekommenderat)
 
 **Varför:**
+
 - React Query är GJORT för server state
 - Automatic caching, garbage collection
 - Optimistic updates built-in
@@ -230,6 +247,7 @@ model CallParticipant {
 - Mindre kod, mer features
 
 **Nuvarande:**
+
 ```
 ┌─────────────────────────────────────┐
 │  React Query (server data cache)   │
@@ -241,6 +259,7 @@ model CallParticipant {
 ```
 
 **Bättre:**
+
 ```
 ┌─────────────────────────────────────┐
 │  React Query (ALL server data)     │ ← Single source
@@ -256,12 +275,14 @@ model CallParticipant {
 #### 8. **Message Pagination Saknas** 🟡
 
 **Problem:**
+
 ```typescript
 // Laddar ALLA messages från början
 useMessages(channelId) // → 10,000 messages!
 ```
 
 **Lösning:**
+
 ```typescript
 // Infinite query med cursors
 useInfiniteQuery({
@@ -276,6 +297,7 @@ useInfiniteQuery({
 ```
 
 **Bonus: Virtualized Scrolling**
+
 ```typescript
 // react-virtual för 60fps scrolling med 100,000+ messages
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -286,10 +308,12 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 #### 9. **Ingen Error Boundary** 🟡
 
 **Problem:**
+
 - En crash i ChannelView = hela appen crashar
 - Ingen graceful error handling
 
 **Lösning:**
+
 ```typescript
 // components/ErrorBoundary.tsx
 <ErrorBoundary fallback={<ErrorView />}>
@@ -302,6 +326,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 #### 10. **Ingen Loading States Strategy** 🟡
 
 **Problem:**
+
 ```typescript
 const { data, isLoading } = useMessages(channelId);
 
@@ -313,6 +338,7 @@ const { data, isLoading } = useMessages(channelId);
 ```
 
 **Lösning:**
+
 ```typescript
 const {
   data,
@@ -333,6 +359,7 @@ const {
 #### 11. **Ingen Memoization** 🟡
 
 **Problem:**
+
 ```typescript
 // ChannelView.tsx - re-renders på varje keystroke
 const channelMessages = messages.filter(m => m.channelId === channelId);
@@ -340,6 +367,7 @@ const channelMessages = messages.filter(m => m.channelId === channelId);
 ```
 
 **Lösning:**
+
 ```typescript
 const channelMessages = useMemo(
   () => messages.filter(m => m.channelId === channelId),
@@ -350,6 +378,7 @@ const channelMessages = useMemo(
 #### 12. **Callbacks Inte Memoized** 🟡
 
 **Problem:**
+
 ```typescript
 <MessageItem
   onEdit={(id) => handleEdit(id)}  // Ny function varje render
@@ -358,6 +387,7 @@ const channelMessages = useMemo(
 ```
 
 **Lösning:**
+
 ```typescript
 const handleEdit = useCallback((id: string) => {
   // ...
@@ -390,36 +420,36 @@ const handleEdit = useCallback((id: string) => {
 
 ### **PHASE 2: WebRTC Foundation** 🎥
 
-5. **WebRTC Service** (4-6h)
+1. **WebRTC Service** (4-6h)
    - [ ] Create webrtc.ts service
    - [ ] Media permissions
    - [ ] Peer connection setup
    - [ ] Signaling via WebSocket
 
-6. **Call UI Components** (4-6h)
+2. **Call UI Components** (4-6h)
    - [ ] CallButton component
    - [ ] CallWindow component
    - [ ] Video grid layout
    - [ ] Audio/Video controls
 
-7. **Database Schema** (1h)
+3. **Database Schema** (1h)
    - [ ] Call model
    - [ ] CallParticipant model
    - [ ] Migration
 
 ### **PHASE 3: Performance** ⚡
 
-8. **Message Pagination** (2-3h)
+1. **Message Pagination** (2-3h)
    - [ ] useInfiniteQuery
    - [ ] Cursor-based pagination
    - [ ] "Load more" button
 
-9. **Virtualized Scrolling** (2-3h)
+2. **Virtualized Scrolling** (2-3h)
    - [ ] Install @tanstack/react-virtual
    - [ ] Implement in MessageList
    - [ ] Test with 10,000+ messages
 
-10. **Memoization** (1-2h)
+3. **Memoization** (1-2h)
     - [ ] useMemo för filtered lists
     - [ ] useCallback för event handlers
     - [ ] React.memo för components
@@ -429,17 +459,20 @@ const handleEdit = useCallback((id: string) => {
 ## 📋 QUICK WINS (Do Now!)
 
 ### **1. Remove Message Duplication** ⚡
+
 ```bash
 # Ta bort messages från Zustand store
 # Använd BARA React Query
 ```
 
 ### **2. Add Toast Notifications** ⚡
+
 ```bash
 npm install react-hot-toast
 ```
 
 ### **3. Fix Type Duplication** ⚡
+
 ```typescript
 // Ta bort duplicate Message interface
 // Import från types/message.ts överallt
@@ -472,6 +505,7 @@ npm install react-hot-toast
 ## 💡 FINAL RECOMMENDATIONS
 
 ### **DO:**
+
 ✅ Flytta till full React Query för server state
 ✅ Zustand bara för UI state
 ✅ WebRTC service layer
@@ -479,6 +513,7 @@ npm install react-hot-toast
 ✅ useReducer för complex state
 
 ### **DON'T:**
+
 ❌ Behåll dubbel state (React Query + Zustand messages)
 ❌ Ignorera error handling
 ❌ Implementera video utan WebRTC service
@@ -489,6 +524,7 @@ npm install react-hot-toast
 ## 🎬 READY FOR VIDEO?
 
 **Not yet!** Fix these first:
+
 1. State management (Phase 1)
 2. Error handling (Phase 1)  
 3. WebRTC service (Phase 2)

@@ -4,7 +4,7 @@ import { config, isDevelopment, isProduction } from './config.js';
 // Create Pino logger instance
 export const logger = pino({
   level: isDevelopment ? 'debug' : 'info',
-  
+
   // Pretty print in development
   transport: isDevelopment
     ? {
@@ -12,8 +12,8 @@ export const logger = pino({
         options: {
           colorize: true,
           translateTime: 'HH:MM:ss',
-          ignore: 'pid,hostname',
-        },
+          ignore: 'pid,hostname'
+        }
       }
     : undefined,
 
@@ -22,15 +22,15 @@ export const logger = pino({
     formatters: {
       level: (label) => {
         return { level: label };
-      },
+      }
     },
-    timestamp: pino.stdTimeFunctions.isoTime,
+    timestamp: pino.stdTimeFunctions.isoTime
   }),
 
   // Base fields
   base: {
-    env: config.NODE_ENV,
-  },
+    env: config.NODE_ENV
+  }
 });
 
 // Child loggers for different modules
@@ -39,13 +39,18 @@ export const createLogger = (module: string) => {
 };
 
 // Utility functions for structured logging
-export const logRequest = (method: string, url: string, statusCode: number, responseTime: number) => {
+export const logRequest = (
+  method: string,
+  url: string,
+  statusCode: number,
+  responseTime: number
+) => {
   logger.info({
     type: 'request',
     method,
     url,
     statusCode,
-    responseTime,
+    responseTime
   });
 };
 
@@ -55,19 +60,23 @@ export const logError = (error: Error, context?: Record<string, unknown>) => {
     error: {
       name: error.name,
       message: error.message,
-      stack: error.stack,
+      stack: error.stack
     },
-    ...context,
+    ...context
   });
 };
 
-export const logSlow = (operation: string, duration: number, threshold: number) => {
+export const logSlow = (
+  operation: string,
+  duration: number,
+  threshold: number
+) => {
   if (duration > threshold) {
     logger.warn({
       type: 'slow_operation',
       operation,
       duration,
-      threshold,
+      threshold
     });
   }
 };
