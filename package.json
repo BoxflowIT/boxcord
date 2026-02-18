@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/apps/api/index.ts",
     "build": "tsc && cd client && yarn install --production=false --ignore-engines && yarn build",
-    "start": "prisma migrate deploy && node dist/apps/api/index.js",
+    "start": "echo '🚀 Starting Boxcord...' && prisma migrate deploy && echo '✅ Migrations complete' && node dist/apps/api/index.js",
     "seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
