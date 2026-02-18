@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '../../services/api';
 import { useCurrentUser } from '../../hooks/useQuery';
 import { MicIcon, MicOffIcon, HeadphonesOffIcon } from '../ui/Icons';
+import { UserVolumeMenu } from './UserVolumeMenu';
+import { useState } from 'react';
 import type { User } from '../../types';
 
 interface VoiceUser {
@@ -23,6 +25,13 @@ export function VoiceUserList() {
     isDeafened: localIsDeafened,
     isSpeaking: localIsSpeaking
   } = useVoiceStore();
+
+  // Volume menu state
+  const [volumeMenuState, setVolumeMenuState] = useState<{
+    userId: string;
+    displayName: string;
+    position: { x: number; y: number };
+  } | null>(null);
 
   // Use cached current user to avoid duplicate API calls
   const { data: currentUser } = useCurrentUser();
@@ -89,10 +98,27 @@ export function VoiceUserList() {
               displayName={isLocalUser ? `${displayName} (You)` : displayName}
               avatarUrl={user?.avatarUrl}
               isLocalUser={isLocalUser}
+              onShowVolumeMenu={(position) =>
+                setVolumeMenuState({
+                  userId: voiceUser.userId,
+                  displayName,
+                  position
+                })
+              }
             />
           );
         })}
       </div>
+
+      {/* Volume menu popup */}
+      {volumeMenuState && (
+        <UserVolumeMenu
+          userId={volumeMenuState.userId}
+          displayName={volumeMenuState.displayName}
+          position={volumeMenuState.position}
+          onClose={() => setVolumeMenuState(null)}
+        />
+      )}
     </div>
   );
 }
@@ -102,13 +128,15 @@ interface VoiceUserItemProps {
   displayName: string;
   avatarUrl?: string | null;
   isLocalUser?: boolean;
+  onShowVolumeMenu: (position: { x: number; y: number }) => void;
 }
 
 function VoiceUserItem({
   user,
   displayName,
   avatarUrl,
-  isLocalUser
+  isLocalUser,
+  onShowVolumeMenu
 }: VoiceUserItemProps) {
   const initials = displayName
     .split(' ')
@@ -117,11 +145,21 @@ function VoiceUserItem({
     .toUpperCase()
     .slice(0, 2);
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!isLocalUser) {
+      // Don't allow volume control for yourself
+      onShowVolumeMenu({ x: e.clientX, y: e.clientY });
+    }
+  };
+
   return (
     <div
       className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
-        isLocalUser ? 'bg-gray-750/50' : 'hover:bg-gray-750'
+        isLocalUser ? 'bg-gray-750/50' : 'hover:bg-gray-750 cursor-pointer'
       }`}
+      onContextMenu={handleContextMenu}
+      title={isLocalUser ? undefined : 'Right-click to adjust volume'}
     >
       {/* Avatar with speaking indicator */}
       <div className="relative">

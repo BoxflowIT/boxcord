@@ -26,6 +26,7 @@ export default function VoiceAudioTab() {
     useRNNoise,
     inputVolume,
     outputVolume,
+    soundEffectsVolume,
     inputSensitivity,
     isTesting,
     setInputDevice,
@@ -36,6 +37,7 @@ export default function VoiceAudioTab() {
     setUseRNNoise,
     setInputVolume,
     setOutputVolume,
+    setSoundEffectsVolume,
     setInputSensitivity
   } = useAudioSettingsStore();
 
@@ -111,6 +113,30 @@ export default function VoiceAudioTab() {
         value={outputVolume}
         onChange={setOutputVolume}
       />
+
+      {/* Sound Effects Volume Control */}
+      <div>
+        <VolumeSlider
+          label="Sound Effects Volume"
+          value={soundEffectsVolume}
+          onChange={setSoundEffectsVolume}
+        />
+        <p className="text-xs text-gray-400 mt-1">
+          🔔 Controls volume for join/leave sounds and ringing tones
+        </p>
+      </div>
+
+      {/* Per-User Volume Info */}
+      <div className="bg-boxflow-dark-lighter p-4 rounded-lg border border-boxflow-hover-50">
+        <h3 className="text-sm font-medium text-white mb-2">
+          👥 Individual User Volume
+        </h3>
+        <p className="text-xs text-gray-400">
+          Right-click on a user in a voice channel to adjust their volume
+          individually (0-200%). This lets you make some people louder or
+          quieter without affecting others.
+        </p>
+      </div>
 
       {/* Audio Quality Settings & Toggles */}
       <AudioQualityToggles
