@@ -65,13 +65,17 @@ function validateEnv() {
       console.error('❌ Environment validation failed:');
       error.errors.forEach((err) => {
         console.error(`  - ${err.path.join('.')}: ${err.message}`);
-        console.error(`    Current value: ${process.env[err.path[0] as string] ? '[SET]' : '[MISSING]'}`);
+        console.error(
+          `    Current value: ${process.env[err.path[0] as string] ? '[SET]' : '[MISSING]'}`
+        );
       });
       console.error('\n📋 All environment variables:');
       Object.keys(process.env)
-        .filter(key => !key.includes('PATH') && !key.includes('_'))
+        .filter((key) => !key.includes('PATH') && !key.includes('_'))
         .sort()
-        .forEach(key => console.error(`  ${key}=[${process.env[key] ? 'SET' : 'MISSING'}]`));
+        .forEach((key) =>
+          console.error(`  ${key}=[${process.env[key] ? 'SET' : 'MISSING'}]`)
+        );
       process.exit(1);
     }
     throw error;

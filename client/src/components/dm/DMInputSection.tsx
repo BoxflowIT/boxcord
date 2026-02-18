@@ -12,6 +12,7 @@ interface DMInputSectionProps {
   onKeyDown: (e: React.KeyboardEvent) => void;
   onFileSelect: (file: File) => void;
   onEmojiSelect: (emoji: string) => void;
+  onGifSelect: (gifUrl: string) => void;
 }
 
 export default function DMInputSection({
@@ -23,7 +24,8 @@ export default function DMInputSection({
   onInputChange,
   onKeyDown,
   onFileSelect,
-  onEmojiSelect
+  onEmojiSelect,
+  onGifSelect
 }: DMInputSectionProps) {
   return (
     <div className="px-4 pb-6">
@@ -42,7 +44,7 @@ export default function DMInputSection({
           rows={1}
           disabled={uploading || sending}
         />
-        <EmojiPicker onEmojiSelect={onEmojiSelect} />
+        <EmojiPicker onEmojiSelect={onEmojiSelect} onGifSelect={onGifSelect} />
         {sending && (
           <div className="px-3 text-boxflow-muted text-sm">Skickar...</div>
         )}

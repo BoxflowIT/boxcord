@@ -16,6 +16,7 @@ interface ChannelInputSectionProps {
   onKeyDown: (e: React.KeyboardEvent) => void;
   onFileSelect: (file: File) => void;
   onEmojiSelect: (emoji: string) => void;
+  onGifSelect: (gifUrl: string) => void;
   onMentionSelect: (
     mention: { value: string },
     startPos: number,
@@ -38,6 +39,7 @@ export default function ChannelInputSection({
   onKeyDown,
   onFileSelect,
   onEmojiSelect,
+  onGifSelect,
   onMentionSelect,
   onSlashCommandSelect,
   onCloseMentions,
@@ -57,7 +59,7 @@ export default function ChannelInputSection({
           rows={1}
           disabled={uploading}
         />
-        <EmojiPicker onEmojiSelect={onEmojiSelect} />
+        <EmojiPicker onEmojiSelect={onEmojiSelect} onGifSelect={onGifSelect} />
         {showMentions && (
           <MentionAutocomplete
             inputValue={inputValue}
