@@ -26,20 +26,20 @@ const CHANNEL_TYPES: ChannelTypeOption[] = [
     type: 'TEXT',
     label: 'Text',
     description: 'Standard textkanal för meddelanden',
-    icon: HashIcon,
+    icon: HashIcon
   },
   {
     type: 'ANNOUNCEMENT',
     label: 'Announcement',
     description: 'Endast admins kan skriva meddelanden',
-    icon: AnnouncementIcon,
+    icon: AnnouncementIcon
   },
   {
     type: 'VOICE',
     label: 'Voice',
     description: 'Röstkanal för voice chat',
-    icon: VoiceChannelIcon,
-  },
+    icon: VoiceChannelIcon
+  }
 ];
 
 interface CreateModalProps {
@@ -78,29 +78,37 @@ export default function CreateModal({
 
     setError(null);
     setIsCreating(true);
-    
+
     try {
       await onCreate(trimmedName, showChannelType ? channelType : undefined);
       resetState();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ett fel uppstod vid skapandet');
+      setError(
+        err instanceof Error ? err.message : 'Ett fel uppstod vid skapandet'
+      );
     } finally {
       setIsCreating(false);
     }
   }, [name, channelType, showChannelType, onCreate, resetState]);
 
-  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !isCreating) {
-      handleCreate();
-    }
-  }, [handleCreate, isCreating]);
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter' && !isCreating) {
+        handleCreate();
+      }
+    },
+    [handleCreate, isCreating]
+  );
 
-  const handleOpenChange = useCallback((open: boolean) => {
-    if (!open) {
-      onCancel();
-      resetState();
-    }
-  }, [onCancel, resetState]);
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        onCancel();
+        resetState();
+      }
+    },
+    [onCancel, resetState]
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -108,14 +116,14 @@ export default function CreateModal({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           {error && (
             <div className="px-3 py-2 bg-red-500/20 border border-red-500 rounded-md text-sm text-red-300">
               {error}
             </div>
           )}
-          
+
           <Input
             type="text"
             value={name}
@@ -125,7 +133,7 @@ export default function CreateModal({
             autoFocus
             disabled={isCreating}
           />
-          
+
           {showChannelType && (
             <ChannelTypeSelector
               value={channelType}
@@ -134,7 +142,7 @@ export default function CreateModal({
             />
           )}
         </div>
-        
+
         <DialogFooter>
           <Button variant="ghost" onClick={onCancel} disabled={isCreating}>
             Avbryt
@@ -155,7 +163,11 @@ interface ChannelTypeSelectorProps {
   disabled?: boolean;
 }
 
-function ChannelTypeSelector({ value, onChange, disabled }: ChannelTypeSelectorProps) {
+function ChannelTypeSelector({
+  value,
+  onChange,
+  disabled
+}: ChannelTypeSelectorProps) {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -165,7 +177,7 @@ function ChannelTypeSelector({ value, onChange, disabled }: ChannelTypeSelectorP
         {CHANNEL_TYPES.map((option) => {
           const Icon = option.icon;
           const isSelected = value === option.type;
-          
+
           return (
             <button
               key={option.type}
@@ -180,10 +192,14 @@ function ChannelTypeSelector({ value, onChange, disabled }: ChannelTypeSelectorP
                 disabled && 'opacity-50 cursor-not-allowed'
               )}
             >
-              <div className={cn(
-                'flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center',
-                isSelected ? 'bg-indigo-500 text-white' : 'bg-gray-600 text-gray-300'
-              )}>
+              <div
+                className={cn(
+                  'flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center',
+                  isSelected
+                    ? 'bg-indigo-500 text-white'
+                    : 'bg-gray-600 text-gray-300'
+                )}
+              >
                 <Icon size="md" />
               </div>
               <div className="flex-1 min-w-0">
@@ -192,8 +208,16 @@ function ChannelTypeSelector({ value, onChange, disabled }: ChannelTypeSelectorP
               </div>
               {isSelected && (
                 <div className="flex-shrink-0 w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center">
-                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <svg
+                    className="w-3 h-3 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
               )}

@@ -14,14 +14,14 @@ interface VoiceUser {
 }
 
 export function VoiceUserList() {
-  const { 
-    users, 
-    isConnected, 
-    currentChannelId, 
+  const {
+    users,
+    isConnected,
+    currentChannelId,
     currentSessionId,
     isMuted: localIsMuted,
     isDeafened: localIsDeafened,
-    isSpeaking: localIsSpeaking,
+    isSpeaking: localIsSpeaking
   } = useVoiceStore();
 
   // Use cached current user to avoid duplicate API calls
@@ -34,25 +34,28 @@ export function VoiceUserList() {
       const response = await api.get('/users/online');
       return response.data as unknown as User[];
     },
-    staleTime: 30000,
+    staleTime: 30000
   });
 
   if (!isConnected || !currentChannelId) return null;
 
   const otherUsers = Array.from(users.values());
-  
+
   // Create local user entry
-  const localUser: VoiceUser | null = currentUser && currentSessionId ? {
-    userId: currentUser.id,
-    sessionId: currentSessionId,
-    isMuted: localIsMuted,
-    isDeafened: localIsDeafened,
-    isSpeaking: localIsSpeaking,
-  } : null;
+  const localUser: VoiceUser | null =
+    currentUser && currentSessionId
+      ? {
+          userId: currentUser.id,
+          sessionId: currentSessionId,
+          isMuted: localIsMuted,
+          isDeafened: localIsDeafened,
+          isSpeaking: localIsSpeaking
+        }
+      : null;
 
   // Combine local user with other users (local user first)
-  const allUsers = localUser 
-    ? [localUser, ...otherUsers.filter(u => u.userId !== currentUser?.id)]
+  const allUsers = localUser
+    ? [localUser, ...otherUsers.filter((u) => u.userId !== currentUser?.id)]
     : otherUsers;
 
   if (allUsers.length === 0) {
@@ -72,8 +75,8 @@ export function VoiceUserList() {
       <div className="space-y-2">
         {allUsers.map((voiceUser) => {
           const isLocalUser = voiceUser.userId === currentUser?.id;
-          const user = isLocalUser 
-            ? currentUser 
+          const user = isLocalUser
+            ? currentUser
             : onlineUsers.find((u) => u.id === voiceUser.userId);
           const displayName = user
             ? `${user.firstName} ${user.lastName}`.trim() || user.email
@@ -101,7 +104,12 @@ interface VoiceUserItemProps {
   isLocalUser?: boolean;
 }
 
-function VoiceUserItem({ user, displayName, avatarUrl, isLocalUser }: VoiceUserItemProps) {
+function VoiceUserItem({
+  user,
+  displayName,
+  avatarUrl,
+  isLocalUser
+}: VoiceUserItemProps) {
   const initials = displayName
     .split(' ')
     .map((n) => n[0])
@@ -110,9 +118,11 @@ function VoiceUserItem({ user, displayName, avatarUrl, isLocalUser }: VoiceUserI
     .slice(0, 2);
 
   return (
-    <div className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
-      isLocalUser ? 'bg-gray-750/50' : 'hover:bg-gray-750'
-    }`}>
+    <div
+      className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
+        isLocalUser ? 'bg-gray-750/50' : 'hover:bg-gray-750'
+      }`}
+    >
       {/* Avatar with speaking indicator */}
       <div className="relative">
         <div
@@ -123,7 +133,7 @@ function VoiceUserItem({ user, displayName, avatarUrl, isLocalUser }: VoiceUserI
           }`}
           style={{
             backgroundColor: avatarUrl ? 'transparent' : '#4f46e5',
-            color: avatarUrl ? 'transparent' : 'white',
+            color: avatarUrl ? 'transparent' : 'white'
           }}
         >
           {avatarUrl ? (

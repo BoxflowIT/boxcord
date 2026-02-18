@@ -104,7 +104,10 @@ export default function Sidebar({
     setShowNewWorkspace(false);
   };
 
-  const handleCreateChannel = async (name: string, type?: 'TEXT' | 'ANNOUNCEMENT' | 'VOICE') => {
+  const handleCreateChannel = async (
+    name: string,
+    type?: 'TEXT' | 'ANNOUNCEMENT' | 'VOICE'
+  ) => {
     await channelOps.createChannel(name, type);
     setShowNewChannel(false);
   };

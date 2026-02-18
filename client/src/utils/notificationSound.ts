@@ -19,6 +19,11 @@ async function playNotificationSound() {
   try {
     const ctx = getAudioContext();
 
+    // Resume AudioContext if suspended (browser autoplay policy)
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+
     // Create oscillator for the notification sound
     const oscillator = ctx.createOscillator();
     const gainNode = ctx.createGain();

@@ -44,12 +44,14 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
 
   // React Query - single source of truth for server data
   const { data: channels = [] } = useChannels(currentWorkspace?.id);
-  
+
   // Check if channel exists before fetching messages
-  const channelExists = channels.length === 0 || channels.some(c => c.id === channelId);
-  
-  const { data: messagesData, isLoading: loadingMessages } =
-    useMessages(channelExists ? channelId : undefined);
+  const channelExists =
+    channels.length === 0 || channels.some((c) => c.id === channelId);
+
+  const { data: messagesData, isLoading: loadingMessages } = useMessages(
+    channelExists ? channelId : undefined
+  );
 
   // Pre-process messages with computed properties (using shared hook)
   const processedMessages = useProcessedMessages(
@@ -142,15 +144,18 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
   // Set current channel when it changes
   useEffect(() => {
     if (!channelId || channels.length === 0) return;
-    
+
     const channel = channels.find((c) => c.id === channelId);
     if (channel) {
       setCurrentChannel(channel);
     } else {
       // Channel not found - redirect to first available channel or #general
-      const defaultChannel = channels.find((c) => c.id === 'ch-general') || channels[0];
+      const defaultChannel =
+        channels.find((c) => c.id === 'ch-general') || channels[0];
       if (defaultChannel) {
-        logger.warn(`Channel ${channelId} not found, redirecting to ${defaultChannel.name}`);
+        logger.warn(
+          `Channel ${channelId} not found, redirecting to ${defaultChannel.name}`
+        );
         navigate(`/channel/${defaultChannel.id}`);
       }
     }

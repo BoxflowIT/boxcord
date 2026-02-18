@@ -19,7 +19,8 @@ export const queryKeys = {
   workspace: (id: string) => ['workspace', id] as const,
   workspaceMembers: (id: string) => ['workspaceMembers', id] as const,
   channels: (workspaceId: string) => ['channels', workspaceId] as const,
-  voiceChannelUsers: (channelId: string) => ['voiceChannelUsers', channelId] as const,
+  voiceChannelUsers: (channelId: string) =>
+    ['voiceChannelUsers', channelId] as const,
   messages: (channelId: string, cursor?: string) =>
     ['messages', channelId, cursor] as const,
   dmChannels: ['dmChannels'] as const,
@@ -75,7 +76,9 @@ export function useOnlineUsers() {
 // Updated via socket events, no polling needed
 export function useVoiceChannelUsers(channelId: string | undefined) {
   return useQuery({
-    queryKey: channelId ? queryKeys.voiceChannelUsers(channelId) : ['voiceChannelUsers-null'],
+    queryKey: channelId
+      ? queryKeys.voiceChannelUsers(channelId)
+      : ['voiceChannelUsers-null'],
     queryFn: () => (channelId ? api.getVoiceChannelUsers(channelId) : []),
     enabled: !!channelId,
     staleTime: 0, // Always refetch when needed
@@ -201,7 +204,7 @@ export function useCreateChannel() {
 
       // DON'T do optimistic update - let socket.IO handle it
       // This avoids complex race conditions
-      
+
       return { previousChannels, tempChannel: null };
     },
 
@@ -222,7 +225,7 @@ export function useCreateChannel() {
         queryKeys.channels(variables.workspaceId),
         (old) => {
           if (!old) return [data];
-          
+
           // If channel already exists (from socket), update it
           const existingIndex = old.findIndex((ch) => ch.id === data.id);
           if (existingIndex !== -1) {
@@ -230,12 +233,12 @@ export function useCreateChannel() {
             updated[existingIndex] = data;
             return updated;
           }
-          
+
           // Otherwise add it
           return [...old, data];
         }
       );
-      
+
       // Don't invalidate - we just updated the cache directly
       // Socket.IO will handle updates from other clients
     }
@@ -250,6 +253,10 @@ export function useDeleteWorkspace() {
     mutationFn: (workspaceId: string) => api.deleteWorkspace(workspaceId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.workspaces });
+    },
+    onError: () => {
+      // On error (e.g., workspace doesn't exist or no permission), refetch to sync with server
+      queryClient.refetchQueries({ queryKey: queryKeys.workspaces });
     }
   });
 }
@@ -296,7 +303,7 @@ export function useDeleteChannel() {
         // Channel was already deleted, don't restore it
         return;
       }
-      
+
       // For other errors, rollback
       if (context?.previousData) {
         context.previousData.forEach(({ key, data }) => {

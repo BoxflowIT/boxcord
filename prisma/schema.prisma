@@ -27,6 +27,7 @@ model User {
 
     presence             UserPresence?
     messages             Message[]
+    directMessages       DirectMessage[]            @relation("DirectMessageAuthor")
     dmParticipants       DirectMessageParticipant[]
     workspaceMemberships WorkspaceMember[]
 
@@ -62,7 +63,7 @@ model WorkspaceMember {
     workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
     user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    @@unique([workspaceId, userId])
+    @@unique([workspaceId, userId], name: "workspaceId_userId")
     @@index([userId])
     @@index([workspaceId])
     @@map("workspace_members")
@@ -112,7 +113,7 @@ model ChannelMember {
 
     channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
-    @@unique([channelId, userId])
+    @@unique([channelId, userId], name: "channelId_userId")
     @@index([channelId])
     @@index([userId])
     @@map("channel_members")
@@ -198,7 +199,7 @@ model DirectMessageParticipant {
     channel DirectMessageChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
     user    User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    @@unique([channelId, userId])
+    @@unique([channelId, userId], name: "channelId_userId")
     @@index([userId])
     @@index([channelId])
     @@map("dm_participants")
@@ -214,10 +215,12 @@ model DirectMessage {
     updatedAt DateTime @updatedAt @map("updated_at")
 
     channel     DirectMessageChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+    author      User                 @relation("DirectMessageAuthor", fields: [authorId], references: [id], onDelete: Cascade)
     attachments DMAttachment[]
     reactions   DMReaction[]
 
     @@index([channelId, createdAt])
+    @@index([authorId])
     @@map("direct_messages")
 }
 

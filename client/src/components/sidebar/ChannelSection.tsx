@@ -1,6 +1,15 @@
 // Reusable Channel Section Component
 import { useQuery } from '@tanstack/react-query';
-import { PlusIcon, EditIcon, CloseIcon, VoiceChannelIcon, AnnouncementIcon, HashIcon, MicOffIcon, HeadphonesOffIcon } from '../ui/Icons';
+import {
+  PlusIcon,
+  EditIcon,
+  CloseIcon,
+  VoiceChannelIcon,
+  AnnouncementIcon,
+  HashIcon,
+  MicOffIcon,
+  HeadphonesOffIcon
+} from '../ui/Icons';
 import { api } from '../../services/api';
 import type { Channel } from '../../types';
 import { cn } from '../../utils/classNames';
@@ -43,34 +52,56 @@ function ChannelIcon({ type }: { type?: string }) {
 // VOICE USER ITEM (shown under voice channel)
 // ============================================================================
 
-function VoiceUserItem({ user, userInfo }: { user: VoiceUser; userInfo?: UserInfo }) {
-  const displayName = userInfo 
-    ? `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim() || userInfo.email
+function VoiceUserItem({
+  user,
+  userInfo
+}: {
+  user: VoiceUser;
+  userInfo?: UserInfo;
+}) {
+  const displayName = userInfo
+    ? `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim() ||
+      userInfo.email
     : 'Laddar...';
 
   return (
     <div className="flex items-center gap-2 pl-7 pr-2 py-0.5 text-sm text-gray-400">
       {/* Avatar */}
-      <div className={cn(
-        'w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium',
-        user.isSpeaking ? 'ring-2 ring-green-500 ring-offset-1 ring-offset-gray-800' : ''
-      )} style={{ backgroundColor: '#4f46e5' }}>
+      <div
+        className={cn(
+          'w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium',
+          user.isSpeaking
+            ? 'ring-2 ring-green-500 ring-offset-1 ring-offset-gray-800'
+            : ''
+        )}
+        style={{ backgroundColor: '#4f46e5' }}
+      >
         {userInfo?.avatarUrl ? (
-          <img src={userInfo.avatarUrl} alt="" className="w-full h-full rounded-full object-cover" />
+          <img
+            src={userInfo.avatarUrl}
+            alt=""
+            className="w-full h-full rounded-full object-cover"
+          />
         ) : (
           displayName.charAt(0).toUpperCase()
         )}
       </div>
-      
+
       {/* Name */}
-      <span className={cn('truncate flex-1', user.isSpeaking && 'text-green-400')}>
+      <span
+        className={cn('truncate flex-1', user.isSpeaking && 'text-green-400')}
+      >
         {displayName}
       </span>
-      
+
       {/* Status icons */}
       <div className="flex items-center gap-0.5">
-        {user.isDeafened && <HeadphonesOffIcon size="sm" className="text-red-400 w-3.5 h-3.5" />}
-        {user.isMuted && <MicOffIcon size="sm" className="text-red-400 w-3.5 h-3.5" />}
+        {user.isDeafened && (
+          <HeadphonesOffIcon size="sm" className="text-red-400 w-3.5 h-3.5" />
+        )}
+        {user.isMuted && (
+          <MicOffIcon size="sm" className="text-red-400 w-3.5 h-3.5" />
+        )}
       </div>
     </div>
   );
@@ -122,7 +153,9 @@ function VoiceChannelWithUsers({
         <ChannelIcon type={channel.type} />
         <span className="truncate flex-1">{channel.name}</span>
         {voiceUsers.length > 0 && (
-          <span className="text-xs text-green-400 font-medium px-1">{voiceUsers.length}</span>
+          <span className="text-xs text-green-400 font-medium px-1">
+            {voiceUsers.length}
+          </span>
         )}
         <button
           onClick={onEdit}
@@ -184,7 +217,12 @@ function TextChannelItem({
       onClick={onSelect}
     >
       <ChannelIcon type={channel.type} />
-      <span className={cn('truncate flex-1', hasUnread && 'text-white font-semibold')}>
+      <span
+        className={cn(
+          'truncate flex-1',
+          hasUnread && 'text-white font-semibold'
+        )}
+      >
         {channel.name}
       </span>
       {hasUnread && (
@@ -214,10 +252,18 @@ function TextChannelItem({
 // SECTION HEADER
 // ============================================================================
 
-function SectionHeader({ title, onAdd }: { title: string; onAdd?: () => void }) {
+function SectionHeader({
+  title,
+  onAdd
+}: {
+  title: string;
+  onAdd?: () => void;
+}) {
   return (
     <div className="flex items-center justify-between px-2 mb-1 mt-3 first:mt-0">
-      <span className="text-subtle uppercase font-semibold text-xs">{title}</span>
+      <span className="text-subtle uppercase font-semibold text-xs">
+        {title}
+      </span>
       {onAdd && (
         <button onClick={onAdd} className="btn-icon-primary">
           <PlusIcon size="sm" />
@@ -257,7 +303,9 @@ export default function ChannelSection({
   }, []);
 
   // Separate by type
-  const textChannels = uniqueChannels.filter((ch) => ch.type === 'TEXT' || ch.type === 'ANNOUNCEMENT' || !ch.type);
+  const textChannels = uniqueChannels.filter(
+    (ch) => ch.type === 'TEXT' || ch.type === 'ANNOUNCEMENT' || !ch.type
+  );
   const voiceChannels = uniqueChannels.filter((ch) => ch.type === 'VOICE');
 
   return (

@@ -123,7 +123,11 @@ export const api = {
   // Channels
   getChannels: (workspaceId: string) =>
     request<Channel[]>(`/channels?workspaceId=${workspaceId}`),
-  createChannel: (workspaceId: string, name: string, type?: 'TEXT' | 'ANNOUNCEMENT' | 'VOICE') =>
+  createChannel: (
+    workspaceId: string,
+    name: string,
+    type?: 'TEXT' | 'ANNOUNCEMENT' | 'VOICE'
+  ) =>
     request<Channel>('/channels', {
       method: 'POST',
       body: JSON.stringify({ workspaceId, name, type: type || 'TEXT' })
@@ -147,9 +151,15 @@ export const api = {
 
   // Voice
   getVoiceChannelUsers: (channelId: string) =>
-    request<{ userId: string; sessionId: string; isMuted: boolean; isDeafened: boolean; isSpeaking: boolean }[]>(
-      `/voice/channels/${channelId}/users`
-    ),
+    request<
+      {
+        userId: string;
+        sessionId: string;
+        isMuted: boolean;
+        isDeafened: boolean;
+        isSpeaking: boolean;
+      }[]
+    >(`/voice/channels/${channelId}/users`),
 
   // Messages
   getMessages: (channelId: string, cursor?: string) =>

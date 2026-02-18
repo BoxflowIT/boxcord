@@ -14,7 +14,9 @@ export async function dmRoutes(app: FastifyInstance) {
   // Get user's DM channels
   app.get('/channels', async (request, reply) => {
     const channels = await dmService.getUserChannels(request.user.id);
-    reply.cache({ maxAge: 60, staleWhileRevalidate: 300 }); // 1min cache, 5min stale
+    // NO CACHE: DM list changes frequently (new messages, unread counts)
+    // Socket events keep React Query cache fresh instead
+    reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
     return { success: true, data: channels };
   });
 
@@ -91,6 +93,15 @@ export async function dmRoutes(app: FastifyInstance) {
     '/messages/:messageId',
     async (request, reply) => {
       await dmService.deleteMessage(request.params.messageId, request.user.id);
+      return reply.status(204).send();
+    }
+  );
+
+  // Delete DM channel (remove user's participation)
+  app.delete<{ Params: { channelId: string } }>(
+    '/channels/:channelId',
+    async (request, reply) => {
+      await dmService.deleteChannel(request.params.channelId, request.user.id);
       return reply.status(204).send();
     }
   );

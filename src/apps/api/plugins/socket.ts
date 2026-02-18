@@ -30,6 +30,39 @@ function decodeBase64Url(str: string): string {
   return Buffer.from(base64, 'base64').toString();
 }
 
+// Helper: Route WebRTC signaling data to target user
+async function routeWebRTCSignal(
+  io: Server,
+  room: string,
+  targetUserId: string,
+  fromUserId: string,
+  eventName: string,
+  signalData: unknown,
+  logger: FastifyInstance['log']
+): Promise<void> {
+  const targetSockets = await io.in(room).fetchSockets();
+
+  for (const targetSocket of targetSockets) {
+    if ((targetSocket as any).userId === targetUserId) {
+      targetSocket.emit(eventName, {
+        fromUserId,
+        [eventName.includes('offer')
+          ? 'offer'
+          : eventName.includes('answer')
+            ? 'answer'
+            : 'candidate']: signalData
+      });
+
+      logger.debug(
+        `[WEBRTC] Routed ${eventName} from ${fromUserId} to ${targetUserId} in room ${room}`
+      );
+      return;
+    }
+  }
+
+  logger.warn(`[WEBRTC] Target user ${targetUserId} not found in room ${room}`);
+}
+
 export function setupSocketHandlers(
   io: Server,
   app: FastifyInstance,
@@ -377,7 +410,18 @@ export function setupSocketHandlers(
               authorId: userId,
               content: data.content.trim()
             },
-            include: { attachments: true, reactions: true }
+            include: {
+              author: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true
+                }
+              },
+              attachments: true,
+              reactions: true
+            }
           });
 
           app.log.info(
@@ -610,22 +654,14 @@ export function setupSocketHandlers(
         offer: unknown;
       }) => {
         try {
-          // Find target user's socket(s)
-          const targetSockets = await io
-            .in(`voice:${data.channelId}`)
-            .fetchSockets();
-
-          for (const targetSocket of targetSockets) {
-            if ((targetSocket as any).userId === data.targetUserId) {
-              targetSocket.emit(SOCKET_EVENTS.WEBRTC_OFFER, {
-                fromUserId: userId,
-                offer: data.offer
-              });
-            }
-          }
-
-          app.log.debug(
-            `[WEBRTC] Offer from ${userId} to ${data.targetUserId} in channel ${data.channelId}`
+          await routeWebRTCSignal(
+            io,
+            `voice:${data.channelId}`,
+            data.targetUserId,
+            userId,
+            SOCKET_EVENTS.WEBRTC_OFFER,
+            data.offer,
+            app.log
           );
         } catch (err) {
           socket.emit('error', { message: (err as Error).message });
@@ -642,21 +678,14 @@ export function setupSocketHandlers(
         answer: unknown;
       }) => {
         try {
-          const targetSockets = await io
-            .in(`voice:${data.channelId}`)
-            .fetchSockets();
-
-          for (const targetSocket of targetSockets) {
-            if ((targetSocket as any).userId === data.targetUserId) {
-              targetSocket.emit(SOCKET_EVENTS.WEBRTC_ANSWER, {
-                fromUserId: userId,
-                answer: data.answer
-              });
-            }
-          }
-
-          app.log.debug(
-            `[WEBRTC] Answer from ${userId} to ${data.targetUserId} in channel ${data.channelId}`
+          await routeWebRTCSignal(
+            io,
+            `voice:${data.channelId}`,
+            data.targetUserId,
+            userId,
+            SOCKET_EVENTS.WEBRTC_ANSWER,
+            data.answer,
+            app.log
           );
         } catch (err) {
           socket.emit('error', { message: (err as Error).message });
@@ -673,18 +702,205 @@ export function setupSocketHandlers(
         candidate: unknown;
       }) => {
         try {
-          const targetSockets = await io
-            .in(`voice:${data.channelId}`)
-            .fetchSockets();
+          await routeWebRTCSignal(
+            io,
+            `voice:${data.channelId}`,
+            data.targetUserId,
+            userId,
+            SOCKET_EVENTS.WEBRTC_ICE_CANDIDATE,
+            data.candidate,
+            app.log
+          );
+        } catch (err) {
+          socket.emit('error', { message: (err as Error).message });
+        }
+      }
+    );
+
+    // ============================================
+    // DM VOICE CALLS
+    // ============================================
+
+    // Start DM voice call (initiate call to other user)
+    socket.on(
+      'dm:call:start',
+      async (data: { channelId: string; targetUserId: string }) => {
+        try {
+          app.log.debug(
+            `[DM_CALL] User ${userId} calling ${data.targetUserId} in DM ${data.channelId}`
+          );
+
+          // Join DM voice room for WebRTC signaling (caller side)
+          socket.join(`dm-voice:${data.channelId}`);
+
+          // Get caller info
+          const caller = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              avatarUrl: true
+            }
+          });
+
+          if (!caller) {
+            socket.emit('error', { message: 'User not found' });
+            return;
+          }
+
+          // Find target user's socket(s)
+          const targetSockets = await io.fetchSockets();
 
           for (const targetSocket of targetSockets) {
             if ((targetSocket as any).userId === data.targetUserId) {
-              targetSocket.emit(SOCKET_EVENTS.WEBRTC_ICE_CANDIDATE, {
+              // Notify other user of incoming call with caller info
+              targetSocket.emit('dm:call:incoming', {
+                channelId: data.channelId,
                 fromUserId: userId,
-                candidate: data.candidate
+                caller: {
+                  id: caller.id,
+                  name: caller.firstName ?? caller.email,
+                  email: caller.email,
+                  avatarUrl: caller.avatarUrl
+                }
               });
+
+              app.log.debug(
+                `[DM_CALL] Notified ${data.targetUserId} of call from ${userId}`
+              );
             }
           }
+        } catch (err) {
+          socket.emit('error', { message: (err as Error).message });
+        }
+      }
+    );
+
+    // Accept DM voice call
+    socket.on('dm:call:accept', async (data: { channelId: string }) => {
+      try {
+        app.log.debug(
+          `[DM_CALL] User ${userId} accepted call in DM ${data.channelId}`
+        );
+
+        // Join DM voice room for WebRTC signaling
+        socket.join(`dm-voice:${data.channelId}`);
+
+        // Notify other participant that call was accepted
+        socket.to(`dm:${data.channelId}`).emit('dm:call:accepted', {
+          channelId: data.channelId,
+          userId
+        });
+      } catch (err) {
+        socket.emit('error', { message: (err as Error).message });
+      }
+    });
+
+    // Reject DM voice call
+    socket.on('dm:call:reject', async (data: { channelId: string }) => {
+      try {
+        app.log.debug(
+          `[DM_CALL] User ${userId} rejected call in DM ${data.channelId}`
+        );
+
+        // Notify other participant that call was rejected
+        socket.to(`dm:${data.channelId}`).emit('dm:call:rejected', {
+          channelId: data.channelId,
+          userId
+        });
+      } catch (err) {
+        socket.emit('error', { message: (err as Error).message });
+      }
+    });
+
+    // End DM voice call
+    socket.on('dm:call:end', async (data: { channelId: string }) => {
+      try {
+        app.log.debug(
+          `[DM_CALL] User ${userId} ended call in DM ${data.channelId}`
+        );
+
+        // Leave DM voice room
+        socket.leave(`dm-voice:${data.channelId}`);
+
+        // Notify other participant that call ended
+        socket.to(`dm:${data.channelId}`).emit('dm:call:ended', {
+          channelId: data.channelId,
+          userId
+        });
+      } catch (err) {
+        socket.emit('error', { message: (err as Error).message });
+      }
+    });
+
+    // DM WebRTC Offer (for 1-on-1 calls)
+    socket.on(
+      'dm:webrtc:offer',
+      async (data: {
+        channelId: string;
+        targetUserId: string;
+        offer: unknown;
+      }) => {
+        try {
+          await routeWebRTCSignal(
+            io,
+            `dm-voice:${data.channelId}`,
+            data.targetUserId,
+            userId,
+            'dm:webrtc:offer',
+            data.offer,
+            app.log
+          );
+        } catch (err) {
+          socket.emit('error', { message: (err as Error).message });
+        }
+      }
+    );
+
+    // DM WebRTC Answer (for 1-on-1 calls)
+    socket.on(
+      'dm:webrtc:answer',
+      async (data: {
+        channelId: string;
+        targetUserId: string;
+        answer: unknown;
+      }) => {
+        try {
+          await routeWebRTCSignal(
+            io,
+            `dm-voice:${data.channelId}`,
+            data.targetUserId,
+            userId,
+            'dm:webrtc:answer',
+            data.answer,
+            app.log
+          );
+        } catch (err) {
+          socket.emit('error', { message: (err as Error).message });
+        }
+      }
+    );
+
+    // DM WebRTC ICE Candidate (for 1-on-1 calls)
+    socket.on(
+      'dm:webrtc:ice-candidate',
+      async (data: {
+        channelId: string;
+        targetUserId: string;
+        candidate: unknown;
+      }) => {
+        try {
+          await routeWebRTCSignal(
+            io,
+            `dm-voice:${data.channelId}`,
+            data.targetUserId,
+            userId,
+            'dm:webrtc:ice-candidate',
+            data.candidate,
+            app.log
+          );
         } catch (err) {
           socket.emit('error', { message: (err as Error).message });
         }

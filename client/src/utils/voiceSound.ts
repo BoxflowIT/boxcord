@@ -3,6 +3,7 @@
 // Create audio context
 const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
 let audioContext: AudioContext | null = null;
+let ringingInterval: number | null = null;
 
 // Initialize audio context on first use
 function getAudioContext(): AudioContext {
@@ -13,9 +14,15 @@ function getAudioContext(): AudioContext {
 }
 
 // Generate a rising "join" tone (E5 -> A5)
-function generateJoinSound() {
+async function generateJoinSound() {
   try {
     const ctx = getAudioContext();
+
+    // Resume AudioContext if suspended (browser autoplay policy)
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+
     const oscillator = ctx.createOscillator();
     const gainNode = ctx.createGain();
 
@@ -24,7 +31,10 @@ function generateJoinSound() {
 
     // Rising tone
     oscillator.frequency.setValueAtTime(659.25, ctx.currentTime); // E5
-    oscillator.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1); // A5
+    oscillator.frequency.exponentialRampToValueAtTime(
+      880,
+      ctx.currentTime + 0.1
+    ); // A5
 
     // Volume envelope: fade in quickly, fade out smoothly
     gainNode.gain.setValueAtTime(0, ctx.currentTime);
@@ -40,9 +50,15 @@ function generateJoinSound() {
 }
 
 // Generate a falling "leave" tone (A5 -> E5)
-function generateLeaveSound() {
+async function generateLeaveSound() {
   try {
     const ctx = getAudioContext();
+
+    // Resume AudioContext if suspended (browser autoplay policy)
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+
     const oscillator = ctx.createOscillator();
     const gainNode = ctx.createGain();
 
@@ -51,7 +67,10 @@ function generateLeaveSound() {
 
     // Falling tone
     oscillator.frequency.setValueAtTime(880, ctx.currentTime); // A5
-    oscillator.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.1); // E5
+    oscillator.frequency.exponentialRampToValueAtTime(
+      659.25,
+      ctx.currentTime + 0.1
+    ); // E5
 
     // Volume envelope: fade in quickly, fade out smoothly
     gainNode.gain.setValueAtTime(0, ctx.currentTime);
@@ -79,4 +98,65 @@ export function playVoiceLeaveSound() {
 // Preload function (no-op, kept for API compatibility)
 export function preloadVoiceSounds() {
   // Web Audio API generates sounds on demand, no preloading needed
+}
+
+// Generate a short ring tone (like phone ringing)
+async function generateRingTone() {
+  try {
+    const ctx = getAudioContext();
+
+    // Resume AudioContext if suspended (browser autoplay policy)
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+
+    const oscillator1 = ctx.createOscillator();
+    const oscillator2 = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    oscillator1.connect(gainNode);
+    oscillator2.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    // Two-tone ring (like a phone)
+    oscillator1.frequency.value = 440; // A4
+    oscillator2.frequency.value = 480; // Slightly higher for harmony
+    oscillator1.type = 'sine';
+    oscillator2.type = 'sine';
+
+    // Ring pattern: 0.4s on, 0.2s off (creates ring-ring effect)
+    const duration = 0.4;
+    gainNode.gain.setValueAtTime(0, ctx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.05);
+    gainNode.gain.setValueAtTime(0.12, ctx.currentTime + duration);
+    gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + duration + 0.05);
+
+    oscillator1.start(ctx.currentTime);
+    oscillator1.stop(ctx.currentTime + duration + 0.05);
+    oscillator2.start(ctx.currentTime);
+    oscillator2.stop(ctx.currentTime + duration + 0.05);
+  } catch (err) {
+    console.error('Failed to generate ring tone:', err);
+  }
+}
+
+// Start ringing (plays ring tone repeatedly)
+export async function startRingingSound() {
+  stopRingingSound(); // Clear any existing interval
+
+  // Play immediately
+  await generateRingTone();
+
+  // Then repeat every 1.5 seconds
+  ringingInterval = window.setInterval(async () => {
+    await generateRingTone();
+  }, 1500);
+}
+
+// Stop ringing
+export function stopRingingSound() {
+  if (ringingInterval !== null) {
+    clearInterval(ringingInterval);
+    ringingInterval = null;
+  }
 }
