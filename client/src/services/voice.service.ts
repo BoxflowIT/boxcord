@@ -2,9 +2,20 @@
 import SimplePeer from 'simple-peer';
 import { socketService } from './socket';
 import { useVoiceStore } from '../store/voiceStore';
+import { useAudioSettingsStore } from '../store/audioSettingsStore';
 import { useAuthStore } from '../store/auth';
 import { SOCKET_EVENTS } from '../../../src/00-core/constants';
 import { playVoiceJoinSound, playVoiceLeaveSound } from '../utils/voiceSound';
+import {
+  applyRNNoise,
+  cleanupRNNoise,
+  isRNNoiseAvailable
+} from '../utils/rnnoise';
+import {
+  createAudioPipeline,
+  cleanupAudioPipeline,
+  AudioPipelineNodes
+} from '../utils/audioPipeline';
 
 // ============================================================================
 // CONSTANTS
@@ -12,19 +23,34 @@ import { playVoiceJoinSound, playVoiceLeaveSound } from '../utils/voiceSound';
 
 const ICE_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' }
 ];
 
-const AUDIO_CONSTRAINTS: MediaTrackConstraints = {
-  echoCancellation: true,
-  noiseSuppression: true,
-  autoGainControl: true,
-};
+// Get audio constraints from settings store
+function getAudioConstraints(): MediaTrackConstraints {
+  const settings = useAudioSettingsStore.getState();
+
+  const constraints = {
+    deviceId: settings.inputDeviceId
+      ? { exact: settings.inputDeviceId }
+      : undefined,
+    // Use ideal instead of exact to avoid constraint failures
+    echoCancellation: true, // Browser native echo cancellation
+    // IMPORTANT: Disable browser native noise suppression when RNNoise is enabled
+    noiseSuppression: settings.useRNNoise ? false : true,
+    autoGainControl: true, // Browser native AGC
+    sampleRate: { ideal: 48000 },
+    channelCount: { ideal: 1 }
+  };
+
+  console.log('🎤 Voice audio constraints:', constraints);
+  return constraints;
+}
 
 const VAD_CONFIG = {
   FFT_SIZE: 256,
   SMOOTHING: 0.5,
-  SPEAKING_THRESHOLD: 30,
+  SPEAKING_THRESHOLD: 30
 } as const;
 
 // ============================================================================
@@ -54,10 +80,14 @@ interface VoiceSession {
 
 class VoiceService {
   private localStream: MediaStream | null = null;
+  private originalLocalStream: MediaStream | null = null; // Track original stream for cleanup with RNNoise
   private audioContext: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
   private vadAnimationFrame: number | null = null;
   private lastSpeakingState = false;
+  private vadActive = false; // VAD gate state
+  private vadFrameCounter = 0; // VAD hysteresis counter
+  private audioPipeline: AudioPipelineNodes | null = null;
 
   // ============================================================================
   // HELPERS
@@ -80,13 +110,15 @@ class VoiceService {
       ...options,
       headers: {
         ...this.getAuthHeader(),
-        ...options.headers,
-      },
+        ...options.headers
+      }
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error?.message || `Request failed: ${response.status}`);
+      throw new Error(
+        errorData.error?.message || `Request failed: ${response.status}`
+      );
     }
 
     if (response.status === 204) {
@@ -101,7 +133,7 @@ class VoiceService {
       initiator,
       stream: this.localStream ?? undefined,
       trickle: true,
-      config: { iceServers: ICE_SERVERS },
+      config: { iceServers: ICE_SERVERS }
     });
   }
 
@@ -111,13 +143,63 @@ class VoiceService {
 
   async joinChannel(channelId: string): Promise<void> {
     const store = useVoiceStore.getState();
+    const audioSettings = useAudioSettingsStore.getState();
 
     try {
       store.setConnecting(true);
 
       this.localStream = await navigator.mediaDevices.getUserMedia({
-        audio: AUDIO_CONSTRAINTS,
+        audio: getAudioConstraints()
       });
+
+      // Apply RNNoise AI noise suppression if enabled
+      if (audioSettings.useRNNoise && isRNNoiseAvailable()) {
+        console.log(
+          '🤖 Applying RNNoise AI to voice call (browser noise suppression OFF)...'
+        );
+        this.originalLocalStream = this.localStream; // Save original stream reference
+        try {
+          if (!this.audioContext) {
+            this.audioContext = new AudioContext();
+          }
+          this.localStream = await applyRNNoise(
+            this.originalLocalStream,
+            this.audioContext
+          );
+          console.log('✅ RNNoise AI active in voice call');
+        } catch (error) {
+          console.error('❌ RNNoise failed, using original stream:', error);
+          this.localStream = this.originalLocalStream;
+          this.originalLocalStream = null;
+        }
+      } else if (audioSettings.useRNNoise) {
+        console.warn('⚠️ RNNoise enabled but not available');
+        this.originalLocalStream = null;
+      } else {
+        console.log('ℹ️ Using browser native noise suppression for voice call');
+        this.originalLocalStream = null;
+      }
+
+      // Setup audio context
+      if (!this.audioContext) {
+        this.audioContext = new AudioContext();
+      }
+
+      // Create centralized audio processing pipeline
+      this.audioPipeline = createAudioPipeline(
+        this.audioContext,
+        this.localStream,
+        {
+          outputGain: audioSettings.inputVolume * 2.0
+          // Note: inputSensitivity controls VAD threshold dynamically, not pipeline config
+        }
+      );
+
+      // Replace localStream with processed stream from pipeline
+      // This ensures voice calls use the processed audio (with VAD gate, compression, etc.)
+      this.localStream = this.audioPipeline.destination.stream;
+
+      console.log('🎙️ Discord-quality voice processing active');
 
       if (store.isMuted) {
         this.setMicrophoneMuted(true);
@@ -125,10 +207,9 @@ class VoiceService {
 
       store.setLocalStream(this.localStream);
 
-      const { data: session } = await this.apiRequest<ApiResponse<VoiceSession>>(
-        `/api/v1/voice/channels/${channelId}/join`,
-        { method: 'POST' }
-      );
+      const { data: session } = await this.apiRequest<
+        ApiResponse<VoiceSession>
+      >(`/api/v1/voice/channels/${channelId}/join`, { method: 'POST' });
 
       store.setCurrentChannel(channelId, session.id);
       store.setConnected(true);
@@ -136,7 +217,7 @@ class VoiceService {
 
       this.startVoiceActivityDetection();
       this.socket?.emit(SOCKET_EVENTS.VOICE_JOIN, { channelId });
-      
+
       // Play join sound
       playVoiceJoinSound();
     } catch (error) {
@@ -156,13 +237,15 @@ class VoiceService {
     try {
       // Play leave sound BEFORE cleanup (so audio context is still active)
       playVoiceLeaveSound();
-      
+
       await this.apiRequest(
         `/api/v1/voice/sessions/${currentSessionId}/leave`,
         { method: 'POST' }
       );
 
-      this.socket?.emit(SOCKET_EVENTS.VOICE_LEAVE, { channelId: currentChannelId });
+      this.socket?.emit(SOCKET_EVENTS.VOICE_LEAVE, {
+        channelId: currentChannelId
+      });
       this.cleanup();
       store.reset();
     } catch (error) {
@@ -201,7 +284,7 @@ class VoiceService {
 
     await this.updateVoiceState({
       isDeafened: newDeafenedState,
-      isMuted: newDeafenedState ? true : store.isMuted,
+      isMuted: newDeafenedState ? true : store.isMuted
     });
   }
 
@@ -219,7 +302,10 @@ class VoiceService {
     return peer;
   }
 
-  addPeer(targetUserId: string, offer: SimplePeer.SignalData): SimplePeer.Instance {
+  addPeer(
+    targetUserId: string,
+    offer: SimplePeer.SignalData
+  ): SimplePeer.Instance {
     const store = useVoiceStore.getState();
     const peer = this.createPeerConnection(false);
 
@@ -238,7 +324,7 @@ class VoiceService {
 
       this.socket?.emit(event, {
         targetUserId: userId,
-        [event === SOCKET_EVENTS.WEBRTC_OFFER ? 'offer' : 'answer']: signal,
+        [event === SOCKET_EVENTS.WEBRTC_OFFER ? 'offer' : 'answer']: signal
       });
     });
 
@@ -297,28 +383,65 @@ class VoiceService {
   // ============================================================================
 
   private startVoiceActivityDetection(): void {
-    if (!this.localStream) return;
+    if (!this.audioPipeline || !this.audioContext) return;
 
     try {
-      this.audioContext = new AudioContext();
+      // Create analyser connected to audio pipeline output
       this.analyser = this.audioContext.createAnalyser();
       this.analyser.fftSize = VAD_CONFIG.FFT_SIZE;
       this.analyser.smoothingTimeConstant = VAD_CONFIG.SMOOTHING;
 
-      const source = this.audioContext.createMediaStreamSource(this.localStream);
-      source.connect(this.analyser);
+      // Connect analyser to pipeline output (before outputGain)
+      this.audioPipeline.limiter.connect(this.analyser);
 
       const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
 
       const detectSpeaking = () => {
-        if (!this.analyser) return;
+        if (!this.analyser || !this.audioPipeline) return;
 
         this.analyser.getByteFrequencyData(dataArray);
 
         const average =
           dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
+        const normalizedLevel = (average / 128) * 100;
         const isSpeaking = average > VAD_CONFIG.SPEAKING_THRESHOLD;
 
+        // Voice Activity Detection for gate control (Discord-like)
+        // Input Sensitivity controls how easily the gate opens
+        const audioSettings = useAudioSettingsStore.getState();
+        const sensitivity = audioSettings.inputSensitivity;
+
+        // Calculate VAD threshold from sensitivity (0-1)
+        // 0.0 = 15% (very insensitive, only loud sounds open gate)
+        // 0.21 = 8% (default, Discord-like)
+        // 1.0 = 2% (very sensitive, whispers open gate)
+        const VAD_THRESHOLD = 15 - sensitivity * 13; // 15% to 2%
+        const VAD_ACTIVATE_THRESHOLD = 2; // Open after 2 frames above threshold (~32ms)
+        const VAD_DEACTIVATE_THRESHOLD = 15; // Close after 15 frames below threshold (~240ms)
+
+        if (normalizedLevel > VAD_THRESHOLD) {
+          // Voice detected - increment counter
+          this.vadFrameCounter++;
+          if (this.vadFrameCounter >= VAD_ACTIVATE_THRESHOLD && !this.vadActive) {
+            this.vadActive = true;
+            this.audioPipeline.vadGate.gain.setTargetAtTime(1.0, 0, 0.01);
+          }
+        } else {
+          // Silence - decrement counter
+          this.vadFrameCounter--;
+          if (this.vadFrameCounter <= 0 && this.vadActive) {
+            // Start silence counter
+            if (this.vadFrameCounter <= -VAD_DEACTIVATE_THRESHOLD) {
+              this.vadActive = false;
+              this.audioPipeline.vadGate.gain.setTargetAtTime(0.0, 0, 0.05);
+            }
+          }
+        }
+
+        // Clamp frame counter to prevent overflow
+        this.vadFrameCounter = Math.max(-VAD_DEACTIVATE_THRESHOLD - 5, Math.min(VAD_ACTIVATE_THRESHOLD + 5, this.vadFrameCounter));
+
+        // Update speaking indicator
         if (isSpeaking !== this.lastSpeakingState) {
           this.lastSpeakingState = isSpeaking;
           const store = useVoiceStore.getState();
@@ -343,11 +466,9 @@ class VoiceService {
       this.vadAnimationFrame = null;
     }
 
-    if (this.audioContext) {
-      this.audioContext.close();
-      this.audioContext = null;
-    }
-
+    // Reset VAD state
+    this.vadActive = false;
+    this.vadFrameCounter = 0;
     this.analyser = null;
     this.lastSpeakingState = false;
   }
@@ -364,7 +485,7 @@ class VoiceService {
       await this.apiRequest(`/api/v1/voice/sessions/${currentSessionId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(state),
+        body: JSON.stringify(state)
       });
     } catch (error) {
       console.error('Failed to update voice state:', error);
@@ -377,12 +498,36 @@ class VoiceService {
 
   private cleanup(): void {
     const store = useVoiceStore.getState();
+    const audioSettings = useAudioSettingsStore.getState();
 
     this.stopVoiceActivityDetection();
 
+    // Stop processed stream
     if (this.localStream) {
+      // Cleanup RNNoise if it was used
+      if (audioSettings.useRNNoise) {
+        cleanupRNNoise(this.localStream);
+      }
       this.localStream.getTracks().forEach((track) => track.stop());
       this.localStream = null;
+    }
+
+    // Stop original stream if RNNoise was used
+    if (this.originalLocalStream) {
+      this.originalLocalStream.getTracks().forEach((track) => track.stop());
+      this.originalLocalStream = null;
+    }
+
+    // Cleanup audio pipeline
+    if (this.audioPipeline) {
+      cleanupAudioPipeline(this.audioPipeline);
+      this.audioPipeline = null;
+    }
+
+    // Close audio context
+    if (this.audioContext) {
+      this.audioContext.close();
+      this.audioContext = null;
     }
 
     store.peers.forEach((peer) => peer.destroy());

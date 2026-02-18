@@ -7,6 +7,7 @@ import SettingsTabSidebar, {
 } from './settings/SettingsTabSidebar';
 import SettingsHeader from './settings/SettingsHeader';
 import NotificationsTab from './settings/NotificationsTab';
+import VoiceAudioTab from './settings/VoiceAudioTab';
 import AppearanceTab from './settings/AppearanceTab';
 import AboutTab from './settings/AboutTab';
 
@@ -45,6 +46,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 onSoundToggle={handlers.onSoundToggle}
               />
             )}
+
+            {activeTab === 'voice' && <VoiceAudioTab />}
 
             {activeTab === 'appearance' && (
               <AppearanceTab
