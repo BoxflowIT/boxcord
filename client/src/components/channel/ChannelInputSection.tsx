@@ -1,4 +1,5 @@
 // Channel Input Section Component
+import { useTranslation } from 'react-i18next';
 import FileUpload from '../FileUpload';
 import EmojiPicker from '../ui/EmojiPicker';
 import MentionAutocomplete from '../MentionAutocomplete';
@@ -45,6 +46,8 @@ export default function ChannelInputSection({
   onCloseMentions,
   onCloseSlashCommands
 }: ChannelInputSectionProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="px-4 pb-6">
       <div className="message-input-container">
@@ -54,7 +57,7 @@ export default function ChannelInputSection({
           value={inputValue}
           onChange={onInputChange}
           onKeyDown={onKeyDown}
-          placeholder={`Skicka meddelande i #${channelName ?? 'kanal'}`}
+          placeholder={t('messages.typeMessageInChannel', { channel: channelName || 'channel' })}
           className="flex-1 bg-transparent text-boxflow-light placeholder-boxflow-subtle resize-none outline-none p-3 max-h-48"
           rows={1}
           disabled={uploading}

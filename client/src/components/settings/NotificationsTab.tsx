@@ -1,4 +1,5 @@
 // Notifications Settings Tab Component
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../utils/classNames';
 import NotificationSettings from '../NotificationSettings';
 
@@ -50,6 +51,8 @@ export default function NotificationsTab({
   soundEnabled,
   onSoundToggle
 }: NotificationsTabProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-6">
       {/* Push Notifications Section */}
@@ -62,16 +65,15 @@ export default function NotificationsTab({
 
       {/* Sound Notifications Section */}
       <SettingItem
-        title="Notification Sound"
-        description="Play a sound when you receive a new message"
+        title={t('notifications.notificationSound')}
+        description={t('notifications.notificationSoundDescription')}
         control={<Toggle enabled={soundEnabled} onChange={onSoundToggle} />}
       />
 
       <div className="border-t border-discord-darkest pt-6">
         <p className="text-sm text-gray-400">
-          💡 <strong>How it works:</strong> Notification sounds only play for
-          messages in channels or DMs you're not currently viewing, and never
-          for your own messages.
+          💡 <strong>{t('notifications.howItWorks')}:</strong>{' '}
+          {t('notifications.howItWorksDescription')}
         </p>
       </div>
     </div>

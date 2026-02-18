@@ -1,4 +1,5 @@
 // Appearance Settings Tab Component
+import { useTranslation } from 'react-i18next';
 import SettingItem from '../ui/SettingItem';
 import Toggle from '../ui/Toggle';
 import ThemeSelector from '../ui/ThemeSelector';
@@ -25,16 +26,18 @@ export default function AppearanceTab({
   onCompactModeToggle,
   onMessageGroupingToggle
 }: AppearanceTabProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-6">
       <SettingItem
-        title="Theme"
-        description="Choose your preferred color theme"
+        title={t('settings.theme')}
+        description={t('settings.themeDescription')}
         control={<ThemeSelector theme={theme} onThemeChange={onThemeChange} />}
       />
       <SettingItem
-        title="Font Size"
-        description="Adjust the size of text throughout the app"
+        title={t('settings.fontSize')}
+        description={t('settings.fontSizeDescription')}
         control={
           <FontSizeSelector
             fontSize={fontSize}
@@ -43,15 +46,15 @@ export default function AppearanceTab({
         }
       />
       <SettingItem
-        title="Compact Mode"
-        description="Display more messages on screen by reducing spacing"
+        title={t('settings.compactMode')}
+        description={t('settings.compactModeDescription')}
         control={
           <Toggle enabled={compactMode} onChange={onCompactModeToggle} />
         }
       />
       <SettingItem
-        title="Message Grouping"
-        description="Group consecutive messages from the same user (within 5 minutes)"
+        title={t('settings.messageGrouping')}
+        description={t('settings.messageGroupingDescription')}
         control={
           <Toggle
             enabled={messageGrouping}
