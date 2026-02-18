@@ -7,8 +7,12 @@ export {
   onDMEdit,
   offDMEdit,
   onDMDelete,
-  offDMDelete,
+  offDMDelete
 } from './dmHandlers';
 export { registerChannelHandlers } from './channelHandlers';
 export { registerVoiceHandlers } from './voiceHandlers';
-export { registerPresenceHandlers, onPresenceUpdate, offPresenceUpdate } from './presenceHandlers';
+export {
+  registerPresenceHandlers,
+  onPresenceUpdate,
+  offPresenceUpdate
+} from './presenceHandlers';

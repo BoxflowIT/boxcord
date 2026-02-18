@@ -17,7 +17,7 @@ describe('UserService', () => {
     it('should create a new user with minimal data', async () => {
       const userData = {
         id: 'user-1',
-        email: 'test@example.com',
+        email: 'test@example.com'
       };
 
       const expectedUser = {
@@ -29,7 +29,7 @@ describe('UserService', () => {
         bio: null,
         role: 'STAFF',
         createdAt: new Date(),
-        updatedAt: new Date(),
+        updatedAt: new Date()
       };
 
       vi.mocked(mockPrisma.user.upsert).mockResolvedValue(expectedUser);
@@ -43,12 +43,12 @@ describe('UserService', () => {
           email: 'test@example.com',
           firstName: null,
           lastName: null,
-          role: 'STAFF',
+          role: 'STAFF'
         },
         update: {
           email: 'test@example.com',
           firstName: undefined,
-          lastName: undefined,
+          lastName: undefined
         },
         select: {
           id: true,
@@ -71,7 +71,7 @@ describe('UserService', () => {
         email: 'full@example.com',
         firstName: 'John',
         lastName: 'Doe',
-        role: 'ADMIN',
+        role: 'ADMIN'
       };
 
       const expectedUser = {
@@ -83,7 +83,7 @@ describe('UserService', () => {
         bio: null,
         role: 'ADMIN',
         createdAt: new Date(),
-        updatedAt: new Date(),
+        updatedAt: new Date()
       };
 
       vi.mocked(mockPrisma.user.upsert).mockResolvedValue(expectedUser);
@@ -111,8 +111,8 @@ describe('UserService', () => {
         presence: {
           status: 'ONLINE',
           customStatus: null,
-          lastSeen: new Date(),
-        },
+          lastSeen: new Date()
+        }
       };
 
       vi.mocked(mockPrisma.user.findUnique).mockResolvedValue(user as any);
@@ -150,7 +150,7 @@ describe('UserService', () => {
     it('should return multiple users', async () => {
       const users = [
         { id: 'user-1', email: 'a@example.com' },
-        { id: 'user-2', email: 'b@example.com' },
+        { id: 'user-2', email: 'b@example.com' }
       ];
 
       vi.mocked(mockPrisma.user.findMany).mockResolvedValue(users as any);
@@ -195,7 +195,7 @@ describe('UserService', () => {
         bio: 'New bio',
         role: 'STAFF',
         createdAt: new Date(),
-        updatedAt: new Date(),
+        updatedAt: new Date()
       };
 
       vi.mocked(mockPrisma.user.update).mockResolvedValue(updatedUser);
@@ -204,7 +204,7 @@ describe('UserService', () => {
         firstName: 'Updated',
         lastName: 'Name',
         avatarUrl: 'https://example.com/avatar.png',
-        bio: 'New bio',
+        bio: 'New bio'
       });
 
       expect(result.firstName).toBe('Updated');
@@ -227,12 +227,14 @@ describe('UserService', () => {
         bio: exactBio,
         role: 'STAFF',
         createdAt: new Date(),
-        updatedAt: new Date(),
+        updatedAt: new Date()
       };
 
       vi.mocked(mockPrisma.user.update).mockResolvedValue(updatedUser as any);
 
-      const result = await userService.updateProfile('user-1', { bio: exactBio });
+      const result = await userService.updateProfile('user-1', {
+        bio: exactBio
+      });
 
       expect(result.bio).toBe(exactBio);
     });

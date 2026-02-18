@@ -25,7 +25,7 @@ import {
   onDMDelete,
   offDMDelete,
   onPresenceUpdate,
-  offPresenceUpdate,
+  offPresenceUpdate
 } from './handlers';
 
 // QueryClient instance for cache updates
@@ -86,7 +86,7 @@ class SocketService {
       timeout: 15000,
       forceNew: true,
       autoConnect: false,
-      closeOnBeforeunload: true,
+      closeOnBeforeunload: true
     });
 
     this.socket = socket;
@@ -136,7 +136,7 @@ class SocketService {
       isViewingChannel: (channelId: string) =>
         window.location.pathname.includes(`/chat/channels/${channelId}`),
       isViewingDM: (channelId: string) =>
-        window.location.pathname.includes(`/chat/dm/${channelId}`),
+        window.location.pathname.includes(`/chat/dm/${channelId}`)
     };
 
     // Register all handlers
@@ -305,7 +305,10 @@ class SocketService {
     offDMDelete(id);
   }
 
-  onPresenceUpdate(id: string, handler: (data: { userId: string; status: string }) => void) {
+  onPresenceUpdate(
+    id: string,
+    handler: (data: { userId: string; status: string }) => void
+  ) {
     onPresenceUpdate(id, handler);
   }
 

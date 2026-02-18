@@ -1,9 +1,14 @@
 // Socket Service Cache Update Tests
 // Tests for React Query cache updates triggered by socket events
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../src/hooks/useQuery';
-import type { PaginatedMessages, DMChannel, Message } from '../../src/types';
+import type {
+  PaginatedMessages,
+  DMChannel,
+  Message,
+  Channel
+} from '../../src/types';
 
 // Test helpers for simulating socket cache updates
 function createTestQueryClient(): QueryClient {
@@ -11,9 +16,9 @@ function createTestQueryClient(): QueryClient {
     defaultOptions: {
       queries: {
         retry: false,
-        staleTime: Infinity,
-      },
-    },
+        staleTime: Infinity
+      }
+    }
   });
 }
 
@@ -24,15 +29,15 @@ function createMockMessage(overrides: Partial<Message> = {}): Message {
     channelId: 'channel-1',
     authorId: 'user-1',
     createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    edited: false,
     author: {
       id: 'user-1',
       email: 'test@test.com',
       firstName: 'Test',
-      lastName: 'User',
-      status: 'ONLINE',
-      createdAt: new Date().toISOString(),
+      lastName: 'User'
     },
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -43,20 +48,16 @@ function createMockDMChannel(overrides: Partial<DMChannel> = {}): DMChannel {
     createdAt: new Date().toISOString(),
     participants: [
       {
-        id: 'participant-1',
-        channelId: 'dm-1',
         userId: 'user-1',
         user: {
           id: 'user-1',
           email: 'test@test.com',
           firstName: 'Test',
-          lastName: 'User',
-          status: 'ONLINE',
-          createdAt: new Date().toISOString(),
-        },
-      },
+          lastName: 'User'
+        }
+      }
     ],
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -71,11 +72,11 @@ describe('DM Cache Updates', () => {
     it('adds new message to cache when viewing DM', () => {
       const channelId = 'dm-channel-1';
       const dmKey = queryKeys.dmMessages(channelId, undefined);
-      
+
       // Setup: existing messages in cache
       queryClient.setQueryData<PaginatedMessages>(dmKey, {
         items: [],
-        hasMore: false,
+        hasMore: false
       });
 
       const newMessage = createMockMessage({ channelId });
@@ -102,7 +103,7 @@ describe('DM Cache Updates', () => {
       // Setup: message already in cache
       queryClient.setQueryData<PaginatedMessages>(dmKey, {
         items: [existingMessage],
-        hasMore: false,
+        hasMore: false
       });
 
       // Simulate receiving same message again
@@ -136,7 +137,9 @@ describe('DM Cache Updates', () => {
       });
 
       // Verify
-      const cached = queryClient.getQueryData<DMChannel[]>(queryKeys.dmChannels);
+      const cached = queryClient.getQueryData<DMChannel[]>(
+        queryKeys.dmChannels
+      );
       expect(cached?.[0].unreadCount).toBe(1);
     });
 
@@ -156,7 +159,9 @@ describe('DM Cache Updates', () => {
       });
 
       // Verify
-      const cached = queryClient.getQueryData<DMChannel[]>(queryKeys.dmChannels);
+      const cached = queryClient.getQueryData<DMChannel[]>(
+        queryKeys.dmChannels
+      );
       expect(cached?.[0].unreadCount).toBe(0);
     });
 
@@ -168,21 +173,18 @@ describe('DM Cache Updates', () => {
       // Setup: DM channels list
       queryClient.setQueryData<DMChannel[]>(queryKeys.dmChannels, [dmChannel]);
 
-      // Simulate socket handler updating lastMessage
-      const newLastMessage = {
-        content: newMessage.content,
-        createdAt: newMessage.createdAt,
-      };
-      
+      // Simulate socket handler updating lastMessage with full message
       queryClient.setQueryData<DMChannel[]>(queryKeys.dmChannels, (old) => {
         if (!old) return old;
         return old.map((ch) =>
-          ch.id === channelId ? { ...ch, lastMessage: newLastMessage } : ch
+          ch.id === channelId ? { ...ch, lastMessage: newMessage } : ch
         );
       });
 
       // Verify
-      const cached = queryClient.getQueryData<DMChannel[]>(queryKeys.dmChannels);
+      const cached = queryClient.getQueryData<DMChannel[]>(
+        queryKeys.dmChannels
+      );
       expect(cached?.[0].lastMessage?.content).toBe('Hello!');
     });
   });
@@ -191,12 +193,15 @@ describe('DM Cache Updates', () => {
     it('updates existing message in cache', () => {
       const channelId = 'dm-channel-1';
       const dmKey = queryKeys.dmMessages(channelId, undefined);
-      const originalMessage = createMockMessage({ channelId, content: 'Original' });
+      const originalMessage = createMockMessage({
+        channelId,
+        content: 'Original'
+      });
 
       // Setup: message in cache
       queryClient.setQueryData<PaginatedMessages>(dmKey, {
         items: [originalMessage],
-        hasMore: false,
+        hasMore: false
       });
 
       // Simulate edit
@@ -205,7 +210,9 @@ describe('DM Cache Updates', () => {
         if (!old?.items) return old;
         return {
           ...old,
-          items: old.items.map((m) => (m.id === editedMessage.id ? editedMessage : m)),
+          items: old.items.map((m) =>
+            m.id === editedMessage.id ? editedMessage : m
+          )
         };
       });
 
@@ -224,7 +231,7 @@ describe('DM Cache Updates', () => {
       // Setup: message in cache
       queryClient.setQueryData<PaginatedMessages>(dmKey, {
         items: [message],
-        hasMore: false,
+        hasMore: false
       });
 
       // Simulate delete
@@ -233,7 +240,7 @@ describe('DM Cache Updates', () => {
         if (!old?.items) return old;
         return {
           ...old,
-          items: old.items.filter((m) => m.id !== messageId),
+          items: old.items.filter((m) => m.id !== messageId)
         };
       });
 
@@ -255,10 +262,10 @@ describe('Channel Cache Updates', () => {
     it('adds message when viewing channel', () => {
       const channelId = 'channel-1';
       const messageKey = queryKeys.messages(channelId, undefined);
-      
+
       queryClient.setQueryData<PaginatedMessages>(messageKey, {
         items: [],
-        hasMore: false,
+        hasMore: false
       });
 
       const newMessage = createMockMessage({ channelId });
@@ -280,21 +287,27 @@ describe('Channel Cache Updates', () => {
       const channelsKey = queryKeys.channels(workspaceId);
 
       // Setup: channels in cache
-      queryClient.setQueryData(channelsKey, [
-        { id: channelId, name: 'general', workspaceId, unreadCount: 0 },
-      ]);
+      const channel: Channel = {
+        id: channelId,
+        name: 'general',
+        workspaceId,
+        unreadCount: 0,
+        type: 'TEXT',
+        isPrivate: false
+      };
+      queryClient.setQueryData<Channel[]>(channelsKey, [channel]);
 
       // Simulate unread increment
-      queryClient.setQueryData(channelsKey, (old: any) => {
+      queryClient.setQueryData<Channel[]>(channelsKey, (old) => {
         if (!old) return old;
-        return old.map((ch: any) =>
+        return old.map((ch) =>
           ch.id === channelId
             ? { ...ch, unreadCount: (ch.unreadCount ?? 0) + 1 }
             : ch
         );
       });
 
-      const cached = queryClient.getQueryData<any[]>(channelsKey);
+      const cached = queryClient.getQueryData<Channel[]>(channelsKey);
       expect(cached?.[0].unreadCount).toBe(1);
     });
   });
@@ -303,11 +316,14 @@ describe('Channel Cache Updates', () => {
     it('updates message content and sets edited flag', () => {
       const channelId = 'channel-1';
       const messageKey = queryKeys.messages(channelId, undefined);
-      const originalMessage = createMockMessage({ channelId, content: 'Original' });
+      const originalMessage = createMockMessage({
+        channelId,
+        content: 'Original'
+      });
 
       queryClient.setQueryData<PaginatedMessages>(messageKey, {
         items: [originalMessage],
-        hasMore: false,
+        hasMore: false
       });
 
       const editedMessage = { ...originalMessage, content: 'Edited' };
@@ -316,14 +332,16 @@ describe('Channel Cache Updates', () => {
         return {
           ...old,
           items: old.items.map((m) =>
-            m.id === editedMessage.id ? { ...m, ...editedMessage, edited: true } : m
-          ),
+            m.id === editedMessage.id
+              ? { ...m, ...editedMessage, edited: true }
+              : m
+          )
         };
       });
 
       const cached = queryClient.getQueryData<PaginatedMessages>(messageKey);
       expect(cached?.items[0].content).toBe('Edited');
-      expect((cached?.items[0] as any).edited).toBe(true);
+      expect(cached?.items[0].edited).toBe(true);
     });
   });
 
@@ -335,14 +353,14 @@ describe('Channel Cache Updates', () => {
 
       queryClient.setQueryData<PaginatedMessages>(messageKey, {
         items: [message],
-        hasMore: false,
+        hasMore: false
       });
 
       queryClient.setQueryData<PaginatedMessages>(messageKey, (old) => {
         if (!old?.items) return old;
         return {
           ...old,
-          items: old.items.filter((m) => m.id !== message.id),
+          items: old.items.filter((m) => m.id !== message.id)
         };
       });
 
@@ -362,11 +380,19 @@ describe('queryKeys', () => {
   });
 
   it('generates correct keys for messages with cursor', () => {
-    expect(queryKeys.messages('ch-1', 'cursor-123')).toEqual(['messages', 'ch-1', 'cursor-123']);
+    expect(queryKeys.messages('ch-1', 'cursor-123')).toEqual([
+      'messages',
+      'ch-1',
+      'cursor-123'
+    ]);
   });
 
   it('generates correct keys for messages without cursor', () => {
-    expect(queryKeys.messages('ch-1', undefined)).toEqual(['messages', 'ch-1', undefined]);
+    expect(queryKeys.messages('ch-1', undefined)).toEqual([
+      'messages',
+      'ch-1',
+      undefined
+    ]);
   });
 
   it('generates correct keys for DM channels', () => {
@@ -374,6 +400,10 @@ describe('queryKeys', () => {
   });
 
   it('generates correct keys for DM messages', () => {
-    expect(queryKeys.dmMessages('dm-1', undefined)).toEqual(['dmMessages', 'dm-1', undefined]);
+    expect(queryKeys.dmMessages('dm-1', undefined)).toEqual([
+      'dmMessages',
+      'dm-1',
+      undefined
+    ]);
   });
 });

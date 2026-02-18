@@ -19,8 +19,8 @@ Object.defineProperty(window, 'matchMedia', {
     removeListener: () => {},
     addEventListener: () => {},
     removeEventListener: () => {},
-    dispatchEvent: () => false,
-  }),
+    dispatchEvent: () => false
+  })
 });
 
 // Mock ResizeObserver

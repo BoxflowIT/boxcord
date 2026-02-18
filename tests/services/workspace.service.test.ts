@@ -20,14 +20,14 @@ describe('WorkspaceService', () => {
           id: 'member-1',
           userId: 'user-1',
           workspaceId: 'ws-1',
-          workspace: { id: 'ws-1', name: 'Workspace 1' },
+          workspace: { id: 'ws-1', name: 'Workspace 1' }
         },
         {
           id: 'member-2',
           userId: 'user-1',
           workspaceId: 'ws-2',
-          workspace: { id: 'ws-2', name: 'Workspace 2' },
-        },
+          workspace: { id: 'ws-2', name: 'Workspace 2' }
+        }
       ];
 
       vi.mocked(mockPrisma.workspaceMember.findMany).mockResolvedValue(
@@ -38,7 +38,7 @@ describe('WorkspaceService', () => {
 
       expect(mockPrisma.workspaceMember.findMany).toHaveBeenCalledWith({
         where: { userId: 'user-1' },
-        include: { workspace: true },
+        include: { workspace: true }
       });
       expect(result).toHaveLength(2);
       expect(result[0].name).toBe('Workspace 1');
@@ -60,7 +60,7 @@ describe('WorkspaceService', () => {
         name: 'Test Workspace',
         description: 'A test workspace',
         createdAt: new Date(),
-        updatedAt: new Date(),
+        updatedAt: new Date()
       };
 
       vi.mocked(mockPrisma.workspace.findUnique).mockResolvedValue(
@@ -88,15 +88,17 @@ describe('WorkspaceService', () => {
         name: 'New Workspace',
         description: 'Description',
         createdAt: new Date(),
-        updatedAt: new Date(),
+        updatedAt: new Date()
       };
 
-      vi.mocked(mockPrisma.workspace.create).mockResolvedValue(workspace as any);
+      vi.mocked(mockPrisma.workspace.create).mockResolvedValue(
+        workspace as any
+      );
 
       const result = await workspaceService.createWorkspace({
         name: 'New Workspace',
         description: 'Description',
-        ownerId: 'user-1',
+        ownerId: 'user-1'
       });
 
       expect(mockPrisma.workspace.create).toHaveBeenCalledWith({
@@ -106,18 +108,18 @@ describe('WorkspaceService', () => {
           members: {
             create: {
               userId: 'user-1',
-              role: 'OWNER',
-            },
+              role: 'OWNER'
+            }
           },
           channels: {
             create: {
               name: 'allmänt',
               description: 'Allmän kanal för alla',
               type: 'TEXT',
-              isPrivate: false,
-            },
-          },
-        },
+              isPrivate: false
+            }
+          }
+        }
       });
       expect(result.name).toBe('New Workspace');
     });
@@ -140,8 +142,8 @@ describe('WorkspaceService', () => {
             role: 'STAFF',
             presence: null,
             createdAt: new Date(),
-            updatedAt: new Date(),
-          },
+            updatedAt: new Date()
+          }
         },
         {
           id: 'm2',
@@ -157,9 +159,9 @@ describe('WorkspaceService', () => {
             role: 'STAFF',
             presence: null,
             createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-        },
+            updatedAt: new Date()
+          }
+        }
       ];
 
       vi.mocked(mockPrisma.workspaceMember.findMany).mockResolvedValue(
@@ -193,7 +195,7 @@ describe('WorkspaceService', () => {
         workspaceId: 'ws-1',
         userId: 'user-new',
         role: 'MEMBER',
-        joinedAt: new Date(),
+        joinedAt: new Date()
       };
 
       vi.mocked(mockPrisma.workspaceMember.create).mockResolvedValue(
@@ -206,8 +208,8 @@ describe('WorkspaceService', () => {
         data: {
           workspaceId: 'ws-1',
           userId: 'user-new',
-          role: 'MEMBER',
-        },
+          role: 'MEMBER'
+        }
       });
       expect(result.role).toBe('MEMBER');
     });
@@ -218,14 +220,18 @@ describe('WorkspaceService', () => {
         workspaceId: 'ws-1',
         userId: 'user-new',
         role: 'ADMIN',
-        joinedAt: new Date(),
+        joinedAt: new Date()
       };
 
       vi.mocked(mockPrisma.workspaceMember.create).mockResolvedValue(
         member as any
       );
 
-      const result = await workspaceService.addMember('ws-1', 'user-new', 'ADMIN');
+      const result = await workspaceService.addMember(
+        'ws-1',
+        'user-new',
+        'ADMIN'
+      );
 
       expect(result.role).toBe('ADMIN');
     });
@@ -236,7 +242,7 @@ describe('WorkspaceService', () => {
       vi.mocked(mockPrisma.workspaceMember.findUnique).mockResolvedValue({
         id: 'm-owner',
         userId: 'owner-id',
-        role: 'OWNER',
+        role: 'OWNER'
       } as any);
 
       vi.mocked(mockPrisma.workspaceMember.delete).mockResolvedValue({} as any);
@@ -244,7 +250,9 @@ describe('WorkspaceService', () => {
       await workspaceService.removeMember('ws-1', 'user-to-remove', 'owner-id');
 
       expect(mockPrisma.workspaceMember.delete).toHaveBeenCalledWith({
-        where: { workspaceId_userId: { workspaceId: 'ws-1', userId: 'user-to-remove' } },
+        where: {
+          workspaceId_userId: { workspaceId: 'ws-1', userId: 'user-to-remove' }
+        }
       });
     });
 
@@ -252,7 +260,7 @@ describe('WorkspaceService', () => {
       vi.mocked(mockPrisma.workspaceMember.findUnique).mockResolvedValue({
         id: 'm-admin',
         userId: 'admin-id',
-        role: 'ADMIN',
+        role: 'ADMIN'
       } as any);
 
       vi.mocked(mockPrisma.workspaceMember.delete).mockResolvedValue({} as any);
@@ -266,7 +274,7 @@ describe('WorkspaceService', () => {
       vi.mocked(mockPrisma.workspaceMember.findUnique).mockResolvedValue({
         id: 'm-member',
         userId: 'member-id',
-        role: 'MEMBER',
+        role: 'MEMBER'
       } as any);
 
       await expect(

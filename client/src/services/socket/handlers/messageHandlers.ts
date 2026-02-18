@@ -7,8 +7,13 @@ import type { PaginatedMessages, Channel, Message } from '../../../types';
 import type { SocketHandlerContext } from '../types';
 
 export function registerMessageHandlers(context: SocketHandlerContext): void {
-  const { socket, queryClient, getCurrentUserId, getCurrentWorkspaceId, isViewingChannel } =
-    context;
+  const {
+    socket,
+    queryClient,
+    getCurrentUserId,
+    getCurrentWorkspaceId,
+    isViewingChannel
+  } = context;
 
   // message:new - New message in a channel
   socket.on('message:new', (message: Message) => {
@@ -31,7 +36,7 @@ export function registerMessageHandlers(context: SocketHandlerContext): void {
         // Not viewing: invalidate ALL message queries for this channel
         queryClient.invalidateQueries({
           queryKey: ['messages', message.channelId],
-          exact: false,
+          exact: false
         });
       }
 
@@ -39,7 +44,9 @@ export function registerMessageHandlers(context: SocketHandlerContext): void {
       if (!isOwnMessage && !isViewing && currentWorkspaceId) {
         const channelsKey = queryKeys.channels(currentWorkspaceId);
         const channels = queryClient.getQueryData<Channel[]>(channelsKey);
-        const isCurrentWorkspace = channels?.some((ch) => ch.id === message.channelId);
+        const isCurrentWorkspace = channels?.some(
+          (ch) => ch.id === message.channelId
+        );
 
         if (isCurrentWorkspace) {
           playMessageNotification();
@@ -68,38 +75,52 @@ export function registerMessageHandlers(context: SocketHandlerContext): void {
           ...old,
           items: old.items.map((m) =>
             m.id === message.id ? { ...m, ...message, edited: true } : m
-          ),
+          )
         };
       });
     }
   });
 
   // message:delete - Message deleted
-  socket.on('message:delete', ({ messageId, channelId }: { messageId: string; channelId: string }) => {
-    if (channelId) {
-      const exactKey = queryKeys.messages(channelId, undefined);
-      queryClient.setQueryData<PaginatedMessages>(exactKey, (old) => {
-        if (!old?.items) return old;
-        return {
-          ...old,
-          items: old.items.filter((m) => m.id !== messageId),
-        };
-      });
+  socket.on(
+    'message:delete',
+    ({ messageId, channelId }: { messageId: string; channelId: string }) => {
+      if (channelId) {
+        const exactKey = queryKeys.messages(channelId, undefined);
+        queryClient.setQueryData<PaginatedMessages>(exactKey, (old) => {
+          if (!old?.items) return old;
+          return {
+            ...old,
+            items: old.items.filter((m) => m.id !== messageId)
+          };
+        });
+      }
     }
-  });
+  );
 
   // channel:typing - Typing indicator
-  socket.on('channel:typing', ({ userId, channelId }: { userId: string; channelId: string }) => {
-    useChatStore.getState().setTyping(channelId, userId);
-    // Clear after 3 seconds
-    setTimeout(() => {
-      useChatStore.getState().clearTyping(channelId, userId);
-    }, 3000);
-  });
+  socket.on(
+    'channel:typing',
+    ({ userId, channelId }: { userId: string; channelId: string }) => {
+      useChatStore.getState().setTyping(channelId, userId);
+      // Clear after 3 seconds
+      setTimeout(() => {
+        useChatStore.getState().clearTyping(channelId, userId);
+      }, 3000);
+    }
+  );
 
   // reaction:update - Reaction toggled
-  socket.on('reaction:update', (data: { messageId: string; userId: string; emoji: string; added: boolean }) => {
-    logger.log('Reaction update:', data);
-    // TODO: Handle reaction update in cache
-  });
+  socket.on(
+    'reaction:update',
+    (data: {
+      messageId: string;
+      userId: string;
+      emoji: string;
+      added: boolean;
+    }) => {
+      logger.log('Reaction update:', data);
+      // TODO: Handle reaction update in cache
+    }
+  );
 }
