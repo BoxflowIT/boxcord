@@ -1,6 +1,7 @@
 import { useVoiceStore } from '../../store/voiceStore';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../services/api';
+import { useCurrentUser } from '../../hooks/useQuery';
 import { MicIcon, MicOffIcon, HeadphonesOffIcon } from '../ui/Icons';
 import type { User } from '../../types';
 
@@ -23,14 +24,8 @@ export function VoiceUserList() {
     isSpeaking: localIsSpeaking,
   } = useVoiceStore();
 
-  // Fetch current user
-  const { data: currentUser } = useQuery<User>({
-    queryKey: ['users', 'me'],
-    queryFn: async () => {
-      const response = await api.get('/users/me');
-      return response.data as unknown as User;
-    },
-  });
+  // Use cached current user to avoid duplicate API calls
+  const { data: currentUser } = useCurrentUser();
 
   // Fetch user details for all voice users
   const { data: onlineUsers = [] } = useQuery<User[]>({

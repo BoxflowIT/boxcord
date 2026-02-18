@@ -93,12 +93,13 @@ function VoiceChannelWithUsers({
   onEdit: (e: React.MouseEvent) => void;
   onDelete: (e: React.MouseEvent) => void;
 }) {
-  // Fetch voice users for this channel
+  // Fetch voice users for this channel (updated via socket events)
   const { data: voiceUsers = [] } = useQuery({
     queryKey: ['voiceChannelUsers', channel.id],
     queryFn: () => api.getVoiceChannelUsers(channel.id),
-    staleTime: 5000,
-    refetchInterval: 10000
+    staleTime: 0, // Always fresh, refetch on mount
+    refetchOnMount: true,
+    refetchOnWindowFocus: false
   });
 
   // Fetch user info for all users
