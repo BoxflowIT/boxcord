@@ -236,6 +236,14 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     }
   };
 
+  const handleGifSelect = (gifUrl: string) => {
+    if (!channelId) return;
+
+    // Send GIF as a message with the URL
+    // The message will be rendered as an image in MessageItem
+    socketService.sendMessage(channelId, gifUrl);
+  };
+
   // Voice channel view
   if (currentChannel?.type === 'VOICE') {
     return (
@@ -298,6 +306,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
         onKeyDown={handleKeyDown}
         onFileSelect={handleFileSelect}
         onEmojiSelect={handleEmojiSelect}
+        onGifSelect={handleGifSelect}
         onMentionSelect={handleMentionSelect}
         onSlashCommandSelect={handleSlashCommandSelect}
         onCloseMentions={() => setShowMentions(false)}

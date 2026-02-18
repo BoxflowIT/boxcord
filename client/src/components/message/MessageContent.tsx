@@ -1,6 +1,7 @@
 // Reusable Message Content Component - Text content and attachments
 import { AttachmentPreview } from '../FileUpload';
 import { cn } from '../../utils/classNames';
+import { isOnlyGifUrl, renderGif } from '../../utils/gifRenderer';
 
 export interface MessageAttachment {
   id: string;
@@ -23,16 +24,25 @@ export function MessageContent({
   compact = false,
   renderContent
 }: MessageContentProps) {
+  // Check if content is a GIF URL
+  const isGif = isOnlyGifUrl(content);
+
   return (
     <>
-      <p
-        className={cn(
-          'text-boxflow-light break-words',
-          compact ? 'text-sm leading-5' : 'text-base'
-        )}
-      >
-        {renderContent ? renderContent(content) : content}
-      </p>
+      {isGif ? (
+        // Render GIF as image
+        renderGif(content)
+      ) : (
+        // Render normal text content
+        <p
+          className={cn(
+            'text-boxflow-light break-words',
+            compact ? 'text-sm leading-5' : 'text-base'
+          )}
+        >
+          {renderContent ? renderContent(content) : content}
+        </p>
+      )}
 
       {/* Attachments */}
       {attachments.length > 0 && (

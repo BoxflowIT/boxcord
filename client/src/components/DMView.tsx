@@ -248,6 +248,21 @@ export default function DMView() {
     }
   };
 
+  const handleGifSelect = async (gifUrl: string) => {
+    if (!channelId) return;
+
+    setSending(true);
+    try {
+      // Send GIF URL as a message
+      await api.sendDM(channelId, gifUrl);
+      // React Query will update automatically
+    } catch (err) {
+      logger.error('Failed to send GIF:', err);
+    } finally {
+      setSending(false);
+    }
+  };
+
   const handleEmojiSelect = (emoji: string) => {
     const cursorPos = textareaRef.current?.selectionStart ?? inputValue.length;
     const newValue =
@@ -340,6 +355,7 @@ export default function DMView() {
         onKeyDown={handleKeyDown}
         onFileSelect={handleFileSelect}
         onEmojiSelect={handleEmojiSelect}
+        onGifSelect={handleGifSelect}
       />
 
       {/* Delete Confirmation Modal */}
