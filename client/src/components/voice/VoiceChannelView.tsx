@@ -4,6 +4,7 @@ import { voiceService } from '../../services/voice.service';
 import { VoiceUserList } from './VoiceUserList';
 import { VoiceControls } from './VoiceControls';
 import { VoiceChannelIcon, VoiceConnectIcon, VoiceDisconnectIcon } from '../ui/Icons';
+import { VoiceLoader } from '../ui/VoiceLoader';
 
 interface VoiceChannelViewProps {
   channelId: string;
@@ -89,13 +90,10 @@ export function VoiceChannelView({
             <button
               onClick={handleJoin}
               disabled={isConnecting}
-              className="px-6 py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+              className="px-6 py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all flex items-center gap-3 min-w-[200px] justify-center"
             >
               {isConnecting ? (
-                <>
-                  <span className="animate-spin">⏳</span>
-                  Connecting...
-                </>
+                <VoiceLoader />
               ) : (
                 <>
                   <VoiceConnectIcon size="md" />

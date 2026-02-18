@@ -463,9 +463,12 @@ class SocketService {
     this.socket.on('voice:users-updated', (data: { channelId: string }) => {
       logger.log('Voice users updated:', data.channelId);
       
-      // Invalidate the query cache for this voice channel's users
+      // Refetch immediately instead of just invalidating
       if (queryClient) {
-        queryClient.invalidateQueries({ queryKey: ['voiceChannelUsers', data.channelId] });
+        queryClient.refetchQueries({ 
+          queryKey: ['voiceChannelUsers', data.channelId],
+          exact: true 
+        });
       }
     });
 

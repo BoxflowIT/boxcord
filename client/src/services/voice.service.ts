@@ -4,6 +4,7 @@ import { socketService } from './socket';
 import { useVoiceStore } from '../store/voiceStore';
 import { useAuthStore } from '../store/auth';
 import { SOCKET_EVENTS } from '../../../src/00-core/constants';
+import { playVoiceJoinSound, playVoiceLeaveSound } from '../utils/voiceSound';
 
 // ============================================================================
 // CONSTANTS
@@ -135,6 +136,9 @@ class VoiceService {
 
       this.startVoiceActivityDetection();
       this.socket?.emit(SOCKET_EVENTS.VOICE_JOIN, { channelId });
+      
+      // Play join sound
+      playVoiceJoinSound();
     } catch (error) {
       console.error('Failed to join voice channel:', error);
       this.cleanup();
@@ -150,6 +154,9 @@ class VoiceService {
     if (!currentChannelId || !currentSessionId) return;
 
     try {
+      // Play leave sound BEFORE cleanup (so audio context is still active)
+      playVoiceLeaveSound();
+      
       await this.apiRequest(
         `/api/v1/voice/sessions/${currentSessionId}/leave`,
         { method: 'POST' }
