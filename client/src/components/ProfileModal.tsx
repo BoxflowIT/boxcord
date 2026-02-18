@@ -10,7 +10,6 @@ import {
   useUpdateProfile,
   useUpdateUserRole
 } from '../hooks/useQuery';
-import NotificationSettings from './NotificationSettings';
 import { RoleManagement, AccountDeletion } from './profile';
 import ProfileDisplay from './profile/ProfileDisplay';
 import ProfileForm from './profile/ProfileForm';
@@ -197,13 +196,6 @@ export default function ProfileModal({
                   onChangeRole={handleChangeRole}
                   isChanging={changingRole}
                 />
-              )}
-
-              {/* Notification Settings - Own profile only */}
-              {isOwnProfile && (
-                <div className="pt-4 border-t border-discord-darkest">
-                  <NotificationSettings />
-                </div>
               )}
 
               {/* Actions */}

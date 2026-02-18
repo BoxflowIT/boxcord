@@ -1,5 +1,6 @@
 // Notifications Settings Tab Component
 import { cn } from '../../utils/classNames';
+import NotificationSettings from '../NotificationSettings';
 
 interface NotificationsTabProps {
   soundEnabled: boolean;
@@ -51,11 +52,21 @@ export default function NotificationsTab({
 }: NotificationsTabProps) {
   return (
     <div className="space-y-6">
+      {/* Push Notifications Section */}
+      <div className="mb-6">
+        <NotificationSettings />
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-discord-darkest" />
+
+      {/* Sound Notifications Section */}
       <SettingItem
         title="Notification Sound"
         description="Play a sound when you receive a new message"
         control={<Toggle enabled={soundEnabled} onChange={onSoundToggle} />}
       />
+
       <div className="border-t border-discord-darkest pt-6">
         <p className="text-sm text-gray-400">
           💡 <strong>How it works:</strong> Notification sounds only play for
