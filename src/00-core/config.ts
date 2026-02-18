@@ -37,7 +37,9 @@ const envSchema = z.object({
   // Push Notifications
   VAPID_PUBLIC_KEY: z.string().min(1),
   VAPID_PRIVATE_KEY: z.string().min(1),
-  VAPID_SUBJECT: z.string().email(),
+  VAPID_SUBJECT: z.string().refine((val) => val.startsWith('mailto:') || z.string().email().safeParse(val).success, {
+    message: 'Must be a valid email or mailto: URL'
+  }),
 
   // AWS S3 (optional)
   AWS_REGION: z.string().optional(),
@@ -47,7 +49,12 @@ const envSchema = z.object({
 
   // SendGrid (optional)
   SENDGRID_API_KEY: z.string().optional(),
-  SENDGRID_FROM_EMAIL: z.string().email().optional()
+  SENDGRID_FROM_EMAIL: z
+    .string()
+    .refine((val) => !val || z.string().email().safeParse(val).success, {
+      message: 'Must be a valid email or empty'
+    })
+    .optional()
 });
 
 // Validate environment variables
