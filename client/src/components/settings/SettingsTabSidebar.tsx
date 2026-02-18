@@ -1,30 +1,38 @@
 // Reusable Settings Tab Sidebar Component
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../utils/classNames';
 
-type SettingsTab = 'notifications' | 'voice' | 'appearance' | 'language' | 'about';
+type SettingsTab =
+  | 'notifications'
+  | 'voice'
+  | 'appearance'
+  | 'language'
+  | 'about';
 
 interface SettingsTabSidebarProps {
   activeTab: SettingsTab;
   onTabChange: (tab: SettingsTab) => void;
 }
 
-const tabs: { id: SettingsTab; label: string }[] = [
-  { id: 'notifications', label: 'Notifications' },
-  { id: 'voice', label: 'Voice & Audio' },
-  { id: 'appearance', label: 'Appearance' },
-  { id: 'language', label: 'Language' },
-  { id: 'about', label: 'About' }
+const tabs: { id: SettingsTab; labelKey: string }[] = [
+  { id: 'notifications', labelKey: 'settings.notifications' },
+  { id: 'voice', labelKey: 'settings.voice' },
+  { id: 'appearance', labelKey: 'settings.appearance' },
+  { id: 'language', labelKey: 'settings.language' },
+  { id: 'about', labelKey: 'settings.about' }
 ];
 
 export default function SettingsTabSidebar({
   activeTab,
   onTabChange
 }: SettingsTabSidebarProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="w-64 bg-boxflow-darker flex-shrink-0 overflow-y-auto border-r border-boxflow-darkest">
       <div className="p-4">
         <h2 className="text-xs font-semibold text-gray-400 uppercase mb-2">
-          Settings
+          {t('common.settings')}
         </h2>
         {tabs.map((tab) => (
           <button
@@ -37,7 +45,7 @@ export default function SettingsTabSidebar({
                 : 'text-boxflow-muted hover:bg-boxflow-hover/50 hover:text-white rounded-lg'
             )}
           >
-            {tab.label}
+            {t(tab.labelKey)}
           </button>
         ))}
       </div>

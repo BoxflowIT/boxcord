@@ -1,5 +1,6 @@
 // Settings Modal Component
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSettings } from '../hooks/useSettings';
 import SettingsTabSidebar, {
   type SettingsTab,
@@ -19,9 +20,12 @@ interface SettingsModalProps {
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('notifications');
+  const { t } = useTranslation();
   const { settings, handlers } = useSettings();
 
   if (!isOpen) return null;
+
+  const activeTabLabel = tabs.find((t) => t.id === activeTab)?.labelKey;
 
   return (
     <div
@@ -36,7 +40,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
         <div className="flex-1 flex flex-col overflow-hidden">
           <SettingsHeader
-            title={tabs.find((t) => t.id === activeTab)?.label || ''}
+            title={activeTabLabel ? t(activeTabLabel) : ''}
             onClose={onClose}
           />
 

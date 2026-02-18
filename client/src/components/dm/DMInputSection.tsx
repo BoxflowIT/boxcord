@@ -1,4 +1,5 @@
 // DM Input Section Component (simpler than channel input - no mentions/commands)
+import { useTranslation } from 'react-i18next';
 import FileUpload from '../FileUpload';
 import EmojiPicker from '../ui/EmojiPicker';
 
@@ -27,6 +28,8 @@ export default function DMInputSection({
   onEmojiSelect,
   onGifSelect
 }: DMInputSectionProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="px-4 pb-6">
       <div className="message-input-container">
@@ -39,14 +42,14 @@ export default function DMInputSection({
           value={inputValue}
           onChange={onInputChange}
           onKeyDown={onKeyDown}
-          placeholder={`Meddelande @${userName ?? 'användare'}`}
+          placeholder={t('dm.messageUser', { user: userName || 'user' })}
           className="flex-1 bg-transparent text-discord-light placeholder-gray-500 resize-none outline-none p-3 max-h-48"
           rows={1}
           disabled={uploading || sending}
         />
         <EmojiPicker onEmojiSelect={onEmojiSelect} onGifSelect={onGifSelect} />
         {sending && (
-          <div className="px-3 text-boxflow-muted text-sm">Skickar...</div>
+          <div className="px-3 text-boxflow-muted text-sm">{t('common.sending')}</div>
         )}
       </div>
     </div>

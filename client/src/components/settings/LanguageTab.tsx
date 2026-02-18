@@ -14,7 +14,9 @@ export function LanguageTab() {
   const currentLanguage = i18n.language;
 
   const handleLanguageChange = (languageCode: string) => {
+    console.log('🌍 Changing language to:', languageCode);
     i18n.changeLanguage(languageCode);
+    console.log('🌍 Current language after change:', i18n.language);
   };
 
   return (
@@ -23,6 +25,9 @@ export function LanguageTab() {
         <h2 className="text-xl font-semibold mb-2">{t('settings.language')}</h2>
         <p className="text-sm text-gray-400">
           {t('settings.languageDescription')}
+        </p>
+        <p className="text-xs text-gray-500 mt-2">
+          Current: {currentLanguage}
         </p>
       </div>
 
@@ -62,6 +67,19 @@ export function LanguageTab() {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Debug: Reset Language button */}
+      <div className="pt-4 border-t border-gray-700">
+        <button
+          onClick={() => {
+            localStorage.removeItem('language');
+            window.location.reload();
+          }}
+          className="text-xs text-gray-500 hover:text-gray-400"
+        >
+          🔧 Debug: Reset to default language
+        </button>
       </div>
     </div>
   );
