@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { z } from 'zod';
 
 // Environment schema validation
@@ -34,12 +35,10 @@ const envSchema = z.object({
     .transform((val) => val === 'true')
     .default('false'),
 
-  // Push Notifications
-  VAPID_PUBLIC_KEY: z.string().min(1),
-  VAPID_PRIVATE_KEY: z.string().min(1),
-  VAPID_SUBJECT: z.string().refine((val) => val.startsWith('mailto:') || z.string().email().safeParse(val).success, {
-    message: 'Must be a valid email or mailto: URL'
-  }),
+  // Push Notifications (optional - app works without them)
+  VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
+  VAPID_SUBJECT: z.string().optional(),
 
   // AWS S3 (optional)
   AWS_REGION: z.string().optional(),
@@ -66,7 +65,13 @@ function validateEnv() {
       console.error('❌ Environment validation failed:');
       error.errors.forEach((err) => {
         console.error(`  - ${err.path.join('.')}: ${err.message}`);
+        console.error(`    Current value: ${process.env[err.path[0] as string] ? '[SET]' : '[MISSING]'}`);
       });
+      console.error('\n📋 All environment variables:');
+      Object.keys(process.env)
+        .filter(key => !key.includes('PATH') && !key.includes('_'))
+        .sort()
+        .forEach(key => console.error(`  ${key}=[${process.env[key] ? 'SET' : 'MISSING'}]`));
       process.exit(1);
     }
     throw error;
