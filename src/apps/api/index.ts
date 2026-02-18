@@ -78,7 +78,19 @@ async function main() {
   // Health check
   app.get('/health', async () => ({
     status: 'ok',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    env: {
+      nodeEnv: config.NODE_ENV,
+      port: config.PORT,
+      hasDatabase: !!config.DATABASE_URL,
+      hasCognito: !!(config.COGNITO_USER_POOL_ID && config.COGNITO_CLIENT_ID),
+      hasJwtSecret: !!config.JWT_SECRET,
+      features: {
+        redis: !!config.REDIS_URL,
+        sentry: !!config.SENTRY_DSN,
+        s3: !!(config.AWS_S3_BUCKET && config.AWS_ACCESS_KEY_ID)
+      }
+    }
   }));
 
   // API routes
@@ -146,6 +158,11 @@ async function main() {
 }
 
 main().catch((err) => {
+  console.error('❌ Failed to start server');
+  console.error('Error name:', err.name);
+  console.error('Error message:', err.message);
+  console.error('Error stack:', err.stack);
+  if (err.code) console.error('Error code:', err.code);
   logger.error({ error: err }, 'Failed to start server');
   process.exit(1);
 });
