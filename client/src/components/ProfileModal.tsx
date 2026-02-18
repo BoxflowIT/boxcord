@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
 import { signOut } from '../services/cognito';
 import { logger } from '../utils/logger';
@@ -27,6 +28,7 @@ export default function ProfileModal({
   isOpen,
   onClose
 }: ProfileModalProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user: currentUser, logout } = useAuthStore();
 
@@ -157,7 +159,7 @@ export default function ProfileModal({
           />
 
           {loading ? (
-            <div className="text-gray-400">Laddar...</div>
+            <div className="text-gray-400">{t('common.loading')}</div>
           ) : profile ? (
             <div className="space-y-4">
               {/* Profile Display or Edit Form */}

@@ -1,6 +1,7 @@
 // Direct Messages List Component
 import { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
 import { logger } from '../utils/logger';
 import { useAuthStore } from '../store/auth';
@@ -31,6 +32,7 @@ export default function DMList({
   selectedId,
   onInviteToServer
 }: DMListProps) {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
   const { data: dmChannels, isLoading, refetch } = useDMChannels();
   const { startCall } = useDMCallStore();
@@ -140,7 +142,7 @@ export default function DMList({
           <div className="flex items-center justify-center py-8">
             <div className="spinner-container p-4">
               <div className="spinner-ring w-8 h-8" />
-              <p className="text-muted text-xs">Laddar...</p>
+              <p className="text-muted text-xs">{t('common.loading')}</p>
             </div>
           </div>
         ) : channels.length === 0 ? (

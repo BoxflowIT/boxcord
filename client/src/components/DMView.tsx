@@ -7,6 +7,7 @@
 
 import { useRef, useState, useMemo, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
 import { logger } from '../utils/logger';
 import { socketService } from '../services/socket';
@@ -29,6 +30,7 @@ import MessageListDisplay from './channel/MessageListDisplay';
 import DMInputSection from './dm/DMInputSection';
 
 export default function DMView() {
+  const { t } = useTranslation();
   const { channelId } = useParams<{ channelId: string }>();
   const { user } = useAuthStore();
   const { callState, startCall, acceptCall, rejectCall, endCall, reset } =
@@ -299,7 +301,7 @@ export default function DMView() {
   }, [messages, user, otherUser]);
 
   if (!otherUser || loadingUser) {
-    return <LoadingState text="Laddar användare..." />;
+    return <LoadingState text={t('dm.loadingUser')} />;
   }
 
   return (
@@ -363,8 +365,8 @@ export default function DMView() {
         isOpen={!!deleteMessageId}
         onCancel={handleCancelDelete}
         onConfirm={confirmDelete}
-        title="Ta bort meddelande"
-        message="Är du säker på att du vill ta bort det här meddelandet? Det går inte att ångra."
+        title={t('messages.delete')}
+        message={t('messages.deleteConfirm')}
       />
     </div>
   );

@@ -8,6 +8,7 @@
     "search": "Search",
     "loading": "Loading...",
     "sending": "Sending...",
+   "creating": "Creating...",
     "error": "Error",
     "success": "Success",
     "settings": "Settings",
@@ -22,7 +23,9 @@
     "online": "Online",
     "offline": "Offline",
     "away": "Away",
-    "busy": "Busy"
+    "busy": "Busy",
+    "remove": "Remove",
+    "confirm": "Confirm"
   },
   "settings": {
     "title": "Settings",
@@ -48,6 +51,7 @@
   },
   "notifications": {
     "title": "Notification Settings",
+    "description": "Get notifications for new messages and mentions",
     "enableDesktop": "Enable Desktop Notifications",
     "enableSound": "Enable Sound Effects",
     "notifyOnMention": "Notify on Mention",
@@ -79,15 +83,25 @@
   "channels": {
     "title": "Channels",
     "create": "Create Channel",
+    "createServer": "Create Server",
     "edit": "Edit Channel",
+    "editServer": "Edit Server",
     "delete": "Delete Channel",
+    "deleteServer": "Delete Server",
     "name": "Channel Name",
     "description": "Description",
     "private": "Private Channel",
     "public": "Public Channel",
     "textChannel": "Text Channel",
+    "textChannelDescription": "Standard text channel for messages",
+    "announcementChannel": "Announcement",
+    "announcementChannelDescription": "Only admins can write messages",
     "voiceChannel": "Voice Channel",
-    "generalChannel": "General"
+    "voiceChannelDescription": "Voice channel for voice chat",
+    "generalChannel": "General",
+    "errorCreating": "An error occurred during creation",
+    "deleteConfirmMessage": "Are you sure you want to delete {{name}}? This cannot be undone.",
+    "deleteServerConfirmMessage": "Are you sure you want to delete {{name}}? All channels and messages will be deleted."
   },
   "messages": {
     "typeMessage": "Type a message...",
@@ -95,6 +109,7 @@
     "reply": "Reply",
     "edit": "Edit Message",
     "delete": "Delete Message",
+    "deleteConfirm": "Are you sure you want to delete this message? This cannot be undone.",
     "react": "Add Reaction",
     "thread": "Thread",
     "pin": "Pin Message",
@@ -115,7 +130,35 @@
     "search": "Search conversations",
     "messageUser": "Message @{{user}}",
     "noConversations": "No conversations yet",
-    "startConversation": "Start a new conversation"
+    "startConversation": "Start a new conversation",
+    "loadingUser": "Loading user..."
+  },
+  "members": {
+    "title": "Members",
+    "noMembers": "No members",
+    "noUsersFound": "No users found",
+    "searchPlaceholder": "Search members"
+  },
+  "workspace": {
+    "title": "Workspace",
+    "createWorkspace": "Create Workspace",
+    "createNew": "Create new workspace",
+    "inviteMembers": "Invite Members",
+    "inviteTo": "Invite to {{workspace}}",
+    "createNewInvite": "Create new invite",
+    "manageMembers": "Manage Members",
+    "workspaceSettings": "Workspace Settings",
+    "welcome": "Welcome to {{workspace}}",
+    "welcomeMessage": "Create or join a workspace to get started.",
+    "selectChannel": "Select a channel from the sidebar to start chatting"
+  },
+  "invite": {
+    "title": "Invite",
+    "createInvite": "Create Invite",
+    "inviteLink": "Invite Link",
+    "copyLink": "Copy Link",
+    "remove": "Remove",
+    "activeInvites": "Active Invites"
   },
   "profile": {
     "title": "Profile",
@@ -128,13 +171,6 @@
     "lastName": "Last Name",
     "email": "Email",
     "role": "Role"
-  },
-  "workspace": {
-    "title": "Workspace",
-    "createWorkspace": "Create Workspace",
-    "inviteMembers": "Invite Members",
-    "manageMembers": "Manage Members",
-    "workspaceSettings": "Workspace Settings"
   },
   "auth": {
     "login": "Login",

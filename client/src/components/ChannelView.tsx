@@ -7,6 +7,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
 import { logger } from '../utils/logger';
 import { socketService } from '../services/socket';
@@ -32,6 +33,7 @@ interface ChannelViewProps {
 }
 
 export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
+  const { t } = useTranslation();
   const { channelId } = useParams<{ channelId: string }>();
   const navigate = useNavigate();
   const { currentChannel, setCurrentChannel, currentWorkspace } =
@@ -316,8 +318,8 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
       {/* Delete Message Confirmation Modal */}
       <DeleteConfirmModal
         isOpen={!!deleteMessageId}
-        title="Ta bort meddelande"
-        message="Är du säker på att du vill ta bort det här meddelandet? Detta kan inte ångras."
+        title={t('messages.delete')}
+        message={t('messages.deleteConfirm')}
         onConfirm={confirmDelete}
         onCancel={handleCancelDelete}
       />
