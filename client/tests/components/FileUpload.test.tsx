@@ -23,7 +23,9 @@ describe('FileUpload', () => {
     const onFileSelect = vi.fn();
     render(<FileUpload onFileSelect={onFileSelect} />);
 
-    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = document.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement;
     const file = new File(['test'], 'test.png', { type: 'image/png' });
 
     fireEvent.change(input, { target: { files: [file] } });
@@ -35,8 +37,10 @@ describe('FileUpload', () => {
     const onFileSelect = vi.fn();
     render(<FileUpload onFileSelect={onFileSelect} />);
 
-    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
-    
+    const input = document.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement;
+
     // Create a mock file larger than 25MB
     const largeBlob = new Blob([new ArrayBuffer(26 * 1024 * 1024)]);
     const file = new File([largeBlob], 'large.png', { type: 'image/png' });
@@ -44,7 +48,9 @@ describe('FileUpload', () => {
 
     fireEvent.change(input, { target: { files: [file] } });
 
-    expect(screen.getByText('Filen är för stor (max 25MB)')).toBeInTheDocument();
+    expect(
+      screen.getByText('Filen är för stor (max 25MB)')
+    ).toBeInTheDocument();
     expect(onFileSelect).not.toHaveBeenCalled();
   });
 
@@ -52,8 +58,12 @@ describe('FileUpload', () => {
     const onFileSelect = vi.fn();
     render(<FileUpload onFileSelect={onFileSelect} />);
 
-    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
-    const file = new File(['test'], 'test.exe', { type: 'application/x-executable' });
+    const input = document.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement;
+    const file = new File(['test'], 'test.exe', {
+      type: 'application/x-executable'
+    });
 
     fireEvent.change(input, { target: { files: [file] } });
 
@@ -107,7 +117,7 @@ describe('AttachmentPreview', () => {
 
     // Should show filename
     expect(screen.getByText('document.pdf')).toBeInTheDocument();
-    
+
     // Should show formatted file size
     expect(screen.getByText('2.0 MB')).toBeInTheDocument();
   });
