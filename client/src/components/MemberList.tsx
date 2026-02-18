@@ -55,9 +55,9 @@ export default function MemberList() {
       if (currentUser && !updatedMembers.some((u) => u.id === currentUser.id)) {
         const currentUserWithPresence = {
           ...currentUser,
-          presence: { 
-            status: 'ONLINE' as const, 
-            lastSeen: new Date().toISOString() 
+          presence: {
+            status: 'ONLINE' as const,
+            lastSeen: new Date().toISOString()
           }
         };
         return [currentUserWithPresence, ...updatedMembers];
@@ -84,7 +84,7 @@ export default function MemberList() {
                   lastSeen:
                     data.status === 'OFFLINE'
                       ? new Date().toISOString()
-                      : u.presence?.lastSeen ?? new Date().toISOString()
+                      : (u.presence?.lastSeen ?? new Date().toISOString())
                 }
               }
             : u

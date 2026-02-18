@@ -3,7 +3,11 @@ import { useVoiceStore } from '../../store/voiceStore';
 import { voiceService } from '../../services/voice.service';
 import { VoiceUserList } from './VoiceUserList';
 import { VoiceControls } from './VoiceControls';
-import { VoiceChannelIcon, VoiceConnectIcon, VoiceDisconnectIcon } from '../ui/Icons';
+import {
+  VoiceChannelIcon,
+  VoiceConnectIcon,
+  VoiceDisconnectIcon
+} from '../ui/Icons';
 import { VoiceLoader } from '../ui/VoiceLoader';
 
 interface VoiceChannelViewProps {
@@ -13,13 +17,12 @@ interface VoiceChannelViewProps {
 
 export function VoiceChannelView({
   channelId,
-  channelName,
+  channelName
 }: VoiceChannelViewProps) {
   const { isConnected, isConnecting, currentChannelId } = useVoiceStore();
   const [error, setError] = useState<string | null>(null);
 
-  const isInThisChannel =
-    isConnected && currentChannelId === channelId;
+  const isInThisChannel = isConnected && currentChannelId === channelId;
 
   const handleJoin = async () => {
     try {

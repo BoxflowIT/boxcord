@@ -256,14 +256,10 @@ export class DirectMessageService {
         cursor: { id: params.cursor },
         skip: 1
       }),
-      select: {
-        id: true,
-        channelId: true,
-        content: true,
-        authorId: true,
-        edited: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
+        author: {
+          select: { id: true, firstName: true, lastName: true, email: true }
+        },
         attachments: {
           select: {
             id: true,
@@ -325,6 +321,9 @@ export class DirectMessageService {
         content: input.content.trim()
       },
       include: {
+        author: {
+          select: { id: true, firstName: true, lastName: true, email: true }
+        },
         attachments: true,
         reactions: true
       }
@@ -372,6 +371,33 @@ export class DirectMessageService {
 
     await this.prisma.directMessage.delete({
       where: { id: messageId }
+    });
+  }
+
+  // Delete a DM channel (remove user's participation)
+  async deleteChannel(channelId: string, userId: string): Promise<void> {
+    // Verify user is a participant
+    const participant = await this.prisma.directMessageParticipant.findUnique({
+      where: {
+        channelId_userId: {
+          channelId,
+          userId
+        }
+      }
+    });
+
+    if (!participant) {
+      throw new NotFoundError('DM Channel', channelId);
+    }
+
+    // Delete user's participation (doesn't delete the channel for other user)
+    await this.prisma.directMessageParticipant.delete({
+      where: {
+        channelId_userId: {
+          channelId,
+          userId
+        }
+      }
     });
   }
 }

@@ -9,8 +9,15 @@ import { io, Socket } from 'socket.io-client';
 import { QueryClient } from '@tanstack/react-query';
 import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
+import { useDMCallStore } from '../store/dmCallStore';
 import { queryKeys } from '../hooks/useQuery';
-import type { Message, PaginatedMessages, Channel, User } from '../types';
+import type {
+  Message,
+  PaginatedMessages,
+  Channel,
+  User,
+  DMChannel
+} from '../types';
 import { logger } from '../utils/logger';
 import { playMessageNotification } from '../utils/notificationSound';
 import { useVoiceStore } from '../store/voiceStore';
@@ -22,6 +29,26 @@ let queryClient: QueryClient | null = null;
 
 export function setQueryClient(client: QueryClient) {
   queryClient = client;
+}
+
+// Helper: Handle WebRTC signal (answer/ice-candidate) for both channel and DM voice
+function handleWebRTCSignal(
+  fromUserId: string,
+  signalData: SimplePeer.SignalData,
+  signalType: 'answer' | 'candidate'
+): void {
+  logger.log(`[WEBRTC] Received ${signalType} from:`, fromUserId);
+
+  const store = useVoiceStore.getState();
+  const peer = store.peers.get(fromUserId);
+
+  if (peer) {
+    peer.signal(signalData);
+  } else {
+    logger.warn(
+      `[WEBRTC] No peer found for ${fromUserId} when receiving ${signalType}`
+    );
+  }
 }
 
 class SocketService {
@@ -92,6 +119,7 @@ class SocketService {
     // Register event listeners
     socket.on('connect', () => {
       this.connecting = false;
+      logger.log('[SOCKET] Connected! Socket ID:', socket.id);
       this.executePendingOperations();
     });
 
@@ -100,17 +128,21 @@ class SocketService {
       logger.error('Socket connection error:', error.message);
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', (reason) => {
       this.connecting = false;
+      logger.log('[SOCKET] Disconnected:', reason);
     });
 
     socket.connect();
 
-    // Only register event listeners once
+    // Only register event listeners once PER SOCKET INSTANCE
+    // Reset flag when socket is recreated (e.g., after disconnect)
     if (this.listenersRegistered) {
+      logger.log('[SOCKET] Listeners already registered, skipping');
       return;
     }
     this.listenersRegistered = true;
+    logger.log('[SOCKET] Registering event listeners...');
 
     // Message events - update React Query cache ONLY
     socket.on('message:new', (message: Message) => {
@@ -118,42 +150,61 @@ class SocketService {
       const currentWorkspaceId = useChatStore.getState().currentWorkspace?.id;
       const isOwnMessage = message.authorId === currentUserId;
 
+      // Check if user is currently viewing this channel (route: /chat/channels/:channelId)
+      const isViewingChannel = window.location.pathname.includes(
+        `/chat/channels/${message.channelId}`
+      );
+
       if (queryClient && message.channelId) {
-        const exactKey = queryKeys.messages(message.channelId, undefined);
-        const cacheData = queryClient.getQueryData<PaginatedMessages>(exactKey);
-
-        // If message is for a channel we're NOT viewing, force refetch channels list for unread badges
-        if (!cacheData) {
-          queryClient.refetchQueries({ queryKey: ['channels'] });
-
-          // Play sound ONLY if: 1) not own message, 2) not viewing channel, 3) in current workspace
-          // Check if message is from current workspace by finding channel in cache
-          if (!isOwnMessage && currentWorkspaceId) {
-            const channelsKey = queryKeys.channels(currentWorkspaceId);
-            const channels = queryClient.getQueryData<Channel[]>(channelsKey);
-            const isCurrentWorkspace = channels?.some(
-              (ch) => ch.id === message.channelId
-            );
-
-            if (isCurrentWorkspace) {
-              playMessageNotification();
+        // ONLY update message cache if user is actively viewing this channel
+        if (isViewingChannel) {
+          const exactKey = queryKeys.messages(message.channelId, undefined);
+          queryClient.setQueryData<PaginatedMessages>(exactKey, (old) => {
+            // If no existing cache, create new structure with this message
+            if (!old) {
+              return { items: [message], hasMore: false };
             }
-          }
-          return;
+            if (!old.items) {
+              return { ...old, items: [message] };
+            }
+            // Don't add duplicate
+            if (old.items.some((m) => m.id === message.id)) {
+              return old;
+            }
+            return { ...old, items: [...old.items, message] };
+          });
+        } else {
+          // Not viewing: invalidate ALL message queries for this channel (any cursor)
+          queryClient.invalidateQueries({
+            queryKey: ['messages', message.channelId],
+            exact: false // Match all queries that start with ['messages', channelId]
+          });
         }
 
-        // Update cache for currently open channel
-        queryClient.setQueryData<PaginatedMessages>(exactKey, (old) => {
-          if (!old || !old.items) {
-            return old ? { ...old, items: [message] } : old;
+        // Play sound if not own message AND not currently viewing this channel
+        if (!isOwnMessage && !isViewingChannel && currentWorkspaceId) {
+          const channelsKey = queryKeys.channels(currentWorkspaceId);
+          const channels = queryClient.getQueryData<Channel[]>(channelsKey);
+          const isCurrentWorkspace = channels?.some(
+            (ch) => ch.id === message.channelId
+          );
+
+          if (isCurrentWorkspace) {
+            playMessageNotification();
+            // Increment unreadCount in cache directly
+            queryClient.setQueryData<Channel[]>(channelsKey, (old) => {
+              if (!old) return old;
+              return old.map((ch) =>
+                ch.id === message.channelId
+                  ? { ...ch, unreadCount: (ch.unreadCount ?? 0) + 1 }
+                  : ch
+              );
+            });
           }
-          // Don't add duplicate
-          if (old.items.some((m) => m.id === message.id)) {
-            return old;
-          }
-          return { ...old, items: [...old.items, message] };
-        });
-        // No sound when viewing the channel (user is actively in the chat)
+        }
+
+        // If viewing and not own message, mark as read (badge stays 0)
+        // No change needed here since useMarkAsRead handles it
       }
     });
 
@@ -216,26 +267,34 @@ class SocketService {
     );
 
     // DM events - update React Query cache directly
-    this.socket.on('dm:new', (message: Message) => {
+    this.socket.on('dm:new', async (message: Message) => {
       const currentUserId = useAuthStore.getState().user?.id;
       const isOwnMessage = message.authorId === currentUserId;
 
+      // Check if user is currently viewing this DM (route: /chat/dm/:channelId)
+      const isViewingDM = window.location.pathname.includes(
+        `/chat/dm/${message.channelId}`
+      );
+
+      // Debug logging
+      console.log('[DM:NEW]', {
+        messageId: message.id,
+        channelId: message.channelId,
+        currentPath: window.location.pathname,
+        isViewingDM,
+        isOwnMessage
+      });
+
       if (queryClient && message.channelId) {
+        // ALWAYS update message cache directly (faster than invalidate + refetch)
         const dmKey = queryKeys.dmMessages(message.channelId, undefined);
-        const cacheData = queryClient.getQueryData<PaginatedMessages>(dmKey);
-
-        if (!cacheData) {
-          queryClient.refetchQueries({ queryKey: queryKeys.dmChannels });
-          // Play sound ONLY if: 1) not own message, 2) not viewing the DM
-          if (!isOwnMessage) {
-            playMessageNotification();
-          }
-          return;
-        }
-
         queryClient.setQueryData<PaginatedMessages>(dmKey, (old) => {
-          if (!old || !old.items) {
-            return old ? { ...old, items: [message] } : old;
+          // If no existing cache, create new structure with this message
+          if (!old) {
+            return { items: [message], hasMore: false };
+          }
+          if (!old.items) {
+            return { ...old, items: [message] };
           }
           if (old.items.some((m) => m.id === message.id)) {
             return old;
@@ -243,8 +302,61 @@ class SocketService {
           return { ...old, items: [...old.items, message] };
         });
 
-        queryClient.refetchQueries({ queryKey: queryKeys.dmChannels });
-        // No sound when viewing the DM (user is actively in the chat)
+        // Create lastMessage from the new message
+        const newLastMessage = {
+          content: message.content,
+          createdAt: message.createdAt
+        };
+
+        // If viewing this DM and not own message, mark as read immediately
+        if (isViewingDM && !isOwnMessage) {
+          try {
+            // Import api dynamically to avoid circular dependency
+            const { api } = await import('./api');
+            await api.markDMAsRead(message.channelId);
+            // Update unreadCount to 0 and lastMessage immediately in cache
+            queryClient.setQueryData<DMChannel[]>(
+              queryKeys.dmChannels,
+              (old) => {
+                if (!old) return old;
+                return old.map((ch) =>
+                  ch.id === message.channelId
+                    ? { ...ch, unreadCount: 0, lastMessage: newLastMessage }
+                    : ch
+                );
+              }
+            );
+            logger.log('[DM:NEW] Auto-marked as read, cache updated');
+          } catch (err) {
+            logger.error('[DM:NEW] Failed to auto-mark as read:', err);
+          }
+        } else if (!isOwnMessage) {
+          // Not viewing: increment unreadCount and update lastMessage in cache
+          queryClient.setQueryData<DMChannel[]>(queryKeys.dmChannels, (old) => {
+            if (!old) return old;
+            return old.map((ch) =>
+              ch.id === message.channelId
+                ? {
+                    ...ch,
+                    unreadCount: (ch.unreadCount ?? 0) + 1,
+                    lastMessage: newLastMessage
+                  }
+                : ch
+            );
+          });
+          // Play sound if not own message AND not currently viewing
+          playMessageNotification();
+        } else {
+          // Own message: update lastMessage but no unread change
+          queryClient.setQueryData<DMChannel[]>(queryKeys.dmChannels, (old) => {
+            if (!old) return old;
+            return old.map((ch) =>
+              ch.id === message.channelId
+                ? { ...ch, lastMessage: newLastMessage }
+                : ch
+            );
+          });
+        }
       }
 
       // Also notify any active DM handlers (legacy support)
@@ -295,6 +407,126 @@ class SocketService {
     this.socket.on('dm:typing', () => {
       // Handle DM typing indicator
     });
+
+    // ============================================
+    // DM VOICE CALL EVENTS
+    // ============================================
+
+    // Incoming DM call
+    this.socket.on(
+      'dm:call:incoming',
+      (data: {
+        channelId: string;
+        fromUserId: string;
+        caller: { id: string; name: string; email: string; avatarUrl?: string };
+      }) => {
+        logger.log('[DM_CALL] Incoming call from:', data.caller.name);
+
+        // Update call store with incoming call
+        useDMCallStore
+          .getState()
+          .receiveCall(data.channelId, data.fromUserId, data.caller.name);
+      }
+    );
+
+    // Call accepted
+    this.socket.on(
+      'dm:call:accepted',
+      async (data: { channelId: string; userId: string }) => {
+        logger.log('[DM_CALL] Call accepted by:', data.userId);
+
+        const callState = useDMCallStore.getState();
+        if (
+          callState.callState === 'calling' &&
+          callState.channelId === data.channelId
+        ) {
+          // Join WebRTC call (we're the initiator)
+          try {
+            await voiceService.joinDMCall(data.channelId);
+            callState.acceptCall();
+
+            // Create peer connection as initiator
+            const peer = voiceService.createPeer(data.userId);
+
+            // Send offer via socket
+            peer.on('signal', (signal: SimplePeer.SignalData) => {
+              this.emit('dm:webrtc:offer', {
+                channelId: data.channelId,
+                targetUserId: data.userId,
+                offer: signal
+              });
+            });
+          } catch (err) {
+            logger.error('Failed to join DM call:', err);
+            callState.reset();
+          }
+        }
+      }
+    );
+
+    // Call rejected
+    this.socket.on(
+      'dm:call:rejected',
+      (data: { channelId: string; userId: string }) => {
+        logger.log('[DM_CALL] Call rejected by:', data.userId);
+
+        const callState = useDMCallStore.getState();
+        if (callState.channelId === data.channelId) {
+          callState.reset();
+        }
+      }
+    );
+
+    // Call ended
+    this.socket.on(
+      'dm:call:ended',
+      async (data: { channelId: string; userId: string }) => {
+        logger.log('[DM_CALL] Call ended by:', data.userId);
+
+        const callState = useDMCallStore.getState();
+        if (callState.channelId === data.channelId) {
+          await voiceService.leaveDMCall();
+          callState.reset();
+        }
+      }
+    );
+
+    // DM WebRTC Offer
+    this.socket.on(
+      'dm:webrtc:offer',
+      (data: { fromUserId: string; offer: SimplePeer.SignalData }) => {
+        logger.log('[DM_WEBRTC] Received offer from:', data.fromUserId);
+
+        // Add peer (we are not the initiator)
+        const peer = voiceService.addPeer(data.fromUserId, data.offer);
+
+        // Send answer via socket
+        peer.on('signal', (signal: SimplePeer.SignalData) => {
+          const callState = useDMCallStore.getState();
+          this.emit('dm:webrtc:answer', {
+            channelId: callState.channelId,
+            targetUserId: data.fromUserId,
+            answer: signal
+          });
+        });
+      }
+    );
+
+    // DM WebRTC Answer
+    this.socket.on(
+      'dm:webrtc:answer',
+      (data: { fromUserId: string; answer: SimplePeer.SignalData }) => {
+        handleWebRTCSignal(data.fromUserId, data.answer, 'answer');
+      }
+    );
+
+    // DM WebRTC ICE Candidate
+    this.socket.on(
+      'dm:webrtc:ice-candidate',
+      (data: { fromUserId: string; candidate: SimplePeer.SignalData }) => {
+        handleWebRTCSignal(data.fromUserId, data.candidate, 'candidate');
+      }
+    );
 
     // Channel lifecycle events - update React Query cache
     this.socket.on('channel:created', (channel: Channel) => {
@@ -413,61 +645,69 @@ class SocketService {
     // ============================================
 
     // When another user joins the voice channel
-    this.socket.on('voice:user-joined', (data: { userId: string; sessionId: string }) => {
-      const store = useVoiceStore.getState();
-      logger.log('User joined voice:', data.userId);
-      
-      store.addUser({
-        userId: data.userId,
-        sessionId: data.sessionId,
-        isMuted: false,
-        isDeafened: false,
-        isSpeaking: false,
-      });
+    this.socket.on(
+      'voice:user-joined',
+      (data: { userId: string; sessionId: string }) => {
+        const store = useVoiceStore.getState();
+        logger.log('User joined voice:', data.userId);
 
-      // Initiate peer connection (we are the initiator)
-      voiceService.createPeer(data.userId);
-    });
+        store.addUser({
+          userId: data.userId,
+          sessionId: data.sessionId,
+          isMuted: false,
+          isDeafened: false,
+          isSpeaking: false
+        });
+
+        // Initiate peer connection (we are the initiator)
+        voiceService.createPeer(data.userId);
+      }
+    );
 
     // When another user leaves the voice channel
     this.socket.on('voice:user-left', (data: { userId: string }) => {
       const store = useVoiceStore.getState();
       logger.log('User left voice:', data.userId);
-      
+
       store.removeUser(data.userId);
       store.removePeer(data.userId);
 
       // Remove audio element
-      const audioElement = document.getElementById(`voice-audio-${data.userId}`);
+      const audioElement = document.getElementById(
+        `voice-audio-${data.userId}`
+      );
       audioElement?.remove();
     });
 
     // When another user updates their voice state (mute/deafen/speaking)
-    this.socket.on('voice:state-changed', (data: { 
-      userId: string; 
-      isMuted?: boolean; 
-      isDeafened?: boolean; 
-      isSpeaking?: boolean; 
-    }) => {
-      const store = useVoiceStore.getState();
-      logger.log('Voice state changed:', data);
-      
-      store.updateUserState(data.userId, {
-        isMuted: data.isMuted,
-        isDeafened: data.isDeafened,
-        isSpeaking: data.isSpeaking,
-      });
-    });
+    this.socket.on(
+      'voice:state-changed',
+      (data: {
+        userId: string;
+        isMuted?: boolean;
+        isDeafened?: boolean;
+        isSpeaking?: boolean;
+      }) => {
+        const store = useVoiceStore.getState();
+        logger.log('Voice state changed:', data);
+
+        store.updateUserState(data.userId, {
+          isMuted: data.isMuted,
+          isDeafened: data.isDeafened,
+          isSpeaking: data.isSpeaking
+        });
+      }
+    );
 
     // When voice channel users are updated (for sidebar display)
     this.socket.on('voice:users-updated', (data: { channelId: string }) => {
       logger.log('Voice users updated:', data.channelId);
-      
+
       // Refetch immediately instead of just invalidating
       if (queryClient) {
-        queryClient.refetchQueries({ 
+        queryClient.refetchQueries({
           queryKey: ['voiceChannelUsers', data.channelId],
-          exact: true 
+          exact: true
         });
       }
     });
@@ -477,41 +717,36 @@ class SocketService {
     // ============================================
 
     // Receive WebRTC offer from peer
-    this.socket.on('webrtc:offer', (data: { fromUserId: string; offer: SimplePeer.SignalData }) => {
-      logger.log('Received WebRTC offer from:', data.fromUserId);
-      
-      // Add peer (we are not the initiator)
-      voiceService.addPeer(data.fromUserId, data.offer);
-    });
+    this.socket.on(
+      'webrtc:offer',
+      (data: { fromUserId: string; offer: SimplePeer.SignalData }) => {
+        logger.log('Received WebRTC offer from:', data.fromUserId);
+
+        // Add peer (we are not the initiator)
+        voiceService.addPeer(data.fromUserId, data.offer);
+      }
+    );
 
     // Receive WebRTC answer from peer
-    this.socket.on('webrtc:answer', (data: { fromUserId: string; answer: SimplePeer.SignalData }) => {
-      logger.log('Received WebRTC answer from:', data.fromUserId);
-      
-      const store = useVoiceStore.getState();
-      const peer = store.peers.get(data.fromUserId);
-      
-      if (peer) {
-        peer.signal(data.answer);
+    this.socket.on(
+      'webrtc:answer',
+      (data: { fromUserId: string; answer: SimplePeer.SignalData }) => {
+        handleWebRTCSignal(data.fromUserId, data.answer, 'answer');
       }
-    });
+    );
 
     // Receive ICE candidate from peer
-    this.socket.on('webrtc:ice-candidate', (data: { fromUserId: string; candidate: SimplePeer.SignalData }) => {
-      logger.log('Received ICE candidate from:', data.fromUserId);
-      
-      const store = useVoiceStore.getState();
-      const peer = store.peers.get(data.fromUserId);
-      
-      if (peer) {
-        peer.signal(data.candidate);
+    this.socket.on(
+      'webrtc:ice-candidate',
+      (data: { fromUserId: string; candidate: SimplePeer.SignalData }) => {
+        handleWebRTCSignal(data.fromUserId, data.candidate, 'candidate');
       }
-    });
+    );
 
     // Peer disconnected
     this.socket.on('webrtc:peer-disconnected', (data: { userId: string }) => {
       logger.log('Peer disconnected:', data.userId);
-      
+
       const store = useVoiceStore.getState();
       store.removePeer(data.userId);
     });
@@ -699,7 +934,8 @@ export const socketService = socketServiceInstance;
 if (import.meta.hot) {
   import.meta.hot.accept();
   import.meta.hot.dispose((data) => {
-    socketServiceInstance.cleanup();
+    // Don't cleanup socket on HMR - just preserve the instance
+    // This keeps the connection alive and maintains listeners
     data.socketService = socketServiceInstance;
   });
 }

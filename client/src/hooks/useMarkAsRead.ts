@@ -7,6 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { logger } from '../utils/logger';
 import { queryKeys } from './useQuery';
+import type { Channel, DMChannel } from '../types';
 
 interface UseMarkAsReadOptions {
   channelId: string | undefined;
@@ -26,22 +27,45 @@ export function useMarkAsRead({
     // For channels, also need workspaceId; for DMs it's optional
     if (!isDM && !workspaceId) return;
 
+    logger.log(
+      `[MARK_AS_READ] Starting timer for ${isDM ? 'DM' : 'channel'}: ${channelId}`
+    );
+
     const timer = setTimeout(async () => {
       try {
+        logger.log(
+          `[MARK_AS_READ] Marking ${isDM ? 'DM' : 'channel'} as read: ${channelId}`
+        );
         if (isDM) {
           await api.markDMAsRead(channelId);
-          // Invalidate DM channels query to refresh unread counts
-          queryClient.invalidateQueries({ queryKey: queryKeys.dmChannels });
+          // Update cache directly with setQueryData (avoids race conditions with refetch)
+          queryClient.setQueryData<DMChannel[]>(queryKeys.dmChannels, (old) => {
+            if (!old) return old;
+            return old.map((ch) =>
+              ch.id === channelId ? { ...ch, unreadCount: 0 } : ch
+            );
+          });
+          logger.log(`[MARK_AS_READ] DM marked as read, cache updated`);
         } else {
           await api.post(`/channels/${channelId}/read`);
-          // Invalidate channels query to refresh unread counts
-          queryClient.invalidateQueries({
-            queryKey: queryKeys.channels(workspaceId!)
-          });
+          // Update cache directly with setQueryData (avoids race conditions with refetch)
+          queryClient.setQueryData<Channel[]>(
+            queryKeys.channels(workspaceId!),
+            (old) => {
+              if (!old) return old;
+              return old.map((ch) =>
+                ch.id === channelId ? { ...ch, unreadCount: 0 } : ch
+              );
+            }
+          );
+          logger.log(`[MARK_AS_READ] Channel marked as read, cache updated`);
         }
       } catch (error) {
         // Silently ignore errors for non-existent channels (foreign key constraint violations)
-        if (error instanceof Error && error.message.includes('Foreign key constraint')) {
+        if (
+          error instanceof Error &&
+          error.message.includes('Foreign key constraint')
+        ) {
           // Channel doesn't exist in database anymore, ignore
           return;
         }
@@ -49,6 +73,9 @@ export function useMarkAsRead({
       }
     }, 1000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      logger.log(`[MARK_AS_READ] Cleanup - clearing timer for: ${channelId}`);
+      clearTimeout(timer);
+    };
   }, [channelId, workspaceId, isDM, queryClient]);
 }

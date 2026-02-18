@@ -5,12 +5,15 @@
 // NO duplicate storage in local state
 // ============================================================================
 
-import { useRef, useState, useMemo, useCallback } from 'react';
+import { useRef, useState, useMemo, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { logger } from '../utils/logger';
 import { socketService } from '../services/socket';
+import { voiceService } from '../services/voice.service';
+import { startRingingSound, stopRingingSound } from '../utils/voiceSound';
 import { useAuthStore } from '../store/auth';
+import { useDMCallStore } from '../store/dmCallStore';
 import { useDMMessages, useDMChannels } from '../hooks/useQuery';
 import { useMessageActions } from '../hooks/useMessageActions';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -21,12 +24,15 @@ import { useSocketRoom } from '../hooks/useSocketRoom';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import { LoadingState } from './ui/LoadingSpinner';
 import { DMHeader } from './dm/DMHeader';
+import { DMCallOverlay } from './dm/DMCallOverlay';
 import MessageListDisplay from './channel/MessageListDisplay';
 import DMInputSection from './dm/DMInputSection';
 
 export default function DMView() {
   const { channelId } = useParams<{ channelId: string }>();
   const { user } = useAuthStore();
+  const { callState, startCall, acceptCall, rejectCall, endCall, reset } =
+    useDMCallStore();
 
   // Read appearance settings (reactive state with auto-sync)
   const [compactMode] = useLocalStorage('compactMode', false);
@@ -67,6 +73,100 @@ export default function DMView() {
   const messagesEndRef = useMessageScroll(messages);
   useMarkAsRead({ channelId, isDM: true });
   useSocketRoom(channelId, 'dm');
+
+  // Handle call ringing sound and timeout
+  useEffect(() => {
+    // Start ringing sound for outgoing (calling) or incoming (ringing) calls
+    if (callState === 'calling' || callState === 'ringing') {
+      startRingingSound();
+
+      // Auto-cancel call after 45 seconds if not answered
+      const timeout = setTimeout(() => {
+        if (callState === 'calling' || callState === 'ringing') {
+          logger.log('[DM_CALL] Call timeout - auto canceling');
+          stopRingingSound();
+
+          // Cancel/reject call
+          if (channelId) {
+            if (callState === 'calling') {
+              // Caller cancels
+              socketService.getSocket()?.emit('dm:call:end', { channelId });
+            } else {
+              // Receiver auto-rejects
+              socketService.getSocket()?.emit('dm:call:reject', { channelId });
+            }
+          }
+          reset();
+        }
+      }, 45000); // 45 seconds
+
+      return () => {
+        clearTimeout(timeout);
+        stopRingingSound();
+      };
+    } else {
+      // Stop ringing when call is answered, rejected, or ended
+      stopRingingSound();
+    }
+  }, [callState, channelId, reset]);
+
+  // DM Voice Call handlers (in order of dependencies)
+  const handleEndCall = useCallback(async () => {
+    if (!channelId) return;
+    endCall();
+
+    try {
+      await voiceService.leaveDMCall();
+      socketService.getSocket()?.emit('dm:call:end', { channelId });
+    } catch (err) {
+      logger.error('Failed to end DM call:', err);
+    } finally {
+      reset();
+    }
+  }, [channelId, endCall, reset]);
+
+  const handleStartCall = useCallback(() => {
+    if (!channelId || !otherUser) return;
+
+    if (callState === 'idle') {
+      // Start new call
+      startCall(
+        channelId,
+        otherUser.id,
+        otherUser.firstName ?? otherUser.email
+      );
+      socketService
+        .getSocket()
+        ?.emit('dm:call:start', { channelId, targetUserId: otherUser.id });
+    } else if (callState === 'ringing') {
+      // Answer incoming call (handled in overlay)
+      return;
+    } else {
+      // End ongoing call
+      handleEndCall();
+    }
+  }, [channelId, otherUser, callState, startCall, handleEndCall]);
+
+  const handleAcceptCall = useCallback(async () => {
+    if (!channelId || !otherUser) return;
+    acceptCall();
+
+    // Join WebRTC call (reuse voice service logic)
+    try {
+      await voiceService.joinDMCall(channelId);
+      // Join dm-voice room for WebRTC signaling
+      socketService.getSocket()?.emit('dm:call:accept', { channelId });
+    } catch (err) {
+      logger.error('Failed to join DM call:', err);
+      reset();
+    }
+  }, [channelId, otherUser, acceptCall, reset]);
+
+  const handleRejectCall = useCallback(() => {
+    if (!channelId) return;
+    rejectCall();
+    socketService.getSocket()?.emit('dm:call:reject', { channelId });
+  }, [channelId, rejectCall]);
 
   // Stable callbacks for message actions
   const handleEditDM = useCallback(
@@ -191,10 +291,22 @@ export default function DMView() {
     <div className="flex flex-col h-full">
       {/* Header */}
       <DMHeader
+        channelId={channelId!}
+        otherUserId={otherUser.id}
         userName={otherUser.firstName ?? otherUser.email}
         userInitial={(
           otherUser.firstName?.charAt(0) ?? otherUser.email.charAt(0)
         ).toUpperCase()}
+        avatarUrl={otherUser.avatarUrl}
+        isOnline={true} // TODO: Add online status
+        onStartCall={handleStartCall}
+      />
+
+      {/* DM Call Overlay */}
+      <DMCallOverlay
+        onAccept={handleAcceptCall}
+        onReject={handleRejectCall}
+        onEndCall={handleEndCall}
       />
 
       {/* Messages */}

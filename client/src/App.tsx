@@ -45,6 +45,38 @@ function App() {
     );
   }, []);
 
+  // Initialize AudioContext on first user interaction (fix browser autoplay policy)
+  useEffect(() => {
+    const initAudioContext = async () => {
+      // Create a temporary AudioContext to initialize it with user gesture
+      const AudioContextClass =
+        window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContextClass) {
+        try {
+          const ctx = new AudioContextClass();
+          if (ctx.state === 'suspended') {
+            await ctx.resume();
+          }
+          console.log('✅ AudioContext initialized after user interaction');
+          // Remove listener after first successful init
+          document.removeEventListener('click', initAudioContext);
+          document.removeEventListener('keydown', initAudioContext);
+        } catch (err) {
+          console.error('Failed to initialize AudioContext:', err);
+        }
+      }
+    };
+
+    // Listen for first user interaction
+    document.addEventListener('click', initAudioContext, { once: true });
+    document.addEventListener('keydown', initAudioContext, { once: true });
+
+    return () => {
+      document.removeEventListener('click', initAudioContext);
+      document.removeEventListener('keydown', initAudioContext);
+    };
+  }, []);
+
   // User is authenticated if token exists in store
   const isAuthenticated = !!token;
 

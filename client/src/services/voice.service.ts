@@ -138,75 +138,96 @@ class VoiceService {
   }
 
   // ============================================================================
+  // PRIVATE AUDIO SETUP (DRY - shared by channel and DM voice)
+  // ============================================================================
+
+  /**
+   * Sets up audio for voice calls (both channel and DM)
+   * Handles: getUserMedia, RNNoise, audio pipeline, VAD
+   */
+  private async setupAudioForCall(): Promise<void> {
+    const store = useVoiceStore.getState();
+    const audioSettings = useAudioSettingsStore.getState();
+
+    // Get user media
+    this.localStream = await navigator.mediaDevices.getUserMedia({
+      audio: getAudioConstraints()
+    });
+
+    // Apply RNNoise AI noise suppression if enabled
+    if (audioSettings.useRNNoise && isRNNoiseAvailable()) {
+      console.log(
+        '🤖 Applying RNNoise AI to voice call (browser noise suppression OFF)...'
+      );
+      this.originalLocalStream = this.localStream;
+      try {
+        if (!this.audioContext) {
+          this.audioContext = new AudioContext();
+        }
+        this.localStream = await applyRNNoise(
+          this.originalLocalStream,
+          this.audioContext
+        );
+        console.log('✅ RNNoise AI active in voice call');
+      } catch (error) {
+        console.error('❌ RNNoise failed, using original stream:', error);
+        this.localStream = this.originalLocalStream;
+        this.originalLocalStream = null;
+      }
+    } else if (audioSettings.useRNNoise) {
+      console.warn('⚠️ RNNoise enabled but not available');
+      this.originalLocalStream = null;
+    } else {
+      console.log('ℹ️ Using browser native noise suppression for voice call');
+      this.originalLocalStream = null;
+    }
+
+    // Setup audio context
+    if (!this.audioContext) {
+      this.audioContext = new AudioContext();
+    }
+
+    // Create centralized audio processing pipeline
+    this.audioPipeline = createAudioPipeline(
+      this.audioContext,
+      this.localStream,
+      {
+        outputGain: audioSettings.inputVolume * 2.0
+        // Note: inputSensitivity controls VAD threshold dynamically, not pipeline config
+      }
+    );
+
+    // Replace localStream with processed stream from pipeline
+    // This ensures voice calls use the processed audio (with VAD gate, compression, etc.)
+    this.localStream = this.audioPipeline.destination.stream;
+
+    console.log('🎙️ Discord-quality voice processing active');
+
+    // Apply mute state if already muted
+    if (store.isMuted) {
+      this.setMicrophoneMuted(true);
+    }
+
+    store.setLocalStream(this.localStream);
+
+    // Start voice activity detection
+    this.startVoiceActivityDetection();
+  }
+
+  // ============================================================================
   // PUBLIC API
   // ============================================================================
 
   async joinChannel(channelId: string): Promise<void> {
     const store = useVoiceStore.getState();
-    const audioSettings = useAudioSettingsStore.getState();
 
     try {
       store.setConnecting(true);
 
-      this.localStream = await navigator.mediaDevices.getUserMedia({
-        audio: getAudioConstraints()
-      });
+      // Setup audio (shared logic)
+      await this.setupAudioForCall();
 
-      // Apply RNNoise AI noise suppression if enabled
-      if (audioSettings.useRNNoise && isRNNoiseAvailable()) {
-        console.log(
-          '🤖 Applying RNNoise AI to voice call (browser noise suppression OFF)...'
-        );
-        this.originalLocalStream = this.localStream; // Save original stream reference
-        try {
-          if (!this.audioContext) {
-            this.audioContext = new AudioContext();
-          }
-          this.localStream = await applyRNNoise(
-            this.originalLocalStream,
-            this.audioContext
-          );
-          console.log('✅ RNNoise AI active in voice call');
-        } catch (error) {
-          console.error('❌ RNNoise failed, using original stream:', error);
-          this.localStream = this.originalLocalStream;
-          this.originalLocalStream = null;
-        }
-      } else if (audioSettings.useRNNoise) {
-        console.warn('⚠️ RNNoise enabled but not available');
-        this.originalLocalStream = null;
-      } else {
-        console.log('ℹ️ Using browser native noise suppression for voice call');
-        this.originalLocalStream = null;
-      }
-
-      // Setup audio context
-      if (!this.audioContext) {
-        this.audioContext = new AudioContext();
-      }
-
-      // Create centralized audio processing pipeline
-      this.audioPipeline = createAudioPipeline(
-        this.audioContext,
-        this.localStream,
-        {
-          outputGain: audioSettings.inputVolume * 2.0
-          // Note: inputSensitivity controls VAD threshold dynamically, not pipeline config
-        }
-      );
-
-      // Replace localStream with processed stream from pipeline
-      // This ensures voice calls use the processed audio (with VAD gate, compression, etc.)
-      this.localStream = this.audioPipeline.destination.stream;
-
-      console.log('🎙️ Discord-quality voice processing active');
-
-      if (store.isMuted) {
-        this.setMicrophoneMuted(true);
-      }
-
-      store.setLocalStream(this.localStream);
-
+      // Channel-specific: API session
       const { data: session } = await this.apiRequest<
         ApiResponse<VoiceSession>
       >(`/api/v1/voice/channels/${channelId}/join`, { method: 'POST' });
@@ -215,7 +236,7 @@ class VoiceService {
       store.setConnected(true);
       store.setConnecting(false);
 
-      this.startVoiceActivityDetection();
+      // Channel-specific: Socket event
       this.socket?.emit(SOCKET_EVENTS.VOICE_JOIN, { channelId });
 
       // Play join sound
@@ -252,6 +273,42 @@ class VoiceService {
       console.error('Failed to leave voice channel:', error);
     }
   }
+
+  // ============================================================================
+  // DM VOICE CALLS
+  // ============================================================================
+
+  async joinDMCall(channelId: string): Promise<void> {
+    try {
+      // Setup audio (shared logic with channel voice)
+      await this.setupAudioForCall();
+
+      // Play join sound (same as channel voice)
+      playVoiceJoinSound();
+
+      console.log('✅ Joined DM voice call:', channelId);
+    } catch (error) {
+      console.error('Failed to join DM call:', error);
+      this.cleanup();
+      throw error;
+    }
+  }
+
+  async leaveDMCall(): Promise<void> {
+    try {
+      // Play leave sound BEFORE cleanup (so audio context is still active)
+      playVoiceLeaveSound();
+
+      // Simply cleanup - no API call needed for DM
+      this.cleanup();
+      console.log('✅ Left DM voice call');
+    } catch (error) {
+      console.error('Failed to leave DM call:', error);
+    }
+  }
+
+  // ============================================================================
+  // STATE MANAGEMENT  // ============================================================================
 
   async toggleMute(): Promise<void> {
     const store = useVoiceStore.getState();
@@ -422,7 +479,10 @@ class VoiceService {
         if (normalizedLevel > VAD_THRESHOLD) {
           // Voice detected - increment counter
           this.vadFrameCounter++;
-          if (this.vadFrameCounter >= VAD_ACTIVATE_THRESHOLD && !this.vadActive) {
+          if (
+            this.vadFrameCounter >= VAD_ACTIVATE_THRESHOLD &&
+            !this.vadActive
+          ) {
             this.vadActive = true;
             this.audioPipeline.vadGate.gain.setTargetAtTime(1.0, 0, 0.01);
           }
@@ -439,7 +499,10 @@ class VoiceService {
         }
 
         // Clamp frame counter to prevent overflow
-        this.vadFrameCounter = Math.max(-VAD_DEACTIVATE_THRESHOLD - 5, Math.min(VAD_ACTIVATE_THRESHOLD + 5, this.vadFrameCounter));
+        this.vadFrameCounter = Math.max(
+          -VAD_DEACTIVATE_THRESHOLD - 5,
+          Math.min(VAD_ACTIVATE_THRESHOLD + 5, this.vadFrameCounter)
+        );
 
         // Update speaking indicator
         if (isSpeaking !== this.lastSpeakingState) {

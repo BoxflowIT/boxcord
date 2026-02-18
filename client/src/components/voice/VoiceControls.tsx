@@ -1,6 +1,12 @@
 import { useVoiceStore } from '../../store/voiceStore';
 import { voiceService } from '../../services/voice.service';
-import { MicIcon, MicOffIcon, HeadphonesIcon, HeadphonesOffIcon, VoiceDisconnectIcon } from '../ui/Icons';
+import {
+  MicIcon,
+  MicOffIcon,
+  HeadphonesIcon,
+  HeadphonesOffIcon,
+  VoiceDisconnectIcon
+} from '../ui/Icons';
 
 export function VoiceControls() {
   const { isMuted, isDeafened, isConnected } = useVoiceStore();
@@ -55,7 +61,11 @@ export function VoiceControls() {
           }`}
           title={isDeafened ? 'Undeafen' : 'Deafen'}
         >
-          {isDeafened ? <HeadphonesOffIcon size="md" /> : <HeadphonesIcon size="md" />}
+          {isDeafened ? (
+            <HeadphonesOffIcon size="md" />
+          ) : (
+            <HeadphonesIcon size="md" />
+          )}
         </button>
       </div>
 

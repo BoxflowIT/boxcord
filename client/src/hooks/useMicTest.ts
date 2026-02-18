@@ -43,7 +43,7 @@ export function useMicTest(rnnoiseReady: boolean): UseMicTestReturn {
     useRNNoise,
     inputVolume,
     outputVolume,
-    inputSensitivity,
+    // Note: inputSensitivity not used here - only affects VAD in voice calls
     isTesting,
     setIsTesting
   } = useAudioSettingsStore();
