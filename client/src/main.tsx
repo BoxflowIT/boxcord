@@ -2,6 +2,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './index.css';
+import './i18n/config'; // Initialize i18n
 import { initSentry } from './config/sentry';
 import { initializeRNNoise } from './utils/rnnoise';
 
