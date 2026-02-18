@@ -1,5 +1,6 @@
 // Image Upload Component for Server Icons
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { IMAGE_UPLOAD } from '../constants/upload';
 
 interface ImageUploadProps {
@@ -13,6 +14,7 @@ export default function ImageUpload({
   onImageSelect,
   onImageRemove
 }: ImageUploadProps) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -116,7 +118,7 @@ export default function ImageUpload({
               onClick={handleRemove}
               className="px-4 py-2 bg-boxflow-hover hover:bg-red-600 text-boxflow-light hover:text-white rounded-md text-sm transition-colors"
             >
-              Ta bort
+              {t('common.remove')}
             </button>
           )}
         </div>

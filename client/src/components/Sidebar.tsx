@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
 import { signOut } from '../services/cognito';
@@ -36,6 +37,7 @@ export default function Sidebar({
   onSettingsClick
 }: SidebarProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // UI State from Zustand
   const {
@@ -257,13 +259,13 @@ export default function Sidebar({
           {/* Workspace header with invite button */}
           <div className="panel-header flex items-center justify-between">
             <h2 className="text-heading truncate flex-1">
-              {currentWorkspace?.name ?? 'Välj workspace'}
+              {currentWorkspace?.name ?? t('workspace.title')}
             </h2>
             {currentWorkspace && (
               <button
                 onClick={() => setShowInviteModal(true)}
                 className="p-1.5 hover:bg-boxflow-hover rounded transition-colors text-boxflow-muted hover:text-white"
-                title="Bjud in"
+                title={t('common.invite')}
               >
                 <UserPlusIcon size="md" className="w-5 h-5" />
               </button>
@@ -303,18 +305,18 @@ export default function Sidebar({
       {/* Modals */}
       <CreateModal
         isOpen={showNewWorkspace}
-        title="Skapa server"
-        placeholder="Server namn"
-        createButtonText="Skapa"
+        title={t('channels.createServer')}
+        placeholder={t('channels.name')}
+        createButtonText={t('common.create')}
         onCreate={handleCreateWorkspace}
         onCancel={() => setShowNewWorkspace(false)}
       />
 
       <CreateModal
         isOpen={showNewChannel}
-        title="Skapa kanal"
-        placeholder="kanal-namn"
-        createButtonText="Skapa"
+        title={t('channels.create')}
+        placeholder={t('channels.name')}
+        createButtonText={t('common.create')}
         onCreate={handleCreateChannel}
         onCancel={() => setShowNewChannel(false)}
         showChannelType={true}
@@ -322,7 +324,7 @@ export default function Sidebar({
 
       <EditModal
         isOpen={editChannelModal.isOpen}
-        title="Redigera kanal"
+        title={t('channels.edit')}
         name={editChannelModal.data?.name || ''}
         description={editChannelModal.data?.description || ''}
         onSave={handleSaveChannel}
@@ -331,7 +333,7 @@ export default function Sidebar({
 
       <EditModal
         isOpen={editWorkspaceModal.isOpen}
-        title="Redigera server"
+        title={t('channels.editServer')}
         name={editWorkspaceModal.data?.name || ''}
         description={editWorkspaceModal.data?.description || ''}
         iconUrl={editWorkspaceModal.data?.iconUrl || ''}
@@ -342,27 +344,20 @@ export default function Sidebar({
 
       <DeleteConfirmModal
         isOpen={deleteChannelModal.isOpen}
-        title="Ta bort kanal"
-        message={
-          <>
-            Är du säker på att du vill ta bort{' '}
-            <strong>{deleteChannelModal.data?.name}</strong>?
-          </>
-        }
+        title={t('channels.delete')}
+        message={t('channels.deleteConfirmMessage', { 
+          name: deleteChannelModal.data?.name || '' 
+        })}
         onConfirm={handleDeleteConfirmChannel}
         onCancel={deleteChannelModal.close}
       />
 
       <DeleteConfirmModal
         isOpen={deleteWorkspaceModal.isOpen}
-        title="Ta bort server"
-        message={
-          <>
-            Är du säker på att du vill ta bort{' '}
-            <strong>{deleteWorkspaceModal.data?.name}</strong>? Alla kanaler och
-            meddelanden kommer att raderas.
-          </>
-        }
+        title={t('channels.deleteServer')}
+        message={t('channels.deleteServerConfirmMessage', { 
+          name: deleteWorkspaceModal.data?.name || '' 
+        })}
         onConfirm={handleDeleteConfirmWorkspace}
         onCancel={deleteWorkspaceModal.close}
       />

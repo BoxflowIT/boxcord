@@ -1,5 +1,6 @@
 // Create Modal for Channel or Workspace
 import { useState, useCallback, KeyboardEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -17,7 +18,7 @@ type ChannelType = 'TEXT' | 'ANNOUNCEMENT' | 'VOICE';
 interface ChannelTypeOption {
   type: ChannelType;
   label: string;
-  description: string;
+  descriptionKey: string;
   icon: React.ComponentType<{ size?: 'sm' | 'md' | 'lg'; className?: string }>;
 }
 
@@ -25,19 +26,19 @@ const CHANNEL_TYPES: ChannelTypeOption[] = [
   {
     type: 'TEXT',
     label: 'Text',
-    description: 'Standard textkanal för meddelanden',
+    descriptionKey: 'channels.textChannelDescription',
     icon: HashIcon
   },
   {
     type: 'ANNOUNCEMENT',
     label: 'Announcement',
-    description: 'Endast admins kan skriva meddelanden',
+    descriptionKey: 'channels.announcementChannelDescription',
     icon: AnnouncementIcon
   },
   {
     type: 'VOICE',
     label: 'Voice',
-    description: 'Röstkanal för voice chat',
+    descriptionKey: 'channels.voiceChannelDescription',
     icon: VoiceChannelIcon
   }
 ];
@@ -56,11 +57,12 @@ export default function CreateModal({
   isOpen,
   title,
   placeholder,
-  createButtonText = 'Skapa',
+  createButtonText = 'Create',
   onCreate,
   onCancel,
   showChannelType = false
 }: CreateModalProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [channelType, setChannelType] = useState<ChannelType>('TEXT');
   const [error, setError] = useState<string | null>(null);
@@ -84,12 +86,12 @@ export default function CreateModal({
       resetState();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Ett fel uppstod vid skapandet'
+        err instanceof Error ? err.message : t('channels.errorCreating')
       );
     } finally {
       setIsCreating(false);
     }
-  }, [name, channelType, showChannelType, onCreate, resetState]);
+  }, [name, channelType, showChannelType, onCreate, resetState, t]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
@@ -145,10 +147,10 @@ export default function CreateModal({
 
         <DialogFooter>
           <Button variant="ghost" onClick={onCancel} disabled={isCreating}>
-            Avbryt
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleCreate} disabled={!name.trim() || isCreating}>
-            {isCreating ? 'Skapar...' : createButtonText}
+            {isCreating ? t('common.creating') : createButtonText}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -168,10 +170,12 @@ function ChannelTypeSelector({
   onChange,
   disabled
 }: ChannelTypeSelectorProps) {
+  const { t } = useTranslation();
+  
   return (
     <div>
       <label className="block text-sm font-medium text-gray-300 mb-2">
-        Kanaltyp
+        {t('channels.title')}
       </label>
       <div className="space-y-2">
         {CHANNEL_TYPES.map((option) => {
@@ -204,7 +208,7 @@ function ChannelTypeSelector({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium">{option.label}</p>
-                <p className="text-xs text-gray-400">{option.description}</p>
+                <p className="text-xs text-gray-400">{t(option.descriptionKey)}</p>
               </div>
               {isSelected && (
                 <div className="flex-shrink-0 w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center">

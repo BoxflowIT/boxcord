@@ -1,5 +1,6 @@
 // Member List Component - Shows online/offline users grouped by role
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/auth';
 import { useChatStore } from '../store/chat';
 import { useWorkspaceMembers } from '../hooks/useQuery';
@@ -19,6 +20,7 @@ import MemberListItem from './member/MemberListItem';
 import type { UserStatus } from './member/StatusIndicator';
 
 export default function MemberList() {
+  const { t } = useTranslation();
   const { user: currentUser } = useAuthStore();
   const { currentWorkspace } = useChatStore();
   const { data: workspaceMembers } = useWorkspaceMembers(currentWorkspace?.id);
@@ -127,7 +129,7 @@ export default function MemberList() {
       <div className="panel-content">
         {filteredUsers.length === 0 ? (
           <div className="text-muted px-2">
-            {searchQuery ? 'Inga användare hittades' : 'Inga medlemmar'}
+            {searchQuery ? t('members.noUsersFound') : t('members.noMembers')}
           </div>
         ) : (
           roleOrder.map((role) => {

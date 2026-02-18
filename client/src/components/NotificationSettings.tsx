@@ -1,9 +1,11 @@
 // Push Notification Settings Component
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { pushService } from '../services/push';
 import ToggleSwitch from './ui/ToggleSwitch';
 
 export default function NotificationSettings() {
+  const { t } = useTranslation();
   const [supported, setSupported] = useState(true);
   const [permission, setPermission] =
     useState<NotificationPermission>('default');
@@ -82,8 +84,8 @@ export default function NotificationSettings() {
         checked={subscribed}
         onChange={handleToggle}
         disabled={loading}
-        label="Push-notiser"
-        description="Få notiser om nya meddelanden och omnämnanden"
+        label={t('notifications.title')}
+        description={t('notifications.description')}
       />
 
       {subscribed && (

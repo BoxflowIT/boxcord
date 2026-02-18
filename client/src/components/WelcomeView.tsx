@@ -3,10 +3,12 @@ import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
 import { useCreateWorkspace } from '../hooks/useQuery';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChatIcon } from './ui/Icons';
 import { logger } from '../utils/logger';
 
 export default function WelcomeView() {
+  const { t } = useTranslation();
   const { currentWorkspace, setCurrentWorkspace } = useChatStore();
   const { user } = useAuthStore();
   const [showCreate, setShowCreate] = useState(false);
@@ -42,13 +44,13 @@ export default function WelcomeView() {
         </div>
 
         <h1 className="text-2xl font-bold text-white mb-2">
-          Välkommen till Boxcord, {user?.firstName ?? 'du'}!
+          {t('workspace.welcome', { workspace: user?.firstName ?? 'Boxcord' })}
         </h1>
 
         <p className="text-discord-light mb-8">
           {currentWorkspace
-            ? 'Välj en kanal i sidofältet för att börja chatta med ditt team.'
-            : 'Skapa eller gå med i en workspace för att komma igång.'}
+            ? t('workspace.selectChannel')
+            : t('workspace.welcomeMessage')}
         </p>
 
         {!currentWorkspace && (
@@ -62,7 +64,7 @@ export default function WelcomeView() {
                   onKeyDown={(e) =>
                     e.key === 'Enter' && handleCreateWorkspace()
                   }
-                  placeholder="Workspace namn, t.ex. Boxflow Team"
+                  placeholder={t('workspace.createNew')}
                   className="form-input-large"
                   autoFocus
                 />
@@ -71,14 +73,14 @@ export default function WelcomeView() {
                     onClick={() => setShowCreate(false)}
                     className="btn-secondary flex-1"
                   >
-                    Avbryt
+                    {t('common.cancel')}
                   </button>
                   <button
                     onClick={handleCreateWorkspace}
                     disabled={creating || !workspaceName.trim()}
                     className="btn-primary flex-1"
                   >
-                    {creating ? 'Skapar...' : 'Skapa'}
+                    {creating ? t('common.creating') : t('common.create')}
                   </button>
                 </div>
               </div>
@@ -87,7 +89,7 @@ export default function WelcomeView() {
                 onClick={() => setShowCreate(true)}
                 className="btn-primary px-6 py-3"
               >
-                Skapa ny workspace
+                {t('workspace.createWorkspace')}
               </button>
             )}
           </>

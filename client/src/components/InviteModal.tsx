@@ -1,5 +1,6 @@
 // Invite Modal - Create and manage workspace invites
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { api } from '../services/api';
@@ -18,6 +19,7 @@ export default function InviteModal({
   workspaceName,
   onClose
 }: InviteModalProps) {
+  const { t } = useTranslation();
   const [invites, setInvites] = useState<WorkspaceInvite[]>([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -79,18 +81,18 @@ export default function InviteModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Bjud in till {workspaceName}</DialogTitle>
+          <DialogTitle>{t('workspace.inviteTo', { workspace: workspaceName })}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Create new invite button */}
           <Button onClick={createInvite} disabled={creating} className="w-full">
-            {creating ? 'Skapar...' : 'Skapa ny inbjudan'}
+            {creating ? t('common.creating') : t('workspace.createNewInvite')}
           </Button>
 
           {/* Existing invites */}
           {loading ? (
-            <p className="text-center text-boxflow-muted py-4">Laddar...</p>
+            <p className="text-center text-boxflow-muted py-4">{t('common.loading')}</p>
           ) : invites.length === 0 ? (
             <p className="text-center text-boxflow-muted py-4">
               Inga aktiva inbjudningar
@@ -127,7 +129,7 @@ export default function InviteModal({
                       onClick={() => deleteInvite(invite.id)}
                       className="text-red-400 hover:text-red-300"
                     >
-                      Ta bort
+                      {t('common.remove')}
                     </Button>
                   </div>
                 </div>

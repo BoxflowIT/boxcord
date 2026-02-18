@@ -1,5 +1,6 @@
 // Delete Confirmation Modal
 import { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -23,10 +24,12 @@ export default function DeleteConfirmModal({
   isOpen,
   title,
   message,
-  confirmText = 'Ta bort',
+  confirmText,
   onConfirm,
   onCancel
 }: DeleteConfirmModalProps) {
+  const { t } = useTranslation();
+  
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
       <DialogContent>
@@ -36,10 +39,10 @@ export default function DeleteConfirmModal({
         </DialogHeader>
         <DialogFooter>
           <Button variant="ghost" onClick={onCancel}>
-            Avbryt
+            {t('common.cancel')}
           </Button>
           <Button variant="destructive" onClick={onConfirm}>
-            {confirmText}
+            {confirmText || t('common.delete')}
           </Button>
         </DialogFooter>
       </DialogContent>
