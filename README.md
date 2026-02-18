@@ -64,15 +64,44 @@ yarn dev
 
 Frontend runs on <http://localhost:5173>
 
+## Production Deployment
+
+For production setup including Sentry, S3, email notifications, and scaling:
+
+**📖 See:** [docs/PRODUCTION.md](docs/PRODUCTION.md)
+
+Quick production checklist:
+- ✅ Configure all required environment variables
+- ✅ Enable HTTPS
+- ✅ Setup Sentry for error tracking
+- ✅ Configure S3 for file storage (multi-server)
+- ✅ Enable Redis caching
+- ✅ Setup monitoring and alerts
+
 ## Environment Variables
 
 Copy `.env.example` to `.env` and fill in:
 
 ```env
+# Required
 DATABASE_URL="postgresql://boxcord:boxcord@localhost:5433/boxcord"
 PORT=3001
 JWT_SECRET=your-secret-key-here
 BOXTIME_API_URL=http://localhost:3000
+COGNITO_USER_POOL_ID=eu-north-1_xxxxx
+COGNITO_CLIENT_ID=your-client-id
+VAPID_PUBLIC_KEY=your-vapid-key
+VAPID_PRIVATE_KEY=your-vapid-key
+VAPID_SUBJECT=mailto:support@boxflow.com
+
+# Optional - Production Features
+REDIS_URL=redis://localhost:6379           # Enable Redis caching
+SENTRY_DSN=https://...                     # Backend error tracking
+AWS_S3_BUCKET=boxcord-uploads              # Cloud file storage
+AWS_ACCESS_KEY_ID=...                      # AWS credentials
+AWS_SECRET_ACCESS_KEY=...
+SENDGRID_API_KEY=...                       # Email notifications
+SENDGRID_FROM_EMAIL=noreply@boxflow.com
 ```
 
 ## Boxtime Integration
@@ -125,6 +154,71 @@ const users = await boxtimeService.searchUsers('john', token);
 | GET    | /api/v1/users/search | Search users          |
 
 ## Code Quality
+
+### Production Features 🚀
+
+All production-ready features are **optional** and automatically enabled when configured:
+
+#### **Structured Logging** (Pino)
+- JSON logs in production, pretty-printed in development
+- Automatic request/response logging
+- Slow query detection
+- Error context tracking
+
+#### **Error Tracking** (Sentry)
+- Backend error monitoring and alerting
+- Performance monitoring with traces
+- User context and breadcrumbs
+- Automatic error deduplication
+
+**Setup:**
+```bash
+# Set in .env
+SENTRY_DSN=https://your-sentry-dsn@sentry.io/project
+```
+
+#### **Cloud File Storage** (AWS S3)
+- Scalable file uploads for multi-server deployments
+- Automatic file cleanup
+- Presigned URLs for secure access
+- Falls back to local storage if not configured
+
+**Setup:**
+```bash
+# Set in .env
+AWS_REGION=eu-north-1
+AWS_ACCESS_KEY_ID=your-key
+AWS_SECRET_ACCESS_KEY=your-secret
+AWS_S3_BUCKET=boxcord-uploads
+```
+
+#### **Email Notifications** (SendGrid)
+- @mention notifications
+- Direct message alerts
+- Workspace invitations
+- Customizable templates
+
+**Setup:**
+```bash
+# Set in .env
+SENDGRID_API_KEY=your-sendgrid-key
+SENDGRID_FROM_EMAIL=noreply@boxflow.com
+```
+
+#### **Graceful Shutdown**
+- Handles SIGTERM/SIGINT for Kubernetes/Railway
+- Closes connections cleanly
+- Prevents data loss during deployments
+- 30-second timeout for force exit
+
+#### **CI/CD Pipeline**
+- GitHub Actions for automated testing
+- TypeScript type checking
+- ESLint for both backend and frontend
+- npm audit security scanning
+- Automatic Railway deployment on main branch
+
+**See:** [.github/workflows/ci.yml](.github/workflows/ci.yml)
 
 ### Recent Improvements
 

@@ -7,6 +7,10 @@ import { Server } from 'socket.io';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
+import { config, isProduction } from '../../00-core/config.js';
+import { logger } from '../../00-core/logger.js';
+import { setupGracefulShutdown } from '../../00-core/shutdown.js';
+import { initSentry } from '../../03-infrastructure/sentry.js';
 import {
   connectDatabase,
   prisma
@@ -22,16 +26,18 @@ import { registerRoutes } from './routes/index.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const PORT = parseInt(process.env.PORT ?? '3001', 10);
-const HOST = process.env.HOST ?? '0.0.0.0';
-const isProd = process.env.NODE_ENV === 'production';
+const PORT = parseInt(config.PORT, 10);
+const HOST = config.HOST;
 
 async function main() {
+  // Initialize Sentry for error tracking
+  initSentry();
+
+  logger.info('Starting Boxcord API...');
+
   // Create Fastify instance
   const app = Fastify({
-    logger: {
-      level: process.env.NODE_ENV === 'production' ? 'info' : 'debug'
-    },
+    logger: false, // Use Pino directly instead
     // Connection pooling
     connectionTimeout: 10000,
     keepAliveTimeout: 65000,
@@ -46,7 +52,7 @@ async function main() {
   });
 
   // Security headers (helmet)
-  if (isProd) {
+  if (isProduction) {
     await app.register(securityPlugin);
   }
 
@@ -79,7 +85,7 @@ async function main() {
   await registerRoutes(app);
 
   // Serve frontend in production
-  if (isProd) {
+  if (isProduction) {
     const clientDistPath = join(__dirname, '../../../client/dist');
     await app.register(fastifyStatic, {
       root: clientDistPath,
@@ -104,9 +110,9 @@ async function main() {
   // Warmup database connection (prevent initial 500 errors)
   try {
     await prisma.$queryRaw`SELECT 1`;
-    app.log.info('🔥 Database connection warmed up');
+    logger.info('🔥 Database connection warmed up');
   } catch (err) {
-    app.log.warn(
+    logger.warn(
       `Database warmup failed, but continuing... ${err instanceof Error ? err.message : String(err)}`
     );
   }
@@ -132,22 +138,14 @@ async function main() {
 
   // Start server
   await app.listen({ port: PORT, host: HOST });
-  app.log.info(`🚀 Boxcord API running at http://${HOST}:${PORT}`);
-  app.log.info('🔌 WebSocket server ready');
+  logger.info(`🚀 Boxcord API running at http://${HOST}:${PORT}`);
+  logger.info('🔌 WebSocket server ready');
 
-  // Graceful shutdown
-  const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
-  signals.forEach((signal) => {
-    process.on(signal, async () => {
-      app.log.info(`${signal} received, shutting down...`);
-      io.close();
-      await app.close();
-      process.exit(0);
-    });
-  });
+  // Setup graceful shutdown handlers
+  setupGracefulShutdown({ server: app, io });
 }
 
 main().catch((err) => {
-  console.error('Failed to start server:', err);
+  logger.error({ error: err }, 'Failed to start server');
   process.exit(1);
 });
