@@ -15,8 +15,8 @@ interface DMHeaderProps {
 }
 
 export function DMHeader({
-  channelId,
-  otherUserId,
+  channelId: _channelId,
+  otherUserId: _otherUserId,
   userName,
   userInitial,
   avatarUrl,
@@ -24,6 +24,9 @@ export function DMHeader({
   isOnline = false,
   onStartCall
 }: DMHeaderProps) {
+  // Note: channelId and otherUserId are available for future use
+  void _channelId;
+  void _otherUserId;
   const { callState } = useDMCallStore();
   const isInCall =
     callState === 'connected' ||
