@@ -9,6 +9,7 @@ import SettingsHeader from './settings/SettingsHeader';
 import NotificationsTab from './settings/NotificationsTab';
 import VoiceAudioTab from './settings/VoiceAudioTab';
 import AppearanceTab from './settings/AppearanceTab';
+import { LanguageTab } from './settings/LanguageTab';
 import AboutTab from './settings/AboutTab';
 
 interface SettingsModalProps {
@@ -61,6 +62,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 onMessageGroupingToggle={handlers.onMessageGroupingToggle}
               />
             )}
+
+            {activeTab === 'language' && <LanguageTab />}
 
             {activeTab === 'about' && <AboutTab />}
           </div>
