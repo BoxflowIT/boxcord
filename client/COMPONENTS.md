@@ -5,6 +5,7 @@ This is documentation for all small, reusable components in the Boxcord project.
 ## 🎨 Code Quality
 
 **Recent Refactoring Achievement:**
+
 - ✅ All 61 components migrated from template literals to `cn()` utility
 - ✅ Consistent className composition across entire codebase
 - ✅ Improved code readability and maintainability
@@ -12,6 +13,7 @@ This is documentation for all small, reusable components in the Boxcord project.
 - ✅ 34/34 tests passing (100% coverage)
 
 **Pattern Used:**
+
 ```typescript
 // Before:
 className={`base ${condition ? 'true' : 'false'} ${className}`}
@@ -52,7 +54,9 @@ client/src/components/
 ## 💬 Message Components
 
 ### MessageAvatar
+
 Displays user profile picture or initials.
+
 ```tsx
 <MessageAvatar 
   avatarUrl={user.avatarUrl}
@@ -63,7 +67,9 @@ Displays user profile picture or initials.
 ```
 
 ### MessageHeader
+
 Shows author name, timestamp, and "edited" badge.
+
 ```tsx
 <MessageHeader 
   authorName="John Doe"
@@ -74,7 +80,9 @@ Shows author name, timestamp, and "edited" badge.
 ```
 
 ### MessageContent
+
 Displays message text and attachments.
+
 ```tsx
 <MessageContent 
   content="Hello world!"
@@ -85,7 +93,9 @@ Displays message text and attachments.
 ```
 
 ### MessageReactionBubbles
+
 Shows reaction bubbles under messages.
+
 ```tsx
 <MessageReactionBubbles 
   reactions={[{ emoji: '👍', count: 5, hasReacted: true }]}
@@ -94,7 +104,9 @@ Shows reaction bubbles under messages.
 ```
 
 ### MessageActions
+
 Hover bar with quick reactions and edit/delete buttons.
+
 ```tsx
 <MessageActions 
   onQuickReaction={(emoji) => handleReaction(emoji)}
@@ -105,7 +117,9 @@ Hover bar with quick reactions and edit/delete buttons.
 ```
 
 ### MessageEditForm
+
 Form for editing messages.
+
 ```tsx
 <MessageEditForm 
   value={editContent}
@@ -120,7 +134,9 @@ Form for editing messages.
 ## 📢 Channel Components
 
 ### ChannelHeader
+
 Header with channel name and description.
+
 ```tsx
 <ChannelHeader 
   channelName="general"
@@ -130,7 +146,9 @@ Header with channel name and description.
 ```
 
 ### MessageList
+
 Container for messages with loading and scroll.
+
 ```tsx
 <MessageList 
   loading={false}
@@ -141,7 +159,9 @@ Container for messages with loading and scroll.
 ```
 
 ### MessageInput
+
 Input area for writing messages.
+
 ```tsx
 <MessageInput 
   value={input}
@@ -155,7 +175,9 @@ Input area for writing messages.
 ```
 
 ### BotResponse
+
 Displays ephemeral bot responses.
+
 ```tsx
 <BotResponse 
   content="Command executed!"
@@ -165,7 +187,9 @@ Displays ephemeral bot responses.
 ```
 
 ### ChannelIcon
+
 Icons for channel types (text/voice/announcement).
+
 ```tsx
 <ChannelIcon 
   type="text"
@@ -174,7 +198,9 @@ Icons for channel types (text/voice/announcement).
 ```
 
 ### UnreadBadge
+
 Badge for unread messages.
+
 ```tsx
 <UnreadBadge 
   count={42}
@@ -185,7 +211,9 @@ Badge for unread messages.
 ```
 
 ### TypingIndicator
+
 Shows who is typing.
+
 ```tsx
 <TypingIndicator 
   users={['Anna', 'Erik']}
@@ -194,7 +222,9 @@ Shows who is typing.
 ```
 
 ### ChannelName
+
 Displays channel name with icon.
+
 ```tsx
 <ChannelName 
   name="general"
@@ -205,7 +235,9 @@ Displays channel name with icon.
 ```
 
 ### MessageComposer
+
 Complete message input with mentions, slash commands, emojis, and file uploads.
+
 ```tsx
 <MessageComposer 
   channelId="channel-123"
@@ -221,7 +253,9 @@ Complete message input with mentions, slash commands, emojis, and file uploads.
 ## 🔖 Sidebar Components
 
 ### WorkspaceHeader
+
 Header with workspace name and dropdown.
+
 ```tsx
 <WorkspaceHeader 
   name="My Team"
@@ -231,7 +265,9 @@ Header with workspace name and dropdown.
 ```
 
 ### WorkspaceList
+
 List of workspace icons in sidebar.
+
 ```tsx
 <WorkspaceList 
   workspaces={workspaces}
@@ -243,7 +279,9 @@ List of workspace icons in sidebar.
 ```
 
 ### ChannelListItem
+
 A channel item in the list.
+
 ```tsx
 <ChannelListItem 
   id="channel-1"
@@ -256,7 +294,9 @@ A channel item in the list.
 ```
 
 ### SectionHeader
+
 Header for sections with + button.
+
 ```tsx
 <SectionHeader 
   title="Text Channels"
@@ -268,7 +308,9 @@ Header for sections with + button.
 ## 💌 DM Components
 
 ### DMChannelItem
+
 A DM item in the list.
+
 ```tsx
 <DMChannelItem 
   id="dm-1"
@@ -283,7 +325,9 @@ A DM item in the list.
 ```
 
 ### DMHeader
+
 Header for DM conversations.
+
 ```tsx
 <DMHeader 
   userName="John Doe"
@@ -297,7 +341,9 @@ Header for DM conversations.
 ## 📝 Form Components
 
 ### TextInput
+
 Reusable text input.
+
 ```tsx
 <TextInput 
   label="Channel name"
@@ -310,7 +356,9 @@ Reusable text input.
 ```
 
 ### TextArea
+
 Reusable textarea.
+
 ```tsx
 <TextArea 
   label="Description"
@@ -322,7 +370,9 @@ Reusable textarea.
 ```
 
 ### Button
+
 Reusable button with variants.
+
 ```tsx
 <Button 
   variant="primary"
@@ -339,7 +389,9 @@ Variants: `primary`, `secondary`, `danger`, `ghost`
 Sizes: `sm`, `md`, `lg`
 
 ### FormGroup
+
 Groups form fields with spacing.
+
 ```tsx
 <FormGroup spacing="md">
   <TextInput label="Name" />
@@ -349,7 +401,9 @@ Groups form fields with spacing.
 ```
 
 ### SelectInput
+
 Dropdown menu for selecting options.
+
 ```tsx
 <SelectInput 
   label="Choose role"
@@ -365,7 +419,9 @@ Dropdown menu for selecting options.
 ```
 
 ### CheckboxInput
+
 Checkbox with label and description.
+
 ```tsx
 <CheckboxInput 
   checked={acceptTerms}
@@ -377,7 +433,9 @@ Checkbox with label and description.
 ```
 
 ### FileInputButton
+
 Button for file upload.
+
 ```tsx
 <FileInputButton 
   onFileSelect={handleFileUpload}
@@ -390,7 +448,9 @@ Button for file upload.
 ```
 
 ### SliderInput
+
 Slider for numeric values.
+
 ```tsx
 <SliderInput 
   value={volume}
@@ -404,7 +464,9 @@ Slider for numeric values.
 ```
 
 ### ColorPicker
+
 Color picker with preset colors.
+
 ```tsx
 <ColorPicker 
   value={color}
@@ -415,7 +477,9 @@ Color picker with preset colors.
 ```
 
 ### ResourceForm
+
 Generic form for creating/editing resources (channels, workspaces).
+
 ```tsx
 <ResourceForm 
   type="channel"
@@ -429,7 +493,9 @@ Generic form for creating/editing resources (channels, workspaces).
 ## 🎨 UI Components
 
 ### Avatar
+
 Profile image or initials in a circle.
+
 ```tsx
 <Avatar 
   size="md"
@@ -443,7 +509,9 @@ Profile image or initials in a circle.
 Sizes: `xs`, `sm`, `md`, `lg`, `xl`
 
 ### AvatarGroup
+
 Stack of overlapping avatars.
+
 ```tsx
 <AvatarGroup 
   users={members}
@@ -453,7 +521,9 @@ Stack of overlapping avatars.
 ```
 
 ### AvatarWithStatus
+
 Avatar with online status indicator.
+
 ```tsx
 <AvatarWithStatus 
   src={user.avatarUrl}
@@ -465,7 +535,9 @@ Avatar with online status indicator.
 ```
 
 ### AvatarUpload
+
 Avatar with upload overlay.
+
 ```tsx
 <AvatarUpload 
   src={avatarUrl}
@@ -478,7 +550,9 @@ Avatar with upload overlay.
 ```
 
 ### Badge
+
 Small badge for counts or labels.
+
 ```tsx
 <Badge 
   variant="primary"
@@ -490,7 +564,9 @@ Small badge for counts or labels.
 ```
 
 ### Card
+
 Container with border and shadow.
+
 ```tsx
 <Card 
   variant="default"
@@ -504,7 +580,9 @@ Container with border and shadow.
 ```
 
 ### Modal
+
 Full-screen modal overlay.
+
 ```tsx
 <Modal 
   open={showModal}
@@ -517,7 +595,9 @@ Full-screen modal overlay.
 ```
 
 ### Dialog
+
 Centered dialog box.
+
 ```tsx
 <Dialog 
   open={showDialog}
@@ -535,7 +615,9 @@ Centered dialog box.
 ```
 
 ### Tooltip
+
 Hover tooltip wrapper.
+
 ```tsx
 <Tooltip 
   content="Click to edit"
@@ -546,7 +628,9 @@ Hover tooltip wrapper.
 ```
 
 ### Spinner / LoadingSpinner
+
 Loading indicator.
+
 ```tsx
 <LoadingSpinner 
   size="md"
@@ -556,7 +640,9 @@ Loading indicator.
 ```
 
 ### Tabs
+
 Tab navigation.
+
 ```tsx
 <Tabs 
   tabs={[
@@ -570,7 +656,9 @@ Tab navigation.
 ```
 
 ### Toggle
+
 Toggle switch.
+
 ```tsx
 <Toggle 
   enabled={notificationsOn}
@@ -580,7 +668,9 @@ Toggle switch.
 ```
 
 ### Dropdown
+
 Dropdown menu.
+
 ```tsx
 <Dropdown 
   trigger={<button>Options</button>}
@@ -595,7 +685,9 @@ Dropdown menu.
 ## 🔔 Notification Components
 
 ### Toast
+
 Temporary notification toast.
+
 ```tsx
 <Toast 
   message="Changes saved!"
@@ -606,7 +698,9 @@ Temporary notification toast.
 ```
 
 ### ToastContainer
+
 Container for managing multiple toasts.
+
 ```tsx
 <ToastContainer 
   position="bottom-right"
@@ -615,7 +709,9 @@ Container for managing multiple toasts.
 ```
 
 ### AlertBanner
+
 Prominent alert banner.
+
 ```tsx
 <AlertBanner 
   type="warning"
@@ -628,7 +724,9 @@ Prominent alert banner.
 ```
 
 ### NotificationBadge
+
 Badge with notification count.
+
 ```tsx
 <NotificationBadge 
   count={12}
@@ -643,7 +741,9 @@ Badge with notification count.
 ## 👥 Member Components
 
 ### MemberItem
+
 Single member in list.
+
 ```tsx
 <MemberItem 
   user={user}
@@ -654,7 +754,9 @@ Single member in list.
 ```
 
 ### MemberRoleTag
+
 Shows member's role.
+
 ```tsx
 <MemberRoleTag 
   role="ADMIN"
@@ -663,7 +765,9 @@ Shows member's role.
 ```
 
 ### StatusIndicator
+
 Online status indicator.
+
 ```tsx
 <StatusIndicator 
   status="online"
@@ -673,7 +777,9 @@ Online status indicator.
 ```
 
 ### RoleBadge
+
 Badge displaying user role.
+
 ```tsx
 <RoleBadge 
   role="ADMIN"
@@ -683,7 +789,9 @@ Badge displaying user role.
 ```
 
 ### RoleSelector
+
 Dropdown for selecting user role.
+
 ```tsx
 <RoleSelector 
   value={role}
@@ -696,7 +804,9 @@ Dropdown for selecting user role.
 ## 🎯 Action Components
 
 ### ActionButton
+
 Button with icon for actions.
+
 ```tsx
 <ActionButton 
   icon={<EditIcon />}
@@ -708,7 +818,9 @@ Button with icon for actions.
 ```
 
 ### ActionMenu
+
 Menu with multiple actions.
+
 ```tsx
 <ActionMenu 
   trigger={<IconButton icon={<DotsIcon />} />}
@@ -720,7 +832,9 @@ Menu with multiple actions.
 ```
 
 ### ConfirmButton
+
 Button that requires confirmation.
+
 ```tsx
 <ConfirmButton 
   onConfirm={handleDelete}
@@ -732,7 +846,9 @@ Button that requires confirmation.
 ```
 
 ### EditDeleteActions
+
 Quick edit/delete action buttons.
+
 ```tsx
 <EditDeleteActions 
   onEdit={handleEdit}
@@ -745,7 +861,9 @@ Quick edit/delete action buttons.
 ## 📦 Container Components
 
 ### Panel
+
 Content panel with optional header.
+
 ```tsx
 <Panel 
   title="Settings"
@@ -758,7 +876,9 @@ Content panel with optional header.
 ```
 
 ### SplitView
+
 Two-panel split layout.
+
 ```tsx
 <SplitView 
   left={<Sidebar />}
@@ -769,7 +889,9 @@ Two-panel split layout.
 ```
 
 ### ListContainer
+
 Container for lists with header and footer.
+
 ```tsx
 <ListContainer 
   header={<ListHeader title="Channels" onAdd={handleAdd} />}
@@ -784,7 +906,9 @@ Container for lists with header and footer.
 ## 📋 List Components
 
 ### ListHeader
+
 Header for lists with title and actions.
+
 ```tsx
 <ListHeader 
   title="Members"
@@ -796,7 +920,9 @@ Header for lists with title and actions.
 ```
 
 ### ListItem
+
 Generic list item.
+
 ```tsx
 <ListItem 
   icon={<UserIcon />}
@@ -808,7 +934,9 @@ Generic list item.
 ```
 
 ### EmptyState
+
 Shows when list is empty.
+
 ```tsx
 <EmptyState 
   icon={<InboxIcon />}
@@ -821,7 +949,9 @@ Shows when list is empty.
 ## 🔧 Utility Components
 
 ### Skeleton
+
 Loading placeholder.
+
 ```tsx
 <Skeleton 
   variant="text"
@@ -834,7 +964,9 @@ Loading placeholder.
 Variants: `text`, `circular`, `rectangular`
 
 ### ScrollArea
+
 Custom scrollable container.
+
 ```tsx
 <ScrollArea 
   maxHeight="500px"
@@ -845,7 +977,9 @@ Custom scrollable container.
 ```
 
 ### Timestamp
+
 Formats time display.
+
 ```tsx
 <Timestamp 
   date={message.createdAt}
@@ -859,7 +993,9 @@ Formats: `relative`, `absolute`, `calendar`
 ## 🎭 Menu Components
 
 ### MenuItem
+
 Single menu item.
+
 ```tsx
 <MenuItem 
   icon={<Icon />}
@@ -871,13 +1007,17 @@ Single menu item.
 ```
 
 ### MenuDivider
+
 Divider in menu.
+
 ```tsx
 <MenuDivider />
 ```
 
 ### DropdownMenu
+
 Complete dropdown menu.
+
 ```tsx
 <DropdownMenu 
   trigger={<button>Menu</button>}
@@ -889,7 +1029,9 @@ Complete dropdown menu.
 ```
 
 ### ContextMenu
+
 Right-click context menu.
+
 ```tsx
 <ContextMenu 
   items={[
@@ -904,7 +1046,9 @@ Right-click context menu.
 ## 🏢 Workspace Components
 
 ### WorkspaceIcon
+
 Workspace avatar/icon.
+
 ```tsx
 <WorkspaceIcon 
   name="My Team"
@@ -915,7 +1059,9 @@ Workspace avatar/icon.
 ```
 
 ### WorkspaceCard
+
 Card showing workspace info.
+
 ```tsx
 <WorkspaceCard 
   workspace={workspace}
@@ -925,7 +1071,9 @@ Card showing workspace info.
 ```
 
 ### WorkspaceSwitcher
+
 Dropdown for switching workspaces.
+
 ```tsx
 <WorkspaceSwitcher 
   workspaces={workspaces}
@@ -935,7 +1083,9 @@ Dropdown for switching workspaces.
 ```
 
 ### CreateWorkspaceButton
+
 Button to create new workspace.
+
 ```tsx
 <CreateWorkspaceButton 
   onClick={() => setShowCreate(true)}
@@ -946,7 +1096,9 @@ Button to create new workspace.
 ## 👤 User Components
 
 ### UserAvatarInfo
+
 Avatar with name and status.
+
 ```tsx
 <UserAvatarInfo 
   user={user}
@@ -957,7 +1109,9 @@ Avatar with name and status.
 ```
 
 ### UserProfileCard
+
 Card with user info.
+
 ```tsx
 <UserProfileCard 
   user={user}
@@ -969,7 +1123,9 @@ Card with user info.
 ## 🎬 Layout Components
 
 ### Divider
+
 Visual separator.
+
 ```tsx
 <Divider 
   orientation="horizontal"
@@ -979,7 +1135,9 @@ Visual separator.
 ```
 
 ### SpinnerOverlay
+
 Full-screen loading overlay.
+
 ```tsx
 <SpinnerOverlay 
   visible={loading}
@@ -1020,6 +1178,7 @@ import { MessageAvatar } from '../components/message';
 **Total new components:** 68+
 
 **By category:**
+
 - Message: 6 components
 - Channel: 4 components
 - Sidebar: 4 components
@@ -1045,6 +1204,7 @@ import { MessageAvatar } from '../components/message';
 - UI: 9+ components
 
 **Expected code reduction:**
+
 - ProfileModal: 462L → ~150L (-67%)
 - SettingsModal: 312L → ~150L (-52%)
 - MemberList: 249L → ~120L (-52%)
@@ -1055,6 +1215,7 @@ import { MessageAvatar } from '../components/message';
 **Total expected savings:** ~1,200+ lines of duplicate code!
 
 **Code quality improvements:**
+
 - ✅ Consistent `cn()` usage across all components
 - ✅ No template literals in className props
 - ✅ Clean, maintainable conditional classes
@@ -1062,6 +1223,7 @@ import { MessageAvatar } from '../components/message';
 - ✅ 100% test coverage maintained
 
 **New capabilities:**
+
 - Workspace management super simple
 - Consistent user display everywhere
 - Reusable actions for edit/delete

@@ -3,7 +3,9 @@ import { z } from 'zod';
 // Environment schema validation
 const envSchema = z.object({
   // Server
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  NODE_ENV: z
+    .enum(['development', 'production', 'test'])
+    .default('development'),
   PORT: z.string().default('3001'),
   HOST: z.string().default('0.0.0.0'),
 
@@ -45,7 +47,7 @@ const envSchema = z.object({
 
   // SendGrid (optional)
   SENDGRID_API_KEY: z.string().optional(),
-  SENDGRID_FROM_EMAIL: z.string().email().optional(),
+  SENDGRID_FROM_EMAIL: z.string().email().optional()
 });
 
 // Validate environment variables
@@ -78,5 +80,5 @@ export const features = {
   sentry: !!config.SENTRY_DSN,
   swagger: config.SWAGGER_ENABLED,
   s3: !!(config.AWS_S3_BUCKET && config.AWS_ACCESS_KEY_ID),
-  email: !!config.SENDGRID_API_KEY,
+  email: !!config.SENDGRID_API_KEY
 };

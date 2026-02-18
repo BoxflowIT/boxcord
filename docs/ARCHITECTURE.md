@@ -85,7 +85,8 @@ If error: Rollback optimistic update
 
 ## 🔄 Data Flow Comparison
 
-### ❌ OLD WAY (Polling / Refetch):
+### ❌ OLD WAY (Polling / Refetch)
+
 ```
 Initial load:    HTTP GET /messages
 After 60s:       HTTP GET /messages  (automatic refetch)
@@ -100,7 +101,8 @@ Result:
 - Server load increases
 ```
 
-### ✅ NEW WAY (WebSocket-First):
+### ✅ NEW WAY (WebSocket-First)
+
 ```
 Initial load:    HTTP GET /messages  (ONE TIME)
 After that:      WebSocket events only
@@ -124,6 +126,7 @@ Result:
 ## 🎨 React Query Cache Strategy
 
 ### **Messages:**
+
 ```typescript
 staleTime: Infinity  // Never considered stale
 gcTime: 10min        // Keep in memory for 10min after unmount
@@ -131,12 +134,14 @@ refetchInterval: NONE // WebSocket keeps it fresh!
 ```
 
 **Why Infinity?**
+
 - WebSocket events update cache immediately
 - No need to refetch from server
 - Always 100% fresh
 - Discord does exactly this
 
 ### **Channels/Workspaces:**
+
 ```typescript
 staleTime: 30min  // Rarely change
 gcTime: 1h        // Keep longer in memory
@@ -144,12 +149,14 @@ refetchInterval: NONE
 ```
 
 **Why 30min?**
+
 - Channels created/deleted rarely
 - WebSocket events sync them instantly
 - 30min as fallback for edge cases
 - Reduces load dramatically
 
 ### **Users:**
+
 ```typescript
 staleTime: 10min  // Status might change
 gcTime: 30min
@@ -157,6 +164,7 @@ refetchInterval: NONE
 ```
 
 **Why 10min?**
+
 - User data (avatar, name) changes occasionally
 - Presence (online/offline) via WebSocket
 - Balance between freshness and requests
@@ -166,6 +174,7 @@ refetchInterval: NONE
 ## 🚀 Performance Characteristics
 
 ### **Request Reduction:**
+
 ```
 WITHOUT WebSocket-First:
 - Login: 12 requests
@@ -182,6 +191,7 @@ Reduction: ~99% fewer requests! 🎯
 ```
 
 ### **Latency:**
+
 ```
 Polling (60s interval):
 - Average: 30 seconds delay
@@ -195,6 +205,7 @@ WebSocket:
 ```
 
 ### **Bandwidth:**
+
 ```
 Polling:
 - Each poll: ~2-5KB
@@ -261,6 +272,7 @@ Only for these scenarios:
 6. **Admin Actions** - Creating workspaces, managing members
 
 **NOT used for:**
+
 - ❌ Background polling
 - ❌ Auto-refresh on interval
 - ❌ Checking for new messages

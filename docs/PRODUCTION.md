@@ -67,6 +67,7 @@ SENDGRID_FROM_EMAIL=noreply@boxflow.com
 ### Railway (Recommended)
 
 1. **Connect Repository**
+
    ```bash
    # Railway will auto-detect Node.js and use nixpacks
    # Make sure railway.json is configured
@@ -77,6 +78,7 @@ SENDGRID_FROM_EMAIL=noreply@boxflow.com
    - Railway provides PostgreSQL and Redis add-ons
 
 3. **Deploy**
+
    ```bash
    # Automatic on push to main branch
    # Or manually trigger deployment
@@ -141,6 +143,7 @@ curl https://your-domain.com/health
 ### 3. WebSocket Test
 
 Open browser console:
+
 ```javascript
 const socket = io('https://your-domain.com');
 socket.on('connect', () => console.log('✅ WebSocket connected'));
@@ -166,6 +169,7 @@ socket.on('connect', () => console.log('✅ WebSocket connected'));
 When running multiple instances:
 
 1. **Enable S3 for file storage**
+
    ```bash
    AWS_S3_BUCKET=boxcord-uploads
    AWS_ACCESS_KEY_ID=...
@@ -173,6 +177,7 @@ When running multiple instances:
    ```
 
 2. **Use Redis for caching** (not in-memory)
+
    ```bash
    REDIS_URL=redis://...
    ```
@@ -185,6 +190,7 @@ When running multiple instances:
 ### Database Optimization
 
 1. **Connection pooling**
+
    ```prisma
    datasource db {
      url = env("DATABASE_URL")
@@ -210,6 +216,7 @@ When running multiple instances:
 ### Logs
 
 Production logs are JSON-formatted:
+
 ```json
 {
   "level": "info",
@@ -224,6 +231,7 @@ Production logs are JSON-formatted:
 ```
 
 Ship to log aggregation service:
+
 - Datadog
 - LogDNA
 - Elasticsearch + Kibana
@@ -231,6 +239,7 @@ Ship to log aggregation service:
 ### Metrics
 
 Track:
+
 - Response times (p50, p95, p99)
 - Error rates
 - WebSocket connections
@@ -240,6 +249,7 @@ Track:
 ### Alerts
 
 Configure alerts for:
+
 - High error rate (> 1%)
 - Slow response times (> 500ms)
 - Database connection errors
@@ -303,6 +313,7 @@ psql $DATABASE_URL < backup.sql
 ## Support
 
 For issues:
+
 1. Check logs for errors
 2. Review Sentry for exceptions
 3. Verify environment variables

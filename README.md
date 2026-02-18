@@ -71,6 +71,7 @@ For production setup including Sentry, S3, email notifications, and scaling:
 **📖 See:** [docs/PRODUCTION.md](docs/PRODUCTION.md)
 
 Quick production checklist:
+
 - ✅ Configure all required environment variables
 - ✅ Enable HTTPS
 - ✅ Setup Sentry for error tracking
@@ -160,30 +161,35 @@ const users = await boxtimeService.searchUsers('john', token);
 All production-ready features are **optional** and automatically enabled when configured:
 
 #### **Structured Logging** (Pino)
+
 - JSON logs in production, pretty-printed in development
 - Automatic request/response logging
 - Slow query detection
 - Error context tracking
 
 #### **Error Tracking** (Sentry)
+
 - Backend error monitoring and alerting
 - Performance monitoring with traces
 - User context and breadcrumbs
 - Automatic error deduplication
 
 **Setup:**
+
 ```bash
 # Set in .env
 SENTRY_DSN=https://your-sentry-dsn@sentry.io/project
 ```
 
 #### **Cloud File Storage** (AWS S3)
+
 - Scalable file uploads for multi-server deployments
 - Automatic file cleanup
 - Presigned URLs for secure access
 - Falls back to local storage if not configured
 
 **Setup:**
+
 ```bash
 # Set in .env
 AWS_REGION=eu-north-1
@@ -193,12 +199,14 @@ AWS_S3_BUCKET=boxcord-uploads
 ```
 
 #### **Email Notifications** (SendGrid)
+
 - @mention notifications
 - Direct message alerts
 - Workspace invitations
 - Customizable templates
 
 **Setup:**
+
 ```bash
 # Set in .env
 SENDGRID_API_KEY=your-sendgrid-key
@@ -206,12 +214,14 @@ SENDGRID_FROM_EMAIL=noreply@boxflow.com
 ```
 
 #### **Graceful Shutdown**
+
 - Handles SIGTERM/SIGINT for Kubernetes/Railway
 - Closes connections cleanly
 - Prevents data loss during deployments
 - 30-second timeout for force exit
 
 #### **CI/CD Pipeline**
+
 - GitHub Actions for automated testing
 - TypeScript type checking
 - ESLint for both backend and frontend
@@ -231,12 +241,14 @@ SENDGRID_FROM_EMAIL=noreply@boxflow.com
 - ✅ **Overall:** 50-85% performance improvement
 
 **Key Features:**
+
 - Two-tier caching (Redis + in-memory fallback)
 - Automatic cache invalidation on writes
 - Slow query detection and logging
 - Zero breaking changes - fully backward compatible
 
 **Quick Start with Redis:**
+
 ```bash
 # Start PostgreSQL + Redis
 docker-compose -f docker-compose.dev.yml up -d

@@ -23,7 +23,10 @@ export function setupGracefulShutdown({ server, io }: ShutdownOptions) {
     }
 
     isShuttingDown = true;
-    logger.info({ signal }, 'Received shutdown signal, starting graceful shutdown...');
+    logger.info(
+      { signal },
+      'Received shutdown signal, starting graceful shutdown...'
+    );
 
     // Set a timeout to force exit if graceful shutdown takes too long
     const forceExitTimeout = setTimeout(() => {
@@ -40,12 +43,12 @@ export function setupGracefulShutdown({ server, io }: ShutdownOptions) {
       logger.info('Closing WebSocket connections...');
       const sockets = await io.fetchSockets();
       logger.info({ count: sockets.length }, 'Disconnecting active sockets');
-      
+
       for (const socket of sockets) {
         socket.emit('server:shutdown', { message: 'Server is shutting down' });
         socket.disconnect(true);
       }
-      
+
       await io.close();
 
       // 3. Close database connections
