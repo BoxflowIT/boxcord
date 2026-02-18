@@ -12,7 +12,7 @@ import type {
   WebRTCOfferPayload,
   WebRTCAnswerPayload,
   WebRTCCandidatePayload,
-  PeerDisconnectedPayload,
+  PeerDisconnectedPayload
 } from '../types';
 
 export function registerVoiceHandlers(context: SocketHandlerContext): void {
@@ -32,7 +32,7 @@ export function registerVoiceHandlers(context: SocketHandlerContext): void {
       sessionId: data.sessionId,
       isMuted: false,
       isDeafened: false,
-      isSpeaking: false,
+      isSpeaking: false
     });
 
     // Initiate peer connection (we are the initiator)
@@ -60,7 +60,7 @@ export function registerVoiceHandlers(context: SocketHandlerContext): void {
     store.updateUserState(data.userId, {
       isMuted: data.isMuted,
       isDeafened: data.isDeafened,
-      isSpeaking: data.isSpeaking,
+      isSpeaking: data.isSpeaking
     });
   });
 
@@ -71,7 +71,7 @@ export function registerVoiceHandlers(context: SocketHandlerContext): void {
     // Refetch immediately instead of just invalidating
     queryClient.refetchQueries({
       queryKey: ['voiceChannelUsers', data.channelId],
-      exact: true,
+      exact: true
     });
   });
 
@@ -120,6 +120,8 @@ function handleWebRTCSignal(
   if (peer) {
     peer.signal(signalData);
   } else {
-    logger.warn(`[WEBRTC] No peer found for ${fromUserId} when receiving ${signalType}`);
+    logger.warn(
+      `[WEBRTC] No peer found for ${fromUserId} when receiving ${signalType}`
+    );
   }
 }

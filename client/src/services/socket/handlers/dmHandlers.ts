@@ -12,7 +12,10 @@ import type { SocketHandlerContext } from '../types';
 // Map for legacy handlers
 const dmMessageHandlers = new Map<string, (message: Message) => void>();
 const dmEditHandlers = new Map<string, (message: Message) => void>();
-const dmDeleteHandlers = new Map<string, (data: { messageId: string }) => void>();
+const dmDeleteHandlers = new Map<
+  string,
+  (data: { messageId: string }) => void
+>();
 
 export function registerDMHandlers(
   context: SocketHandlerContext,
@@ -30,7 +33,7 @@ export function registerDMHandlers(
       messageId: message.id,
       channelId: message.channelId,
       isViewingDM: isViewing,
-      isOwnMessage,
+      isOwnMessage
     });
 
     if (message.channelId) {
@@ -87,7 +90,7 @@ export function registerDMHandlers(
           if (!old?.items) return old;
           return {
             ...old,
-            items: old.items.map((m) => (m.id === message.id ? message : m)),
+            items: old.items.map((m) => (m.id === message.id ? message : m))
           };
         }
       );
@@ -97,21 +100,27 @@ export function registerDMHandlers(
   });
 
   // dm:delete - DM message deleted
-  socket.on('dm:delete', ({ messageId, channelId }: { messageId: string; channelId?: string }) => {
-    if (channelId) {
-      queryClient.setQueryData<PaginatedMessages>(queryKeys.dmMessages(channelId), (old) => {
-        if (!old?.items) return old;
-        return {
-          ...old,
-          items: old.items.filter((m) => m.id !== messageId),
-        };
-      });
-    } else {
-      queryClient.invalidateQueries({ queryKey: ['dmMessages'] });
-    }
+  socket.on(
+    'dm:delete',
+    ({ messageId, channelId }: { messageId: string; channelId?: string }) => {
+      if (channelId) {
+        queryClient.setQueryData<PaginatedMessages>(
+          queryKeys.dmMessages(channelId),
+          (old) => {
+            if (!old?.items) return old;
+            return {
+              ...old,
+              items: old.items.filter((m) => m.id !== messageId)
+            };
+          }
+        );
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['dmMessages'] });
+      }
 
-    dmDeleteHandlers.forEach((handler) => handler({ messageId }));
-  });
+      dmDeleteHandlers.forEach((handler) => handler({ messageId }));
+    }
+  );
 
   // dm:typing - Typing indicator (placeholder)
   socket.on('dm:typing', () => {
@@ -136,7 +145,9 @@ export function registerDMHandlers(
   // Incoming DM call
   socket.on('dm:call:incoming', (data: DMCallIncoming) => {
     logger.log('[DM_CALL] Incoming call from:', data.caller.name);
-    useDMCallStore.getState().receiveCall(data.channelId, data.fromUserId, data.caller.name);
+    useDMCallStore
+      .getState()
+      .receiveCall(data.channelId, data.fromUserId, data.caller.name);
   });
 
   // Call accepted
@@ -144,7 +155,10 @@ export function registerDMHandlers(
     logger.log('[DM_CALL] Call accepted by:', data.userId);
 
     const callState = useDMCallStore.getState();
-    if (callState.callState === 'calling' && callState.channelId === data.channelId) {
+    if (
+      callState.callState === 'calling' &&
+      callState.channelId === data.channelId
+    ) {
       try {
         await voiceService.joinDMCall(data.channelId);
         callState.acceptCall();
@@ -157,7 +171,7 @@ export function registerDMHandlers(
           emit('dm:webrtc:offer', {
             channelId: data.channelId,
             targetUserId: data.userId,
-            offer: signal,
+            offer: signal
           });
         });
       } catch (err) {
@@ -187,32 +201,41 @@ export function registerDMHandlers(
   });
 
   // DM WebRTC Offer
-  socket.on('dm:webrtc:offer', (data: { fromUserId: string; offer: SimplePeer.SignalData }) => {
-    logger.log('[DM_WEBRTC] Received offer from:', data.fromUserId);
+  socket.on(
+    'dm:webrtc:offer',
+    (data: { fromUserId: string; offer: SimplePeer.SignalData }) => {
+      logger.log('[DM_WEBRTC] Received offer from:', data.fromUserId);
 
-    // Add peer (we are not the initiator)
-    const peer = voiceService.addPeer(data.fromUserId, data.offer);
+      // Add peer (we are not the initiator)
+      const peer = voiceService.addPeer(data.fromUserId, data.offer);
 
-    // Send answer via socket
-    peer.on('signal', (signal: SimplePeer.SignalData) => {
-      const callState = useDMCallStore.getState();
-      emit('dm:webrtc:answer', {
-        channelId: callState.channelId,
-        targetUserId: data.fromUserId,
-        answer: signal,
+      // Send answer via socket
+      peer.on('signal', (signal: SimplePeer.SignalData) => {
+        const callState = useDMCallStore.getState();
+        emit('dm:webrtc:answer', {
+          channelId: callState.channelId,
+          targetUserId: data.fromUserId,
+          answer: signal
+        });
       });
-    });
-  });
+    }
+  );
 
   // DM WebRTC Answer
-  socket.on('dm:webrtc:answer', (data: { fromUserId: string; answer: SimplePeer.SignalData }) => {
-    handleWebRTCSignal(data.fromUserId, data.answer, 'answer');
-  });
+  socket.on(
+    'dm:webrtc:answer',
+    (data: { fromUserId: string; answer: SimplePeer.SignalData }) => {
+      handleWebRTCSignal(data.fromUserId, data.answer, 'answer');
+    }
+  );
 
   // DM WebRTC ICE Candidate
-  socket.on('dm:webrtc:ice-candidate', (data: { fromUserId: string; candidate: SimplePeer.SignalData }) => {
-    handleWebRTCSignal(data.fromUserId, data.candidate, 'candidate');
-  });
+  socket.on(
+    'dm:webrtc:ice-candidate',
+    (data: { fromUserId: string; candidate: SimplePeer.SignalData }) => {
+      handleWebRTCSignal(data.fromUserId, data.candidate, 'candidate');
+    }
+  );
 }
 
 // Helper: Handle WebRTC signal
@@ -229,7 +252,9 @@ function handleWebRTCSignal(
   if (peer) {
     peer.signal(signalData);
   } else {
-    logger.warn(`[WEBRTC] No peer found for ${fromUserId} when receiving ${signalType}`);
+    logger.warn(
+      `[WEBRTC] No peer found for ${fromUserId} when receiving ${signalType}`
+    );
   }
 }
 
@@ -250,7 +275,10 @@ export function offDMEdit(id: string) {
   dmEditHandlers.delete(id);
 }
 
-export function onDMDelete(id: string, handler: (data: { messageId: string }) => void) {
+export function onDMDelete(
+  id: string,
+  handler: (data: { messageId: string }) => void
+) {
   dmDeleteHandlers.set(id, handler);
 }
 
