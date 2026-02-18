@@ -6,7 +6,9 @@ import { cacheService } from '../../../03-infrastructure/cache/redis.cache.js';
 
 async function rateLimitPlugin(app: FastifyInstance) {
   // Use Redis for rate limiting if connected, otherwise in-memory
-  const redisClient = cacheService.isConnected() ? (cacheService as any).client : undefined;
+  const redisClient = cacheService.isConnected()
+    ? (cacheService as any).client
+    : undefined;
 
   await app.register(rateLimit, {
     max: 100, // 100 requests per timeWindow

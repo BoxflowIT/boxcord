@@ -27,7 +27,7 @@ export default function Tooltip({
 
   const handleMouseEnter = () => {
     const id = setTimeout(() => setShow(true), delay);
-    setTimeoutId(id);
+    setTimeoutId(id as unknown as number);
   };
 
   const handleMouseLeave = () => {

@@ -295,6 +295,7 @@ enum ChannelType {
     TEXT
     ANNOUNCEMENT
     THREAD
+    VOICE
 }
 
 enum UserStatus {
@@ -302,4 +303,26 @@ enum UserStatus {
     AWAY
     BUSY
     OFFLINE
+}
+
+// ============================================
+// VOICE CHANNELS
+// ============================================
+
+model VoiceSession {
+    id        String    @id @default(uuid())
+    channelId String    @map("channel_id")
+    userId    String    @map("user_id")
+    joinedAt  DateTime  @default(now()) @map("joined_at")
+    leftAt    DateTime? @map("left_at")
+
+    // WebRTC connection metadata
+    isMuted    Boolean @default(false) @map("is_muted")
+    isDeafened Boolean @default(false) @map("is_deafened")
+    isSpeaking Boolean @default(false) @map("is_speaking")
+
+    @@index([channelId])
+    @@index([userId])
+    @@index([channelId, userId, leftAt])
+    @@map("voice_sessions")
 }

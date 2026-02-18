@@ -13,6 +13,9 @@ import { queryKeys } from '../hooks/useQuery';
 import type { Message, PaginatedMessages, Channel, User } from '../types';
 import { logger } from '../utils/logger';
 import { playMessageNotification } from '../utils/notificationSound';
+import { useVoiceStore } from '../store/voiceStore';
+import { voiceService } from './voice.service';
+import type SimplePeer from 'simple-peer';
 
 // QueryClient instance for cache updates
 let queryClient: QueryClient | null = null;
@@ -403,6 +406,111 @@ class SocketService {
     // Errors
     this.socket.on('error', (error: { message: string }) => {
       logger.error('Socket error:', error.message);
+    });
+
+    // ============================================
+    // VOICE CHANNEL EVENTS
+    // ============================================
+
+    // When another user joins the voice channel
+    this.socket.on('voice:user-joined', (data: { userId: string; sessionId: string }) => {
+      const store = useVoiceStore.getState();
+      logger.log('User joined voice:', data.userId);
+      
+      store.addUser({
+        userId: data.userId,
+        sessionId: data.sessionId,
+        isMuted: false,
+        isDeafened: false,
+        isSpeaking: false,
+      });
+
+      // Initiate peer connection (we are the initiator)
+      voiceService.createPeer(data.userId);
+    });
+
+    // When another user leaves the voice channel
+    this.socket.on('voice:user-left', (data: { userId: string }) => {
+      const store = useVoiceStore.getState();
+      logger.log('User left voice:', data.userId);
+      
+      store.removeUser(data.userId);
+      store.removePeer(data.userId);
+
+      // Remove audio element
+      const audioElement = document.getElementById(`voice-audio-${data.userId}`);
+      audioElement?.remove();
+    });
+
+    // When another user updates their voice state (mute/deafen/speaking)
+    this.socket.on('voice:state-changed', (data: { 
+      userId: string; 
+      isMuted?: boolean; 
+      isDeafened?: boolean; 
+      isSpeaking?: boolean; 
+    }) => {
+      const store = useVoiceStore.getState();
+      logger.log('Voice state changed:', data);
+      
+      store.updateUserState(data.userId, {
+        isMuted: data.isMuted,
+        isDeafened: data.isDeafened,
+        isSpeaking: data.isSpeaking,
+      });
+    });
+
+    // When voice channel users are updated (for sidebar display)
+    this.socket.on('voice:users-updated', (data: { channelId: string }) => {
+      logger.log('Voice users updated:', data.channelId);
+      
+      // Invalidate the query cache for this voice channel's users
+      if (queryClient) {
+        queryClient.invalidateQueries({ queryKey: ['voiceChannelUsers', data.channelId] });
+      }
+    });
+
+    // ============================================
+    // WEBRTC SIGNALING EVENTS
+    // ============================================
+
+    // Receive WebRTC offer from peer
+    this.socket.on('webrtc:offer', (data: { fromUserId: string; offer: SimplePeer.SignalData }) => {
+      logger.log('Received WebRTC offer from:', data.fromUserId);
+      
+      // Add peer (we are not the initiator)
+      voiceService.addPeer(data.fromUserId, data.offer);
+    });
+
+    // Receive WebRTC answer from peer
+    this.socket.on('webrtc:answer', (data: { fromUserId: string; answer: SimplePeer.SignalData }) => {
+      logger.log('Received WebRTC answer from:', data.fromUserId);
+      
+      const store = useVoiceStore.getState();
+      const peer = store.peers.get(data.fromUserId);
+      
+      if (peer) {
+        peer.signal(data.answer);
+      }
+    });
+
+    // Receive ICE candidate from peer
+    this.socket.on('webrtc:ice-candidate', (data: { fromUserId: string; candidate: SimplePeer.SignalData }) => {
+      logger.log('Received ICE candidate from:', data.fromUserId);
+      
+      const store = useVoiceStore.getState();
+      const peer = store.peers.get(data.fromUserId);
+      
+      if (peer) {
+        peer.signal(data.candidate);
+      }
+    });
+
+    // Peer disconnected
+    this.socket.on('webrtc:peer-disconnected', (data: { userId: string }) => {
+      logger.log('Peer disconnected:', data.userId);
+      
+      const store = useVoiceStore.getState();
+      store.removePeer(data.userId);
     });
   }
 

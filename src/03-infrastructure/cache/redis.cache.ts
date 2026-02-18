@@ -20,7 +20,7 @@ class RedisCacheService implements CacheService {
 
   constructor() {
     this.defaultTTL = parseInt(process.env.PRISMA_QUERY_CACHE_TTL || '60', 10);
-    
+
     // Only initialize Redis if URL is provided
     if (process.env.REDIS_URL) {
       this.initializeRedis();
@@ -36,7 +36,9 @@ class RedisCacheService implements CacheService {
         maxRetriesPerRequest: 3,
         retryStrategy: (times: number) => {
           if (times > 3) {
-            console.warn('⚠️  Redis connection failed, falling back to in-memory cache');
+            console.warn(
+              '⚠️  Redis connection failed, falling back to in-memory cache'
+            );
             return null; // Stop retrying
           }
           return Math.min(times * 100, 2000); // Exponential backoff
@@ -155,7 +157,8 @@ class InMemoryCacheService implements CacheService {
   private readonly defaultTTL: number;
 
   constructor() {
-    this.defaultTTL = parseInt(process.env.PRISMA_QUERY_CACHE_TTL || '60', 10) * 1000;
+    this.defaultTTL =
+      parseInt(process.env.PRISMA_QUERY_CACHE_TTL || '60', 10) * 1000;
   }
 
   isConnected(): boolean {
@@ -175,7 +178,7 @@ class InMemoryCacheService implements CacheService {
   }
 
   async set(key: string, value: any, ttlSeconds?: number): Promise<void> {
-    const ttl = (ttlSeconds ?? (this.defaultTTL / 1000)) * 1000;
+    const ttl = (ttlSeconds ?? this.defaultTTL / 1000) * 1000;
     this.cache.set(key, {
       value,
       expires: Date.now() + ttl
@@ -185,7 +188,7 @@ class InMemoryCacheService implements CacheService {
     if (this.cache.size > 1000) {
       const now = Date.now();
       const toDelete: string[] = [];
-      
+
       this.cache.forEach((entry, key) => {
         if (entry.expires < now) {
           toDelete.push(key);
@@ -201,7 +204,7 @@ class InMemoryCacheService implements CacheService {
         toDelete.push(...entries);
       }
 
-      toDelete.forEach(key => this.cache.delete(key));
+      toDelete.forEach((key) => this.cache.delete(key));
     }
   }
 
@@ -212,14 +215,14 @@ class InMemoryCacheService implements CacheService {
   async deletePattern(pattern: string): Promise<void> {
     const regex = new RegExp(pattern.replace('*', '.*'));
     const toDelete: string[] = [];
-    
+
     this.cache.forEach((_, key) => {
       if (regex.test(key)) {
         toDelete.push(key);
       }
     });
 
-    toDelete.forEach(key => this.cache.delete(key));
+    toDelete.forEach((key) => this.cache.delete(key));
   }
 
   async clear(): Promise<void> {

@@ -16,11 +16,30 @@ export async function channelRoutes(app: FastifyInstance) {
   app.get<{ Querystring: { workspaceId: string } }>(
     '/',
     async (request, reply) => {
-      const channels = await channelService.getWorkspaceChannels(
-        request.query.workspaceId,
-        request.user.id
+      const { workspaceId } = request.query;
+      const userId = request.user.id;
+
+      app.log.info(
+        `Getting channels for workspace ${workspaceId}, user ${userId}`
       );
-      reply.cache({ maxAge: 60, staleWhileRevalidate: 300 }); // 1min cache, 5min stale
+
+      const channels = await channelService.getWorkspaceChannels(
+        workspaceId,
+        userId
+      );
+
+      app.log.info(
+        `Found ${channels.length} channels: ${channels.map((c) => `${c.name}(${c.id})`).join(', ')}`
+      );
+
+      // Prevent all HTTP caching
+      reply.header(
+        'Cache-Control',
+        'no-store, no-cache, must-revalidate, proxy-revalidate'
+      );
+      reply.header('Pragma', 'no-cache');
+      reply.header('Expires', '0');
+
       return { success: true, data: channels };
     }
   );
@@ -43,6 +62,32 @@ export async function channelRoutes(app: FastifyInstance) {
     };
   }>('/', async (request, reply) => {
     const channel = await channelService.createChannel(request.body);
+    app.log.info(
+      `Created channel ${channel.name} (${channel.id}), isPrivate: ${channel.isPrivate}`
+    );
+
+    // Add creator as member so they can see the channel
+    // MUST complete before returning to avoid race condition with GET /channels
+    try {
+      await prisma.channelMember.create({
+        data: {
+          channelId: channel.id,
+          userId: request.user.id
+        }
+      });
+      app.log.info(
+        `Added user ${request.user.id} as member of channel ${channel.id}`
+      );
+    } catch (err: any) {
+      // Only ignore duplicate errors, throw everything else
+      if (!err.message?.includes('Unique constraint')) {
+        app.log.error('Failed to create channel member:', err);
+        throw err;
+      }
+      app.log.info(
+        `User ${request.user.id} already member of channel ${channel.id}`
+      );
+    }
 
     // Emit socket event to all users in workspace
     const io = app.io;

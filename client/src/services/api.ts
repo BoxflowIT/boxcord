@@ -123,18 +123,33 @@ export const api = {
   // Channels
   getChannels: (workspaceId: string) =>
     request<Channel[]>(`/channels?workspaceId=${workspaceId}`),
-  createChannel: (workspaceId: string, name: string) =>
+  createChannel: (workspaceId: string, name: string, type?: 'TEXT' | 'ANNOUNCEMENT' | 'VOICE') =>
     request<Channel>('/channels', {
       method: 'POST',
-      body: JSON.stringify({ workspaceId, name })
+      body: JSON.stringify({ workspaceId, name, type: type || 'TEXT' })
     }),
-  deleteChannel: (id: string) =>
-    request<void>(`/channels/${id}`, { method: 'DELETE' }),
+  deleteChannel: async (id: string) => {
+    try {
+      return await request<void>(`/channels/${id}`, { method: 'DELETE' });
+    } catch (error) {
+      // If channel is already deleted (404), treat as success
+      if (error instanceof Error && error.message.includes('not found')) {
+        return;
+      }
+      throw error;
+    }
+  },
   updateChannel: (id: string, data: { name?: string; description?: string }) =>
     request<Channel>(`/channels/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data)
     }),
+
+  // Voice
+  getVoiceChannelUsers: (channelId: string) =>
+    request<{ userId: string; sessionId: string; isMuted: boolean; isDeafened: boolean; isSpeaking: boolean }[]>(
+      `/voice/channels/${channelId}/users`
+    ),
 
   // Messages
   getMessages: (channelId: string, cursor?: string) =>

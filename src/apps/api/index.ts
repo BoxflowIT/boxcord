@@ -35,8 +35,8 @@ async function main() {
     // Connection pooling
     connectionTimeout: 10000,
     keepAliveTimeout: 65000,
-    // Request payload optimization
-    bodyLimit: 10 * 1024 * 1024 // 10MB max
+    // Request payload optimization (increased for voice channels)
+    bodyLimit: 100 * 1024 * 1024 // 100MB max for audio uploads
   });
 
   // Register plugins

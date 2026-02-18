@@ -23,14 +23,15 @@ export function useChannelOperations({
   const deleteChannelMutation = useDeleteChannel();
   const [isCreating, setIsCreating] = useState(false);
 
-  const handleCreate = async (name: string) => {
+  const handleCreate = async (name: string, type?: 'TEXT' | 'ANNOUNCEMENT' | 'VOICE') => {
     if (!currentWorkspaceId || isCreating) return;
 
     setIsCreating(true);
     try {
       const channel = await createChannelMutation.mutateAsync({
         workspaceId: currentWorkspaceId,
-        name
+        name,
+        type
       });
       onChannelSelect(channel);
       return channel;

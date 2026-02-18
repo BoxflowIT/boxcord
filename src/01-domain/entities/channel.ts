@@ -1,6 +1,6 @@
 // Domain entity: Channel
 
-export type ChannelType = 'TEXT' | 'ANNOUNCEMENT' | 'THREAD';
+export type ChannelType = 'TEXT' | 'ANNOUNCEMENT' | 'THREAD' | 'VOICE';
 
 export interface Channel {
   id: string;
