@@ -1,7 +1,7 @@
 // Reusable Settings Tab Sidebar Component
 import { cn } from '../../utils/classNames';
 
-type SettingsTab = 'notifications' | 'appearance' | 'about';
+type SettingsTab = 'notifications' | 'voice' | 'appearance' | 'about';
 
 interface SettingsTabSidebarProps {
   activeTab: SettingsTab;
@@ -10,6 +10,7 @@ interface SettingsTabSidebarProps {
 
 const tabs: { id: SettingsTab; label: string }[] = [
   { id: 'notifications', label: 'Notifications' },
+  { id: 'voice', label: 'Voice & Audio' },
   { id: 'appearance', label: 'Appearance' },
   { id: 'about', label: 'About' }
 ];
