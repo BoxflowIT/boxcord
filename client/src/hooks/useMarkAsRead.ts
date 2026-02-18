@@ -40,6 +40,11 @@ export function useMarkAsRead({
           });
         }
       } catch (error) {
+        // Silently ignore errors for non-existent channels (foreign key constraint violations)
+        if (error instanceof Error && error.message.includes('Foreign key constraint')) {
+          // Channel doesn't exist in database anymore, ignore
+          return;
+        }
         logger.error('Failed to mark as read:', error);
       }
     }, 1000);

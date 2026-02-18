@@ -8,7 +8,9 @@ function getCacheKey(model: string, operation: string, args: any): string {
 
 function shouldCache(operation: string): boolean {
   // Only cache read operations
-  return ['findUnique', 'findFirst', 'findMany', 'count', 'aggregate'].includes(operation);
+  return ['findUnique', 'findFirst', 'findMany', 'count', 'aggregate'].includes(
+    operation
+  );
 }
 
 async function invalidateCacheForModel(model: string): Promise<void> {
@@ -45,7 +47,7 @@ const prismaClientSingleton = () => {
         // Query caching for read operations (async)
         if (shouldCache(operation)) {
           const cacheKey = getCacheKey(model, operation, args);
-          
+
           return (async () => {
             // Check cache first
             const cached = await cacheService.get(cacheKey);
@@ -58,16 +60,16 @@ const prismaClientSingleton = () => {
             try {
               const data = await query(args);
               const duration = Date.now() - start;
-              
+
               // Cache successful result
               await cacheService.set(cacheKey, data);
-              
+
               if (duration > 1000) {
                 console.warn(
                   `⚠️  Slow query: ${model}.${operation} took ${duration}ms`
                 );
               }
-              
+
               return data;
             } catch (error) {
               console.error(`❌ Query error in ${model}.${operation}:`, error);
@@ -79,7 +81,7 @@ const prismaClientSingleton = () => {
         // For non-cacheable operations, just monitor performance
         const start = Date.now();
         const result = query(args);
-        
+
         result
           .then(() => {
             const duration = Date.now() - start;
@@ -92,7 +94,7 @@ const prismaClientSingleton = () => {
           .catch((error) => {
             console.error(`❌ Query error in ${model}.${operation}:`, error);
           });
-        
+
         return result;
       },
       // Invalidate cache on write operations

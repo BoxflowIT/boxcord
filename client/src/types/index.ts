@@ -76,7 +76,7 @@ export interface Channel {
   workspaceId: string;
   name: string;
   description?: string;
-  type: 'TEXT' | 'ANNOUNCEMENT' | 'THREAD';
+  type: 'TEXT' | 'ANNOUNCEMENT' | 'THREAD' | 'VOICE';
   isPrivate: boolean;
   createdAt?: string;
   updatedAt?: string;

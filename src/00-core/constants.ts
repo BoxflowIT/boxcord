@@ -27,7 +27,22 @@ export const SOCKET_EVENTS = {
 
   // Reactions
   REACTION_ADD: 'reaction:add',
-  REACTION_REMOVE: 'reaction:remove'
+  REACTION_REMOVE: 'reaction:remove',
+
+  // Voice Channels
+  VOICE_JOIN: 'voice:join',
+  VOICE_LEAVE: 'voice:leave',
+  VOICE_STATE: 'voice:state',
+  VOICE_USER_JOINED: 'voice:user-joined',
+  VOICE_USER_LEFT: 'voice:user-left',
+  VOICE_STATE_CHANGED: 'voice:state-changed',
+  VOICE_USERS_UPDATED: 'voice:users-updated',
+
+  // WebRTC Signaling
+  WEBRTC_OFFER: 'webrtc:offer',
+  WEBRTC_ANSWER: 'webrtc:answer',
+  WEBRTC_ICE_CANDIDATE: 'webrtc:ice-candidate',
+  WEBRTC_PEER_DISCONNECTED: 'webrtc:peer-disconnected'
 } as const;
 
 // Rate limiting

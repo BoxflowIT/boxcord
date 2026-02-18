@@ -38,16 +38,33 @@ export default function MemberList() {
   useEffect(() => {
     if (!workspaceMembers) return;
 
-    // Always include current user if not in list
-    if (currentUser && !workspaceMembers.some((u) => u.id === currentUser.id)) {
-      const currentUserWithPresence = {
-        ...currentUser,
-        presence: { status: 'ONLINE', lastSeen: new Date().toISOString() }
-      };
-      setUsers([currentUserWithPresence, ...workspaceMembers]);
-    } else {
-      setUsers(workspaceMembers);
-    }
+    // Merge presence data from current state with new workspace members
+    // This preserves WebSocket presence updates
+    setUsers((prevUsers) => {
+      const updatedMembers = workspaceMembers.map((member) => {
+        // Find existing user to preserve WebSocket presence updates
+        const existing = prevUsers.find((u) => u.id === member.id);
+        if (existing?.presence) {
+          // Keep WebSocket-updated presence
+          return { ...member, presence: existing.presence };
+        }
+        return member;
+      });
+
+      // Always include current user if not in list
+      if (currentUser && !updatedMembers.some((u) => u.id === currentUser.id)) {
+        const currentUserWithPresence = {
+          ...currentUser,
+          presence: { 
+            status: 'ONLINE' as const, 
+            lastSeen: new Date().toISOString() 
+          }
+        };
+        return [currentUserWithPresence, ...updatedMembers];
+      }
+
+      return updatedMembers;
+    });
   }, [workspaceMembers, currentUser]);
 
   useEffect(() => {
@@ -63,11 +80,11 @@ export default function MemberList() {
                 ...u,
                 presence: {
                   ...u.presence,
-                  status: data.status,
+                  status: data.status as UserStatus,
                   lastSeen:
                     data.status === 'OFFLINE'
                       ? new Date().toISOString()
-                      : u.presence?.lastSeen
+                      : u.presence?.lastSeen ?? new Date().toISOString()
                 }
               }
             : u

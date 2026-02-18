@@ -5,6 +5,7 @@ import type { ExtendedPrismaClient } from '../../../03-infrastructure/database/c
 import { SOCKET_EVENTS } from '../../../00-core/constants.js';
 import { MessageService } from '../../../02-application/services/message.service.js';
 import { PushService } from '../../../02-application/services/push.service.js';
+import { VoiceService } from '../../../02-application/services/voice.service.js';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -36,6 +37,7 @@ export function setupSocketHandlers(
 ) {
   const messageService = new MessageService(prisma);
   const pushService = new PushService(prisma);
+  const voiceService = new VoiceService(prisma);
   const onlineUsers = new Map<string, Set<string>>(); // channelId -> Set of userIds
   const isDev = process.env.NODE_ENV !== 'production';
   const allowMockTokens = isDev || process.env.ALLOW_MOCK_TOKENS === 'true';
@@ -97,7 +99,7 @@ export function setupSocketHandlers(
     app.log.info(`User ${userId} connected (socket: ${socket.id})`);
 
     // Update presence to online
-    prisma.userPresence
+    await prisma.userPresence
       .upsert({
         where: { userId },
         create: { userId, status: 'ONLINE' },
@@ -121,6 +123,11 @@ export function setupSocketHandlers(
         app.log.info(
           `[WORKSPACE_JOIN] User ${userId} joined workspace:${ws.id}`
         );
+      });
+
+      // Broadcast user online status to all workspaces they're in
+      workspaces.forEach((ws) => {
+        socket.to(`workspace:${ws.id}`).emit('user:online', { userId });
       });
     } catch (err) {
       app.log.error(
@@ -563,27 +570,153 @@ export function setupSocketHandlers(
       }
     );
 
+    // ============================================
+    // VOICE CHANNELS & WEBRTC SIGNALING
+    // ============================================
+
+    // Join voice channel room
+    socket.on(SOCKET_EVENTS.VOICE_JOIN, async (data: { channelId: string }) => {
+      try {
+        socket.join(`voice:${data.channelId}`);
+        app.log.debug(
+          `[VOICE] User ${userId} joined voice channel: ${data.channelId}`
+        );
+      } catch (err) {
+        socket.emit('error', { message: (err as Error).message });
+      }
+    });
+
+    // Leave voice channel room
+    socket.on(
+      SOCKET_EVENTS.VOICE_LEAVE,
+      async (data: { channelId: string }) => {
+        try {
+          socket.leave(`voice:${data.channelId}`);
+          app.log.debug(
+            `[VOICE] User ${userId} left voice channel: ${data.channelId}`
+          );
+        } catch (err) {
+          socket.emit('error', { message: (err as Error).message });
+        }
+      }
+    );
+
+    // WebRTC Offer (initiate peer connection)
+    socket.on(
+      SOCKET_EVENTS.WEBRTC_OFFER,
+      async (data: {
+        channelId: string;
+        targetUserId: string;
+        offer: unknown;
+      }) => {
+        try {
+          // Find target user's socket(s)
+          const targetSockets = await io
+            .in(`voice:${data.channelId}`)
+            .fetchSockets();
+
+          for (const targetSocket of targetSockets) {
+            if ((targetSocket as any).userId === data.targetUserId) {
+              targetSocket.emit(SOCKET_EVENTS.WEBRTC_OFFER, {
+                fromUserId: userId,
+                offer: data.offer
+              });
+            }
+          }
+
+          app.log.debug(
+            `[WEBRTC] Offer from ${userId} to ${data.targetUserId} in channel ${data.channelId}`
+          );
+        } catch (err) {
+          socket.emit('error', { message: (err as Error).message });
+        }
+      }
+    );
+
+    // WebRTC Answer (respond to peer connection)
+    socket.on(
+      SOCKET_EVENTS.WEBRTC_ANSWER,
+      async (data: {
+        channelId: string;
+        targetUserId: string;
+        answer: unknown;
+      }) => {
+        try {
+          const targetSockets = await io
+            .in(`voice:${data.channelId}`)
+            .fetchSockets();
+
+          for (const targetSocket of targetSockets) {
+            if ((targetSocket as any).userId === data.targetUserId) {
+              targetSocket.emit(SOCKET_EVENTS.WEBRTC_ANSWER, {
+                fromUserId: userId,
+                answer: data.answer
+              });
+            }
+          }
+
+          app.log.debug(
+            `[WEBRTC] Answer from ${userId} to ${data.targetUserId} in channel ${data.channelId}`
+          );
+        } catch (err) {
+          socket.emit('error', { message: (err as Error).message });
+        }
+      }
+    );
+
+    // WebRTC ICE Candidate (exchange network info)
+    socket.on(
+      SOCKET_EVENTS.WEBRTC_ICE_CANDIDATE,
+      async (data: {
+        channelId: string;
+        targetUserId: string;
+        candidate: unknown;
+      }) => {
+        try {
+          const targetSockets = await io
+            .in(`voice:${data.channelId}`)
+            .fetchSockets();
+
+          for (const targetSocket of targetSockets) {
+            if ((targetSocket as any).userId === data.targetUserId) {
+              targetSocket.emit(SOCKET_EVENTS.WEBRTC_ICE_CANDIDATE, {
+                fromUserId: userId,
+                candidate: data.candidate
+              });
+            }
+          }
+        } catch (err) {
+          socket.emit('error', { message: (err as Error).message });
+        }
+      }
+    );
+
     // Disconnect
     socket.on('disconnect', async () => {
       app.log.debug(`User disconnected: ${userId}`);
 
-      // Update presence to offline
+      // DON'T cleanup voice sessions on socket disconnect
+      // Users should stay in voice channels even if socket disconnects temporarily
+      // Voice sessions are explicitly closed via /voice/sessions/:sessionId/leave endpoint
+      // await voiceService.cleanupUserSessions(userId).catch(console.error);
+
+      // DON'T set status to OFFLINE on socket disconnect
+      // Socket can disconnect temporarily (page reload, network issues)
+      // Only update lastSeen timestamp
       await prisma.userPresence
         .upsert({
           where: { userId },
-          create: { userId, status: 'OFFLINE', lastSeen: new Date() },
-          update: { status: 'OFFLINE', lastSeen: new Date() }
+          create: { userId, status: 'ONLINE', lastSeen: new Date() },
+          update: { lastSeen: new Date() } // Keep current status, just update lastSeen
         })
         .catch(console.error);
 
-      // Remove from all channels
+      // DON'T broadcast offline status on temporary disconnects
+      // Status should be managed by explicit user actions or timeout-based cleanup
+
+      // Remove from channel tracking
       onlineUsers.forEach((users, channelId) => {
-        if (users.delete(userId)) {
-          io.to(`channel:${channelId}`).emit(SOCKET_EVENTS.USER_OFFLINE, {
-            userId,
-            channelId
-          });
-        }
+        users.delete(userId);
       });
     });
   });

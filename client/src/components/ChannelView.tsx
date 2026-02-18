@@ -6,7 +6,7 @@
 // ============================================================================
 
 import { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { logger } from '../utils/logger';
 import { socketService } from '../services/socket';
@@ -25,6 +25,7 @@ import { ChannelHeader } from './channel/ChannelHeader';
 import { BotResponseBanner } from './channel';
 import MessageListDisplay from './channel/MessageListDisplay';
 import ChannelInputSection from './channel/ChannelInputSection';
+import { VoiceChannelView } from './voice/VoiceChannelView';
 
 interface ChannelViewProps {
   onToggleMemberList?: () => void;
@@ -32,6 +33,7 @@ interface ChannelViewProps {
 
 export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
   const { channelId } = useParams<{ channelId: string }>();
+  const navigate = useNavigate();
   const { currentChannel, setCurrentChannel, currentWorkspace } =
     useChatStore();
   const { user } = useAuthStore();
@@ -41,9 +43,13 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
   const [messageGrouping] = useLocalStorage('messageGrouping', true);
 
   // React Query - single source of truth for server data
-  const { data: messagesData, isLoading: loadingMessages } =
-    useMessages(channelId);
   const { data: channels = [] } = useChannels(currentWorkspace?.id);
+  
+  // Check if channel exists before fetching messages
+  const channelExists = channels.length === 0 || channels.some(c => c.id === channelId);
+  
+  const { data: messagesData, isLoading: loadingMessages } =
+    useMessages(channelExists ? channelId : undefined);
 
   // Pre-process messages with computed properties (using shared hook)
   const processedMessages = useProcessedMessages(
@@ -83,11 +89,11 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
   // Shared hooks for common message view patterns
   const messagesEndRef = useMessageScroll(channelMessages);
   useMarkAsRead({
-    channelId,
+    channelId: channelExists ? channelId : undefined,
     workspaceId: currentWorkspace?.id,
     isDM: false
   });
-  useSocketRoom(channelId, 'channel');
+  useSocketRoom(channelExists ? channelId : undefined, 'channel');
 
   const {
     inputValue,
@@ -99,7 +105,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     handleEmojiSelect,
     clearInput
   } = useChannelInput({
-    channelId,
+    channelId: channelExists ? channelId : undefined,
     onShowMentions: setShowMentions,
     onShowSlashCommands: setShowSlashCommands
   });
@@ -135,12 +141,20 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
 
   // Set current channel when it changes
   useEffect(() => {
-    if (!channelId) return;
+    if (!channelId || channels.length === 0) return;
+    
     const channel = channels.find((c) => c.id === channelId);
     if (channel) {
       setCurrentChannel(channel);
+    } else {
+      // Channel not found - redirect to first available channel or #general
+      const defaultChannel = channels.find((c) => c.id === 'ch-general') || channels[0];
+      if (defaultChannel) {
+        logger.warn(`Channel ${channelId} not found, redirecting to ${defaultChannel.name}`);
+        navigate(`/channel/${defaultChannel.id}`);
+      }
     }
-  }, [channelId, channels, setCurrentChannel]);
+  }, [channelId, channels, setCurrentChannel, navigate]);
 
   const handleSend = async () => {
     if (!inputValue.trim() || !channelId) return;
@@ -216,6 +230,16 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
       setUploading(false);
     }
   };
+
+  // Voice channel view
+  if (currentChannel?.type === 'VOICE') {
+    return (
+      <VoiceChannelView
+        channelId={channelId!}
+        channelName={currentChannel.name}
+      />
+    );
+  }
 
   return (
     <>
