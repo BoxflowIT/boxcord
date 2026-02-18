@@ -7,7 +7,6 @@ import { useAuthStore } from '../store/auth';
 import { useDMChannels, queryKeys } from '../hooks/useQuery';
 import { useUserSearch } from '../hooks/useUserSearch';
 import { useDMCallStore } from '../store/dmCallStore';
-import { useChatStore } from '../store/chat';
 import { getOtherUser } from '../utils/dmUtils';
 import DMListHeader from './dm/DMListHeader';
 import DMSearchPanel from './dm/DMSearchPanel';
@@ -35,7 +34,6 @@ export default function DMList({
   const { user } = useAuthStore();
   const { data: dmChannels, isLoading, refetch } = useDMChannels();
   const { startCall } = useDMCallStore();
-  const { setShowInviteModal } = useChatStore();
   const queryClient = useQueryClient();
 
   const [showNewDM, setShowNewDM] = useState(false);
@@ -73,12 +71,10 @@ export default function DMList({
     (otherUser: UserInfo) => {
       if (onInviteToServer) {
         onInviteToServer(otherUser.id);
-      } else {
-        // Fallback: open invite modal
-        setShowInviteModal(true);
       }
+      // Invite modal is handled by parent component
     },
-    [onInviteToServer, setShowInviteModal]
+    [onInviteToServer]
   );
 
   const handleMuteNotifications = useCallback((channelId: string) => {
@@ -89,7 +85,7 @@ export default function DMList({
   const handleDeleteConversation = useCallback(
     async (channelId: string) => {
       try {
-        await api.delete(`/dm/channels/${channelId}`);
+        await api.deleteDM(channelId);
         // Remove from cache
         queryClient.setQueryData<DMChannel[]>(queryKeys.dmChannels, (old) => {
           if (!old) return old;
