@@ -1,6 +1,10 @@
 // Moderation Service - User moderation (kick, ban)
 import type { ExtendedPrismaClient } from '../../03-infrastructure/database/client.js';
-import { NotFoundError, ForbiddenError, ValidationError } from '../../00-core/errors.js';
+import {
+  NotFoundError,
+  ForbiddenError,
+  ValidationError
+} from '../../00-core/errors.js';
 
 export class ModerationService {
   constructor(private readonly prisma: ExtendedPrismaClient) {}
@@ -172,7 +176,7 @@ export class ModerationService {
     });
 
     // Fetch user details separately since AuditLog has no user relation
-    const userIds = [...new Set(logs.map(log => log.userId))];
+    const userIds = [...new Set(logs.map((log) => log.userId))];
     const users = await this.prisma.user.findMany({
       where: { id: { in: userIds } },
       select: {
@@ -183,10 +187,10 @@ export class ModerationService {
       }
     });
 
-    const userMap = new Map(users.map(u => [u.id, u]));
+    const userMap = new Map(users.map((u) => [u.id, u]));
 
     // Combine logs with user data
-    return logs.map(log => ({
+    return logs.map((log) => ({
       ...log,
       user: userMap.get(log.userId) || null
     }));

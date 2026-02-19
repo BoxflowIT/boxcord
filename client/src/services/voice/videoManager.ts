@@ -83,14 +83,9 @@ export async function startScreenShare(
       audio: false // Don't capture system audio for now
     });
 
-    // Remove existing video tracks if any
-    if (audioState.localStream) {
-      const existingVideoTracks = audioState.localStream.getVideoTracks();
-      existingVideoTracks.forEach((track) => {
-        track.stop();
-        audioState.localStream!.removeTrack(track);
-      });
-    }
+    // Note: We keep existing camera video tracks
+    // Screen share is added as an additional video track
+    // SimplePeer will handle multiple video tracks
 
     // Add screen share tracks
     const screenTracks = screenStream.getVideoTracks();
@@ -128,11 +123,15 @@ export function stopScreenShare(audioState: AudioPipelineState): void {
 
   if (!audioState.localStream) return;
 
-  // Stop and remove screen share tracks
+  // Stop and remove ONLY screen share tracks (keep camera video if enabled)
   const videoTracks = audioState.localStream.getVideoTracks();
   videoTracks.forEach((track) => {
-    track.stop();
-    audioState.localStream!.removeTrack(track);
+    // Only stop display surface tracks (screen share), not camera tracks
+    const settings = track.getSettings();
+    if (settings.displaySurface) {
+      track.stop();
+      audioState.localStream!.removeTrack(track);
+    }
   });
 
   store.setScreenSharing(false);

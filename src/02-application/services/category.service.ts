@@ -1,6 +1,10 @@
 // Category Service - Channel category management
 import type { ExtendedPrismaClient } from '../../03-infrastructure/database/client.js';
-import { NotFoundError, ForbiddenError, ValidationError } from '../../00-core/errors.js';
+import {
+  NotFoundError,
+  ForbiddenError,
+  ValidationError
+} from '../../00-core/errors.js';
 
 export interface CategoryWithChannels {
   id: string;
@@ -19,7 +23,9 @@ export interface CategoryWithChannels {
 export class CategoryService {
   constructor(private readonly prisma: ExtendedPrismaClient) {}
 
-  async getWorkspaceCategories(workspaceId: string): Promise<CategoryWithChannels[]> {
+  async getWorkspaceCategories(
+    workspaceId: string
+  ): Promise<CategoryWithChannels[]> {
     const categories = await this.prisma.channelCategory.findMany({
       where: { workspaceId },
       orderBy: { position: 'asc' },
@@ -101,7 +107,9 @@ export class CategoryService {
       where: { id: categoryId },
       data: {
         ...(data.name && { name: data.name.trim() }),
-        ...(typeof data.collapsed === 'boolean' && { collapsed: data.collapsed })
+        ...(typeof data.collapsed === 'boolean' && {
+          collapsed: data.collapsed
+        })
       },
       include: {
         channels: {
@@ -173,7 +181,10 @@ export class CategoryService {
     });
   }
 
-  private async verifyAdmin(workspaceId: string, userId: string): Promise<void> {
+  private async verifyAdmin(
+    workspaceId: string,
+    userId: string
+  ): Promise<void> {
     const member = await this.prisma.workspaceMember.findUnique({
       where: {
         workspaceId_userId: { workspaceId, userId }

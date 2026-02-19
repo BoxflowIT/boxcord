@@ -15,7 +15,8 @@ export async function categoryRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const { workspaceId } = request.params as { workspaceId: string };
 
-      const categories = await categoryService.getWorkspaceCategories(workspaceId);
+      const categories =
+        await categoryService.getWorkspaceCategories(workspaceId);
 
       return reply.send({
         success: true,
@@ -44,11 +45,17 @@ export async function categoryRoutes(fastify: FastifyInstance) {
       const { name } = request.body as { name: string };
       const userId = request.user.id;
 
-      const category = await categoryService.createCategory(workspaceId, userId, name);
+      const category = await categoryService.createCategory(
+        workspaceId,
+        userId,
+        name
+      );
 
       // Emit socket event
       if (fastify.io) {
-        fastify.io.to(`workspace:${workspaceId}`).emit('category:created', category);
+        fastify.io
+          .to(`workspace:${workspaceId}`)
+          .emit('category:created', category);
       }
 
       return reply.send({
@@ -78,11 +85,17 @@ export async function categoryRoutes(fastify: FastifyInstance) {
       const updates = request.body as { name?: string; collapsed?: boolean };
       const userId = request.user.id;
 
-      const category = await categoryService.updateCategory(categoryId, userId, updates);
+      const category = await categoryService.updateCategory(
+        categoryId,
+        userId,
+        updates
+      );
 
       // Emit socket event
       if (fastify.io) {
-        fastify.io.to(`workspace:${category.workspaceId}`).emit('category:updated', category);
+        fastify.io
+          .to(`workspace:${category.workspaceId}`)
+          .emit('category:updated', category);
       }
 
       return reply.send({
@@ -130,7 +143,11 @@ export async function categoryRoutes(fastify: FastifyInstance) {
       const { categoryId } = request.body as { categoryId: string | null };
       const userId = request.user.id;
 
-      await categoryService.moveChannelToCategory(channelId, categoryId, userId);
+      await categoryService.moveChannelToCategory(
+        channelId,
+        categoryId,
+        userId
+      );
 
       return reply.send({
         success: true,

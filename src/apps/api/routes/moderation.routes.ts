@@ -30,7 +30,12 @@ export async function moderationRoutes(fastify: FastifyInstance) {
       };
       const moderatorId = request.user.id;
 
-      await moderationService.kickUser(workspaceId, targetUserId, moderatorId, reason);
+      await moderationService.kickUser(
+        workspaceId,
+        targetUserId,
+        moderatorId,
+        reason
+      );
 
       // Emit socket event
       if (fastify.io) {
@@ -73,7 +78,12 @@ export async function moderationRoutes(fastify: FastifyInstance) {
       };
       const moderatorId = request.user.id;
 
-      await moderationService.banUser(workspaceId, targetUserId, moderatorId, reason);
+      await moderationService.banUser(
+        workspaceId,
+        targetUserId,
+        moderatorId,
+        reason
+      );
 
       // Emit socket event
       if (fastify.io) {
@@ -155,7 +165,11 @@ export async function moderationRoutes(fastify: FastifyInstance) {
       };
       const userId = request.user.id;
 
-      const logs = await moderationService.getAuditLogs(workspaceId, userId, filters);
+      const logs = await moderationService.getAuditLogs(
+        workspaceId,
+        userId,
+        filters
+      );
 
       return reply.send({
         success: true,

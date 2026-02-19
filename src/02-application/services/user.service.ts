@@ -337,7 +337,7 @@ export class UserService {
 
   async getDNDUsers(userIds: string[]): Promise<string[]> {
     const now = new Date();
-    
+
     const users = await this.prisma.user.findMany({
       where: {
         id: { in: userIds },
