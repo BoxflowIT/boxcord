@@ -1,5 +1,6 @@
 // List Container - Generic scrollable list container
 import { Children } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../utils/classNames';
 
 interface ListContainerProps {
@@ -19,6 +20,7 @@ export default function ListContainer({
   maxHeight = 'auto',
   className = ''
 }: ListContainerProps) {
+  const { t } = useTranslation();
   const isEmpty = Children.count(children) === 0;
 
   return (
@@ -28,7 +30,8 @@ export default function ListContainer({
       <div className="flex-1 overflow-y-auto" style={{ maxHeight }}>
         {isEmpty ? (
           <div className="p-4 text-center text-muted">
-            {emptyMessage || 'Inga items'}
+            {emptyMessage || t('common.noItems')}
+          </div>
           </div>
         ) : (
           children

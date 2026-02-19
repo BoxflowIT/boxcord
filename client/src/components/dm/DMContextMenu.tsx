@@ -1,4 +1,5 @@
 // DM Context Menu - Right-click menu for DM list items
+import { useTranslation } from 'react-i18next';
 import { Phone, UserPlus, BellOff, Trash2, MessageSquare } from 'lucide-react';
 import MenuItem from '../menu/MenuItem';
 
@@ -26,19 +27,20 @@ export default function DMContextMenu({
   onDeleteConversation,
   onMarkAsRead
 }: DMContextMenuProps) {
+  const { t } = useTranslation();
   return (
     <div className="py-1">
       {/* Voice Call */}
       <MenuItem
         icon={<Phone size={16} />}
-        label="Starta röstsamtal"
+        label={t('dm.startVoiceCall')}
         onClick={onStartCall}
       />
 
       {/* Mark as read */}
       <MenuItem
         icon={<MessageSquare size={16} />}
-        label="Markera som läst"
+        label={t('dm.markAsRead')}
         onClick={onMarkAsRead}
       />
 
@@ -48,14 +50,14 @@ export default function DMContextMenu({
       {/* Invite to server */}
       <MenuItem
         icon={<UserPlus size={16} />}
-        label="Bjud in till server"
+        label={t('dm.inviteToServer')}
         onClick={onInviteToServer}
       />
 
       {/* Mute notifications */}
       <MenuItem
         icon={<BellOff size={16} />}
-        label="Stäng av notiser"
+        label={t('dm.muteNotifications')}
         onClick={onMuteNotifications}
       />
 
@@ -65,7 +67,7 @@ export default function DMContextMenu({
       {/* Delete conversation */}
       <MenuItem
         icon={<Trash2 size={16} />}
-        label="Ta bort konversation"
+        label={t('dm.deleteConversation')}
         onClick={onDeleteConversation}
         variant="danger"
       />

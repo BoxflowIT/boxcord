@@ -1,5 +1,6 @@
 // Forgot Password Page - Boxcord Design
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { forgotPassword, confirmPassword } from '../services/cognito';
 import { Button } from '../components/ui/button';
@@ -9,6 +10,7 @@ import { AuthLayout } from '../components/ui/AuthLayout';
 import { logger } from '../utils/logger';
 
 export default function ForgotPassword() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [step, setStep] = useState<'email' | 'confirm'>('email');
   const [email, setEmail] = useState('');
@@ -29,16 +31,16 @@ export default function ForgotPassword() {
       const result = await forgotPassword(email);
 
       if (!result.success) {
-        setError(result.error || 'Kunde inte skicka återställningskod');
+        setError(result.error || t('auth.sendResetCodeFailed'));
         setIsLoading(false);
         return;
       }
 
-      setSuccess('En verifieringskod har skickats till din e-post!');
+      setSuccess(t('auth.verificationCodeSent'));
       setStep('confirm');
     } catch (error) {
       logger.error('Forgot password error:', error);
-      setError('Ett oväntat fel uppstod');
+      setError(t('common.unexpectedError'));
     } finally {
       setIsLoading(false);
     }
@@ -51,13 +53,13 @@ export default function ForgotPassword() {
 
     // Validate passwords match
     if (newPassword !== confirmNewPassword) {
-      setError('Lösenorden matchar inte');
+      setError(t('auth.passwordsDoNotMatch'));
       return;
     }
 
     // Validate password strength (Cognito requires min 8 chars)
     if (newPassword.length < 8) {
-      setError('Lösenordet måste vara minst 8 tecken');
+      setError(t('auth.passwordMinLength'));
       return;
     }
 
@@ -71,12 +73,12 @@ export default function ForgotPassword() {
       );
 
       if (!result.success) {
-        setError(result.error || 'Lösenordsåterställning misslyckades');
+        setError(result.error || t('auth.resetPasswordFailed'));
         setIsLoading(false);
         return;
       }
 
-      setSuccess('Lösenord ändrat! Du kan nu logga in med ditt nya lösenord.');
+      setSuccess(t('auth.passwordChanged'));
 
       // Redirect to login after 2 seconds
       setTimeout(() => {
@@ -84,7 +86,7 @@ export default function ForgotPassword() {
       }, 2000);
     } catch (error) {
       logger.error('Reset password error:', error);
-      setError('Ett oväntat fel uppstod');
+      setError(t('common.unexpectedError'));
     } finally {
       setIsLoading(false);
     }
@@ -92,11 +94,11 @@ export default function ForgotPassword() {
 
   return (
     <AuthLayout
-      title="Återställ lösenord"
+      title={t('auth.resetPassword')}
       description={
         step === 'email'
-          ? 'Ange din e-postadress för att få en återställningskod'
-          : 'Ange verifieringskoden och ditt nya lösenord'
+          ? t('auth.enterEmailForResetCode')
+          : t('auth.enterCodeAndNewPassword')
       }
     >
       {step === 'email' ? (
@@ -104,7 +106,7 @@ export default function ForgotPassword() {
           <FormField
             type="email"
             id="email"
-            label="E-postadress"
+            label={t('auth.email')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="din@email.com"
@@ -121,12 +123,12 @@ export default function ForgotPassword() {
             className="w-full"
             size="lg"
           >
-            {isLoading ? 'Skickar...' : 'Skicka återställningskod'}
+            {isLoading ? t('common.sending') : t('auth.sendResetCode')}
           </Button>
 
           <div className="text-center">
             <Link to="/login" className="text-sm text-link">
-              Tillbaka till inloggning
+              {t('auth.backToLogin')}
             </Link>
           </div>
         </form>
@@ -135,7 +137,7 @@ export default function ForgotPassword() {
           <FormField
             type="text"
             id="code"
-            label="Verifieringskod"
+            label={t('auth.verificationCode')}
             value={verificationCode}
             onChange={(e) => setVerificationCode(e.target.value)}
             placeholder="123456"
@@ -146,11 +148,11 @@ export default function ForgotPassword() {
           <FormField
             type="password"
             id="newPassword"
-            label="Nytt lösenord"
+            label={t('auth.newPassword')}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             placeholder="••••••••"
-            helperText="Minst 8 tecken"
+            helperText={t('auth.minChars', { count: 8 })}
             disabled={isLoading}
             minLength={8}
             required
@@ -159,7 +161,7 @@ export default function ForgotPassword() {
           <FormField
             type="password"
             id="confirmPassword"
-            label="Bekräfta lösenord"
+            label={t('auth.confirmPassword')}
             value={confirmNewPassword}
             onChange={(e) => setConfirmNewPassword(e.target.value)}
             placeholder="••••••••"
@@ -182,7 +184,7 @@ export default function ForgotPassword() {
             className="w-full"
             size="lg"
           >
-            {isLoading ? 'Återställer...' : 'Återställ lösenord'}
+            {isLoading ? t('auth.resetting') : t('auth.resetPassword')}
           </Button>
 
           <Button
@@ -198,7 +200,7 @@ export default function ForgotPassword() {
             variant="secondary"
             className="w-full"
           >
-            Tillbaka
+            {t('common.back')}
           </Button>
         </form>
       )}

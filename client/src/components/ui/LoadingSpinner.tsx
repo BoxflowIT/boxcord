@@ -1,4 +1,5 @@
 // Reusable Loading Spinner Component (inline, not fullscreen)
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../utils/classNames';
 
 interface LoadingSpinnerProps {
@@ -49,13 +50,11 @@ export default function LoadingSpinner({
 }
 
 // Variant for full-height container loading
-export function LoadingState({
-  text = 'Laddar...',
-  size = 'md'
-}: LoadingSpinnerProps) {
+export function LoadingState({ text, size = 'md' }: LoadingSpinnerProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center justify-center h-full py-8">
-      <LoadingSpinner size={size} text={text} />
+      <LoadingSpinner size={size} text={text ?? t('common.loading')} />
     </div>
   );
 }

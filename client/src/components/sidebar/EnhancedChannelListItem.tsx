@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { EditIcon, CloseIcon } from '../ui/Icons';
 import { cn } from '../../utils/classNames';
 
@@ -21,6 +22,7 @@ export default function EnhancedChannelListItem({
   onEdit,
   onDelete
 }: EnhancedChannelListItemProps) {
+  const { t } = useTranslation();
   const hasUnread = unreadCount > 0;
 
   return (
@@ -48,14 +50,14 @@ export default function EnhancedChannelListItem({
       <button
         onClick={onEdit}
         className="btn-icon hover-group-visible"
-        title="Redigera kanal"
+        title={t('channels.edit')}
       >
         <EditIcon size="sm" />
       </button>
       <button
         onClick={onDelete}
         className="btn-icon-danger hover-group-visible"
-        title="Ta bort kanal"
+        title={t('channels.delete')}
       >
         <CloseIcon size="sm" />
       </button>

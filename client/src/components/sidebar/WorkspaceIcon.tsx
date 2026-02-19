@@ -1,5 +1,6 @@
 // Reusable Workspace Icon Component
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface WorkspaceIconProps {
   id: string;
@@ -21,6 +22,7 @@ export default function WorkspaceIcon({
   onDelete,
   onLeave
 }: WorkspaceIconProps) {
+  const { t } = useTranslation();
   const [showMenu, setShowMenu] = useState(false);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
@@ -88,7 +90,7 @@ export default function WorkspaceIcon({
                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
               />
             </svg>
-            <span>Redigera server</span>
+            <span>{t('channels.editServer')}</span>
           </button>
           <button
             className="w-full px-3 py-2 text-left text-sm text-boxflow-light hover:bg-boxflow-primary hover:text-white transition-colors flex items-center gap-2"
@@ -110,7 +112,7 @@ export default function WorkspaceIcon({
                 d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
               />
             </svg>
-            <span>Lämna server</span>
+            <span>{t('workspace.leave')}</span>
           </button>
           <div className="border-t border-boxflow-border my-1" />
           <button
@@ -133,7 +135,7 @@ export default function WorkspaceIcon({
                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
               />
             </svg>
-            <span>Ta bort server</span>
+            <span>{t('channels.deleteServer')}</span>
           </button>
         </div>
       )}

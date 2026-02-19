@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../services/api';
 import { logger } from '../../utils/logger';
 import { useChannelInput } from '../../hooks/useChannelInput';
@@ -22,11 +23,13 @@ interface MessageComposerProps {
 export default function MessageComposer({
   channelId,
   workspaceId,
-  placeholder = 'Skriv meddelande...',
+  placeholder,
   onSend,
   onTyping,
   onBotResponse
 }: MessageComposerProps) {
+  const { t } = useTranslation();
+  const placeholderText = placeholder ?? t('messages.typeMessage');
   const [uploading, setUploading] = useState(false);
   const [showMentions, setShowMentions] = useState(false);
   const [showSlashCommands, setShowSlashCommands] = useState(false);
@@ -162,7 +165,7 @@ export default function MessageComposer({
             disabled={!inputValue.trim() || uploading}
             className="ml-auto px-4 py-2 boxflow-bg-accent boxflow-text rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
           >
-            {uploading ? 'Laddar upp...' : 'Skicka'}
+            {uploading ? t('common.uploading') : t('common.send')}
           </button>
         </div>
       </div>

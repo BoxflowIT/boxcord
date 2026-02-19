@@ -1,4 +1,5 @@
 // DM Search Panel Component
+import { useTranslation } from 'react-i18next';
 import { CloseIcon } from '../ui/Icons';
 import Avatar from '../ui/Avatar';
 
@@ -24,6 +25,7 @@ export default function DMSearchPanel({
   onSelectUser,
   onClose
 }: DMSearchPanelProps) {
+  const { t } = useTranslation();
   return (
     <div className="p-2 border-b border-discord-darkest flex-shrink-0">
       <div className="flex-row mb-2">
@@ -31,14 +33,14 @@ export default function DMSearchPanel({
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Sök användare..."
+          placeholder={t('dm.searchUsers')}
           className="input-base text-sm flex-1"
           autoFocus
         />
         <button
           onClick={onClose}
           className="text-gray-400 hover:text-white p-1"
-          title="Stäng"
+          title={t('common.close')}
         >
           <CloseIcon size="sm" />
         </button>

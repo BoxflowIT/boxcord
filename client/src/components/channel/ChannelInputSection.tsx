@@ -57,7 +57,9 @@ export default function ChannelInputSection({
           value={inputValue}
           onChange={onInputChange}
           onKeyDown={onKeyDown}
-          placeholder={t('messages.typeMessageInChannel', { channel: channelName || 'channel' })}
+          placeholder={t('messages.typeMessageInChannel', {
+            channel: channelName || 'channel'
+          })}
           className="flex-1 bg-transparent text-boxflow-light placeholder-boxflow-subtle resize-none outline-none p-3 max-h-48"
           rows={1}
           disabled={uploading}

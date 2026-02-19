@@ -1,4 +1,5 @@
 // Reusable Message Header Component - Author name, timestamp, edited badge
+import { useTranslation } from 'react-i18next';
 import { formatTime } from '../../lib/formatters';
 import { cn } from '../../utils/classNames';
 
@@ -15,6 +16,7 @@ export function MessageHeader({
   edited,
   compact = false
 }: MessageHeaderProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-baseline gap-2">
       <span
@@ -29,7 +31,9 @@ export function MessageHeader({
         {formatTime(createdAt)}
       </span>
       {edited && (
-        <span className="text-xs text-boxflow-muted">(redigerad)</span>
+        <span className="text-xs text-boxflow-muted">
+          ({t('messages.edited')})
+        </span>
       )}
     </div>
   );

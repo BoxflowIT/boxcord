@@ -1,5 +1,6 @@
 // Reusable Message List Component
 import React, { useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LoadingState } from '../ui/LoadingSpinner';
 
 interface MessageListProps {
@@ -15,6 +16,7 @@ export function MessageList({
   emptyState,
   autoScroll = true
 }: MessageListProps) {
+  const { t } = useTranslation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -26,7 +28,7 @@ export function MessageList({
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <LoadingState text="Laddar meddelanden..." />
+        <LoadingState text={t('common.loadingMessages')} />
       </div>
     );
   }

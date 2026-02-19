@@ -1,4 +1,5 @@
 // Message List Component - Displays messages with loading and empty states
+import { useTranslation } from 'react-i18next';
 import { LoadingState } from '../ui/LoadingSpinner';
 import ChannelEmptyState from '../channel/ChannelEmptyState';
 import { MessageItem } from '../MessageItem';
@@ -63,10 +64,11 @@ export default function MessageListDisplay({
   onDelete,
   messagesEndRef
 }: MessageListDisplayProps) {
+  const { t } = useTranslation();
   if (loading) {
     return (
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        <LoadingState text="Laddar meddelanden..." />
+        <LoadingState text={t('common.loadingMessages')} />
       </div>
     );
   }
@@ -74,7 +76,7 @@ export default function MessageListDisplay({
   if (messages.length === 0) {
     return (
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        <ChannelEmptyState channelName={channelName ?? 'kanal'} />
+        <ChannelEmptyState channelName={channelName ?? t('channels.channel')} />
       </div>
     );
   }

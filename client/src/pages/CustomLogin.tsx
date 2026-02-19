@@ -1,5 +1,6 @@
 // Custom Login Page - Boxcord Design
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/auth';
 import { signIn } from '../services/cognito';
@@ -12,6 +13,7 @@ import { AuthLayout } from '../components/ui/AuthLayout';
 import { logger } from '../utils/logger';
 
 export default function CustomLogin() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { token, setAuth, setLoading } = useAuthStore();
   const [email, setEmail] = useState('');
@@ -37,14 +39,14 @@ export default function CustomLogin() {
       const result = await signIn(email, password);
 
       if (!result.success) {
-        setError(result.error || 'Inloggningen misslyckades');
+        setError(result.error || t('auth.loginFailed'));
         setIsLoggingIn(false);
         setLoading(false);
         return;
       }
 
       if (result.requiresNewPassword) {
-        setError('Nytt lösenord krävs. Kontakta administratör.');
+        setError(t('auth.newPasswordRequired'));
         setIsLoggingIn(false);
         setLoading(false);
         return;
@@ -76,7 +78,7 @@ export default function CustomLogin() {
       navigate('/chat', { replace: true });
     } catch (error) {
       logger.error('Login error:', error);
-      setError('Ett oväntat fel uppstod vid inloggning');
+      setError(t('common.unexpectedError'));
       setIsLoggingIn(false);
       setLoading(false);
     }
@@ -85,14 +87,14 @@ export default function CustomLogin() {
   return (
     <AuthLayout
       title="Boxcord"
-      description="Välkommen tillbaka!"
-      footer="Använder samma inloggning som Boxtime"
+      description={t('auth.welcomeBack')}
+      footer={t('auth.sameAsBoxtime')}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <FormField
           type="email"
           id="email"
-          label="E-postadress"
+          label={t('auth.email')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="din@email.com"
@@ -103,7 +105,7 @@ export default function CustomLogin() {
         <FormField
           type="password"
           id="password"
-          label="Lösenord"
+          label={t('auth.password')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••"
@@ -115,7 +117,7 @@ export default function CustomLogin() {
 
         <div className="text-right">
           <Link to="/forgot-password" className="text-sm text-link">
-            Glömt lösenord?
+            {t('auth.forgotPassword')}
           </Link>
         </div>
 
@@ -125,7 +127,7 @@ export default function CustomLogin() {
           className="w-full"
           size="lg"
         >
-          {isLoggingIn ? 'Loggar in...' : 'Logga in'}
+          {isLoggingIn ? t('auth.loggingIn') : t('auth.login')}
         </Button>
       </form>
     </AuthLayout>

@@ -16,6 +16,24 @@ vi.mock('../../src/services/push', () => ({
   }
 }));
 
+// Mock i18next
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        'notifications.pushNotifications': 'Push Notifications',
+        'notifications.browserNotSupported':
+          'Your browser does not support push notifications',
+        'notifications.permissionDenied':
+          'You have blocked notifications. Enable them in browser settings.',
+        'notifications.permissionGranted': 'Notifications enabled',
+        'notifications.testNotification': 'Send test notification'
+      };
+      return translations[key] || key;
+    }
+  })
+}));
+
 describe('NotificationSettings', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -27,7 +45,7 @@ describe('NotificationSettings', () => {
     render(<NotificationSettings />);
 
     await waitFor(() => {
-      expect(screen.getByText(/stöder inte push-notiser/i)).toBeInTheDocument();
+      expect(screen.getByText(/does not support push/i)).toBeInTheDocument();
     });
   });
 
@@ -42,7 +60,7 @@ describe('NotificationSettings', () => {
     render(<NotificationSettings />);
 
     await waitFor(() => {
-      expect(screen.getByText(/blockerat notiser/i)).toBeInTheDocument();
+      expect(screen.getByText(/blocked notifications/i)).toBeInTheDocument();
     });
   });
 
@@ -95,7 +113,7 @@ describe('NotificationSettings', () => {
     render(<NotificationSettings />);
 
     await waitFor(() => {
-      expect(screen.getByText(/testnotis/i)).toBeInTheDocument();
+      expect(screen.getByText(/test notification/i)).toBeInTheDocument();
     });
 
     // Click the toggle switch
@@ -118,10 +136,10 @@ describe('NotificationSettings', () => {
     render(<NotificationSettings />);
 
     await waitFor(() => {
-      expect(screen.getByText(/testnotis/i)).toBeInTheDocument();
+      expect(screen.getByText(/test notification/i)).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText(/testnotis/i));
+    fireEvent.click(screen.getByText(/test notification/i));
 
     await waitFor(() => {
       expect(pushService.sendTest).toHaveBeenCalled();

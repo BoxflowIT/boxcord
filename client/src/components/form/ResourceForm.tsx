@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useFormState } from '../../hooks/useFormState';
 import { TextInput } from './TextInput';
 import { TextArea } from './TextArea';
@@ -31,10 +32,13 @@ export default function ResourceForm({
   initialValues = {},
   onSubmit,
   onCancel,
-  submitText = 'Spara',
-  cancelText = 'Avbryt',
+  submitText,
+  cancelText,
   isLoading = false
 }: ResourceFormProps) {
+  const { t } = useTranslation();
+  const submit = submitText ?? t('common.save');
+  const cancel = cancelText ?? t('common.cancel');
   const { values, errors, isSubmitting, setValue, handleSubmit } = useFormState(
     {
       initialValues: fields.reduce(
@@ -48,10 +52,12 @@ export default function ResourceForm({
         const errs: Record<string, string> = {};
         fields.forEach((field) => {
           if (field.required && !vals[field.name]?.trim()) {
-            errs[field.name] = `${field.label} är obligatorisk`;
+            errs[field.name] = t('validation.required', { field: field.label });
           }
           if (field.maxLength && vals[field.name]?.length > field.maxLength) {
-            errs[field.name] = `Max ${field.maxLength} tecken`;
+            errs[field.name] = t('validation.maxLength', {
+              max: field.maxLength
+            });
           }
         });
         return errs;
@@ -105,7 +111,7 @@ export default function ResourceForm({
               onClick={onCancel}
               disabled={isLoading || isSubmitting}
             >
-              {cancelText}
+              {cancel}
             </Button>
           )}
           <Button
@@ -113,7 +119,7 @@ export default function ResourceForm({
             variant="primary"
             loading={isLoading || isSubmitting}
           >
-            {submitText}
+            {submit}
           </Button>
         </div>
       </FormGroup>

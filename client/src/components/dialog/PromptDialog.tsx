@@ -1,5 +1,6 @@
 // Prompt Dialog - Input prompt dialog
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Modal from '../ui/Modal';
 import { Button, TextInput } from '../form';
 
@@ -24,10 +25,13 @@ export default function PromptDialog({
   message,
   placeholder = '',
   defaultValue = '',
-  confirmText = 'OK',
-  cancelText = 'Avbryt',
+  confirmText,
+  cancelText,
   isLoading = false
 }: PromptDialogProps) {
+  const { t } = useTranslation();
+  const confirm = confirmText ?? t('common.ok');
+  const cancel = cancelText ?? t('common.cancel');
   const [value, setValue] = useState(defaultValue);
 
   const handleConfirm = () => {
@@ -63,14 +67,14 @@ export default function PromptDialog({
 
         <div className="flex gap-3 justify-end mt-6">
           <Button variant="ghost" onClick={onClose} disabled={isLoading}>
-            {cancelText}
+            {cancel}
           </Button>
           <Button
             variant="primary"
             onClick={handleConfirm}
             disabled={!value.trim() || isLoading}
           >
-            {isLoading ? 'Laddar...' : confirmText}
+            {isLoading ? t('common.loading') : confirm}
           </Button>
         </div>
       </div>

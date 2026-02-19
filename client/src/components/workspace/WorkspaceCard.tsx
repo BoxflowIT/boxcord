@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 interface WorkspaceCardProps {
   name: string;
   iconUrl?: string | null;
@@ -18,6 +20,7 @@ export default function WorkspaceCard({
   onEdit,
   onDelete
 }: WorkspaceCardProps) {
+  const { t } = useTranslation();
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     onDelete();
@@ -37,7 +40,7 @@ export default function WorkspaceCard({
         className={
           isActive ? 'workspace-icon-active' : 'workspace-icon-inactive'
         }
-        title={`${name}\nDubbelklick: redigera\nHögerklick: ta bort`}
+        title={`${name}\n${t('common.doubleClickEdit')}\n${t('common.rightClickDelete')}`}
       >
         {iconUrl ? (
           <img src={iconUrl} alt="" className="w-full h-full object-cover" />

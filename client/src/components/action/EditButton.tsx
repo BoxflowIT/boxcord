@@ -1,4 +1,5 @@
 // Edit Button - Quick edit action button
+import { useTranslation } from 'react-i18next';
 import { EditIcon } from '../ui/Icons';
 import ActionButton from './ActionButton';
 
@@ -13,17 +14,18 @@ interface EditButtonProps {
 
 export default function EditButton({
   onClick,
-  title = 'Redigera',
+  title,
   size = 'sm',
   variant = 'default',
   disabled = false,
   className = ''
 }: EditButtonProps) {
+  const { t } = useTranslation();
   return (
     <ActionButton
       icon={<EditIcon size={size} />}
       onClick={onClick}
-      title={title}
+      title={title ?? t('common.edit')}
       variant={variant}
       disabled={disabled}
       className={className}

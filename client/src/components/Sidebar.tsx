@@ -345,8 +345,8 @@ export default function Sidebar({
       <DeleteConfirmModal
         isOpen={deleteChannelModal.isOpen}
         title={t('channels.delete')}
-        message={t('channels.deleteConfirmMessage', { 
-          name: deleteChannelModal.data?.name || '' 
+        message={t('channels.deleteConfirmMessage', {
+          name: deleteChannelModal.data?.name || ''
         })}
         onConfirm={handleDeleteConfirmChannel}
         onCancel={deleteChannelModal.close}
@@ -355,8 +355,8 @@ export default function Sidebar({
       <DeleteConfirmModal
         isOpen={deleteWorkspaceModal.isOpen}
         title={t('channels.deleteServer')}
-        message={t('channels.deleteServerConfirmMessage', { 
-          name: deleteWorkspaceModal.data?.name || '' 
+        message={t('channels.deleteServerConfirmMessage', {
+          name: deleteWorkspaceModal.data?.name || ''
         })}
         onConfirm={handleDeleteConfirmWorkspace}
         onCancel={deleteWorkspaceModal.close}
@@ -364,15 +364,15 @@ export default function Sidebar({
 
       <DeleteConfirmModal
         isOpen={leaveWorkspaceModal.isOpen}
-        title="Lämna server"
+        title={t('workspace.leave')}
         message={
           <>
-            Är du säker på att du vill lämna{' '}
-            <strong>{leaveWorkspaceModal.data?.name}</strong>? Du kan gå med
-            igen med en inbjudningslänk.
+            {t('workspace.leaveConfirm', {
+              name: leaveWorkspaceModal.data?.name
+            })}
           </>
         }
-        confirmText="Lämna"
+        confirmText={t('common.leave')}
         onConfirm={handleLeaveConfirmWorkspace}
         onCancel={leaveWorkspaceModal.close}
       />

@@ -146,7 +146,7 @@ export default function DMList({
             </div>
           </div>
         ) : channels.length === 0 ? (
-          <p className="text-gray-400 text-sm p-2">Inga konversationer</p>
+          <p className="text-gray-400 text-sm p-2">{t('dm.noConversations')}</p>
         ) : (
           channels.map((channel) => {
             const otherUser = getOtherUser(channel, user?.id);

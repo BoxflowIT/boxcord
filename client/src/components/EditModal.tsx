@@ -1,5 +1,6 @@
 // Edit Modal for Channel or Workspace
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -38,6 +39,7 @@ export default function EditModal({
   onSave,
   onCancel
 }: EditModalProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState(initialDescription);
   const [iconUrl, setIconUrl] = useState(initialIconUrl);
@@ -78,7 +80,7 @@ export default function EditModal({
             finalIconUrl = result.url;
           }
         } catch (uploadErr) {
-          setUploadError('Kunde inte ladda upp bilden');
+          setUploadError(t('errors.uploadFailed'));
           logger.error('Failed to upload image:', uploadErr);
           setUploading(false);
           return;
@@ -93,7 +95,7 @@ export default function EditModal({
       });
     } catch (err) {
       logger.error('Failed to save:', err);
-      setUploadError('Kunde inte spara ändringarna');
+      setUploadError(t('common.couldNotSave'));
     } finally {
       setUploading(false);
     }
@@ -108,7 +110,7 @@ export default function EditModal({
         <div className="space-y-4">
           <div>
             <label className="block text-sm text-gray-400 mb-1">
-              {showIcon ? 'Servernamn' : 'Kanalnamn'}
+              {showIcon ? t('channels.createServer') : t('channels.name')}
             </label>
             <Input
               type="text"
@@ -119,19 +121,18 @@ export default function EditModal({
           </div>
           <div>
             <label className="block text-sm text-gray-400 mb-1">
-              Beskrivning
+              {t('channels.description')}
             </label>
             <Input
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Valfritt"
             />
           </div>
           {showIcon && (
             <div>
               <label className="block text-sm text-gray-400 mb-2">
-                Serverikon
+                {t('channels.createServer')}
               </label>
               <ImageUpload
                 currentImage={iconUrl}
@@ -144,10 +145,10 @@ export default function EditModal({
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onCancel} disabled={uploading}>
-            Avbryt
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={!name.trim() || uploading}>
-            {uploading ? 'Sparar...' : 'Spara'}
+            {uploading ? t('common.saving') : t('common.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

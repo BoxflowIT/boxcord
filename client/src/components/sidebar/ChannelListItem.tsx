@@ -1,4 +1,5 @@
 // Reusable Channel List Item Component
+import { useTranslation } from 'react-i18next';
 import { SettingsIcon } from '../ui/Icons';
 import { cn } from '../../utils/classNames';
 
@@ -18,6 +19,7 @@ export function ChannelListItem({
   onClick,
   onEdit
 }: ChannelListItemProps) {
+  const { t } = useTranslation();
   const hasUnread = unreadCount > 0;
 
   return (
@@ -49,7 +51,7 @@ export function ChannelListItem({
             onEdit();
           }}
           className="btn-icon hover-group-visible"
-          title="Redigera kanal"
+          title={t('channels.edit')}
         >
           <SettingsIcon size="sm" />
         </button>

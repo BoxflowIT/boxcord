@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '../dialog';
 
 interface ResourceDeleteDialogProps {
@@ -21,16 +22,8 @@ export default function ResourceDeleteDialog({
   onClose,
   dangerMessage
 }: ResourceDeleteDialogProps) {
+  const { t } = useTranslation();
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const resourceLabels = {
-    channel: { single: 'kanal', plural: 'kanalen' },
-    workspace: { single: 'workspace', plural: 'workspacen' },
-    message: { single: 'meddelande', plural: 'meddelandet' },
-    user: { single: 'användare', plural: 'användaren' }
-  };
-
-  const label = resourceLabels[resourceType];
 
   const handleConfirm = async () => {
     setIsDeleting(true);
@@ -47,13 +40,12 @@ export default function ResourceDeleteDialog({
   return (
     <ConfirmDialog
       isOpen={isOpen}
-      title={`Ta bort ${label.single}?`}
+      title={t(`delete.${resourceType}Title`)}
       message={
         dangerMessage ||
-        `Är du säker på att du vill ta bort ${label.plural} "${resourceName}"? Detta går inte att ångra.`
+        t(`delete.${resourceType}Message`, { name: resourceName })
       }
-      confirmText="Ta bort"
-      cancelText="Avbryt"
+      confirmText={t('common.delete')}
       variant="danger"
       onConfirm={handleConfirm}
       onClose={onClose}

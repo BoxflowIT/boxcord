@@ -1,4 +1,5 @@
 // Reusable Profile Edit Form Component
+import { useTranslation } from 'react-i18next';
 import { TextInput, TextArea, FormGroup } from '../form';
 
 interface ProfileFormData {
@@ -18,6 +19,7 @@ export function ProfileEditForm({
   onChange,
   disabled = false
 }: ProfileEditFormProps) {
+  const { t } = useTranslation();
   const handleChange = (field: keyof ProfileFormData, value: string) => {
     onChange({ ...formData, [field]: value });
   };
@@ -25,26 +27,26 @@ export function ProfileEditForm({
   return (
     <FormGroup spacing="md">
       <TextInput
-        label="Förnamn"
+        label={t('profile.firstName')}
         value={formData.firstName}
         onChange={(e) => handleChange('firstName', e.target.value)}
-        placeholder="Ditt förnamn"
+        placeholder={t('profile.yourFirstName')}
         disabled={disabled}
         fullWidth
       />
       <TextInput
-        label="Efternamn"
+        label={t('profile.lastName')}
         value={formData.lastName}
         onChange={(e) => handleChange('lastName', e.target.value)}
-        placeholder="Ditt efternamn"
+        placeholder={t('profile.yourLastName')}
         disabled={disabled}
         fullWidth
       />
       <TextArea
-        label="Bio"
+        label={t('profile.bio')}
         value={formData.bio}
         onChange={(e) => handleChange('bio', e.target.value)}
-        placeholder="Berätta lite om dig själv..."
+        placeholder={t('profile.tellAboutYourself')}
         rows={4}
         disabled={disabled}
         fullWidth

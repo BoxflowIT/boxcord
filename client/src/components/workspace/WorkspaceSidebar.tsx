@@ -1,4 +1,5 @@
 // Workspace Sidebar - Vertical workspace list
+import { useTranslation } from 'react-i18next';
 import WorkspaceButton from './WorkspaceButton';
 import AddButton from './AddButton';
 
@@ -27,6 +28,7 @@ export default function WorkspaceSidebar({
   onDeleteWorkspace,
   footer
 }: WorkspaceSidebarProps) {
+  const { t } = useTranslation();
   return (
     <div className="sidebar-icon">
       {/* Workspace list */}
@@ -52,7 +54,7 @@ export default function WorkspaceSidebar({
       {/* Add workspace button */}
       <AddButton
         onClick={onAddWorkspace}
-        title="Lägg till workspace"
+        title={t('workspace.addWorkspace')}
         variant="workspace"
       />
 

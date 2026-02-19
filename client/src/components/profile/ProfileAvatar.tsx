@@ -1,4 +1,5 @@
 // Profile Avatar Component with edit functionality
+import { useTranslation } from 'react-i18next';
 import { useImageUpload } from '../../hooks/useImageUpload';
 import { cn } from '../../utils/classNames';
 import CameraIcon from '../ui/CameraIcon';
@@ -61,6 +62,7 @@ export default function ProfileAvatar({
   onAvatarChange,
   onRemoveAvatar
 }: ProfileAvatarProps) {
+  const { t } = useTranslation();
   const { uploading, handleFileInput } = useImageUpload({
     maxSizeMB: 5
   });
@@ -93,7 +95,9 @@ export default function ProfileAvatar({
             <label htmlFor="avatar-upload" className={OVERLAY_LABEL_CLASSES}>
               <CameraIcon className="w-12 h-12 mb-2" />
               <span className="text-sm font-bold">
-                {uploading ? 'Laddar...' : 'Klicka för att byta bild'}
+                {uploading
+                  ? t('common.loading')
+                  : t('profile.clickToChangeImage')}
               </span>
             </label>
             <input
@@ -112,7 +116,7 @@ export default function ProfileAvatar({
         <button
           onClick={onRemoveAvatar}
           className={REMOVE_BUTTON_CLASSES}
-          title="Ta bort bild"
+          title={t('profile.removeImage')}
         >
           <CloseIcon className="w-4 h-4" />
         </button>

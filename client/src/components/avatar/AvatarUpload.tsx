@@ -1,5 +1,6 @@
 // Avatar Upload - Avatar with upload overlay
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Avatar from '../ui/Avatar';
 import { cn } from '../../utils/classNames';
 
@@ -24,6 +25,7 @@ export default function AvatarUpload({
   disabled = false,
   className = ''
 }: AvatarUploadProps) {
+  const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,7 +100,7 @@ export default function AvatarUpload({
                     d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
                   />
                 </svg>
-                <span>Ladda upp</span>
+                <span>{t('common.upload')}</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -114,7 +116,7 @@ export default function AvatarUpload({
                   }}
                   className="mt-1 text-red-400 hover:text-red-300"
                 >
-                  Ta bort
+                  {t('common.remove')}
                 </button>
               )}
             </>

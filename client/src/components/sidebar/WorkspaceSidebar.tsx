@@ -1,4 +1,5 @@
 // Reusable Workspace Sidebar (Left icon column)
+import { useTranslation } from 'react-i18next';
 import { PlusIcon, SettingsIcon, JoinIcon } from '../ui/Icons';
 import WorkspaceIcon from './WorkspaceIcon';
 import type { Workspace } from '../../types';
@@ -26,6 +27,7 @@ export default function WorkspaceSidebar({
   onJoinServer,
   onSettingsClick
 }: WorkspaceSidebarProps) {
+  const { t } = useTranslation();
   return (
     <div className="sidebar-icon">
       {workspaces.map((workspace) => (
@@ -45,7 +47,7 @@ export default function WorkspaceSidebar({
       <button
         onClick={onCreateWorkspace}
         className="workspace-icon-add"
-        title="Skapa server"
+        title={t('channels.createServer')}
       >
         <PlusIcon size="lg" />
       </button>
@@ -53,7 +55,7 @@ export default function WorkspaceSidebar({
       <button
         onClick={onJoinServer}
         className="workspace-icon-add"
-        title="Gå med i server"
+        title={t('invite.joinServer')}
       >
         <JoinIcon size="lg" />
       </button>

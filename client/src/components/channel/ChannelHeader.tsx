@@ -1,4 +1,5 @@
 // Reusable Channel Header Component
+import { useTranslation } from 'react-i18next';
 import { UsersIcon } from '../ui/Icons';
 
 interface ChannelHeaderProps {
@@ -12,12 +13,13 @@ export function ChannelHeader({
   channelDescription,
   onToggleMemberList
 }: ChannelHeaderProps) {
+  const { t } = useTranslation();
   return (
     <div className="panel-header justify-between">
       <div>
         <h2 className="text-heading">
           <span className="text-boxflow-muted mr-1">#</span>
-          {channelName ?? 'Laddar...'}
+          {channelName ?? t('common.loading')}
         </h2>
         {channelDescription && (
           <p className="text-sm text-boxflow-muted mt-0.5">
@@ -29,7 +31,7 @@ export function ChannelHeader({
         <button
           onClick={onToggleMemberList}
           className="btn-icon"
-          title="Visa medlemmar"
+          title={t('common.showMembers')}
         >
           <UsersIcon />
         </button>

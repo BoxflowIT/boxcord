@@ -2,6 +2,7 @@
  * DM Call Overlay
  * Displays when a DM voice call is active (ringing/calling/connected)
  */
+import { useTranslation } from 'react-i18next';
 import { useDMCallStore } from '../../store/dmCallStore';
 import { useVoiceStore } from '../../store/voiceStore';
 import { voiceService } from '../../services/voice.service';
@@ -25,6 +26,7 @@ export function DMCallOverlay({
   onReject,
   onEndCall
 }: DMCallOverlayProps) {
+  const { t } = useTranslation();
   const { callState, otherUserName } = useDMCallStore();
   const { isMuted, isDeafened } = useVoiceStore();
 
@@ -51,7 +53,7 @@ export function DMCallOverlay({
             {otherUserName}
           </h2>
 
-          <p className="text-gray-400 mb-6">Inkommande röstsamtal...</p>
+          <p className="text-gray-400 mb-6">{t('voice.incomingCall')}</p>
 
           <div className="flex gap-4 justify-center">
             <button
@@ -59,7 +61,7 @@ export function DMCallOverlay({
               className="px-6 py-3 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition-colors flex items-center gap-2"
             >
               <PhoneHangUpIcon size="md" />
-              Avvisa
+              {t('voice.reject')}
             </button>
 
             <button
@@ -67,7 +69,7 @@ export function DMCallOverlay({
               className="px-6 py-3 rounded-lg bg-green-500 hover:bg-green-600 text-white font-medium transition-colors flex items-center gap-2"
             >
               <MicIcon size="md" />
-              Svara
+              {t('voice.answer')}
             </button>
           </div>
         </div>
@@ -85,13 +87,13 @@ export function DMCallOverlay({
             <p className="text-white font-medium">{otherUserName}</p>
             <p className="text-xs text-gray-400 flex items-center gap-1">
               <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
-              Ringer...
+              {t('voice.calling')}
             </p>
           </div>
           <button
             onClick={onEndCall}
             className="p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors"
-            title="Avbryt"
+            title={t('common.cancel')}
           >
             <PhoneHangUpIcon size="sm" />
           </button>
@@ -110,7 +112,7 @@ export function DMCallOverlay({
             <p className="text-white font-medium">{otherUserName}</p>
             <p className="text-xs text-green-400 flex items-center gap-1">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-              I samtal
+              {t('voice.inCall')}
             </p>
           </div>
         </div>
@@ -148,7 +150,7 @@ export function DMCallOverlay({
           <button
             onClick={onEndCall}
             className="flex-1 p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors"
-            title="Lägg på"
+            title={t('voice.hangUp')}
           >
             <PhoneHangUpIcon size="sm" />
           </button>
