@@ -1,0 +1,33 @@
+{
+  "name": "Boxcord - Team Chat",
+  "short_name": "Boxcord",
+  "description": "Modern team chat application with voice, video, and screen sharing",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#3b82f6",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["productivity", "communication", "business"],
+  "shortcuts": [
+    {
+      "name": "New Message",
+      "short_name": "New DM",
+      "description": "Start a new direct message",
+      "url": "/dm/new"
+    },
+    {
+      "name": "Workspaces",
+      "short_name": "Workspaces",
+      "description": "View all workspaces",
+      "url": "/workspaces"
+    }
+  ],
+  "prefer_related_applications": false
+}

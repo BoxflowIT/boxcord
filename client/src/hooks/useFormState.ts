@@ -66,7 +66,7 @@ export function useFormState<T extends Record<string, any>>({
         try {
           await onSubmit(values);
           setIsDirty(false);
-        } catch (error) {
+        } catch {
           // Error handling can be done in onSubmit
         } finally {
           setIsSubmitting(false);

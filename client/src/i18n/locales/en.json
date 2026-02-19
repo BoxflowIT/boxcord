@@ -4,6 +4,13 @@
     "searchEmoji": "Search emoji...",
     "searchGifs": "Search GIFs on Giphy..."
   },
+  "search": {
+    "placeholder": "Search messages...",
+    "typeToSearch": "Type at least 2 characters to search",
+    "noResults": "No messages found",
+    "hint": "Press Escape to close",
+    "searching": "Searching..."
+  },
   "common": {
     "save": "Save",
     "saving": "Saving...",
@@ -93,7 +100,9 @@
     "permissionGranted": "Notifications enabled",
     "testNotification": "Send test notification",
     "testNotificationBody": "This is a test notification from Boxcord!",
-    "pushNotifications": "Push Notifications"
+    "pushNotifications": "Push Notifications",
+    "unreadMessages": "{{count}} unread messages",
+    "unreadMentions": "{{count}} unread mentions"
   },
   "voice": {
     "title": "Voice & Audio Settings",
@@ -154,6 +163,16 @@
     "thread": "Thread",
     "pin": "Pin Message",
     "unpin": "Unpin Message",
+    "pinnedBy": "Pinned by {{author}}",
+    "previousPinned": "Previous pinned message",
+    "nextPinned": "Next pinned message",
+    "noPinnedMessages": "No pinned messages",
+    "forwardMessage": "Forward Message",
+    "forwardingMessage": "Forwarding message",
+    "searchDestination": "Search for a channel or person...",
+    "forward": "Forward",
+    "noDestinationsFound": "No destinations found",
+    "new": "NEW",
     "copy": "Copy Message",
     "mention": "Mention",
     "emoji": "Emoji",

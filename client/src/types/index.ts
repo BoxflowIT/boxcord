@@ -41,6 +41,9 @@ export interface Message {
   };
   content: string;
   edited: boolean;
+  isPinned?: boolean;
+  pinnedAt?: string | null;
+  pinnedBy?: string | null;
   createdAt: string;
   updatedAt: string;
   parentId?: string | null;
