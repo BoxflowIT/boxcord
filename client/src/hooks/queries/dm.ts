@@ -29,3 +29,14 @@ export function useDMMessages(channelId: string | undefined, cursor?: string) {
     // NO refetchInterval - WebSocket events keep cache fresh!
   });
 }
+
+// Pinned DM messages
+export function usePinnedDMs(channelId: string | undefined) {
+  return useQuery({
+    queryKey: channelId ? ['pinnedDMs', channelId] : ['pinnedDMs-null'],
+    queryFn: () => (channelId ? api.getPinnedDMs(channelId) : []),
+    enabled: !!channelId,
+    staleTime: 60 * 1000, // 60s
+    gcTime: 5 * 60 * 1000
+  });
+}

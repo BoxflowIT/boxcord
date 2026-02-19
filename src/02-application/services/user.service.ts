@@ -12,6 +12,10 @@ export interface LocalUser {
   avatarUrl?: string | null;
   bio?: string | null;
   role: string;
+  status?: string | null;
+  statusEmoji?: string | null;
+  dndMode?: boolean;
+  dndUntil?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -266,5 +270,86 @@ export class UserService {
     await this.prisma.user.delete({
       where: { id: userId }
     });
+  }
+
+  // Custom status and DND features
+  async updateCustomStatus(
+    userId: string,
+    status: string | null,
+    statusEmoji?: string | null
+  ): Promise<LocalUser> {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        status,
+        statusEmoji
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        bio: true,
+        role: true,
+        status: true,
+        statusEmoji: true,
+        dndMode: true,
+        dndUntil: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+
+    return user;
+  }
+
+  async updateDNDMode(
+    userId: string,
+    dndMode: boolean,
+    dndUntil?: Date | null
+  ): Promise<LocalUser> {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        dndMode,
+        dndUntil: dndMode ? dndUntil : null
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        bio: true,
+        role: true,
+        status: true,
+        statusEmoji: true,
+        dndMode: true,
+        dndUntil: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+
+    return user;
+  }
+
+  async getDNDUsers(userIds: string[]): Promise<string[]> {
+    const now = new Date();
+    
+    const users = await this.prisma.user.findMany({
+      where: {
+        id: { in: userIds },
+        dndMode: true,
+        OR: [
+          { dndUntil: null }, // Indefinite DND
+          { dndUntil: { gt: now } } // DND still active
+        ]
+      },
+      select: { id: true }
+    });
+
+    return users.map((u) => u.id);
   }
 }

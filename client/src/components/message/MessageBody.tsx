@@ -17,6 +17,10 @@ interface MessageBodyProps {
   onQuickReaction: (emoji: string) => void;
   onEdit: () => void;
   onDelete: () => void;
+  onForward?: () => void;
+  onPin?: () => void;
+  isPinned?: boolean;
+  canPin?: boolean;
   isOwnMessage: boolean;
 }
 
@@ -31,6 +35,10 @@ export function MessageBody({
   onQuickReaction,
   onEdit,
   onDelete,
+  onForward,
+  onPin,
+  isPinned,
+  canPin,
   isOwnMessage
 }: MessageBodyProps) {
   return (
@@ -42,6 +50,10 @@ export function MessageBody({
             onQuickReaction={onQuickReaction}
             onEdit={onEdit}
             onDelete={onDelete}
+            onForward={onForward}
+            onPin={onPin}
+            isPinned={isPinned}
+            canPin={canPin}
             isOwnMessage={isOwnMessage}
           />
         </div>

@@ -203,4 +203,52 @@ export async function userRoutes(app: FastifyInstance) {
 
     return { success: true, data: user };
   });
+
+  // PATCH /users/me/status - Update custom status
+  app.patch<{
+    Body: { status: string | null; statusEmoji?: string | null };
+  }>('/me/status', async (request, reply) => {
+    const { status, statusEmoji } = request.body;
+
+    const user = await userService.updateCustomStatus(
+      request.user.id,
+      status,
+      statusEmoji
+    );
+
+    // Emit socket event
+    if (app.io) {
+      app.io.emit('user:status-changed', {
+        userId: request.user.id,
+        status,
+        statusEmoji
+      });
+    }
+
+    return { success: true, data: user };
+  });
+
+  // PATCH /users/me/dnd - Update DND mode
+  app.patch<{
+    Body: { dndMode: boolean; dndUntil?: string | null };
+  }>('/me/dnd', async (request, reply) => {
+    const { dndMode, dndUntil } = request.body;
+
+    const user = await userService.updateDNDMode(
+      request.user.id,
+      dndMode,
+      dndUntil ? new Date(dndUntil) : null
+    );
+
+    // Emit socket event
+    if (app.io) {
+      app.io.emit('user:dnd-changed', {
+        userId: request.user.id,
+        dndMode,
+        dndUntil
+      });
+    }
+
+    return { success: true, data: user };
+  });
 }

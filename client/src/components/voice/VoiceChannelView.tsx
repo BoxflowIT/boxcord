@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { useVoiceStore } from '../../store/voiceStore';
+import { useVoiceStore, useVoiceControls } from '../../store/voiceStore';
 import { voiceService } from '../../services/voice.service';
+import { usePushToTalk } from '../../hooks/usePushToTalk';
 import { VoiceUserList } from './VoiceUserList';
-import { VoiceControls } from './VoiceControls';
+import { VoiceControls } from './EnhancedVoiceControls';
+import { VideoGrid } from './VideoGrid';
 import {
   VoiceChannelIcon,
   VoiceConnectIcon,
@@ -20,9 +22,20 @@ export function VoiceChannelView({
   channelName
 }: VoiceChannelViewProps) {
   const { isConnected, isConnecting, currentChannelId } = useVoiceStore();
+  const {
+    isMuted,
+    isDeafened,
+    isVideoEnabled,
+    isScreenSharing,
+    isPushToTalk,
+    setPushToTalk
+  } = useVoiceControls();
   const [error, setError] = useState<string | null>(null);
 
   const isInThisChannel = isConnected && currentChannelId === channelId;
+
+  // Push-to-Talk with 'V' key (like Discord)
+  usePushToTalk({ enabled: isInThisChannel, key: 'v' });
 
   const handleJoin = async () => {
     try {
@@ -46,6 +59,35 @@ export function VoiceChannelView({
       console.error('Failed to leave voice channel:', err);
       setError('Failed to leave voice channel');
     }
+  };
+
+  const handleToggleVideo = async () => {
+    try {
+      setError(null);
+      await voiceService.toggleVideo();
+    } catch (err) {
+      console.error('Failed to toggle video:', err);
+      setError(
+        err instanceof Error ? err.message : 'Failed to toggle video'
+      );
+    }
+  };
+
+  const handleToggleScreenShare = async () => {
+    try {
+      setError(null);
+      await voiceService.toggleScreenShare();
+    } catch (err) {
+      console.error('Failed to toggle screen share:', err);
+      setError(
+        err instanceof Error ? err.message : 'Failed to toggle screen share'
+      );
+    }
+  };
+
+  const handleTogglePTT = () => {
+    setPushToTalk(!isPushToTalk);
+    // PTT mode will be implemented separately with keyboard listeners
   };
 
   return (
@@ -136,11 +178,27 @@ export function VoiceChannelView({
 
             {/* Voice users list */}
             <div className="flex-1 overflow-y-auto">
+              {/* Video grid (if video/screen share is active) */}
+              <VideoGrid className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" />
+              
+              {/* Voice users list */}
               <VoiceUserList />
             </div>
 
             {/* Voice controls */}
-            <VoiceControls />
+            <VoiceControls
+              isMuted={isMuted}
+              isDeafened={isDeafened}
+              isVideoEnabled={isVideoEnabled}
+              isScreenSharing={isScreenSharing}
+              isPushToTalk={isPushToTalk}
+              onToggleMute={() => voiceService.toggleMute()}
+              onToggleDeafen={() => voiceService.toggleDeafen()}
+              onToggleVideo={handleToggleVideo}
+              onToggleScreenShare={handleToggleScreenShare}
+              onTogglePTT={handleTogglePTT}
+              onLeave={handleLeave}
+            />
           </div>
         )}
       </div>

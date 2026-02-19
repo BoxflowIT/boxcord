@@ -25,6 +25,14 @@ import {
 import { startVoiceActivityDetection, stopVoiceActivityDetection } from './vad';
 import { createPeer, addPeer } from './peerManager';
 import { muteAllPeers, cleanupPeerAudio } from './audioManager';
+import {
+  toggleVideo,
+  toggleScreenShare,
+  enableVideo,
+  disableVideo,
+  startScreenShare,
+  stopScreenShare
+} from './videoManager';
 
 // ============================================================================
 // VOICE SERVICE CLASS
@@ -238,6 +246,44 @@ class VoiceService {
       isDeafened: newDeafenedState,
       isMuted: newDeafenedState ? true : store.isMuted
     });
+  }
+
+  // ============================================================================
+  // VIDEO & SCREEN SHARE
+  // ============================================================================
+
+  async toggleVideo(): Promise<void> {
+    try {
+      await toggleVideo(this.audioState);
+    } catch (error) {
+      console.error('Failed to toggle video:', error);
+      throw error;
+    }
+  }
+
+  async toggleScreenShare(): Promise<void> {
+    try {
+      await toggleScreenShare(this.audioState);
+    } catch (error) {
+      console.error('Failed to toggle screen share:', error);
+      throw error;
+    }
+  }
+
+  async enableVideo(): Promise<void> {
+    await enableVideo(this.audioState);
+  }
+
+  async disableVideo(): Promise<void> {
+    disableVideo(this.audioState);
+  }
+
+  async startScreenShare(): Promise<void> {
+    await startScreenShare(this.audioState);
+  }
+
+  async stopScreenShare(): Promise<void> {
+    stopScreenShare(this.audioState);
   }
 
   // ============================================================================

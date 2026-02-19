@@ -1,7 +1,7 @@
 // Member List Item - Individual member row with avatar, name, status, and DM button
 import { useTranslation } from 'react-i18next';
 import Avatar from '../ui/Avatar';
-import { ChatIcon } from '../ui/Icons';
+import { ChatIcon, MoreIcon } from '../ui/Icons';
 import StatusIndicator, { UserStatus } from './StatusIndicator';
 
 interface MemberListItemProps {
@@ -13,6 +13,7 @@ interface MemberListItemProps {
   isCurrentUser?: boolean;
   onClick: () => void;
   onStartDM?: (e: React.MouseEvent) => void;
+  onModerate?: (e: React.MouseEvent) => void;
 }
 
 export default function MemberListItem({
@@ -22,7 +23,8 @@ export default function MemberListItem({
   status,
   isCurrentUser = false,
   onClick,
-  onStartDM
+  onStartDM,
+  onModerate
 }: MemberListItemProps) {
   const { t } = useTranslation();
   return (
@@ -50,15 +52,28 @@ export default function MemberListItem({
         </div>
       </button>
 
-      {/* DM button - only show for other users */}
-      {!isCurrentUser && onStartDM && (
-        <button
-          onClick={onStartDM}
-          className="btn-icon-primary hover-group-visible"
-          title={t('dm.sendDirectMessage')}
-        >
-          <ChatIcon size="sm" />
-        </button>
+      {/* Action buttons - only show for other users */}
+      {!isCurrentUser && (
+        <div className="flex gap-1">
+          {onStartDM && (
+            <button
+              onClick={onStartDM}
+              className="btn-icon-primary hover-group-visible"
+              title={t('dm.sendDirectMessage')}
+            >
+              <ChatIcon size="sm" />
+            </button>
+          )}
+          {onModerate && (
+            <button
+              onClick={onModerate}
+              className="btn-icon-primary hover-group-visible"
+              title={t('moderation.title')}
+            >
+              <MoreIcon size="sm" />
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

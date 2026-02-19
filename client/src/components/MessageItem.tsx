@@ -38,6 +38,12 @@ export interface MessageItemProps {
   // Actions
   onEdit: (messageId: string, content: string) => void;
   onDelete: (messageId: string) => void;
+  onForward?: (messageId: string, content: string) => void;
+  onPin?: (messageId: string) => void;
+
+  // Pin state
+  isPinned?: boolean;
+  canPin?: boolean;
 
   // Optional customization
   renderContent?: (content: string) => React.ReactNode;
@@ -65,6 +71,10 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
   onCancelEdit,
   onEdit,
   onDelete,
+  onForward,
+  onPin,
+  isPinned = false,
+  canPin = false,
   renderContent,
   compact = false,
   isDM = false
@@ -104,6 +114,10 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
           onCancelEdit={onCancelEdit}
           onEdit={() => onEdit(messageId, content)}
           onDelete={() => onDelete(messageId)}
+          onForward={onForward ? () => onForward(messageId, content) : undefined}
+          onPin={onPin ? () => onPin(messageId) : undefined}
+          isPinned={isPinned}
+          canPin={canPin}
           onQuickReaction={handleToggleReaction}
           onToggleReaction={handleToggleReaction}
           renderContent={renderContent}
@@ -125,6 +139,10 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
           onCancelEdit={onCancelEdit}
           onEdit={() => onEdit(messageId, content)}
           onDelete={() => onDelete(messageId)}
+          onForward={onForward ? () => onForward(messageId, content) : undefined}
+          onPin={onPin ? () => onPin(messageId) : undefined}
+          isPinned={isPinned}
+          canPin={canPin}
           onQuickReaction={handleToggleReaction}
           onToggleReaction={handleToggleReaction}
           renderContent={renderContent}

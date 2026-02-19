@@ -22,6 +22,9 @@ interface VoiceStateData {
   isMuted: boolean;
   isDeafened: boolean;
   isSpeaking: boolean;
+  isVideoEnabled: boolean;
+  isScreenSharing: boolean;
+  isPushToTalk: boolean;
   users: Map<string, VoiceUser>;
   peers: Map<string, SimplePeer.Instance>;
   localStream: MediaStream | null;
@@ -37,6 +40,9 @@ interface VoiceActions {
   setMuted: (isMuted: boolean) => void;
   setDeafened: (isDeafened: boolean) => void;
   setSpeaking: (isSpeaking: boolean) => void;
+  setVideoEnabled: (isVideoEnabled: boolean) => void;
+  setScreenSharing: (isScreenSharing: boolean) => void;
+  setPushToTalk: (isPushToTalk: boolean) => void;
   setLocalStream: (stream: MediaStream | null) => void;
   addUser: (user: VoiceUser) => void;
   removeUser: (userId: string) => void;
@@ -57,6 +63,9 @@ const createInitialState = (): VoiceStateData => ({
   currentSessionId: null,
   isConnected: false,
   isConnecting: false,
+  isVideoEnabled: false,
+  isScreenSharing: false,
+  isPushToTalk: false,
   isMuted: false,
   isDeafened: false,
   isSpeaking: false,
@@ -80,6 +89,9 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
   setConnected: (isConnected) => set({ isConnected }),
 
   // Local user state
+  setVideoEnabled: (isVideoEnabled) => set({ isVideoEnabled }),
+  setScreenSharing: (isScreenSharing) => set({ isScreenSharing }),
+  setPushToTalk: (isPushToTalk) => set({ isPushToTalk }),
   setMuted: (isMuted) => set({ isMuted }),
   setDeafened: (isDeafened) => set({ isDeafened }),
   setSpeaking: (isSpeaking) => set({ isSpeaking }),
@@ -165,8 +177,14 @@ export const useVoiceControls = () =>
       isMuted: s.isMuted,
       isDeafened: s.isDeafened,
       isSpeaking: s.isSpeaking,
+      isVideoEnabled: s.isVideoEnabled,
+      isScreenSharing: s.isScreenSharing,
+      isPushToTalk: s.isPushToTalk,
       setMuted: s.setMuted,
-      setDeafened: s.setDeafened
+      setDeafened: s.setDeafened,
+      setVideoEnabled: s.setVideoEnabled,
+      setScreenSharing: s.setScreenSharing,
+      setPushToTalk: s.setPushToTalk
     }))
   );
 

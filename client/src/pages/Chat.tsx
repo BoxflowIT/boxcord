@@ -17,6 +17,7 @@ import WelcomeView from '../components/WelcomeView';
 import MemberList from '../components/MemberList';
 import ProfileModal from '../components/ProfileModal';
 import SettingsModal from '../components/SettingsModal';
+import { GlobalSearch } from '../components/GlobalSearch';
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ export default function Chat() {
   const [showProfile, setShowProfile] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showMemberList, setShowMemberList] = useState(true);
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
 
   // React Query hooks - single source of truth for server data
   const { data: workspaces = [] } = useWorkspaces();
@@ -46,8 +48,18 @@ export default function Chat() {
 
     window.addEventListener('beforeunload', handleBeforeUnload);
 
+    // Global search keyboard shortcut (Cmd+K or Ctrl+K)
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowGlobalSearch(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('keydown', handleKeyDown);
       socketService.disconnect();
     };
   }, []);
@@ -140,6 +152,26 @@ export default function Chat() {
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
       />
+
+      {/* Global Search */}
+      {showGlobalSearch && (
+        <div className="fixed inset-0 bg-black/70 flex items-start justify-center pt-20 z-50">
+          <div className="w-full max-w-2xl">
+            <GlobalSearch
+              onClose={() => setShowGlobalSearch(false)}
+              onResultClick={(result) => {
+                if (result.type === 'channel') {
+                  navigate(`/chat/channels/${result.channel?.id}`);
+                } else {
+                  // Navigate to DM (we'd need dmChannelId from result)
+                  console.log('Navigate to DM:', result);
+                }
+                setShowGlobalSearch(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

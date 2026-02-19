@@ -33,15 +33,15 @@ export function MessageContent({
         // Render GIF as image
         renderGif(content)
       ) : (
-        // Render normal text content
-        <p
+        // Render normal text content - use div to prevent nesting issues
+        <div
           className={cn(
             'text-boxflow-light break-words',
             compact ? 'text-sm leading-5' : 'text-base'
           )}
         >
           {renderContent ? renderContent(content) : content}
-        </p>
+        </div>
       )}
 
       {/* Attachments */}

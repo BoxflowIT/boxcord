@@ -18,6 +18,9 @@ import {
   registerChannelHandlers,
   registerVoiceHandlers,
   registerPresenceHandlers,
+  registerCategoryHandlers,
+  registerModerationHandlers,
+  registerUserStatusHandlers,
   onDMMessage,
   offDMMessage,
   onDMEdit,
@@ -145,6 +148,9 @@ class SocketService {
     registerChannelHandlers(context);
     registerVoiceHandlers(context);
     registerPresenceHandlers(context);
+    registerCategoryHandlers(context);
+    registerModerationHandlers(context);
+    registerUserStatusHandlers(context);
   }
 
   disconnect() {

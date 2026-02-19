@@ -58,9 +58,20 @@ export class MessageService {
         cursor: { id: params.cursor },
         skip: 1
       }),
-      include: {
+      select: {
+        id: true,
+        channelId: true,
+        authorId: true,
+        content: true,
+        edited: true,
+        isPinned: true,
+        pinnedAt: true,
+        pinnedBy: true,
+        createdAt: true,
+        updatedAt: true,
+        parentId: true,
         author: {
-          select: { id: true, firstName: true, lastName: true, email: true }
+          select: { id: true, firstName: true, lastName: true, email: true, avatarUrl: true }
         },
         attachments: {
           select: {
@@ -310,7 +321,8 @@ export class MessageService {
 
     return {
       items: items as MessageWithExtras[],
-      nextCursor: hasMore ? items[items.length - 1].id : undefined
+      nextCursor: hasMore ? items[items.length - 1].id : undefined,
+      hasMore
     };
   }
 }

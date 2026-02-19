@@ -36,8 +36,14 @@ interface MessageWithHeaderProps {
   // Actions
   onEdit: () => void;
   onDelete: () => void;
+  onForward?: () => void;
+  onPin?: () => void;
   onQuickReaction: (emoji: string) => void;
   onToggleReaction: (emoji: string) => void;
+
+  // Pin state
+  isPinned?: boolean;
+  canPin?: boolean;
 
   // Optional
   renderContent?: (content: string) => React.ReactNode;
@@ -62,6 +68,10 @@ export function MessageWithHeader({
   onCancelEdit,
   onEdit,
   onDelete,
+  onForward,
+  onPin,
+  isPinned,
+  canPin,
   onQuickReaction,
   onToggleReaction,
   renderContent
@@ -103,6 +113,10 @@ export function MessageWithHeader({
             onQuickReaction={onQuickReaction}
             onEdit={onEdit}
             onDelete={onDelete}
+            onForward={onForward}
+            onPin={onPin}
+            isPinned={isPinned}
+            canPin={canPin}
             isOwnMessage={isOwnMessage}
           />
         )}

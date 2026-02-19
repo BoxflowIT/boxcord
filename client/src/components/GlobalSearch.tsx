@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SearchIcon, CloseIcon, HashIcon, ChatIcon } from './ui/Icons';
+import { api } from '../services/api';
 import type { Message } from '../types';
 
 interface SearchResult extends Message {
@@ -9,7 +10,7 @@ interface SearchResult extends Message {
   channel?: {
     id: string;
     name: string;
-    workspace: {
+    workspace?: {
       id: string;
       name: string;
     };
@@ -52,24 +53,10 @@ export function GlobalSearch({ onClose, onResultClick }: GlobalSearchProps) {
       setError(null);
 
       try {
-        const response = await fetch(
-          `/api/v1/search?q=${encodeURIComponent(query)}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`
-            }
-          }
-        );
-
-        const data = await response.json();
-
-        if (response.ok) {
-          setResults(data.data.items);
-        } else {
-          setError(data.error?.message || 'Search failed');
-        }
-      } catch {
-        setError('Network error');
+        const data = await api.globalSearch(query);
+        setResults(data.items);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Search failed');
       } finally {
         setIsSearching(false);
       }
@@ -179,7 +166,7 @@ export function GlobalSearch({ onClose, onResultClick }: GlobalSearchProps) {
                   <>
                     <HashIcon size="sm" />
                     <span>
-                      {result.channel?.workspace.name} / #{result.channel?.name}
+                      {result.channel?.workspace?.name || 'Unknown'} / #{result.channel?.name || 'Unknown'}
                     </span>
                   </>
                 ) : (
