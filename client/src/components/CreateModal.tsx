@@ -171,7 +171,7 @@ function ChannelTypeSelector({
   disabled
 }: ChannelTypeSelectorProps) {
   const { t } = useTranslation();
-  
+
   return (
     <div>
       <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -208,7 +208,9 @@ function ChannelTypeSelector({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium">{option.label}</p>
-                <p className="text-xs text-gray-400">{t(option.descriptionKey)}</p>
+                <p className="text-xs text-gray-400">
+                  {t(option.descriptionKey)}
+                </p>
               </div>
               {isSelected && (
                 <div className="flex-shrink-0 w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center">

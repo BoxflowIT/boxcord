@@ -1,4 +1,5 @@
 // Select Input - Dropdown select input
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../utils/classNames';
 
 interface SelectOption {
@@ -22,12 +23,14 @@ export default function SelectInput({
   value,
   onChange,
   options,
-  placeholder = 'Välj...',
+  placeholder,
   disabled = false,
   label,
   error,
   className = ''
 }: SelectInputProps) {
+  const { t } = useTranslation();
+  const placeholderText = placeholder ?? t('common.select');
   return (
     <div className={className}>
       {label && (
@@ -45,9 +48,9 @@ export default function SelectInput({
           'disabled:opacity-50 disabled:cursor-not-allowed'
         )}
       >
-        {placeholder && (
+        {placeholderText && (
           <option value="" disabled>
-            {placeholder}
+            {placeholderText}
           </option>
         )}
         {options.map((option) => (

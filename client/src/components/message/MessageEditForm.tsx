@@ -1,4 +1,5 @@
 // Reusable Message Edit Form Component
+import { useTranslation } from 'react-i18next';
 
 interface MessageEditFormProps {
   value: string;
@@ -17,6 +18,7 @@ export function MessageEditForm({
   textareaRef,
   compact = false
 }: MessageEditFormProps) {
+  const { t } = useTranslation();
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -43,18 +45,17 @@ export function MessageEditForm({
           onClick={onSave}
           className="px-3 py-1 gradient-primary text-white rounded-lg shadow-primary transition-all"
         >
-          Spara
+          {t('common.save')}
         </button>
         <button
           onClick={onCancel}
           className="px-3 py-1 hover:bg-boxflow-hover text-boxflow-muted hover:text-white rounded-lg transition-colors"
         >
-          Avbryt
+          {t('common.cancel')}
         </button>
         {compact && (
           <span className="text-boxflow-muted pt-1">
-            Escape för att <strong>avbryta</strong> • Enter för att{' '}
-            <strong>spara</strong>
+            {t('messages.editHint')}
           </span>
         )}
       </div>

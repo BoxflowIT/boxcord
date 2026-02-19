@@ -72,7 +72,7 @@ export default function InviteModal({
   };
 
   const formatExpiry = (expiresAt: string | null) => {
-    if (!expiresAt) return 'Aldrig';
+    if (!expiresAt) return t('common.never');
     const date = new Date(expiresAt);
     return date.toLocaleDateString('sv-SE');
   };
@@ -81,7 +81,9 @@ export default function InviteModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t('workspace.inviteTo', { workspace: workspaceName })}</DialogTitle>
+          <DialogTitle>
+            {t('workspace.inviteTo', { workspace: workspaceName })}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -92,10 +94,12 @@ export default function InviteModal({
 
           {/* Existing invites */}
           {loading ? (
-            <p className="text-center text-boxflow-muted py-4">{t('common.loading')}</p>
+            <p className="text-center text-boxflow-muted py-4">
+              {t('common.loading')}
+            </p>
           ) : invites.length === 0 ? (
             <p className="text-center text-boxflow-muted py-4">
-              Inga aktiva inbjudningar
+              {t('invite.noActiveInvites')}
             </p>
           ) : (
             <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -109,10 +113,10 @@ export default function InviteModal({
                       {invite.code}
                     </code>
                     <div className="text-xs text-boxflow-muted mt-1">
-                      Använd: {invite.uses}
+                      {t('invite.uses')}: {invite.uses}
                       {invite.maxUses && ` / ${invite.maxUses}`}
                       {' • '}
-                      Går ut: {formatExpiry(invite.expiresAt)}
+                      {t('invite.expires')}: {formatExpiry(invite.expiresAt)}
                     </div>
                   </div>
                   <div className="flex gap-2 ml-2">
@@ -121,7 +125,9 @@ export default function InviteModal({
                       size="sm"
                       onClick={() => copyInviteLink(invite.code)}
                     >
-                      {copied === invite.code ? '✓ Kopierad' : 'Kopiera'}
+                      {copied === invite.code
+                        ? t('common.copiedCheck')
+                        : t('common.copy')}
                     </Button>
                     <Button
                       variant="ghost"
@@ -139,7 +145,7 @@ export default function InviteModal({
 
           {/* Help text */}
           <p className="text-xs text-boxflow-subtle text-center">
-            Dela inbjudningslänken med personer du vill bjuda in till servern.
+            {t('invite.shareInviteHelp')}
           </p>
         </div>
       </DialogContent>

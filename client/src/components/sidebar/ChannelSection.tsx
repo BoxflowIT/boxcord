@@ -1,4 +1,5 @@
 // Reusable Channel Section Component
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import {
   PlusIcon,
@@ -59,10 +60,11 @@ function VoiceUserItem({
   user: VoiceUser;
   userInfo?: UserInfo;
 }) {
+  const { t } = useTranslation();
   const displayName = userInfo
     ? `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim() ||
       userInfo.email
-    : 'Laddar...';
+    : t('common.loading');
 
   return (
     <div className="flex items-center gap-2 pl-7 pr-2 py-0.5 text-sm text-gray-400">
@@ -124,6 +126,7 @@ function VoiceChannelWithUsers({
   onEdit: (e: React.MouseEvent) => void;
   onDelete: (e: React.MouseEvent) => void;
 }) {
+  const { t } = useTranslation();
   // Fetch voice users for this channel (updated via socket events)
   const { data: voiceUsers = [] } = useQuery({
     queryKey: ['voiceChannelUsers', channel.id],
@@ -160,14 +163,14 @@ function VoiceChannelWithUsers({
         <button
           onClick={onEdit}
           className="btn-icon hover-group-visible"
-          title="Redigera kanal"
+          title={t('channels.edit')}
         >
           <EditIcon size="sm" />
         </button>
         <button
           onClick={onDelete}
           className="btn-icon-danger hover-group-visible"
-          title="Ta bort kanal"
+          title={t('channels.delete')}
         >
           <CloseIcon size="sm" />
         </button>
@@ -206,6 +209,7 @@ function TextChannelItem({
   onEdit: (e: React.MouseEvent) => void;
   onDelete: (e: React.MouseEvent) => void;
 }) {
+  const { t } = useTranslation();
   const hasUnread = (channel.unreadCount ?? 0) > 0;
 
   return (
@@ -233,14 +237,14 @@ function TextChannelItem({
       <button
         onClick={onEdit}
         className="btn-icon hover-group-visible"
-        title="Redigera kanal"
+        title={t('channels.edit')}
       >
         <EditIcon size="sm" />
       </button>
       <button
         onClick={onDelete}
         className="btn-icon-danger hover-group-visible"
-        title="Ta bort kanal"
+        title={t('channels.delete')}
       >
         <CloseIcon size="sm" />
       </button>
@@ -294,6 +298,7 @@ export default function ChannelSection({
   onDeleteChannel,
   onCreateChannel
 }: ChannelSectionProps) {
+  const { t } = useTranslation();
   // Deduplicate and sort channels
   const uniqueChannels = channels.reduce<Channel[]>((acc, channel) => {
     if (!acc.some((ch) => ch.id === channel.id)) {
@@ -311,9 +316,14 @@ export default function ChannelSection({
   return (
     <>
       {/* Text Channels */}
-      <SectionHeader title="Text Kanaler" onAdd={onCreateChannel} />
+      <SectionHeader
+        title={t('channels.textChannels')}
+        onAdd={onCreateChannel}
+      />
       {textChannels.length === 0 ? (
-        <p className="text-xs text-gray-500 px-2 py-1">Inga textkanaler</p>
+        <p className="text-xs text-gray-500 px-2 py-1">
+          {t('channels.noTextChannels')}
+        </p>
       ) : (
         textChannels.map((channel) => (
           <TextChannelItem
@@ -328,9 +338,11 @@ export default function ChannelSection({
       )}
 
       {/* Voice Channels */}
-      <SectionHeader title="Röst Kanaler" />
+      <SectionHeader title={t('channels.voiceChannels')} />
       {voiceChannels.length === 0 ? (
-        <p className="text-xs text-gray-500 px-2 py-1">Inga röstkanaler</p>
+        <p className="text-xs text-gray-500 px-2 py-1">
+          {t('channels.noVoiceChannels')}
+        </p>
       ) : (
         voiceChannels.map((channel) => (
           <VoiceChannelWithUsers

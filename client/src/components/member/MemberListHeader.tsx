@@ -1,4 +1,5 @@
 // Member List Header - Shows member count and search toggle
+import { useTranslation } from 'react-i18next';
 import { SearchIcon, CloseIcon } from '../ui/Icons';
 
 interface MemberListHeaderProps {
@@ -12,15 +13,16 @@ export default function MemberListHeader({
   showSearch,
   onSearchToggle
 }: MemberListHeaderProps) {
+  const { t } = useTranslation();
   return (
     <div className="panel-header">
       <h3 className="text-subtle uppercase font-semibold flex-1">
-        Medlemmar — {memberCount}
+        {t('common.members')} — {memberCount}
       </h3>
       <button
         onClick={onSearchToggle}
         className="btn-icon"
-        title="Sök medlemmar"
+        title={t('members.searchMembers')}
       >
         {showSearch ? <CloseIcon size="sm" /> : <SearchIcon size="sm" />}
       </button>

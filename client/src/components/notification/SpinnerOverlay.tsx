@@ -1,4 +1,5 @@
 // Spinner Overlay - Full screen loading overlay
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../utils/classNames';
 
 interface SpinnerOverlayProps {
@@ -7,9 +8,11 @@ interface SpinnerOverlayProps {
 }
 
 export default function SpinnerOverlay({
-  message = 'Laddar...',
+  message,
   transparent = false
 }: SpinnerOverlayProps) {
+  const { t } = useTranslation();
+  const displayMessage = message ?? t('common.loading');
   return (
     <div
       className={cn(
@@ -18,7 +21,7 @@ export default function SpinnerOverlay({
       )}
     >
       <div className="spinner-ring w-12 h-12 mb-4" />
-      <p className="text-boxflow-light text-lg">{message}</p>
+      <p className="text-boxflow-light text-lg">{displayMessage}</p>
     </div>
   );
 }

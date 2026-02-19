@@ -1,5 +1,6 @@
 // Join Server Modal - Join a workspace via invite code
 import { useState, KeyboardEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,7 @@ export default function JoinServerModal({
   onJoin,
   onClose
 }: JoinServerModalProps) {
+  const { t } = useTranslation();
   const [code, setCode] = useState(initialCode);
   const [preview, setPreview] = useState<InvitePreview | null>(null);
   const [loading, setLoading] = useState(false);
@@ -47,7 +49,7 @@ export default function JoinServerModal({
         setPreview(data);
         setCode(extractedCode);
       } catch {
-        setError('Ogiltig eller utgången inbjudan');
+        setError(t('invite.invalidOrExpired'));
       } finally {
         setLoading(false);
       }
@@ -65,7 +67,7 @@ export default function JoinServerModal({
       onJoin(result.workspace);
       handleClose();
     } catch {
-      setError('Kunde inte gå med i servern');
+      setError(t('invite.couldNotJoin'));
     } finally {
       setJoining(false);
     }
@@ -88,13 +90,13 @@ export default function JoinServerModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Gå med i en server</DialogTitle>
+          <DialogTitle>{t('invite.joinServer')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-boxflow-muted mb-2">
-              Inbjudningslänk eller kod
+              {t('invite.inviteLinkOrCode')}
             </label>
             <Input
               type="text"
@@ -108,7 +110,7 @@ export default function JoinServerModal({
 
           {loading && (
             <p className="text-sm text-boxflow-muted text-center py-2">
-              Söker efter server...
+              {t('invite.searchingServer')}
             </p>
           )}
 
@@ -145,16 +147,16 @@ export default function JoinServerModal({
           )}
 
           <p className="text-xs text-boxflow-subtle">
-            Klistra in en inbjudningslänk eller kod för att gå med i en server.
+            {t('invite.pasteInviteHelp')}
           </p>
         </div>
 
         <DialogFooter>
           <Button variant="ghost" onClick={handleClose}>
-            Avbryt
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleJoin} disabled={!preview || joining}>
-            {joining ? 'Går med...' : 'Gå med i server'}
+            {joining ? t('invite.joining') : t('invite.joinServer')}
           </Button>
         </DialogFooter>
       </DialogContent>

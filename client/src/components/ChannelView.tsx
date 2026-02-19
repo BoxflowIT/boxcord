@@ -260,7 +260,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     <>
       {/* Header */}
       <ChannelHeader
-        channelName={currentChannel?.name ?? 'Kanal'}
+        channelName={currentChannel?.name ?? t('channels.channel')}
         channelDescription={currentChannel?.description}
         onToggleMemberList={onToggleMemberList}
       />

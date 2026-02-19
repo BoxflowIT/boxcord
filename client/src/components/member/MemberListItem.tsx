@@ -1,4 +1,5 @@
 // Member List Item - Individual member row with avatar, name, status, and DM button
+import { useTranslation } from 'react-i18next';
 import Avatar from '../ui/Avatar';
 import { ChatIcon } from '../ui/Icons';
 import StatusIndicator, { UserStatus } from './StatusIndicator';
@@ -23,6 +24,7 @@ export default function MemberListItem({
   onClick,
   onStartDM
 }: MemberListItemProps) {
+  const { t } = useTranslation();
   return (
     <div className="group list-item-interactive">
       <button
@@ -53,7 +55,7 @@ export default function MemberListItem({
         <button
           onClick={onStartDM}
           className="btn-icon-primary hover-group-visible"
-          title="Skicka direktmeddelande"
+          title={t('dm.sendDirectMessage')}
         >
           <ChatIcon size="sm" />
         </button>

@@ -1,5 +1,6 @@
 // Emoji & GIF Picker Component - Unified picker with tabs
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import EmojiPickerReact, { EmojiClickData, Theme } from 'emoji-picker-react';
 import { GiphyFetch } from '@giphy/js-fetch-api';
 import { Grid } from '@giphy/react-components';
@@ -20,6 +21,7 @@ export default function EmojiPicker({
   onEmojiSelect,
   onGifSelect
 }: EmojiPickerProps) {
+  const { t } = useTranslation();
   const [showPicker, setShowPicker] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('emojis');
   const [searchTerm, setSearchTerm] = useState('');
@@ -94,7 +96,7 @@ export default function EmojiPicker({
         type="button"
         onClick={() => setShowPicker(!showPicker)}
         className="btn-icon"
-        title="Lägg till emoji eller GIF"
+        title={t('emoji.addEmojiOrGif')}
       >
         <EmojiIcon />
       </button>
@@ -133,7 +135,7 @@ export default function EmojiPicker({
               <EmojiPickerReact
                 onEmojiClick={handleEmojiClick}
                 theme={Theme.DARK}
-                searchPlaceholder="Sök emoji..."
+                searchPlaceholder={t('emoji.searchEmoji')}
                 height={400}
                 width={350}
               />
@@ -148,7 +150,7 @@ export default function EmojiPicker({
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Sök GIFs på Giphy..."
+                  placeholder={t('emoji.searchGifs')}
                   className="w-full px-3 py-2 bg-gray-900 text-white rounded-lg border border-gray-600 focus:border-green-500 outline-none text-sm"
                   autoFocus
                 />

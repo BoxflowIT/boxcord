@@ -1,4 +1,5 @@
 // Reusable Profile Actions Component (Edit, Save, Logout, Delete)
+import { useTranslation } from 'react-i18next';
 import { Button } from '../form';
 
 interface ProfileActionsProps {
@@ -22,6 +23,7 @@ export function ProfileActions({
   onLogout,
   onDelete
 }: ProfileActionsProps) {
+  const { t } = useTranslation();
   if (!isOwnProfile) return null;
 
   return (
@@ -35,7 +37,7 @@ export function ProfileActions({
             disabled={saving}
             fullWidth
           >
-            Spara ändringar
+            {t('profile.saveChanges')}
           </Button>
           <Button
             variant="ghost"
@@ -43,22 +45,22 @@ export function ProfileActions({
             disabled={saving}
             fullWidth
           >
-            Avbryt
+            {t('common.cancel')}
           </Button>
         </div>
       ) : (
         <>
           <Button variant="secondary" onClick={onEdit} fullWidth>
-            Redigera profil
+            {t('profile.editProfile')}
           </Button>
           {onLogout && (
             <Button variant="ghost" onClick={onLogout} fullWidth>
-              Logga ut
+              {t('auth.logout')}
             </Button>
           )}
           {onDelete && (
             <Button variant="danger" onClick={onDelete} fullWidth>
-              Radera konto
+              {t('profile.deleteAccount')}
             </Button>
           )}
         </>

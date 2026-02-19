@@ -111,7 +111,7 @@ export default function ProfileModal({
       {
         onError: (err) => {
           logger.error('Failed to change role:', err);
-          alert('Kunde inte ändra roll. Kontrollera att du har behörighet.');
+          alert(t('common.couldNotChangeRole'));
         }
         // Cache updated automatically via invalidation
       }
@@ -223,12 +223,12 @@ export default function ProfileModal({
                   }}
                   className="w-full px-4 py-2 gradient-primary text-white rounded-lg shadow-primary transition-all"
                 >
-                  Skicka meddelande
+                  {t('profile.sendMessage')}
                 </button>
               )}
             </div>
           ) : (
-            <p className="text-red-400">Kunde inte ladda profil</p>
+            <p className="text-red-400">{t('errors.couldNotLoadProfile')}</p>
           )}
         </div>
       </div>

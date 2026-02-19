@@ -29,7 +29,7 @@ export default function DeleteConfirmModal({
   onCancel
 }: DeleteConfirmModalProps) {
   const { t } = useTranslation();
-  
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
       <DialogContent>

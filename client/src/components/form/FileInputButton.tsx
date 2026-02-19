@@ -1,5 +1,6 @@
 // File Input Button - Styled file upload button
 import React, { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PlusIcon } from '../ui/Icons';
 import { cn } from '../../utils/classNames';
 
@@ -17,11 +18,13 @@ export default function FileInputButton({
   onFileSelect,
   accept = 'image/*',
   disabled = false,
-  label = 'Välj fil',
+  label,
   icon,
   variant = 'default',
   className = ''
 }: FileInputButtonProps) {
+  const { t } = useTranslation();
+  const buttonLabel = label ?? t('common.selectFile');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleClick = () => {
@@ -52,7 +55,7 @@ export default function FileInputButton({
         className={cn(variantClasses[variant], className)}
       >
         {icon || <PlusIcon size="sm" />}
-        {label && <span className="ml-2">{label}</span>}
+        {buttonLabel && <span className="ml-2">{buttonLabel}</span>}
       </button>
       <input
         ref={inputRef}

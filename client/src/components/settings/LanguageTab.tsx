@@ -26,9 +26,7 @@ export function LanguageTab() {
         <p className="text-sm text-gray-400">
           {t('settings.languageDescription')}
         </p>
-        <p className="text-xs text-gray-500 mt-2">
-          Current: {currentLanguage}
-        </p>
+        <p className="text-xs text-gray-500 mt-2">Current: {currentLanguage}</p>
       </div>
 
       <div className="space-y-3">

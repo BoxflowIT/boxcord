@@ -1,4 +1,5 @@
 // Workspace Button - Clickable workspace with all interactions
+import { useTranslation } from 'react-i18next';
 
 interface WorkspaceButtonProps {
   id?: string;
@@ -18,6 +19,7 @@ export default function WorkspaceButton({
   onEdit,
   onDelete
 }: WorkspaceButtonProps) {
+  const { t } = useTranslation();
   const handleDoubleClick = (e: React.MouseEvent) => {
     if (onEdit) {
       e.preventDefault();
@@ -41,7 +43,7 @@ export default function WorkspaceButton({
         className={
           isActive ? 'workspace-icon-active' : 'workspace-icon-inactive'
         }
-        title={`${name}\n${onEdit ? 'Dubbelklick: redigera\n' : ''}${onDelete ? 'Högerklick: ta bort' : ''}`}
+        title={`${name}\n${onEdit ? t('common.doubleClickEdit') + '\n' : ''}${onDelete ? t('common.rightClickDelete') : ''}`}
       >
         {iconUrl ? (
           <img src={iconUrl} alt="" className="w-full h-full object-cover" />

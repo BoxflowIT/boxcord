@@ -49,7 +49,9 @@ export default function DMInputSection({
         />
         <EmojiPicker onEmojiSelect={onEmojiSelect} onGifSelect={onGifSelect} />
         {sending && (
-          <div className="px-3 text-boxflow-muted text-sm">{t('common.sending')}</div>
+          <div className="px-3 text-boxflow-muted text-sm">
+            {t('common.sending')}
+          </div>
         )}
       </div>
     </div>

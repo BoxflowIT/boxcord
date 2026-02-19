@@ -1,5 +1,6 @@
 // Reusable Button Component with variants
 import React, { forwardRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../utils/classNames';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -23,6 +24,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
+    const { t } = useTranslation();
     const baseClasses =
       'font-medium rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2';
 
@@ -72,7 +74,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
               />
             </svg>
-            Laddar...
+            {t('common.loading')}
           </span>
         ) : (
           children

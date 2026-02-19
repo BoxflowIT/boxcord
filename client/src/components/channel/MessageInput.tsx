@@ -1,5 +1,6 @@
 // Reusable Message Input Component
 import React, { useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import FileUpload from '../FileUpload';
 import EmojiPicker from '../ui/EmojiPicker';
 
@@ -23,7 +24,7 @@ export function MessageInput({
   onChange,
   onSend,
   onKeyDown,
-  placeholder = 'Skicka meddelande...',
+  placeholder,
   disabled = false,
   uploading = false,
   onFileSelect,
@@ -32,6 +33,8 @@ export function MessageInput({
   maxRows = 10,
   autoFocus = false
 }: MessageInputProps) {
+  const { t } = useTranslation();
+  const placeholderText = placeholder ?? t('messages.typeMessage');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea

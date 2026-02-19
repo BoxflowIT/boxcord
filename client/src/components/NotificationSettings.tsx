@@ -61,8 +61,10 @@ export default function NotificationSettings() {
   if (!supported) {
     return (
       <div className="card">
-        <h3 className="text-heading mb-2">Push-notiser</h3>
-        <p className="text-muted">Din webbläsare stöder inte push-notiser.</p>
+        <h3 className="text-heading mb-2">
+          {t('notifications.pushNotifications')}
+        </h3>
+        <p className="text-muted">{t('notifications.browserNotSupported')}</p>
       </div>
     );
   }
@@ -70,10 +72,10 @@ export default function NotificationSettings() {
   if (permission === 'denied') {
     return (
       <div className="card">
-        <h3 className="text-heading mb-2">Push-notiser</h3>
-        <p className="text-muted">
-          Du har blockerat notiser. Aktivera dem i webbläsarens inställningar.
-        </p>
+        <h3 className="text-heading mb-2">
+          {t('notifications.pushNotifications')}
+        </h3>
+        <p className="text-muted">{t('notifications.permissionDenied')}</p>
       </div>
     );
   }
@@ -94,7 +96,7 @@ export default function NotificationSettings() {
           disabled={loading}
           className="text-sm text-link disabled:opacity-50 mt-3"
         >
-          Skicka testnotis
+          {t('notifications.testNotification')}
         </button>
       )}
     </div>

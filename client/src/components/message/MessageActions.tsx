@@ -1,4 +1,5 @@
 // Reusable Message Actions Bar - Quick reactions + edit/delete
+import { useTranslation } from 'react-i18next';
 import { EditIcon, TrashIcon } from '../ui/Icons';
 
 interface MessageActionsProps {
@@ -18,6 +19,7 @@ export function MessageActions({
   isOwnMessage,
   quickReactions = DEFAULT_QUICK_REACTIONS
 }: MessageActionsProps) {
+  const { t } = useTranslation();
   return (
     <>
       {/* Quick reactions */}
@@ -26,7 +28,7 @@ export function MessageActions({
           key={emoji}
           onClick={() => onQuickReaction(emoji)}
           className="p-1 hover:bg-boxflow-hover rounded text-lg transition-transform hover:scale-125"
-          title={`Reagera med ${emoji}`}
+          title={t('messages.reactWith', { emoji })}
         >
           {emoji}
         </button>
@@ -42,7 +44,7 @@ export function MessageActions({
             <button
               onClick={onEdit}
               className="p-1 hover:bg-boxflow-hover rounded"
-              title="Redigera"
+              title={t('common.edit')}
             >
               <EditIcon size="sm" />
             </button>
@@ -51,7 +53,7 @@ export function MessageActions({
             <button
               onClick={onDelete}
               className="p-1 hover:bg-red-500/20 rounded text-red-400"
-              title="Ta bort"
+              title={t('common.delete')}
             >
               <TrashIcon size="sm" />
             </button>

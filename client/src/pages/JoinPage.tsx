@@ -1,11 +1,13 @@
 // Join Page - Handle invite links
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { Button } from '../components/ui/button';
 import type { InvitePreview } from '../types';
 
 export default function JoinPage() {
+  const { t } = useTranslation();
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
   const [preview, setPreview] = useState<InvitePreview | null>(null);
@@ -15,7 +17,7 @@ export default function JoinPage() {
 
   useEffect(() => {
     if (!code) {
-      setError('Ingen inbjudningskod angiven');
+      setError(t('invite.noCodeProvided'));
       setLoading(false);
       return;
     }
@@ -25,7 +27,7 @@ export default function JoinPage() {
         const data = await api.previewInvite(code);
         setPreview(data);
       } catch {
-        setError('Inbjudan hittades inte eller har gått ut');
+        setError(t('invite.notFoundOrExpired'));
       } finally {
         setLoading(false);
       }
@@ -44,7 +46,7 @@ export default function JoinPage() {
       await api.joinWithInvite(code);
       navigate('/chat');
     } catch {
-      setError('Kunde inte gå med i servern');
+      setError(t('invite.joinFailed'));
     } finally {
       setJoining(false);
     }
@@ -56,21 +58,23 @@ export default function JoinPage() {
         {loading ? (
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-boxflow-primary mx-auto" />
-            <p className="mt-4 text-boxflow-muted">Laddar inbjudan...</p>
+            <p className="mt-4 text-boxflow-muted">{t('invite.loading')}</p>
           </div>
         ) : error ? (
           <div className="text-center">
             <div className="text-red-400 text-5xl mb-4">😕</div>
             <h1 className="text-xl font-bold text-white mb-2">
-              Ogiltig inbjudan
+              {t('invite.invalid')}
             </h1>
             <p className="text-boxflow-muted mb-6">{error}</p>
-            <Button onClick={() => navigate('/chat')}>Gå till chatten</Button>
+            <Button onClick={() => navigate('/chat')}>
+              {t('invite.goToChat')}
+            </Button>
           </div>
         ) : preview ? (
           <div className="text-center">
             <h1 className="text-xl font-semibold text-white mb-6">
-              Du har blivit inbjuden att gå med i
+              {t('invite.youveBeenInvited')}
             </h1>
 
             <div className="p-6 bg-boxflow-darker rounded-lg mb-6">
@@ -105,14 +109,14 @@ export default function JoinPage() {
                 disabled={joining}
                 className="w-full"
               >
-                {joining ? 'Går med...' : 'Acceptera inbjudan'}
+                {joining ? t('invite.joining') : t('invite.accept')}
               </Button>
               <Button
                 variant="ghost"
                 onClick={() => navigate('/chat')}
                 className="w-full"
               >
-                Avbryt
+                {t('common.cancel')}
               </Button>
             </div>
           </div>

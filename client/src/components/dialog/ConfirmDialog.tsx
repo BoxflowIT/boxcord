@@ -1,4 +1,5 @@
 // Confirm Dialog - Simple confirmation dialog
+import { useTranslation } from 'react-i18next';
 import Modal from '../ui/Modal';
 import { Button } from '../form';
 
@@ -20,11 +21,14 @@ export default function ConfirmDialog({
   onConfirm,
   title,
   message,
-  confirmText = 'Bekräfta',
-  cancelText = 'Avbryt',
+  confirmText,
+  cancelText,
   variant = 'default',
   isLoading = false
 }: ConfirmDialogProps) {
+  const { t } = useTranslation();
+  const confirm = confirmText ?? t('common.confirm');
+  const cancel = cancelText ?? t('common.cancel');
   const handleConfirm = () => {
     onConfirm();
     if (!isLoading) {
@@ -40,14 +44,14 @@ export default function ConfirmDialog({
 
         <div className="flex gap-3 justify-end">
           <Button variant="ghost" onClick={onClose} disabled={isLoading}>
-            {cancelText}
+            {cancel}
           </Button>
           <Button
             variant={variant === 'danger' ? 'danger' : 'primary'}
             onClick={handleConfirm}
             disabled={isLoading}
           >
-            {isLoading ? 'Laddar...' : confirmText}
+            {isLoading ? t('common.loading') : confirm}
           </Button>
         </div>
       </div>

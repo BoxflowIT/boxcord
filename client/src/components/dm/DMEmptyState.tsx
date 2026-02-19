@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import Avatar from '../ui/Avatar';
 
 interface DMEmptyStateProps {
@@ -12,6 +13,7 @@ export default function DMEmptyState({
   userName,
   userInitial
 }: DMEmptyStateProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col items-center justify-center h-full text-boxflow-muted">
       <Avatar size="lg" className="mb-4">
@@ -19,7 +21,7 @@ export default function DMEmptyState({
       </Avatar>
       <p className="text-xl mb-2">{userName}</p>
       <p className="text-sm text-boxflow-subtle">
-        Detta är början av din direktmeddelandehistorik med {userName}.
+        {t('dm.historyStart', { user: userName })}
       </p>
     </div>
   );
