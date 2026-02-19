@@ -188,6 +188,13 @@ export const api = {
   getPinnedMessages: (channelId: string) =>
     request<Message[]>(`/messages/pinned?channelId=${channelId}`),
 
+  // Global Search
+  globalSearch: (query: string) =>
+    request<{
+      items: Array<Message & { type: 'channel' | 'dm'; channel?: Channel }>;
+      hasMore: boolean;
+    }>(`/search?q=${encodeURIComponent(query)}`),
+
   // Users
   getCurrentUser: () => request<User>('/users/me'),
   getUser: (id: string) => request<User>(`/users/${id}`),
@@ -248,17 +255,17 @@ export const api = {
       method: 'POST'
     }),
   pinDM: (messageId: string, channelId: string) =>
-    request<Message>(`/dms/messages/${messageId}/pin`, {
+    request<Message>(`/dm/messages/${messageId}/pin`, {
       method: 'POST',
       body: JSON.stringify({ channelId })
     }),
   unpinDM: (messageId: string, channelId: string) =>
-    request<Message>(`/dms/messages/${messageId}/pin`, {
+    request<Message>(`/dm/messages/${messageId}/pin`, {
       method: 'DELETE',
       body: JSON.stringify({ channelId })
     }),
   getPinnedDMs: (channelId: string) =>
-    request<Message[]>(`/dms/channels/${channelId}/pinned`),
+    request<Message[]>(`/dm/channels/${channelId}/pinned`),
 
   // Reactions
   getQuickReactions: () => request<string[]>('/reactions/quick'),
@@ -281,6 +288,35 @@ export const api = {
     uploadFile(`/files/messages/${messageId}`, file),
   uploadDMFile: (messageId: string, file: File) =>
     uploadFile(`/files/dm/${messageId}`, file),
+
+  // User Status & DND
+  updateCustomStatus: (status: string, statusEmoji: string) =>
+    request<User>('/users/me/status', {
+      method: 'PATCH',
+      body: JSON.stringify({ status, statusEmoji })
+    }),
+  updateDNDMode: (dndMode: boolean, dndUntil?: string) =>
+    request<User>('/users/me/dnd', {
+      method: 'PATCH',
+      body: JSON.stringify({ dndMode, dndUntil })
+    }),
+
+  // Moderation
+  kickUser: (workspaceId: string, userId: string, reason?: string) =>
+    request<{ success: boolean }>(`/workspaces/${workspaceId}/kick`, {
+      method: 'POST',
+      body: JSON.stringify({ userId, reason })
+    }),
+  banUser: (workspaceId: string, userId: string, reason?: string) =>
+    request<{ success: boolean }>(`/workspaces/${workspaceId}/ban`, {
+      method: 'POST',
+      body: JSON.stringify({ userId, reason })
+    }),
+  unbanUser: (workspaceId: string, userId: string) =>
+    request<{ success: boolean }>(`/workspaces/${workspaceId}/unban`, {
+      method: 'POST',
+      body: JSON.stringify({ userId })
+    }),
 
   // Generic methods for services that manage their own endpoints
   get: <T = { data: unknown }>(path: string) =>

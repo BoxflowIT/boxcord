@@ -12,7 +12,10 @@ import {
 import { useDMOperations } from '../hooks/useDMOperations';
 import { socketService } from '../services/socket';
 import { getUserDisplayName } from '../utils/user';
+import { api } from '../services/api';
+import { logger } from '../utils/logger';
 import ProfileModal from './ProfileModal';
+import { ModerationModal } from './moderation/ModerationModal';
 import MemberListHeader from './member/MemberListHeader';
 import MemberSearch from './member/MemberSearch';
 import MemberSection from './member/MemberSection';
@@ -31,6 +34,8 @@ export default function MemberList() {
   const [showProfile, setShowProfile] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showModeration, setShowModeration] = useState(false);
+  const [moderationUserId, setModerationUserId] = useState<string | null>(null);
 
   const { filteredUsers, groupedByRole, roleOrder } = useMemberListData({
     users,
@@ -111,6 +116,42 @@ export default function MemberList() {
     await startDM(userId);
   };
 
+  const handleModerate = (userId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setModerationUserId(userId);
+    setShowModeration(true);
+  };
+
+  const handleKickUser = async (userId: string, reason?: string) => {
+    if (!currentWorkspace?.id) return;
+
+    try {
+      await api.kickUser(currentWorkspace.id, userId, reason);
+      setShowModeration(false);
+      setModerationUserId(null);
+    } catch (err) {
+      logger.error('Failed to kick user:', err);
+      alert(t('errors.generic'));
+    }
+  };
+
+  const handleBanUser = async (userId: string, reason?: string) => {
+    if (!currentWorkspace?.id) return;
+
+    try {
+      await api.banUser(currentWorkspace.id, userId, reason);
+      setShowModeration(false);
+      setModerationUserId(null);
+    } catch (err) {
+      logger.error('Failed to ban user:', err);
+      alert(t('errors.generic'));
+    }
+  };
+
+  // Check if current user is admin
+  const currentUserMember = users.find((u) => u.id === currentUser?.id);
+  const isAdmin = currentUserMember?.role === 'ADMIN' || currentUserMember?.role === 'SUPER_ADMIN';
+
   return (
     <div className="sidebar-main border-l border-boxflow-border">
       <MemberListHeader
@@ -145,6 +186,8 @@ export default function MemberList() {
                 {roleUsers.map((user) => {
                   const displayName = getUserDisplayName(user);
 
+                  const canModerate = isAdmin && user.id !== currentUser?.id && user.role !== 'SUPER_ADMIN' && user.role !== 'ADMIN';
+
                   return (
                     <MemberListItem
                       key={user.id}
@@ -162,6 +205,11 @@ export default function MemberList() {
                           ? (e) => handleStartDM(user.id, e)
                           : undefined
                       }
+                      onModerate={
+                        canModerate
+                          ? (e) => handleModerate(user.id, e)
+                          : undefined
+                      }
                     />
                   );
                 })}
@@ -176,6 +224,27 @@ export default function MemberList() {
         isOpen={showProfile}
         onClose={() => setShowProfile(false)}
       />
+
+      {showModeration && moderationUserId && (
+        <ModerationModal
+          userId={moderationUserId}
+          userName={
+            getUserDisplayName(
+              users.find((u) => u.id === moderationUserId) ?? {
+                id: moderationUserId,
+                email: 'Unknown',
+                role: 'STAFF'
+              }
+            )
+          }
+          onKick={handleKickUser}
+          onBan={handleBanUser}
+          onClose={() => {
+            setShowModeration(false);
+            setModerationUserId(null);
+          }}
+        />
+      )}
     </div>
   );
 }

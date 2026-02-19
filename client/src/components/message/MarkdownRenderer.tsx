@@ -3,7 +3,6 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeRaw from 'rehype-raw';
-import 'highlight.js/styles/github-dark.css';
 
 interface MarkdownRendererProps {
   content: string;
@@ -20,6 +19,12 @@ export function MarkdownRenderer({
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeHighlight, rehypeRaw]}
         components={{
+          // Prevent <p> inside <p> nesting - use div for wrapper
+          p: ({ node: _node, children, ...props }) => (
+            <div className="mb-2" {...props}>
+              {children}
+            </div>
+          ),
           // Style code blocks
           code: ({ node: _node, className, children, ...props }) => {
             const match = /language-(\w+)/.exec(className || '');

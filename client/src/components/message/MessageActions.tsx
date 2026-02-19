@@ -1,12 +1,13 @@
-// Reusable Message Actions Bar - Quick reactions + edit/delete/pin
+// Reusable Message Actions Bar - Quick reactions + edit/delete/pin/forward
 import { useTranslation } from 'react-i18next';
-import { EditIcon, TrashIcon, PinIcon } from '../ui/Icons';
+import { EditIcon, TrashIcon, PinIcon, SendIcon } from '../ui/Icons';
 
 interface MessageActionsProps {
   onQuickReaction: (emoji: string) => void;
   onEdit?: () => void;
   onDelete?: () => void;
   onPin?: () => void;
+  onForward?: () => void;
   isOwnMessage: boolean;
   isPinned?: boolean;
   canPin?: boolean; // Permission to pin messages
@@ -20,6 +21,7 @@ export function MessageActions({
   onEdit,
   onDelete,
   onPin,
+  onForward,
   isOwnMessage,
   isPinned = false,
   canPin = false,
@@ -51,6 +53,17 @@ export function MessageActions({
           title={isPinned ? t('messages.unpin') : t('messages.pin')}
         >
           <PinIcon size="sm" />
+        </button>
+      )}
+
+      {/* Forward button */}
+      {onForward && (
+        <button
+          onClick={onForward}
+          className="p-1 hover:bg-boxflow-hover rounded"
+          title={t('messages.forwardMessage')}
+        >
+          <SendIcon size="sm" />
         </button>
       )}
 

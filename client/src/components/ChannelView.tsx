@@ -8,12 +8,14 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { logger } from '../utils/logger';
 import { socketService } from '../services/socket';
 import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
 import { useMessages, useChannels } from '../hooks/useQuery';
+import { usePinnedMessages } from '../hooks/queries/message';
 import { useMessageActions } from '../hooks/useMessageActions';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useChannelInput } from '../hooks/useChannelInput';
@@ -27,6 +29,7 @@ import { BotResponseBanner } from './channel';
 import MessageListDisplay from './channel/MessageListDisplay';
 import ChannelInputSection from './channel/ChannelInputSection';
 import { VoiceChannelView } from './voice/VoiceChannelView';
+import { PinnedMessagesPanel } from './message/PinnedMessagesPanel';
 
 interface ChannelViewProps {
   onToggleMemberList?: () => void;
@@ -36,6 +39,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
   const { t } = useTranslation();
   const { channelId } = useParams<{ channelId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { currentChannel, setCurrentChannel, currentWorkspace } =
     useChatStore();
   const { user } = useAuthStore();
@@ -52,6 +56,11 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     channels.length === 0 || channels.some((c) => c.id === channelId);
 
   const { data: messagesData, isLoading: loadingMessages } = useMessages(
+    channelExists ? channelId : undefined
+  );
+
+  // Fetch pinned messages
+  const { data: pinnedMessages = [] } = usePinnedMessages(
     channelExists ? channelId : undefined
   );
 
@@ -265,6 +274,23 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
         onToggleMemberList={onToggleMemberList}
       />
 
+      {/* Pinned Messages */}
+      <PinnedMessagesPanel
+        pinnedMessages={pinnedMessages.map((msg) => ({
+          ...msg,
+          isPinned: msg.isPinned ?? true
+        }))}
+        onMessageClick={(messageId) => {
+          // Scroll to message
+          const element = document.getElementById(`message-${messageId}`);
+          element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }}
+        onUnpin={async (messageId) => {
+          await api.unpinMessage(messageId, channelId!);
+        }}
+        canUnpin={true}
+      />
+
       {/* Messages */}
       <MessageListDisplay
         messages={channelMessages}
@@ -281,6 +307,21 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
         onCancelEdit={handleCancelEdit}
         onEdit={handleEditMessage}
         onDelete={handleDeleteMessage}
+        onPin={async (messageId) => {
+          const message = channelMessages.find((m) => m.id === messageId);
+          if (!message || !channelId) return;
+          
+          if (message.isPinned) {
+            await api.unpinMessage(messageId, channelId);
+          } else {
+            await api.pinMessage(messageId, channelId);
+          }
+          
+          // Refresh messages to show updated pin state
+          await queryClient.invalidateQueries({ queryKey: ['messages', channelId] });
+          await queryClient.invalidateQueries({ queryKey: ['pinnedMessages', channelId] });
+        }}
+        canPin={true}
         messagesEndRef={messagesEndRef}
       />
 

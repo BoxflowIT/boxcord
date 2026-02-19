@@ -8,6 +8,7 @@
 import { useRef, useState, useMemo, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { logger } from '../utils/logger';
 import { socketService } from '../services/socket';
@@ -16,6 +17,7 @@ import { startRingingSound, stopRingingSound } from '../utils/voiceSound';
 import { useAuthStore } from '../store/auth';
 import { useDMCallStore } from '../store/dmCallStore';
 import { useDMMessages, useDMChannels } from '../hooks/useQuery';
+import { usePinnedDMs } from '../hooks/queries/dm';
 import { useMessageActions } from '../hooks/useMessageActions';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useProcessedMessages } from '../hooks/useProcessedMessages';
@@ -28,10 +30,12 @@ import { DMHeader } from './dm/DMHeader';
 import { DMCallOverlay } from './dm/DMCallOverlay';
 import MessageListDisplay from './channel/MessageListDisplay';
 import DMInputSection from './dm/DMInputSection';
+import { PinnedMessagesPanel } from './message/PinnedMessagesPanel';
 
 export default function DMView() {
   const { t } = useTranslation();
   const { channelId } = useParams<{ channelId: string }>();
+  const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const { callState, startCall, acceptCall, rejectCall, endCall, reset } =
     useDMCallStore();
@@ -57,6 +61,9 @@ export default function DMView() {
   // React Query hook for messages - single source of truth
   const { data: messagesData, isLoading: loadingMessages } =
     useDMMessages(channelId);
+
+  // Fetch pinned DM messages
+  const { data: pinnedMessages = [] } = usePinnedDMs(channelId);
 
   const loadingUser = !otherUser; // Loading if we don't have other user yet
 
@@ -319,6 +326,23 @@ export default function DMView() {
         onStartCall={handleStartCall}
       />
 
+      {/* Pinned Messages */}
+      <PinnedMessagesPanel
+        pinnedMessages={pinnedMessages.map((msg) => ({
+          ...msg,
+          isPinned: msg.isPinned ?? true
+        }))}
+        onMessageClick={(messageId) => {
+          // Scroll to message
+          const element = document.getElementById(`message-${messageId}`);
+          element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }}
+        onUnpin={async (messageId) => {
+          await api.unpinDM(messageId, channelId!);
+        }}
+        canUnpin={true}
+      />
+
       {/* DM Call Overlay */}
       <DMCallOverlay
         onAccept={handleAcceptCall}
@@ -343,6 +367,21 @@ export default function DMView() {
         onCancelEdit={handleCancelEdit}
         onEdit={handleEditMessage}
         onDelete={handleDeleteMessage}
+        onPin={async (messageId) => {
+          const message = displayMessages.find((m) => m.id === messageId);
+          if (!message || !channelId) return;
+          
+          if (message.isPinned) {
+            await api.unpinMessage(messageId, channelId);
+          } else {
+            await api.pinMessage(messageId, channelId);
+          }
+          
+          // Refresh DM messages to show updated pin state
+          await queryClient.invalidateQueries({ queryKey: ['dmMessages', channelId] });
+          await queryClient.invalidateQueries({ queryKey: ['pinnedDMs', channelId] });
+        }}
+        canPin={true}
         messagesEndRef={messagesEndRef}
       />
 

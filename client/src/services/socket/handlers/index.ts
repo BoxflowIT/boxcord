@@ -16,3 +16,6 @@ export {
   onPresenceUpdate,
   offPresenceUpdate
 } from './presenceHandlers';
+export { registerCategoryHandlers } from './categoryHandlers';
+export { registerModerationHandlers } from './moderationHandlers';
+export { registerUserStatusHandlers } from './userStatusHandlers';

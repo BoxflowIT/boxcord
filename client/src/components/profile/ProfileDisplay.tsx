@@ -6,6 +6,7 @@ interface ProfileDisplayProps {
   role: string;
   bio?: string | null;
   customStatus?: string | null;
+  statusEmoji?: string | null;
 }
 
 export default function ProfileDisplay({
@@ -14,7 +15,8 @@ export default function ProfileDisplay({
   email,
   role,
   bio,
-  customStatus
+  customStatus,
+  statusEmoji
 }: ProfileDisplayProps) {
   return (
     <div className="space-y-4">
@@ -30,8 +32,11 @@ export default function ProfileDisplay({
       </div>
 
       {/* Custom status */}
-      {customStatus && (
-        <p className="text-sm text-gray-400 italic">"{customStatus}"</p>
+      {(customStatus || statusEmoji) && (
+        <div className="flex items-center gap-2 text-sm">
+          {statusEmoji && <span className="text-xl">{statusEmoji}</span>}
+          {customStatus && <p className="text-gray-300 italic">"{customStatus}"</p>}
+        </div>
       )}
 
       {/* Bio */}

@@ -1,9 +1,12 @@
 // Message List Component - Displays messages with loading and empty states
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LoadingState } from '../ui/LoadingSpinner';
 import ChannelEmptyState from '../channel/ChannelEmptyState';
 import { MessageItem } from '../MessageItem';
-import { parseMentions } from '../MentionAutocomplete';
+import { ForwardMessageModal } from '../message/ForwardMessageModal';
+import { renderEnhancedMessage } from '../../utils/messageRendering';
+import { api } from '../../services/api';
 
 interface Message {
   id: string;
@@ -11,6 +14,7 @@ interface Message {
   createdAt: string;
   edited: boolean;
   authorId: string;
+  isPinned?: boolean;
   attachments?: Array<{
     id: string;
     fileName: string;
@@ -43,6 +47,8 @@ interface MessageListDisplayProps {
   onCancelEdit: () => void;
   onEdit: (messageId: string, content: string) => void;
   onDelete: (messageId: string) => void;
+  onPin?: (messageId: string) => void;
+  canPin?: boolean;
   messagesEndRef: React.RefObject<HTMLDivElement>;
 }
 
@@ -62,9 +68,35 @@ export default function MessageListDisplay({
   onCancelEdit,
   onEdit,
   onDelete,
+  onPin,
+  canPin = false,
   messagesEndRef
 }: MessageListDisplayProps) {
   const { t } = useTranslation();
+  
+  // Forward message state
+  const [forwardingMessage, setForwardingMessage] = useState<{
+    id: string;
+    content: string;
+  } | null>(null);
+
+  const handleForward = async (targetId: string, targetType: 'channel' | 'dm') => {
+    if (!forwardingMessage) return;
+
+    try {
+      if (targetType === 'channel') {
+        await api.post(`/channels/${targetId}/messages`, { content: forwardingMessage.content });
+      } else {
+        await api.sendDM(targetId, forwardingMessage.content);
+      }
+      setForwardingMessage(null);
+      alert(t('messages.forwardSuccess'));
+    } catch (error) {
+      console.error('Failed to forward message:', error);
+      alert(t('messages.forwardError'));
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -118,12 +150,25 @@ export default function MessageListDisplay({
             onCancelEdit={onCancelEdit}
             onEdit={onEdit}
             onDelete={onDelete}
-            renderContent={(content) => parseMentions(content)}
+            onForward={(messageId, content) => setForwardingMessage({ id: messageId, content })}
+            onPin={onPin}
+            isPinned={message.isPinned}
+            canPin={canPin}
+            renderContent={renderEnhancedMessage}
             compact={compactMode}
             isDM={isDM}
           />
         ))}
         <div ref={messagesEndRef} />
+
+      {/* Forward Message Modal */}
+      {forwardingMessage && (
+        <ForwardMessageModal
+          messageContent={forwardingMessage.content}
+          onForward={handleForward}
+          onClose={() => setForwardingMessage(null)}
+        />
+      )}
       </div>
     </div>
   );

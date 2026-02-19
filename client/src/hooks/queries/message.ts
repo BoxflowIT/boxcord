@@ -30,3 +30,14 @@ export function useReactions(messageId: string | undefined) {
     gcTime: 2 * 60 * 1000
   });
 }
+
+// Pinned messages in a channel
+export function usePinnedMessages(channelId: string | undefined) {
+  return useQuery({
+    queryKey: channelId ? ['pinnedMessages', channelId] : ['pinnedMessages-null'],
+    queryFn: () => (channelId ? api.getPinnedMessages(channelId) : []),
+    enabled: !!channelId,
+    staleTime: 60 * 1000, // 60s
+    gcTime: 5 * 60 * 1000
+  });
+}

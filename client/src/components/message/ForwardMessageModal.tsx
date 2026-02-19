@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CloseIcon, SendIcon } from '../ui/Icons';
+import { api } from '../../services/api';
+import { useAuthStore } from '../../store/auth';
 
 interface Channel {
   id: string;
@@ -22,6 +24,7 @@ export function ForwardMessageModal({
   onClose
 }: ForwardMessageModalProps) {
   const { t } = useTranslation();
+  const { user: currentUser } = useAuthStore();
   const [channels, setChannels] = useState<Channel[]>([]);
   const [dms, setDms] = useState<Channel[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,27 +36,41 @@ export function ForwardMessageModal({
     const fetchTargets = async () => {
       try {
         setLoading(true);
-        // Fetch channels
-        const channelsRes = await fetch('/api/v1/channels');
-        const channelsData = await channelsRes.json();
-        setChannels(
-          channelsData.data.map((ch: any) => ({
-            id: ch.id,
-            name: ch.name,
-            type: 'channel' as const,
-            workspaceName: ch.workspace?.name
-          }))
-        );
+        
+        // Fetch all workspaces first
+        const workspaces = await api.getWorkspaces();
+        
+        // Fetch channels for each workspace
+        const allChannels: Channel[] = [];
+        for (const workspace of workspaces) {
+          const workspaceChannels = await api.getChannels(workspace.id);
+          allChannels.push(
+            ...workspaceChannels.map((ch) => ({
+              id: ch.id,
+              name: ch.name,
+              type: 'channel' as const,
+              workspaceName: workspace.name
+            }))
+          );
+        }
+        setChannels(allChannels);
 
         // Fetch DMs
-        const dmsRes = await fetch('/api/v1/dm/channels');
-        const dmsData = await dmsRes.json();
+        const dmsData = await api.getDMChannels();
         setDms(
-          dmsData.data.map((dm: any) => ({
-            id: dm.id,
-            name: dm.otherUser?.email || 'Unknown',
-            type: 'dm' as const
-          }))
+          dmsData.map((dm) => {
+            // Get the other user (not the current user)
+            const otherParticipant = dm.participants.find(
+              (p) => p.userId !== currentUser?.id
+            );
+            const otherUser = otherParticipant?.user || dm.participants[0]?.user;
+            
+            return {
+              id: dm.id,
+              name: otherUser?.firstName || otherUser?.email || 'Unknown',
+              type: 'dm' as const
+            };
+          })
         );
       } catch (error) {
         console.error('Failed to fetch targets:', error);

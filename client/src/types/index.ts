@@ -15,12 +15,17 @@ export interface User {
   avatarUrl?: string;
   bio?: string;
   role: string;
+  status?: string;
+  statusEmoji?: string;
+  dndMode?: boolean;
+  dndUntil?: string;
   presence?: UserPresence;
 }
 
 export interface UserPresence {
   status: 'ONLINE' | 'IDLE' | 'DO_NOT_DISTURB' | 'OFFLINE';
   customStatus?: string;
+  statusEmoji?: string;
   lastSeen: string;
 }
 

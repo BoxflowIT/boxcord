@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { signOut } from '../services/cognito';
 import { logger } from '../utils/logger';
@@ -12,6 +13,7 @@ import {
   useUpdateUserRole
 } from '../hooks/useQuery';
 import { RoleManagement, AccountDeletion } from './profile';
+import { CustomStatusModal } from './profile/CustomStatusModal';
 import ProfileDisplay from './profile/ProfileDisplay';
 import ProfileForm from './profile/ProfileForm';
 import ProfileEditActions from './profile/ProfileEditActions';
@@ -30,6 +32,7 @@ export default function ProfileModal({
 }: ProfileModalProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user: currentUser, logout } = useAuthStore();
 
   // React Query hooks for auto caching
@@ -42,6 +45,7 @@ export default function ProfileModal({
     useUpdateUserRole();
 
   const [editing, setEditing] = useState(false);
+  const [showCustomStatus, setShowCustomStatus] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -118,6 +122,35 @@ export default function ProfileModal({
     );
   };
 
+  const handleSaveCustomStatus = async (
+    status: string,
+    emoji: string,
+    dndUntil?: Date
+  ) => {
+    try {
+      // Update custom status
+      await api.updateCustomStatus(status, emoji);
+      
+      // Update DND mode if duration specified
+      if (dndUntil) {
+        await api.updateDNDMode(true, dndUntil.toISOString());
+      } else {
+        // Clear DND mode if no duration specified
+        await api.updateDNDMode(false, undefined);
+      }
+      
+      // Invalidate queries to refresh UI
+      await queryClient.invalidateQueries({ queryKey: ['user', 'current'] });
+      await queryClient.invalidateQueries({ queryKey: ['workspace', 'members'] });
+      
+      // Close modal on success
+      setShowCustomStatus(false);
+    } catch (err) {
+      logger.error('Failed to update status:', err);
+      alert(t('errors.generic'));
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -184,7 +217,8 @@ export default function ProfileModal({
                   email={profile.email}
                   role={profile.role}
                   bio={profile.bio}
-                  customStatus={profile.presence?.customStatus}
+                  customStatus={profile.status}
+                  statusEmoji={profile.statusEmoji}
                 />
               )}
 
@@ -203,6 +237,14 @@ export default function ProfileModal({
               {/* Actions */}
               {isOwnProfile && (
                 <div className="space-y-2 pt-2">
+                  {/* Custom Status Button */}
+                  <button
+                    onClick={() => setShowCustomStatus(true)}
+                    className="w-full px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                  >
+                    {t('profile.setStatus')}
+                  </button>
+
                   <ProfileEditActions
                     editing={editing}
                     saving={saving}
@@ -232,6 +274,16 @@ export default function ProfileModal({
           )}
         </div>
       </div>
+
+      {/* Custom Status Modal */}
+      {showCustomStatus && (
+        <CustomStatusModal
+          currentStatus={profile?.status ?? ''}
+          currentEmoji={profile?.statusEmoji ?? '😀'}
+          onSave={handleSaveCustomStatus}
+          onClose={() => setShowCustomStatus(false)}
+        />
+      )}
     </div>
   );
 }
