@@ -1,12 +1,15 @@
-// Reusable Message Actions Bar - Quick reactions + edit/delete
+// Reusable Message Actions Bar - Quick reactions + edit/delete/pin
 import { useTranslation } from 'react-i18next';
-import { EditIcon, TrashIcon } from '../ui/Icons';
+import { EditIcon, TrashIcon, PinIcon } from '../ui/Icons';
 
 interface MessageActionsProps {
   onQuickReaction: (emoji: string) => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onPin?: () => void;
   isOwnMessage: boolean;
+  isPinned?: boolean;
+  canPin?: boolean; // Permission to pin messages
   quickReactions?: string[];
 }
 
@@ -16,7 +19,10 @@ export function MessageActions({
   onQuickReaction,
   onEdit,
   onDelete,
+  onPin,
   isOwnMessage,
+  isPinned = false,
+  canPin = false,
   quickReactions = DEFAULT_QUICK_REACTIONS
 }: MessageActionsProps) {
   const { t } = useTranslation();
@@ -36,6 +42,17 @@ export function MessageActions({
 
       {/* Divider */}
       <div className="w-px h-4 bg-boxflow-hover mx-1" />
+
+      {/* Pin button (for users with permission) */}
+      {canPin && onPin && (
+        <button
+          onClick={onPin}
+          className={`p-1 hover:bg-boxflow-hover rounded ${isPinned ? 'text-yellow-400' : ''}`}
+          title={isPinned ? t('messages.unpin') : t('messages.pin')}
+        >
+          <PinIcon size="sm" />
+        </button>
+      )}
 
       {/* Edit/Delete for own messages */}
       {isOwnMessage && (

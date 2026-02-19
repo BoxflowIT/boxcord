@@ -22,6 +22,10 @@ model User {
     avatarUrl String?  @map("avatar_url")
     bio       String?
     role      String   @default("STAFF") // SUPER_ADMIN | ADMIN | STAFF
+    status    String?  // Custom status message
+    statusEmoji String? @map("status_emoji") // Emoji for status
+    dndMode   Boolean  @default(false) @map("dnd_mode") // Do Not Disturb
+    dndUntil  DateTime? @map("dnd_until") // Temporary DND until specific time
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -46,9 +50,10 @@ model Workspace {
     createdAt   DateTime @default(now()) @map("created_at")
     updatedAt   DateTime @updatedAt @map("updated_at")
 
-    channels Channel[]
-    members  WorkspaceMember[]
-    invites  WorkspaceInvite[]
+    channels          Channel[]
+    channelCategories ChannelCategory[]
+    members           WorkspaceMember[]
+    invites           WorkspaceInvite[]
 
     @@map("workspaces")
 }
@@ -58,6 +63,10 @@ model WorkspaceMember {
     workspaceId String     @map("workspace_id")
     userId      String     @map("user_id") // References Boxtime user.id (Cognito sub)
     role        MemberRole @default(MEMBER)
+    isBanned    Boolean    @default(false) @map("is_banned")
+    bannedAt    DateTime?  @map("banned_at")
+    bannedBy    String?    @map("banned_by")
+    banReason   String?    @map("ban_reason")
     joinedAt    DateTime   @default(now()) @map("joined_at")
 
     workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -86,22 +95,43 @@ model WorkspaceInvite {
 }
 
 model Channel {
-    id          String      @id @default(uuid())
-    workspaceId String      @map("workspace_id")
+    id          String       @id @default(uuid())
+    workspaceId String       @map("workspace_id")
+    categoryId  String?      @map("category_id") // Optional category grouping
     name        String
     description String?
-    type        ChannelType @default(TEXT)
-    isPrivate   Boolean     @default(false) @map("is_private")
-    createdAt   DateTime    @default(now()) @map("created_at")
-    updatedAt   DateTime    @updatedAt @map("updated_at")
+    type        ChannelType  @default(TEXT)
+    isPrivate   Boolean      @default(false) @map("is_private")
+    position    Int          @default(0) // For ordering within category
+    createdAt   DateTime     @default(now()) @map("created_at")
+    updatedAt   DateTime     @updatedAt @map("updated_at")
 
     workspace Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+    category  ChannelCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
     messages  Message[]
     members   ChannelMember[]
 
     @@unique([workspaceId, name])
     @@index([workspaceId])
+    @@index([categoryId])
     @@map("channels")
+}
+
+model ChannelCategory {
+    id          String   @id @default(uuid())
+    workspaceId String   @map("workspace_id")
+    name        String
+    position    Int      @default(0) // For ordering categories
+    collapsed   Boolean  @default(false) // User can collapse categories
+    createdAt   DateTime @default(now()) @map("created_at")
+    updatedAt   DateTime @updatedAt @map("updated_at")
+
+    workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+    channels  Channel[]
+
+    @@unique([workspaceId, name])
+    @@index([workspaceId])
+    @@map("channel_categories")
 }
 
 model ChannelMember {
@@ -124,13 +154,16 @@ model ChannelMember {
 // ============================================
 
 model Message {
-    id        String   @id @default(uuid())
-    channelId String   @map("channel_id")
-    authorId  String   @map("author_id") // References Boxtime user.id
+    id        String    @id @default(uuid())
+    channelId String    @map("channel_id")
+    authorId  String    @map("author_id") // References Boxtime user.id
     content   String
-    edited    Boolean  @default(false)
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
+    edited    Boolean   @default(false)
+    isPinned  Boolean   @default(false) @map("is_pinned")
+    pinnedAt  DateTime? @map("pinned_at")
+    pinnedBy  String?   @map("pinned_by") // User ID who pinned
+    createdAt DateTime  @default(now()) @map("created_at")
+    updatedAt DateTime  @updatedAt @map("updated_at")
 
     // Reply threading
     parentId String?   @map("parent_id")
@@ -206,13 +239,16 @@ model DirectMessageParticipant {
 }
 
 model DirectMessage {
-    id        String   @id @default(uuid())
-    channelId String   @map("channel_id")
-    authorId  String   @map("author_id")
+    id        String    @id @default(uuid())
+    channelId String    @map("channel_id")
+    authorId  String    @map("author_id")
     content   String
-    edited    Boolean  @default(false)
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
+    edited    Boolean   @default(false)
+    isPinned  Boolean   @default(false) @map("is_pinned")
+    pinnedAt  DateTime? @map("pinned_at")
+    pinnedBy  String?   @map("pinned_by")
+    createdAt DateTime  @default(now()) @map("created_at")
+    updatedAt DateTime  @updatedAt @map("updated_at")
 
     channel     DirectMessageChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
     author      User                 @relation("DirectMessageAuthor", fields: [authorId], references: [id], onDelete: Cascade)
@@ -282,6 +318,28 @@ model PushSubscription {
 
     @@index([userId])
     @@map("push_subscriptions")
+}
+
+// ============================================
+// AUDIT LOGS
+// ============================================
+
+model AuditLog {
+    id          String   @id @default(uuid())
+    workspaceId String   @map("workspace_id")
+    userId      String   @map("user_id") // Who performed the action
+    action      String   // Action type: USER_KICK, USER_BAN, CHANNEL_CREATE, etc.
+    targetId    String?  @map("target_id") // ID of affected entity
+    targetType  String?  @map("target_type") // Type of target: USER, CHANNEL, MESSAGE
+    metadata    Json? // Additional action details
+    ipAddress   String?  @map("ip_address")
+    userAgent   String?  @map("user_agent")
+    createdAt   DateTime @default(now()) @map("created_at")
+
+    @@index([workspaceId])
+    @@index([userId])
+    @@index([createdAt])
+    @@map("audit_logs")
 }
 
 // ============================================

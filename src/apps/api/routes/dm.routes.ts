@@ -131,4 +131,53 @@ export async function dmRoutes(app: FastifyInstance) {
       return reply.status(204).send();
     }
   );
+
+  // Pin DM
+  app.post<{
+    Params: { messageId: string };
+    Body: { channelId: string };
+  }>('/messages/:messageId/pin', async (request, reply) => {
+    const message = await dmService.pinMessage(
+      request.params.messageId,
+      request.user.id,
+      request.body.channelId
+    );
+
+    // Emit via socket to participants
+    if (app.io) {
+      app.io.to(`dm:${request.body.channelId}`).emit('dm:pinned', message);
+    }
+
+    return { success: true, data: message };
+  });
+
+  // Unpin DM
+  app.delete<{
+    Params: { messageId: string };
+    Body: { channelId: string };
+  }>('/messages/:messageId/pin', async (request, reply) => {
+    const message = await dmService.unpinMessage(
+      request.params.messageId,
+      request.user.id,
+      request.body.channelId
+    );
+
+    // Emit via socket to participants
+    if (app.io) {
+      app.io.to(`dm:${request.body.channelId}`).emit('dm:unpinned', message);
+    }
+
+    return { success: true, data: message };
+  });
+
+  // Get pinned messages in DM channel
+  app.get<{
+    Params: { channelId: string };
+  }>('/channels/:channelId/pinned', async (request, reply) => {
+    const messages = await dmService.getPinnedMessages(
+      request.params.channelId,
+      request.user.id
+    );
+    return { success: true, data: messages };
+  });
 }

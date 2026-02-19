@@ -4,6 +4,13 @@
     "searchEmoji": "Sök emoji...",
     "searchGifs": "Sök GIFs på Giphy..."
   },
+  "search": {
+    "placeholder": "Sök meddelanden...",
+    "typeToSearch": "Skriv minst 2 tecken för att söka",
+    "noResults": "Inga meddelanden hittades",
+    "hint": "Tryck Escape för att stänga",
+    "searching": "Söker..."
+  },
   "common": {
     "save": "Spara",
     "saving": "Sparar...",
@@ -154,6 +161,10 @@
     "thread": "Tråd",
     "pin": "Nåla fast meddelande",
     "unpin": "Ta bort nål",
+    "pinnedBy": "Nålat av {{author}}",
+    "previousPinned": "Föregående nålat meddelande",
+    "nextPinned": "Nästa nålat meddelande",
+    "noPinnedMessages": "Inga nålade meddelanden",
     "copy": "Kopiera meddelande",
     "mention": "Omnämn",
     "emoji": "Emoji",

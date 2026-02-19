@@ -16,6 +16,7 @@ import { chatbotRoutes } from './chatbot.routes.js';
 import { inviteRoutes } from './invite.routes.js';
 import { initialDataRoutes } from './initial.routes.js';
 import { voiceRoutes } from './voice.routes.js';
+import { searchRoutes } from './search.routes.js';
 
 export async function registerRoutes(app: FastifyInstance) {
   // Ensure uploads directory exists
@@ -46,6 +47,7 @@ export async function registerRoutes(app: FastifyInstance) {
       await api.register(chatbotRoutes, { prefix: '/chatbot' });
       await api.register(inviteRoutes, { prefix: '/invites' });
       await api.register(voiceRoutes, { prefix: '/voice' });
+      await api.register(searchRoutes, { prefix: '/search' });
     },
     { prefix: '/api/v1' }
   );

@@ -59,4 +59,40 @@ export async function messageRoutes(app: FastifyInstance) {
     await messageService.deleteMessage(request.params.id, request.user.id);
     return reply.status(204).send();
   });
+
+  // Pin message
+  app.post<{
+    Params: { id: string };
+    Body: { channelId: string };
+  }>('/:id/pin', async (request, reply) => {
+    const message = await messageService.pinMessage(
+      request.params.id,
+      request.user.id,
+      request.body.channelId
+    );
+    return { success: true, data: message };
+  });
+
+  // Unpin message
+  app.delete<{
+    Params: { id: string };
+    Body: { channelId: string };
+  }>('/:id/pin', async (request, reply) => {
+    const message = await messageService.unpinMessage(
+      request.params.id,
+      request.body.channelId
+    );
+    return { success: true, data: message };
+  });
+
+  // Get pinned messages for a channel
+  app.get<{
+    Querystring: { channelId: string };
+  }>('/pinned', async (request, reply) => {
+    const messages = await messageService.getPinnedMessages(
+      request.query.channelId
+    );
+    reply.cache({ maxAge: 30 });
+    return { success: true, data: messages };
+  });
 }

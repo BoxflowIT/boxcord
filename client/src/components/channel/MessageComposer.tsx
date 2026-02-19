@@ -29,7 +29,6 @@ export default function MessageComposer({
   onBotResponse
 }: MessageComposerProps) {
   const { t } = useTranslation();
-  const placeholderText = placeholder ?? t('messages.typeMessage');
   const [uploading, setUploading] = useState(false);
   const [showMentions, setShowMentions] = useState(false);
   const [showSlashCommands, setShowSlashCommands] = useState(false);

@@ -32,7 +32,6 @@ export default function ListContainer({
           <div className="p-4 text-center text-muted">
             {emptyMessage || t('common.noItems')}
           </div>
-          </div>
         ) : (
           children
         )}

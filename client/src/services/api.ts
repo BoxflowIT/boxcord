@@ -175,6 +175,18 @@ export const api = {
     request<void>(`/messages/${messageId}`, {
       method: 'DELETE'
     }),
+  pinMessage: (messageId: string, channelId: string) =>
+    request<Message>(`/messages/${messageId}/pin`, {
+      method: 'POST',
+      body: JSON.stringify({ channelId })
+    }),
+  unpinMessage: (messageId: string, channelId: string) =>
+    request<Message>(`/messages/${messageId}/pin`, {
+      method: 'DELETE',
+      body: JSON.stringify({ channelId })
+    }),
+  getPinnedMessages: (channelId: string) =>
+    request<Message[]>(`/messages/pinned?channelId=${channelId}`),
 
   // Users
   getCurrentUser: () => request<User>('/users/me'),
@@ -235,6 +247,18 @@ export const api = {
     request<void>(`/dm/channels/${channelId}/read`, {
       method: 'POST'
     }),
+  pinDM: (messageId: string, channelId: string) =>
+    request<Message>(`/dms/messages/${messageId}/pin`, {
+      method: 'POST',
+      body: JSON.stringify({ channelId })
+    }),
+  unpinDM: (messageId: string, channelId: string) =>
+    request<Message>(`/dms/messages/${messageId}/pin`, {
+      method: 'DELETE',
+      body: JSON.stringify({ channelId })
+    }),
+  getPinnedDMs: (channelId: string) =>
+    request<Message[]>(`/dms/channels/${channelId}/pinned`),
 
   // Reactions
   getQuickReactions: () => request<string[]>('/reactions/quick'),

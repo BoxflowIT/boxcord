@@ -400,4 +400,185 @@ export class DirectMessageService {
       }
     });
   }
+
+  async pinMessage(
+    messageId: string,
+    userId: string,
+    channelId: string
+  ): Promise<DirectMessage> {
+    const message = await this.prisma.directMessage.findUnique({
+      where: { id: messageId }
+    });
+
+    if (!message) {
+      throw new NotFoundError('Message', messageId);
+    }
+
+    if (message.channelId !== channelId) {
+      throw new ValidationError('Message does not belong to this channel');
+    }
+
+    // Verify user is participant
+    const participant = await this.prisma.directMessageParticipant.findFirst({
+      where: { channelId, userId }
+    });
+
+    if (!participant) {
+      throw new ForbiddenError(
+        'You are not a participant in this conversation'
+      );
+    }
+
+    return this.prisma.directMessage.update({
+      where: { id: messageId },
+      data: {
+        isPinned: true,
+        pinnedAt: new Date(),
+        pinnedBy: userId
+      }
+    });
+  }
+
+  async unpinMessage(
+    messageId: string,
+    userId: string,
+    channelId: string
+  ): Promise<DirectMessage> {
+    const message = await this.prisma.directMessage.findUnique({
+      where: { id: messageId }
+    });
+
+    if (!message) {
+      throw new NotFoundError('Message', messageId);
+    }
+
+    if (message.channelId !== channelId) {
+      throw new ValidationError('Message does not belong to this channel');
+    }
+
+    // Verify user is participant
+    const participant = await this.prisma.directMessageParticipant.findFirst({
+      where: { channelId, userId }
+    });
+
+    if (!participant) {
+      throw new ForbiddenError(
+        'You are not a participant in this conversation'
+      );
+    }
+
+    return this.prisma.directMessage.update({
+      where: { id: messageId },
+      data: {
+        isPinned: false,
+        pinnedAt: null,
+        pinnedBy: null
+      }
+    });
+  }
+
+  async getPinnedMessages(
+    channelId: string,
+    userId: string
+  ): Promise<DirectMessage[]> {
+    // Verify user is participant
+    const participant = await this.prisma.directMessageParticipant.findFirst({
+      where: { channelId, userId }
+    });
+
+    if (!participant) {
+      throw new ForbiddenError(
+        'You are not a participant in this conversation'
+      );
+    }
+
+    return this.prisma.directMessage.findMany({
+      where: {
+        channelId,
+        isPinned: true
+      },
+      include: {
+        attachments: true,
+        reactions: true
+      },
+      orderBy: {
+        pinnedAt: 'desc'
+      }
+    });
+  }
+
+  async searchDirectMessages(
+    userId: string,
+    query: string,
+    params: PaginationParams = {}
+  ): Promise<PaginatedResult<DirectMessage>> {
+    const limit = Math.min(
+      params.limit ?? PAGINATION.DEFAULT_PAGE_SIZE,
+      PAGINATION.MAX_PAGE_SIZE
+    );
+
+    // Get user's DM channels
+    const channelIds = await this.prisma.directMessageParticipant
+      .findMany({
+        where: { userId },
+        select: { channelId: true }
+      })
+      .then((participants) => participants.map((p) => p.channelId));
+
+    // Search in accessible DM channels
+    const messages = await this.prisma.directMessage.findMany({
+      where: {
+        channelId: { in: channelIds },
+        content: {
+          contains: query,
+          mode: 'insensitive'
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit + 1,
+      ...(params.cursor && {
+        cursor: { id: params.cursor },
+        skip: 1
+      }),
+      include: {
+        author: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true
+          }
+        },
+        channel: {
+          include: {
+            participants: {
+              where: { userId: { not: userId } }, // Get other participant(s)
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                    avatarUrl: true
+                  }
+                }
+              }
+            }
+          }
+        },
+        attachments: true,
+        reactions: true
+      }
+    });
+
+    const hasMore = messages.length > limit;
+    const items = hasMore ? messages.slice(0, -1) : messages;
+
+    return {
+      items,
+      nextCursor: hasMore ? items[items.length - 1].id : undefined
+    };
+  }
 }

@@ -339,6 +339,25 @@ export function ChevronDownIcon({ size = 'md', className }: IconProps) {
   );
 }
 
+// Chevron Up icon
+export function ChevronUpIcon({ size = 'md', className }: IconProps) {
+  return (
+    <svg
+      className={getClass(size, className)}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M5 15l7-7 7 7"
+      />
+    </svg>
+  );
+}
+
 // Link/Invite icon
 export function LinkIcon({ size = 'md', className }: IconProps) {
   return (
@@ -706,3 +725,112 @@ export function VolumeMutedIcon({ size = 'md', className }: IconProps) {
     </svg>
   );
 }
+
+// Pin icon
+export function PinIcon({ size = 'md', className }: IconProps) {
+  return (
+    <svg
+      className={getClass(size, className)}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+      />
+    </svg>
+  );
+}
+
+// Additional Icons for new features
+export const ChevronRightIcon = ChevronDownIcon; // Reuse, just rotate
+export const SendIcon = ({ size = 'md', className }: IconProps) => (
+  <svg
+    className={getClass(size, className)}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+    />
+  </svg>
+);
+export const MicrophoneIcon = MicIcon;
+export const MicrophoneMutedIcon = MicOffIcon;
+export function PhoneOffIcon({ size = 'md', className }: IconProps) {
+  return <PhoneHangUpIcon size={size} className={className} />;
+}
+export const ScreenShareIcon = ({ size = 'md', className }: IconProps) => (
+  <svg
+    className={getClass(size, className)}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+    />
+  </svg>
+);
+export const VideoIcon = ({ size = 'md', className }: IconProps) => (
+  <svg
+    className={getClass(size, className)}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+    />
+  </svg>
+);
+export const VideoOffIcon = ({ size = 'md', className }: IconProps) => (
+  <svg
+    className={getClass(size, className)}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 3l18 18"
+    />
+  </svg>
+);
+export const BanIcon = ({ size = 'md', className }: IconProps) => (
+  <svg
+    className={getClass(size, className)}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+    />
+  </svg>
+);
+export const KickIcon = LogoutIcon; // Reuse logout icon

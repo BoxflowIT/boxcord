@@ -30,7 +30,7 @@ export default function ResourceDeleteDialog({
     try {
       await onConfirm();
       onClose();
-    } catch (error) {
+    } catch {
       // Error handling done in parent
     } finally {
       setIsDeleting(false);
