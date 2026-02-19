@@ -268,7 +268,13 @@ export class DirectMessageService {
         createdAt: true,
         updatedAt: true,
         author: {
-          select: { id: true, firstName: true, lastName: true, email: true, avatarUrl: true }
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatarUrl: true
+          }
         },
         attachments: {
           select: {
