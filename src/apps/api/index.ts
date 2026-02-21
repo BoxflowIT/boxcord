@@ -21,6 +21,7 @@ import { errorHandler } from './plugins/error-handler.js';
 import cachePlugin from './plugins/cache.js';
 import securityPlugin from './plugins/security.js';
 import rateLimitPlugin from './plugins/rate-limit.js';
+import validationPlugin from './plugins/validation.js';
 import { registerRoutes } from './routes/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -68,6 +69,9 @@ async function main() {
 
   // JWT authentication
   await app.register(jwtPlugin);
+
+  // Input validation
+  await app.register(validationPlugin);
 
   // Cache plugin for performance
   await app.register(cachePlugin);

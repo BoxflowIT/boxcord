@@ -2,11 +2,42 @@
 // Manages local user profiles + syncs from Boxtime
 import type { FastifyInstance } from 'fastify';
 import type { UserStatus } from '@prisma/client';
+import { z } from 'zod';
 import { prisma } from '../../../03-infrastructure/database/client.js';
 import { UserService } from '../../../02-application/services/user.service.js';
 import { boxtimeService } from '../../../02-application/services/boxtime.service.js';
+import { schemas } from '../plugins/validation.js';
 
 const userService = new UserService(prisma);
+
+// Local schemas
+const searchQuery = z.object({
+  q: z.string().min(1).max(100),
+  limit: z.coerce.number().int().min(1).max(50).optional()
+});
+
+const presenceBody = z.object({
+  status: z.enum(['ONLINE', 'AWAY', 'DND', 'INVISIBLE', 'OFFLINE']),
+  customStatus: z.string().max(128).optional()
+});
+
+const batchBody = z.object({
+  userIds: z.array(z.string().uuid()).min(1).max(100)
+});
+
+const roleBody = z.object({
+  role: z.enum(['SUPER_ADMIN', 'ADMIN', 'STAFF'])
+});
+
+const statusBody = z.object({
+  status: z.string().max(128).nullable(),
+  statusEmoji: z.string().max(10).nullable().optional()
+});
+
+const dndBody = z.object({
+  dndMode: z.boolean(),
+  dndUntil: z.string().datetime().nullable().optional()
+});
 
 export async function userRoutes(app: FastifyInstance) {
   // All routes require authentication
@@ -54,58 +85,77 @@ export async function userRoutes(app: FastifyInstance) {
 
   // Update current user's profile
   app.patch<{
-    Body: {
-      firstName?: string;
-      lastName?: string;
-      avatarUrl?: string;
-      bio?: string;
-    };
-  }>('/me', async (request) => {
-    const user = await userService.updateProfile(request.user.id, request.body);
+    Body: z.infer<typeof schemas.updateProfile>;
+  }>(
+    '/me',
+    {
+      preHandler: app.validateBody(schemas.updateProfile)
+    },
+    async (request) => {
+      const user = await userService.updateProfile(
+        request.user.id,
+        request.body
+      );
 
-    // Broadcast user profile update to all connected clients
-    if (app.io) {
-      app.io.emit('user:update', {
-        userId: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        avatarUrl: user.avatarUrl,
-        bio: user.bio
-      });
+      // Broadcast user profile update to all connected clients
+      if (app.io) {
+        app.io.emit('user:update', {
+          userId: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          avatarUrl: user.avatarUrl,
+          bio: user.bio
+        });
+      }
+
+      return { success: true, data: user };
     }
-
-    return { success: true, data: user };
-  });
+  );
 
   // Search users
-  app.get<{ Querystring: { q: string; limit?: string } }>(
+  app.get<{ Querystring: z.infer<typeof searchQuery> }>(
     '/search',
+    {
+      preHandler: app.validateQuery(searchQuery)
+    },
     async (request) => {
-      const limit = request.query.limit
-        ? parseInt(request.query.limit, 10)
-        : 20;
-      const users = await userService.searchUsers(request.query.q, limit);
+      const users = await userService.searchUsers(
+        request.query.q,
+        request.query.limit ?? 20
+      );
       return { success: true, data: users };
     }
   );
 
   // Update presence/status
   app.post<{
-    Body: { status: UserStatus; customStatus?: string };
-  }>('/me/presence', async (request) => {
-    await userService.updatePresence(
-      request.user.id,
-      request.body.status,
-      request.body.customStatus
-    );
-    return { success: true };
-  });
+    Body: z.infer<typeof presenceBody>;
+  }>(
+    '/me/presence',
+    {
+      preHandler: app.validateBody(presenceBody)
+    },
+    async (request) => {
+      await userService.updatePresence(
+        request.user.id,
+        request.body.status as UserStatus,
+        request.body.customStatus
+      );
+      return { success: true };
+    }
+  );
 
   // Get multiple users by IDs (for batch loading)
-  app.post<{ Body: { userIds: string[] } }>('/batch', async (request) => {
-    const users = await userService.getUsersByIds(request.body.userIds);
-    return { success: true, data: users };
-  });
+  app.post<{ Body: z.infer<typeof batchBody> }>(
+    '/batch',
+    {
+      preHandler: app.validateBody(batchBody)
+    },
+    async (request) => {
+      const users = await userService.getUsersByIds(request.body.userIds);
+      return { success: true, data: users };
+    }
+  );
 
   // Get all online users
   app.get('/online', async () => {
@@ -116,33 +166,39 @@ export async function userRoutes(app: FastifyInstance) {
   // Update user role (only SUPER_ADMIN can do this)
   app.patch<{
     Params: { id: string };
-    Body: { role: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF' };
-  }>('/:id/role', async (request, reply) => {
-    // Get current user's role from database (not from JWT)
-    const currentUser = await userService.getUser(request.user.id);
+    Body: z.infer<typeof roleBody>;
+  }>(
+    '/:id/role',
+    {
+      preHandler: app.validateBody(roleBody)
+    },
+    async (request, reply) => {
+      // Get current user's role from database (not from JWT)
+      const currentUser = await userService.getUser(request.user.id);
 
-    // Only SUPER_ADMIN can change roles
-    if (currentUser.role !== 'SUPER_ADMIN') {
-      return reply.code(403).send({
-        success: false,
-        error: 'Only SUPER_ADMIN can change user roles'
-      });
+      // Only SUPER_ADMIN can change roles
+      if (currentUser.role !== 'SUPER_ADMIN') {
+        return reply.code(403).send({
+          success: false,
+          error: 'Only SUPER_ADMIN can change user roles'
+        });
+      }
+
+      // Cannot change own role
+      if (request.params.id === request.user.id) {
+        return reply.code(400).send({
+          success: false,
+          error: 'Cannot change your own role'
+        });
+      }
+
+      const user = await userService.updateUserRole(
+        request.params.id,
+        request.body.role
+      );
+      return { success: true, data: user };
     }
-
-    // Cannot change own role
-    if (request.params.id === request.user.id) {
-      return reply.code(400).send({
-        success: false,
-        error: 'Cannot change your own role'
-      });
-    }
-
-    const user = await userService.updateUserRole(
-      request.params.id,
-      request.body.role
-    );
-    return { success: true, data: user };
-  });
+  );
 
   // Delete current user account
   app.delete('/me', async (request) => {
@@ -206,49 +262,61 @@ export async function userRoutes(app: FastifyInstance) {
 
   // PATCH /users/me/status - Update custom status
   app.patch<{
-    Body: { status: string | null; statusEmoji?: string | null };
-  }>('/me/status', async (request, reply) => {
-    const { status, statusEmoji } = request.body;
+    Body: z.infer<typeof statusBody>;
+  }>(
+    '/me/status',
+    {
+      preHandler: app.validateBody(statusBody)
+    },
+    async (request, reply) => {
+      const { status, statusEmoji } = request.body;
 
-    const user = await userService.updateCustomStatus(
-      request.user.id,
-      status,
-      statusEmoji
-    );
-
-    // Emit socket event
-    if (app.io) {
-      app.io.emit('user:status-changed', {
-        userId: request.user.id,
+      const user = await userService.updateCustomStatus(
+        request.user.id,
         status,
         statusEmoji
-      });
-    }
+      );
 
-    return { success: true, data: user };
-  });
+      // Emit socket event
+      if (app.io) {
+        app.io.emit('user:status-changed', {
+          userId: request.user.id,
+          status,
+          statusEmoji
+        });
+      }
+
+      return { success: true, data: user };
+    }
+  );
 
   // PATCH /users/me/dnd - Update DND mode
   app.patch<{
-    Body: { dndMode: boolean; dndUntil?: string | null };
-  }>('/me/dnd', async (request, reply) => {
-    const { dndMode, dndUntil } = request.body;
+    Body: z.infer<typeof dndBody>;
+  }>(
+    '/me/dnd',
+    {
+      preHandler: app.validateBody(dndBody)
+    },
+    async (request, reply) => {
+      const { dndMode, dndUntil } = request.body;
 
-    const user = await userService.updateDNDMode(
-      request.user.id,
-      dndMode,
-      dndUntil ? new Date(dndUntil) : null
-    );
-
-    // Emit socket event
-    if (app.io) {
-      app.io.emit('user:dnd-changed', {
-        userId: request.user.id,
+      const user = await userService.updateDNDMode(
+        request.user.id,
         dndMode,
-        dndUntil
-      });
-    }
+        dndUntil ? new Date(dndUntil) : null
+      );
 
-    return { success: true, data: user };
-  });
+      // Emit socket event
+      if (app.io) {
+        app.io.emit('user:dnd-changed', {
+          userId: request.user.id,
+          dndMode,
+          dndUntil
+        });
+      }
+
+      return { success: true, data: user };
+    }
+  );
 }

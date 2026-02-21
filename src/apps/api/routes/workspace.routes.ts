@@ -1,9 +1,22 @@
 // Workspace Routes
 import type { FastifyInstance } from 'fastify';
+import { z } from 'zod';
 import { prisma } from '../../../03-infrastructure/database/client.js';
 import { WorkspaceService } from '../../../02-application/services/workspace.service.js';
+import { schemas } from '../plugins/validation.js';
 
 const workspaceService = new WorkspaceService(prisma);
+
+// Local schemas
+const addMemberBody = z.object({
+  userId: z.string().uuid(),
+  role: z.enum(['ADMIN', 'MEMBER']).optional()
+});
+
+const createInviteBody = z.object({
+  maxUses: z.number().int().min(1).max(100).optional(),
+  expiresInDays: z.number().int().min(1).max(30).optional()
+});
 
 export async function workspaceRoutes(app: FastifyInstance) {
   // All routes require authentication
@@ -28,8 +41,11 @@ export async function workspaceRoutes(app: FastifyInstance) {
   });
 
   // Create workspace
-  app.post<{ Body: { name: string; description?: string } }>(
+  app.post<{ Body: z.infer<typeof schemas.createWorkspace> }>(
     '/',
+    {
+      preHandler: app.validateBody(schemas.createWorkspace)
+    },
     async (request, reply) => {
       const workspace = await workspaceService.createWorkspace({
         name: request.body.name,
@@ -55,15 +71,21 @@ export async function workspaceRoutes(app: FastifyInstance) {
   // Add member to workspace
   app.post<{
     Params: { id: string };
-    Body: { userId: string; role?: 'ADMIN' | 'MEMBER' };
-  }>('/:id/members', async (request, reply) => {
-    const member = await workspaceService.addMember(
-      request.params.id,
-      request.body.userId,
-      request.body.role
-    );
-    return reply.status(201).send({ success: true, data: member });
-  });
+    Body: z.infer<typeof addMemberBody>;
+  }>(
+    '/:id/members',
+    {
+      preHandler: app.validateBody(addMemberBody)
+    },
+    async (request, reply) => {
+      const member = await workspaceService.addMember(
+        request.params.id,
+        request.body.userId,
+        request.body.role
+      );
+      return reply.status(201).send({ success: true, data: member });
+    }
+  );
 
   // Remove member from workspace
   app.delete<{
@@ -92,15 +114,21 @@ export async function workspaceRoutes(app: FastifyInstance) {
   // Update workspace
   app.patch<{
     Params: { id: string };
-    Body: { name?: string; description?: string; iconUrl?: string };
-  }>('/:id', async (request) => {
-    const workspace = await workspaceService.updateWorkspace(
-      request.params.id,
-      request.user.id,
-      request.body
-    );
-    return { success: true, data: workspace };
-  });
+    Body: z.infer<typeof schemas.updateWorkspace>;
+  }>(
+    '/:id',
+    {
+      preHandler: app.validateBody(schemas.updateWorkspace)
+    },
+    async (request) => {
+      const workspace = await workspaceService.updateWorkspace(
+        request.params.id,
+        request.user.id,
+        request.body
+      );
+      return { success: true, data: workspace };
+    }
+  );
 
   // ============================================
   // INVITE ROUTES
@@ -109,16 +137,22 @@ export async function workspaceRoutes(app: FastifyInstance) {
   // Create invite for workspace
   app.post<{
     Params: { id: string };
-    Body: { maxUses?: number; expiresInDays?: number };
-  }>('/:id/invites', async (request, reply) => {
-    const invite = await workspaceService.createInvite({
-      workspaceId: request.params.id,
-      createdBy: request.user.id,
-      maxUses: request.body.maxUses,
-      expiresInDays: request.body.expiresInDays
-    });
-    return reply.status(201).send({ success: true, data: invite });
-  });
+    Body: z.infer<typeof createInviteBody>;
+  }>(
+    '/:id/invites',
+    {
+      preHandler: app.validateBody(createInviteBody)
+    },
+    async (request, reply) => {
+      const invite = await workspaceService.createInvite({
+        workspaceId: request.params.id,
+        createdBy: request.user.id,
+        maxUses: request.body.maxUses,
+        expiresInDays: request.body.expiresInDays
+      });
+      return reply.status(201).send({ success: true, data: invite });
+    }
+  );
 
   // Get workspace invites
   app.get<{ Params: { id: string } }>('/:id/invites', async (request) => {
