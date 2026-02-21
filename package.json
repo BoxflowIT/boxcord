@@ -39,6 +39,7 @@
     "@prisma/client": "^6.19.2",
     "@sendgrid/mail": "^8.1.6",
     "@sentry/node": "^10.39.0",
+    "@sentry/react": "^10.39.0",
     "dotenv-safe": "^9.1.0",
     "fastify": "^5.7.3",
     "fastify-plugin": "^4.5.1",
@@ -59,18 +60,21 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.19.33",
     "@types/web-push": "^3.6.4",
-    "eslint": "9.3.0",
+    "eslint": "^10.0.1",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.2.5",
     "prisma": "^6.19.2",
     "tsx": "^4.11.0",
     "typescript": "^5.4.5",
-    "typescript-eslint": "^8.0.0",
+    "typescript-eslint": "^8.56.0",
     "vitest": "^4.0.18"
   },
   "overrides": {
     "ajv": "^8.18.0",
     "fast-xml-parser": "^5.3.6",
+    "minimatch": "^10.2.1"
+  },
+  "resolutions": {
     "minimatch": "^10.2.1"
   },
   "engines": {
