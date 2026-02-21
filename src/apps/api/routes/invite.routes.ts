@@ -39,6 +39,14 @@ export async function inviteRoutes(app: FastifyInstance) {
   // Use invite to join workspace
   app.post<{ Params: { code: string } }>(
     '/:code/join',
+    {
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: '1 minute'
+        }
+      }
+    },
     async (request, reply) => {
       try {
         const result = await workspaceService.useInvite(

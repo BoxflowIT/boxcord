@@ -14,6 +14,14 @@ export async function voiceRoutes(app: FastifyInstance) {
   // Join voice channel
   app.post<{ Params: { channelId: string } }>(
     '/channels/:channelId/join',
+    {
+      config: {
+        rateLimit: {
+          max: 20,
+          timeWindow: '1 minute'
+        }
+      }
+    },
     async (request, reply) => {
       const session = await voiceService.joinChannel(
         request.params.channelId,

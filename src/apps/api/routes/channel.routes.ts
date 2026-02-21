@@ -79,6 +79,12 @@ export async function channelRoutes(app: FastifyInstance) {
   }>(
     '/',
     {
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: '1 minute'
+        }
+      },
       preHandler: app.validateBody(createChannelBody)
     },
     async (request, reply) => {

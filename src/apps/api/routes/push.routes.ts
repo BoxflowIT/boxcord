@@ -40,7 +40,14 @@ export async function pushRoutes(app: FastifyInstance) {
   // Subscribe to push notifications
   app.post<{
     Body: z.infer<typeof subscriptionSchema>;
-  }>('/subscribe', async (request) => {
+  }>('/subscribe', {
+    config: {
+      rateLimit: {
+        max: 10,
+        timeWindow: '1 minute'
+      }
+    }
+  }, async (request) => {
     const subscription = subscriptionSchema.parse(request.body);
 
     await pushService.subscribe(request.user.id, subscription);

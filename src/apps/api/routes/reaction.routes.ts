@@ -33,6 +33,12 @@ export async function reactionRoutes(app: FastifyInstance) {
   }>(
     '/messages/:messageId',
     {
+      config: {
+        rateLimit: {
+          max: 60,
+          timeWindow: '1 minute'
+        }
+      },
       preHandler: app.validateBody(schemas.toggleReaction)
     },
     async (request) => {

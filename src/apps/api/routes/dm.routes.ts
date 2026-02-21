@@ -40,6 +40,12 @@ export async function dmRoutes(app: FastifyInstance) {
   app.post<{ Body: z.infer<typeof createDMChannelBody> }>(
     '/channels',
     {
+      config: {
+        rateLimit: {
+          max: 20,
+          timeWindow: '1 minute'
+        }
+      },
       preHandler: app.validateBody(createDMChannelBody)
     },
     async (request, reply) => {

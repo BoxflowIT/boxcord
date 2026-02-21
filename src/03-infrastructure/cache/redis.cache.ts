@@ -213,7 +213,11 @@ class InMemoryCacheService implements CacheService {
   }
 
   async deletePattern(pattern: string): Promise<void> {
-    const regex = new RegExp(pattern.replace('*', '.*'));
+    // Escape special regex characters except * which we want to treat as wildcard
+    const escapedPattern = pattern
+      .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/\*/g, '.*');
+    const regex = new RegExp(`^${escapedPattern}$`);
     const toDelete: string[] = [];
 
     this.cache.forEach((_, key) => {

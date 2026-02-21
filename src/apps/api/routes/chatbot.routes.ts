@@ -34,7 +34,14 @@ export async function chatbotRoutes(app: FastifyInstance) {
       channelId: string;
       workspaceId?: string;
     };
-  }>('/execute', async (request) => {
+  }>('/execute', {
+    config: {
+      rateLimit: {
+        max: 20,
+        timeWindow: '1 minute'
+      }
+    }
+  }, async (request) => {
     const { command, channelId, workspaceId } = request.body;
 
     const result = await chatbotService.processMessage(command, {
