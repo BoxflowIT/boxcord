@@ -232,12 +232,19 @@ class InMemoryCacheService implements CacheService {
 
 // Export singleton instance with automatic fallback
 let cacheService: CacheService;
+let redisCache: { isConnected: () => boolean; get: (key: string) => Promise<any | null> };
 
 if (process.env.REDIS_URL && process.env.NODE_ENV !== 'test') {
-  cacheService = new RedisCacheService();
+  const redisService = new RedisCacheService();
+  cacheService = redisService;
+  redisCache = redisService;
 } else {
   cacheService = new InMemoryCacheService();
+  redisCache = {
+    isConnected: () => false,
+    get: async () => null
+  };
 }
 
-export { cacheService };
+export { cacheService, redisCache };
 export default cacheService;
