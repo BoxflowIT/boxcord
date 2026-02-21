@@ -68,7 +68,8 @@
   },
   "overrides": {
     "ajv": "^8.18.0",
-    "fast-xml-parser": "^5.3.6"
+    "fast-xml-parser": "^5.3.6",
+    "minimatch": "^10.2.1"
   },
   "engines": {
     "node": ">=20.0.0"
