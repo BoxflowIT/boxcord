@@ -21,7 +21,14 @@ export async function fileRoutes(app: FastifyInstance) {
   });
 
   // Upload general file (for workspace icons, etc.)
-  app.post('/', async (request, reply) => {
+  app.post('/', {
+    config: {
+      rateLimit: {
+        max: 10,
+        timeWindow: '1 minute'
+      }
+    }
+  }, async (request, reply) => {
     const file = await request.file();
 
     if (!file) {
@@ -49,6 +56,14 @@ export async function fileRoutes(app: FastifyInstance) {
   // Upload file for channel message
   app.post<{ Params: { messageId: string } }>(
     '/messages/:messageId',
+    {
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: '1 minute'
+        }
+      }
+    },
     async (request, reply) => {
       const file = await request.file();
 
@@ -78,6 +93,14 @@ export async function fileRoutes(app: FastifyInstance) {
   // Upload file for DM
   app.post<{ Params: { messageId: string } }>(
     '/dm/:messageId',
+    {
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: '1 minute'
+        }
+      }
+    },
     async (request, reply) => {
       const file = await request.file();
 

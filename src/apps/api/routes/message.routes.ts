@@ -51,6 +51,12 @@ export async function messageRoutes(app: FastifyInstance) {
   }>(
     '/',
     {
+      config: {
+        rateLimit: {
+          max: 30,
+          timeWindow: '1 minute'
+        }
+      },
       preHandler: app.validateBody(schemas.createMessage)
     },
     async (request, reply) => {

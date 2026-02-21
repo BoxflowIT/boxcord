@@ -27,6 +27,12 @@ export async function searchRoutes(app: FastifyInstance) {
   }>(
     '/messages',
     {
+      config: {
+        rateLimit: {
+          max: 30,
+          timeWindow: '1 minute'
+        }
+      },
       preHandler: app.validateQuery(searchQuery)
     },
     async (request, reply) => {
@@ -49,6 +55,12 @@ export async function searchRoutes(app: FastifyInstance) {
   }>(
     '/dms',
     {
+      config: {
+        rateLimit: {
+          max: 30,
+          timeWindow: '1 minute'
+        }
+      },
       preHandler: app.validateQuery(searchQuery)
     },
     async (request, reply) => {
@@ -70,6 +82,12 @@ export async function searchRoutes(app: FastifyInstance) {
   }>(
     '/',
     {
+      config: {
+        rateLimit: {
+          max: 30,
+          timeWindow: '1 minute'
+        }
+      },
       preHandler: app.validateQuery(searchQuery)
     },
     async (request, reply) => {

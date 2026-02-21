@@ -89,6 +89,12 @@ export async function userRoutes(app: FastifyInstance) {
   }>(
     '/me',
     {
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: '1 minute'
+        }
+      },
       preHandler: app.validateBody(schemas.updateProfile)
     },
     async (request) => {
@@ -116,6 +122,12 @@ export async function userRoutes(app: FastifyInstance) {
   app.get<{ Querystring: z.infer<typeof searchQuery> }>(
     '/search',
     {
+      config: {
+        rateLimit: {
+          max: 30,
+          timeWindow: '1 minute'
+        }
+      },
       preHandler: app.validateQuery(searchQuery)
     },
     async (request) => {

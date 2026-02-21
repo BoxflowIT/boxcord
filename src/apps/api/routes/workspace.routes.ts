@@ -44,6 +44,12 @@ export async function workspaceRoutes(app: FastifyInstance) {
   app.post<{ Body: z.infer<typeof schemas.createWorkspace> }>(
     '/',
     {
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: '1 minute'
+        }
+      },
       preHandler: app.validateBody(schemas.createWorkspace)
     },
     async (request, reply) => {
