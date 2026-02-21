@@ -186,7 +186,7 @@ export const api = {
       body: JSON.stringify({ channelId })
     }),
   getPinnedMessages: (channelId: string) =>
-    request<Message[]>(`/messages/pinned?channelId=${channelId}`),
+    request<Message[]>(`/messages/pinned?channelId=${channelId}&_t=${Date.now()}`),
 
   // Global Search
   globalSearch: (query: string) =>
@@ -265,7 +265,7 @@ export const api = {
       body: JSON.stringify({ channelId })
     }),
   getPinnedDMs: (channelId: string) =>
-    request<Message[]>(`/dm/channels/${channelId}/pinned`),
+    request<Message[]>(`/dm/channels/${channelId}/pinned?_t=${Date.now()}`),
 
   // Reactions
   getQuickReactions: () => request<string[]>('/reactions/quick'),

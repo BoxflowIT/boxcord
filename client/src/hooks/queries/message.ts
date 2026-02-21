@@ -37,7 +37,9 @@ export function usePinnedMessages(channelId: string | undefined) {
     queryKey: channelId ? ['pinnedMessages', channelId] : ['pinnedMessages-null'],
     queryFn: () => (channelId ? api.getPinnedMessages(channelId) : []),
     enabled: !!channelId,
-    staleTime: 60 * 1000, // 60s
-    gcTime: 5 * 60 * 1000
+    staleTime: 0, // Always refetch on mount to get fresh data
+    gcTime: 5 * 60 * 1000,
+    refetchOnMount: 'always', // Force fresh data on page load
+    refetchOnWindowFocus: false // Don't refetch when switching windows
   });
 }

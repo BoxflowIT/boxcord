@@ -82,11 +82,20 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
   ...createInitialState(),
 
   // Channel state
-  setCurrentChannel: (channelId, sessionId) =>
-    set({ currentChannelId: channelId, currentSessionId: sessionId }),
+  setCurrentChannel: (channelId, sessionId) => {
+    console.log('📍 [voiceStore] setCurrentChannel:', { channelId, sessionId });
+    set({ currentChannelId: channelId, currentSessionId: sessionId });
+  },
 
-  setConnecting: (isConnecting) => set({ isConnecting }),
-  setConnected: (isConnected) => set({ isConnected }),
+  setConnecting: (isConnecting) => {
+    console.log('⏳ [voiceStore] setConnecting:', isConnecting);
+    set({ isConnecting });
+  },
+  
+  setConnected: (isConnected) => {
+    console.log('🔌 [voiceStore] setConnected:', isConnected);
+    set({ isConnected });
+  },
 
   // Local user state
   setVideoEnabled: (isVideoEnabled) => set({ isVideoEnabled }),
@@ -145,13 +154,29 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
   reset: () => {
     const { peers, localStream } = get();
 
+    console.log('🔄 Resetting voice store...', {
+      peerCount: peers.size,
+      hasLocalStream: !!localStream
+    });
+
     // Cleanup peers
-    peers.forEach((peer) => peer.destroy());
+    peers.forEach((peer, userId) => {
+      console.log('🧹 Destroying peer:', userId);
+      peer.destroy();
+    });
 
     // Stop media tracks
-    localStream?.getTracks().forEach((track) => track.stop());
+    if (localStream) {
+      const tracks = localStream.getTracks();
+      console.log('🛑 Stopping tracks:', tracks.length);
+      tracks.forEach((track) => {
+        console.log('  - Stopping track:', track.kind, track.label);
+        track.stop();
+      });
+    }
 
     set(createInitialState());
+    console.log('✅ Voice store reset complete');
   }
 }));
 

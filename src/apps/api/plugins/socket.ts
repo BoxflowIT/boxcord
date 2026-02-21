@@ -382,7 +382,8 @@ export function setupSocketHandlers(
 
     // Join DM channel
     socket.on('dm:join', (dmChannelId: string) => {
-      socket.join(`dm:${dmChannelId}`);
+      const room = `dm:${dmChannelId}`;
+      socket.join(room);
     });
 
     // Leave DM channel

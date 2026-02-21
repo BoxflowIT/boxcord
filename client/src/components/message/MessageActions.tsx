@@ -28,6 +28,7 @@ export function MessageActions({
   quickReactions = DEFAULT_QUICK_REACTIONS
 }: MessageActionsProps) {
   const { t } = useTranslation();
+  
   return (
     <>
       {/* Quick reactions */}

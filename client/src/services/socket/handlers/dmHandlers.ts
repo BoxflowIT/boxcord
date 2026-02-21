@@ -122,6 +122,72 @@ export function registerDMHandlers(
     }
   );
 
+  // dm:pinned - DM message pinned
+  socket.on('dm:pinned', (message: Message) => {
+    if (!message || !message.id) {
+      return;
+    }
+    
+    if (message.channelId) {
+      // Update message in dmMessages cache with isPinned: true
+      queryClient.setQueryData<PaginatedMessages>(
+        queryKeys.dmMessages(message.channelId),
+        (old) => {
+          if (!old?.items) return old;
+          return {
+            ...old,
+            items: old.items.map((m) => 
+              m.id === message.id 
+                ? { ...m, isPinned: true, pinnedAt: message.pinnedAt, pinnedBy: message.pinnedBy }
+                : m
+            )
+          };
+        }
+      );
+
+      // Add to pinnedDMs cache immediately (optimistic update)
+      queryClient.setQueryData<Message[]>(
+        ['pinnedDMs', message.channelId],
+        (old) => {
+          if (!old) return [message];
+          // Add if not already in list
+          if (old.some((m) => m.id === message.id)) return old;
+          return [...old, { ...message, isPinned: true }];
+        }
+      );
+    }
+  });
+
+  // dm:unpinned - DM message unpinned
+  socket.on('dm:unpinned', (message: Message) => {
+    if (message.channelId) {
+      // Update message in dmMessages cache with isPinned: false
+      queryClient.setQueryData<PaginatedMessages>(
+        queryKeys.dmMessages(message.channelId),
+        (old) => {
+          if (!old?.items) return old;
+          return {
+            ...old,
+            items: old.items.map((m) => 
+              m.id === message.id 
+                ? { ...m, isPinned: false, pinnedAt: null, pinnedBy: null }
+                : m
+            )
+          };
+        }
+      );
+
+      // Remove from pinnedDMs cache immediately (optimistic update)
+      queryClient.setQueryData<Message[]>(
+        ['pinnedDMs', message.channelId],
+        (old) => {
+          if (!old) return old;
+          return old.filter((m) => m.id !== message.id);
+        }
+      );
+    }
+  });
+
   // dm:typing - Typing indicator (placeholder)
   socket.on('dm:typing', () => {
     // Handle DM typing indicator
