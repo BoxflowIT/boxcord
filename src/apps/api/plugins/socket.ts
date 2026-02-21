@@ -152,7 +152,7 @@ export function setupSocketHandlers(
           
           app.log.debug('Socket auth: JWT signature verified successfully');
         } catch (verifyErr) {
-          app.log.error('Socket auth: JWT signature verification failed', verifyErr);
+          app.log.error('Socket auth: JWT signature verification failed: %s', verifyErr instanceof Error ? verifyErr.message : String(verifyErr));
           return next(new Error('Invalid token signature'));
         }
       } else if (!isDev) {

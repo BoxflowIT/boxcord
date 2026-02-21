@@ -23,8 +23,10 @@ export interface LocalUser {
 export interface UpdateUserInput {
   firstName?: string;
   lastName?: string;
-  avatarUrl?: string;
+  avatarUrl?: string | null;
   bio?: string;
+  statusText?: string | null;
+  statusEmoji?: string | null;
 }
 
 export interface UserWithPresence extends LocalUser {
