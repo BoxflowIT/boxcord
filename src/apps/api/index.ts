@@ -23,6 +23,9 @@ import metricsPlugin from './plugins/metrics.plugin.js';
 import securityPlugin from './plugins/security.js';
 import rateLimitPlugin from './plugins/rate-limit.js';
 import validationPlugin from './plugins/validation.js';
+import sanitizationPlugin from './plugins/sanitization.js';
+import swaggerPlugin from './plugins/swagger.js';
+import loggingPlugin from './plugins/logging.js';
 import { registerRoutes } from './routes/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -61,6 +64,14 @@ async function main() {
   // Rate limiting
   await app.register(rateLimitPlugin);
 
+  // Input sanitization (XSS protection)
+  await app.register(sanitizationPlugin);
+
+  // Swagger API documentation (only in development)
+  if (!isProduction) {
+    await app.register(swaggerPlugin);
+  }
+
   // Compression for responses (gzip/brotli)
   await app.register(compress, {
     global: true,
@@ -70,6 +81,9 @@ async function main() {
 
   // JWT authentication
   await app.register(jwtPlugin);
+
+  // Structured logging with request tracking
+  await app.register(loggingPlugin);
 
   // Input validation
   await app.register(validationPlugin);

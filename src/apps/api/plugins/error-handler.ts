@@ -1,13 +1,55 @@
-// Error Handler Plugin
+// Error Handler Plugin - Environment-specific Error Handling
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import { AppError } from '../../../00-core/errors.js';
+import * as Sentry from '@sentry/node';
+
+const isDevelopment = process.env.NODE_ENV === 'development';
+const _isTest = process.env.NODE_ENV === 'test';
+const isProduction = process.env.NODE_ENV === 'production';
 
 export function errorHandler(
   error: FastifyError,
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  request.log.error(error);
+  const statusCode = error.statusCode ?? 500;
+
+  // Enhanced logging with context
+  const errorLog = {
+    error: {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      stack: isDevelopment ? error.stack : undefined
+    },
+    request: {
+      method: request.method,
+      url: request.url,
+      ip: request.ip,
+      user: (request as any).user?.id,
+      headers: {
+        'user-agent': request.headers['user-agent'],
+        referer: request.headers['referer']
+      }
+    }
+  };
+
+  if (statusCode >= 500) {
+    request.log.error(errorLog, 'Internal server error');
+    // Report to Sentry in production
+    if (isProduction) {
+      Sentry.captureException(error, {
+        extra: {
+          url: request.url,
+          method: request.method,
+          userId: (request as any).user?.id,
+          ip: request.ip
+        }
+      });
+    }
+  } else {
+    request.log.warn(errorLog, 'Client error');
+  }
 
   // Handle our custom AppError
   if (error instanceof AppError) {
@@ -16,7 +58,7 @@ export function errorHandler(
       error: {
         code: error.code,
         message: error.message,
-        details: error.details
+        details: isDevelopment ? error.details : undefined
       }
     });
   }
@@ -28,7 +70,7 @@ export function errorHandler(
       error: {
         code: 'VALIDATION_ERROR',
         message: 'Validation failed',
-        details: error.validation
+        details: isDevelopment ? error.validation : undefined
       }
     });
   }
@@ -47,16 +89,19 @@ export function errorHandler(
     });
   }
 
-  // Default error response
-  const statusCode = error.statusCode ?? 500;
+  // PRODUCTION: Never expose internal error details or stack traces
+  // DEVELOPMENT: Show full error details for debugging
   return reply.status(statusCode).send({
     success: false,
     error: {
-      code: 'INTERNAL_ERROR',
-      message:
-        process.env.NODE_ENV === 'production'
-          ? 'An unexpected error occurred'
+      code: error.code || 'INTERNAL_ERROR',
+      message: isProduction
+        ? statusCode >= 500
+          ? 'An unexpected error occurred. Please try again later.'
           : error.message
+        : error.message,
+      stack: isDevelopment ? error.stack : undefined,
+      details: isDevelopment ? error : undefined
     }
   });
 }
