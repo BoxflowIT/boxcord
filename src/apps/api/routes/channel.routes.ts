@@ -1,10 +1,30 @@
 // Channel Routes
 import type { FastifyInstance } from 'fastify';
+import { z } from 'zod';
 import { prisma } from '../../../03-infrastructure/database/client.js';
 import { ChannelService } from '../../../02-application/services/channel.service.js';
 import type { ChannelType } from '../../../01-domain/entities/channel.js';
 
 const channelService = new ChannelService(prisma);
+
+// Local query schemas
+const getChannelsQuery = z.object({
+  workspaceId: z.string().uuid()
+});
+
+// Channel creation schema (more permissive name for existing channels)
+const createChannelBody = z.object({
+  workspaceId: z.string().uuid(),
+  name: z.string().min(1).max(100),
+  description: z.string().max(500).optional(),
+  type: z.enum(['TEXT', 'VOICE']).optional(),
+  isPrivate: z.boolean().optional()
+});
+
+const updateChannelBody = z.object({
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(500).optional()
+});
 
 export async function channelRoutes(app: FastifyInstance) {
   // All routes require authentication
@@ -13,8 +33,11 @@ export async function channelRoutes(app: FastifyInstance) {
   });
 
   // Get channels for a workspace
-  app.get<{ Querystring: { workspaceId: string } }>(
+  app.get<{ Querystring: z.infer<typeof getChannelsQuery> }>(
     '/',
+    {
+      preHandler: app.validateQuery(getChannelsQuery)
+    },
     async (request, reply) => {
       const { workspaceId } = request.query;
       const userId = request.user.id;
@@ -53,53 +76,53 @@ export async function channelRoutes(app: FastifyInstance) {
 
   // Create channel
   app.post<{
-    Body: {
-      workspaceId: string;
-      name: string;
-      description?: string;
-      type?: ChannelType;
-      isPrivate?: boolean;
-    };
-  }>('/', async (request, reply) => {
-    const channel = await channelService.createChannel(request.body);
-    app.log.info(
-      `Created channel ${channel.name} (${channel.id}), isPrivate: ${channel.isPrivate}`
-    );
+    Body: z.infer<typeof createChannelBody>;
+  }>(
+    '/',
+    {
+      preHandler: app.validateBody(createChannelBody)
+    },
+    async (request, reply) => {
+      const channel = await channelService.createChannel(request.body);
+      app.log.info(
+        `Created channel ${channel.name} (${channel.id}), isPrivate: ${channel.isPrivate}`
+      );
 
-    // Add creator as member so they can see the channel
-    // MUST complete before returning to avoid race condition with GET /channels
-    try {
-      await prisma.channelMember.create({
-        data: {
-          channelId: channel.id,
-          userId: request.user.id
+      // Add creator as member so they can see the channel
+      // MUST complete before returning to avoid race condition with GET /channels
+      try {
+        await prisma.channelMember.create({
+          data: {
+            channelId: channel.id,
+            userId: request.user.id
+          }
+        });
+        app.log.info(
+          `Added user ${request.user.id} as member of channel ${channel.id}`
+        );
+      } catch (err: any) {
+        // Only ignore duplicate errors, throw everything else
+        if (!err.message?.includes('Unique constraint')) {
+          app.log.error('Failed to create channel member:', err);
+          throw err;
         }
-      });
-      app.log.info(
-        `Added user ${request.user.id} as member of channel ${channel.id}`
-      );
-    } catch (err: any) {
-      // Only ignore duplicate errors, throw everything else
-      if (!err.message?.includes('Unique constraint')) {
-        app.log.error('Failed to create channel member:', err);
-        throw err;
+        app.log.info(
+          `User ${request.user.id} already member of channel ${channel.id}`
+        );
       }
-      app.log.info(
-        `User ${request.user.id} already member of channel ${channel.id}`
-      );
-    }
 
-    // Emit socket event to all users in workspace
-    const io = app.io;
-    if (io) {
-      io.to(`workspace:${channel.workspaceId}`).emit(
-        'channel:created',
-        channel
-      );
-    }
+      // Emit socket event to all users in workspace
+      const io = app.io;
+      if (io) {
+        io.to(`workspace:${channel.workspaceId}`).emit(
+          'channel:created',
+          channel
+        );
+      }
 
-    return reply.status(201).send({ success: true, data: channel });
-  });
+      return reply.status(201).send({ success: true, data: channel });
+    }
+  );
 
   // Delete channel
   app.delete<{ Params: { id: string } }>('/:id', async (request, reply) => {
@@ -122,14 +145,20 @@ export async function channelRoutes(app: FastifyInstance) {
   // Update channel
   app.patch<{
     Params: { id: string };
-    Body: { name?: string; description?: string };
-  }>('/:id', async (request) => {
-    const channel = await channelService.updateChannel(
-      request.params.id,
-      request.body
-    );
-    return { success: true, data: channel };
-  });
+    Body: z.infer<typeof updateChannelBody>;
+  }>(
+    '/:id',
+    {
+      preHandler: app.validateBody(updateChannelBody)
+    },
+    async (request) => {
+      const channel = await channelService.updateChannel(
+        request.params.id,
+        request.body
+      );
+      return { success: true, data: channel };
+    }
+  );
 
   // Join channel
   app.post<{ Params: { id: string } }>('/:id/join', async (request) => {

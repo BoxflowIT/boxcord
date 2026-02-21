@@ -6,6 +6,20 @@ import { SOCKET_EVENTS } from '../../../00-core/constants.js';
 import { MessageService } from '../../../02-application/services/message.service.js';
 import { PushService } from '../../../02-application/services/push.service.js';
 import { VoiceService } from '../../../02-application/services/voice.service.js';
+import { JwksClient } from 'jwks-rsa';
+import jsonwebtoken from 'jsonwebtoken';
+
+// Cognito JWKS client for token verification
+const COGNITO_USER_POOL_ID =
+  process.env.COGNITO_USER_POOL_ID || 'eu-north-1_SJ3dGBIPY';
+const COGNITO_REGION = process.env.COGNITO_REGION || 'eu-north-1';
+const jwksUri = `https://cognito-idp.${COGNITO_REGION}.amazonaws.com/${COGNITO_USER_POOL_ID}/.well-known/jwks.json`;
+
+const socketJwksClient = new JwksClient({
+  jwksUri,
+  cache: true,
+  cacheMaxAge: 600000 // 10 minutes
+});
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -102,22 +116,53 @@ export function setupSocketHandlers(
         }
       }
 
-      // Decode JWT manually (Cognito tokens)
-      // Note: We don't verify signature here - it was verified during HTTP auth
+      // Verify JWT with signature validation (Cognito tokens)
       const parts = token.split('.');
       if (parts.length !== 3) {
         app.log.error('Socket auth: Invalid JWT format');
         return next(new Error('Invalid token format'));
       }
 
+      // Decode header to get kid for signature verification
+      const header = JSON.parse(decodeBase64Url(parts[0]));
       const payload = JSON.parse(decodeBase64Url(parts[1]));
+      
       if (!payload.sub) {
         app.log.error('Socket auth: No sub claim in token');
         return next(new Error('Invalid token - missing sub'));
       }
 
+      // Check expiration first
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
+        app.log.error('Socket auth: Token expired');
+        return next(new Error('Token expired'));
+      }
+
+      // Verify signature if it's a Cognito token
+      if (payload.iss && payload.iss.includes('cognito-idp') && header.kid) {
+        try {
+          const key = await socketJwksClient.getSigningKey(header.kid);
+          const signingKey = key.getPublicKey();
+          
+          // Verify signature
+          jsonwebtoken.verify(token, signingKey, {
+            algorithms: ['RS256'],
+            issuer: payload.iss
+          });
+          
+          app.log.debug('Socket auth: JWT signature verified successfully');
+        } catch (verifyErr) {
+          app.log.error('Socket auth: JWT signature verification failed', verifyErr);
+          return next(new Error('Invalid token signature'));
+        }
+      } else if (!isDev) {
+        // In production, require proper Cognito tokens
+        app.log.error('Socket auth: Non-Cognito token in production');
+        return next(new Error('Invalid token issuer'));
+      }
+
       socket.userId = payload.sub;
-      socket.email = payload.email;
+      socket.email = payload.email || payload['cognito:username'] || '';
       next();
     } catch (err) {
       app.log.error(
