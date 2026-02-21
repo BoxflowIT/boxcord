@@ -297,8 +297,8 @@ export default function ChannelSection({
 }: ChannelSectionProps) {
   const { t } = useTranslation();
   // Batch fetch all voice channel users for this workspace (optimization)
-  const { data: workspaceVoiceUsers = {} } =
-    useWorkspaceVoiceUsers(workspaceId);
+  const { data } = useWorkspaceVoiceUsers(workspaceId);
+  const workspaceVoiceUsers: Record<string, VoiceUser[]> = data || {};
   // Deduplicate and sort channels
   const uniqueChannels = channels.reduce<Channel[]>((acc, channel) => {
     if (!acc.some((ch) => ch.id === channel.id)) {
