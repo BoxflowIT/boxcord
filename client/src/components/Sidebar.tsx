@@ -276,6 +276,7 @@ export default function Sidebar({
           <div className="panel-content flex-1 min-h-0 overflow-y-auto">
             {currentWorkspace && (
               <ChannelSection
+                workspaceId={currentWorkspace.id}
                 channels={channels}
                 currentChannelId={currentChannel?.id}
                 onChannelSelect={handleChannelSelect}

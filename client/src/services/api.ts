@@ -160,6 +160,19 @@ export const api = {
         isSpeaking: boolean;
       }[]
     >(`/voice/channels/${channelId}/users`),
+  getWorkspaceVoiceUsers: (workspaceId: string) =>
+    request<
+      Record<
+        string,
+        {
+          userId: string;
+          sessionId: string;
+          isMuted: boolean;
+          isDeafened: boolean;
+          isSpeaking: boolean;
+        }[]
+      >
+    >(`/voice/workspaces/${workspaceId}/voice-users`),
 
   // Messages
   getMessages: (channelId: string, cursor?: string) =>

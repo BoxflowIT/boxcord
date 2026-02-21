@@ -174,6 +174,62 @@ export class VoiceService {
   }
 
   /**
+   * Get active users for all voice channels in a workspace (batch)
+   * Optimized to fetch all voice channel users in a single query
+   */
+  async getWorkspaceVoiceUsers(
+    workspaceId: string
+  ): Promise<Record<string, ActiveVoiceUser[]>> {
+    // Get all voice channels in workspace
+    const channels = await this.prisma.channel.findMany({
+      where: { workspaceId, type: 'VOICE' },
+      select: { id: true }
+    });
+
+    const channelIds = channels.map((c) => c.id);
+
+    // Fetch all active sessions for these channels in one query
+    const sessions = await this.prisma.voiceSession.findMany({
+      where: {
+        channelId: { in: channelIds },
+        leftAt: null
+      },
+      select: {
+        id: true,
+        userId: true,
+        channelId: true,
+        joinedAt: true,
+        isMuted: true,
+        isDeafened: true,
+        isSpeaking: true
+      },
+      orderBy: { joinedAt: 'asc' }
+    });
+
+    // Group by channelId
+    const result: Record<string, ActiveVoiceUser[]> = {};
+    for (const channelId of channelIds) {
+      result[channelId] = [];
+    }
+
+    for (const session of sessions) {
+      if (!result[session.channelId]) {
+        result[session.channelId] = [];
+      }
+      result[session.channelId].push({
+        userId: session.userId,
+        sessionId: session.id,
+        isMuted: session.isMuted,
+        isDeafened: session.isDeafened,
+        isSpeaking: session.isSpeaking,
+        joinedAt: session.joinedAt
+      });
+    }
+
+    return result;
+  }
+
+  /**
    * Get user's current voice session
    */
   async getCurrentSession(userId: string): Promise<VoiceSessionInfo | null> {

@@ -23,4 +23,7 @@ export {
 } from './queries/user';
 export { useMessages, useReactions } from './queries/message';
 export { useDMChannels, useDMMessages } from './queries/dm';
-export { useVoiceChannelUsers } from './queries/voice';
+export {
+  useVoiceChannelUsers,
+  useWorkspaceVoiceUsers
+} from './queries/voice';
