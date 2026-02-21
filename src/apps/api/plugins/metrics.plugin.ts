@@ -9,33 +9,34 @@ import {
 async function metricsPlugin(fastify: FastifyInstance) {
   // Hook to measure request duration
   fastify.addHook('onRequest', async (request: FastifyRequest) => {
-    // @ts-expect-error - Adding custom property for timing
-    request.startTime = Date.now();
+    (request as any).startTime = Date.now();
   });
 
   // Hook to record metrics after response
-  fastify.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply) => {
-    // Skip metrics collection for /metrics and /health endpoints to avoid noise
-    const skipRoutes = ['/metrics', '/health', '/ready', '/live'];
-    if (skipRoutes.includes(request.url)) return;
+  fastify.addHook(
+    'onResponse',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      // Skip metrics collection for /metrics and /health endpoints to avoid noise
+      const skipRoutes = ['/metrics', '/health', '/ready', '/live'];
+      if (skipRoutes.includes(request.url)) return;
 
-    // Calculate duration
-    // @ts-expect-error - Custom property
-    const duration = (Date.now() - request.startTime) / 1000; // Convert to seconds
+      // Calculate duration
+      const duration = (Date.now() - (request as any).startTime) / 1000; // Convert to seconds
 
-    // Normalize route path (replace IDs with placeholders)
-    const route = normalizeRoute(request.url);
+      // Normalize route path (replace IDs with placeholders)
+      const route = normalizeRoute(request.url);
 
-    const labels = {
-      method: request.method,
-      route,
-      status_code: reply.statusCode.toString()
-    };
+      const labels = {
+        method: request.method,
+        route,
+        status_code: reply.statusCode.toString()
+      };
 
-    // Record metrics
-    httpRequestCounter.inc(labels);
-    httpRequestDuration.observe(labels, duration);
-  });
+      // Record metrics
+      httpRequestCounter.inc(labels);
+      httpRequestDuration.observe(labels, duration);
+    }
+  );
 
   fastify.log.info('✅ Metrics plugin registered');
 }
@@ -45,7 +46,10 @@ async function metricsPlugin(fastify: FastifyInstance) {
 function normalizeRoute(url: string): string {
   return url
     .replace(/\/\d+/g, '/:id') // Replace numeric IDs
-    .replace(/\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '/:uuid') // UUIDs
+    .replace(
+      /\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
+      '/:uuid'
+    ) // UUIDs
     .split('?')[0]; // Remove query params
 }
 
