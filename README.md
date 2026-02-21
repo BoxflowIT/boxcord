@@ -223,10 +223,21 @@ SENDGRID_FROM_EMAIL=noreply@boxflow.com
 #### **CI/CD Pipeline**
 
 - GitHub Actions for automated testing
-- TypeScript type checking
+- TypeScript type checking (backend + frontend)
 - ESLint for both backend and frontend
+- Automated tests (backend + frontend)
 - npm audit security scanning
 - Automatic Railway deployment on main branch
+
+**Run all checks before pushing:**
+
+```bash
+yarn validate
+```
+
+This runs:
+- Backend: typecheck, lint, tests
+- Frontend: typecheck, lint, tests
 
 **See:** [.github/workflows/ci.yml](.github/workflows/ci.yml)
 
