@@ -19,8 +19,12 @@ import { voiceRoutes } from './voice.routes.js';
 import { searchRoutes } from './search.routes.js';
 import { categoryRoutes } from './category.routes.js';
 import { moderationRoutes } from './moderation.routes.js';
+import { healthRoutes } from './health.routes.js';
 
 export async function registerRoutes(app: FastifyInstance) {
+  // Health checks (no prefix, no auth required)
+  await app.register(healthRoutes);
+
   // Ensure uploads directory exists
   const uploadDir = join(process.cwd(), process.env.UPLOAD_DIR ?? 'uploads');
   if (!existsSync(uploadDir)) {

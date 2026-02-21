@@ -79,24 +79,6 @@ async function main() {
   // Custom error handler
   app.setErrorHandler(errorHandler);
 
-  // Health check
-  app.get('/health', async () => ({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    env: {
-      nodeEnv: config.NODE_ENV,
-      port: config.PORT,
-      hasDatabase: !!config.DATABASE_URL,
-      hasCognito: !!(config.COGNITO_USER_POOL_ID && config.COGNITO_CLIENT_ID),
-      hasJwtSecret: !!config.JWT_SECRET,
-      features: {
-        redis: !!config.REDIS_URL,
-        sentry: !!config.SENTRY_DSN,
-        s3: !!(config.AWS_S3_BUCKET && config.AWS_ACCESS_KEY_ID)
-      }
-    }
-  }));
-
   // API routes
   await registerRoutes(app);
 
