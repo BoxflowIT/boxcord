@@ -176,6 +176,7 @@ model Message {
     reactions   Reaction[]
 
     @@index([channelId, createdAt])
+    @@index([channelId, isPinned, createdAt]) // Optimize pinned message queries
     @@index([authorId])
     @@map("messages")
 }
@@ -256,6 +257,7 @@ model DirectMessage {
     reactions   DMReaction[]
 
     @@index([channelId, createdAt])
+    @@index([channelId, isPinned, createdAt]) // Optimize pinned DM queries
     @@index([authorId])
     @@map("direct_messages")
 }
