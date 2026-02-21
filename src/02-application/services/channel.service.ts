@@ -50,7 +50,7 @@ export class ChannelService {
     }
 
     // OPTIMIZED: Get all unread counts in a single query using groupBy
-    const channelIds = channels.map((c) => c.id);
+    const _channelIds = channels.map((c) => c.id);
     const memberMap = new Map(
       channels.map((c) => [c.id, c.members[0]?.lastReadAt])
     );
@@ -81,7 +81,7 @@ export class ChannelService {
 
     // Combine channels with unread counts
     return channels.map((channel) => {
-      const { members, _count, ...channelData } = channel;
+      const { members: _members, _count, ...channelData } = channel;
       return {
         ...channelData,
         unreadCount: unreadMap.get(channel.id) ?? 0

@@ -150,7 +150,9 @@ export default function MemberList() {
 
   // Check if current user is admin
   const currentUserMember = users.find((u) => u.id === currentUser?.id);
-  const isAdmin = currentUserMember?.role === 'ADMIN' || currentUserMember?.role === 'SUPER_ADMIN';
+  const isAdmin =
+    currentUserMember?.role === 'ADMIN' ||
+    currentUserMember?.role === 'SUPER_ADMIN';
 
   return (
     <div className="sidebar-main border-l border-boxflow-border">
@@ -186,7 +188,11 @@ export default function MemberList() {
                 {roleUsers.map((user) => {
                   const displayName = getUserDisplayName(user);
 
-                  const canModerate = isAdmin && user.id !== currentUser?.id && user.role !== 'SUPER_ADMIN' && user.role !== 'ADMIN';
+                  const canModerate =
+                    isAdmin &&
+                    user.id !== currentUser?.id &&
+                    user.role !== 'SUPER_ADMIN' &&
+                    user.role !== 'ADMIN';
 
                   return (
                     <MemberListItem
@@ -228,15 +234,13 @@ export default function MemberList() {
       {showModeration && moderationUserId && (
         <ModerationModal
           userId={moderationUserId}
-          userName={
-            getUserDisplayName(
-              users.find((u) => u.id === moderationUserId) ?? {
-                id: moderationUserId,
-                email: 'Unknown',
-                role: 'STAFF'
-              }
-            )
-          }
+          userName={getUserDisplayName(
+            users.find((u) => u.id === moderationUserId) ?? {
+              id: moderationUserId,
+              email: 'Unknown',
+              role: 'STAFF'
+            }
+          )}
           onKick={handleKickUser}
           onBan={handleBanUser}
           onClose={() => {

@@ -176,7 +176,7 @@ export async function dmRoutes(app: FastifyInstance) {
     {
       preHandler: app.validateBody(channelIdBody)
     },
-    async (request, reply) => {
+    async (request, _reply) => {
       const message = await dmService.pinMessage(
         request.params.messageId,
         request.user.id,
@@ -202,7 +202,7 @@ export async function dmRoutes(app: FastifyInstance) {
     {
       preHandler: app.validateBody(channelIdBody)
     },
-    async (request, reply) => {
+    async (request, _reply) => {
       const message = await dmService.unpinMessage(
         request.params.messageId,
         request.user.id,
@@ -222,7 +222,7 @@ export async function dmRoutes(app: FastifyInstance) {
   // Get pinned messages in DM channel
   app.get<{
     Params: { channelId: string };
-  }>('/channels/:channelId/pinned', async (request, reply) => {
+  }>('/channels/:channelId/pinned', async (request, _reply) => {
     const messages = await dmService.getPinnedMessages(
       request.params.channelId,
       request.user.id

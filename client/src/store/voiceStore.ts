@@ -91,7 +91,7 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
     console.log('⏳ [voiceStore] setConnecting:', isConnecting);
     set({ isConnecting });
   },
-  
+
   setConnected: (isConnected) => {
     console.log('🔌 [voiceStore] setConnected:', isConnected);
     set({ isConnected });

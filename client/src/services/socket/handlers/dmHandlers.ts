@@ -29,13 +29,6 @@ export function registerDMHandlers(
     const isOwnMessage = message.authorId === currentUserId;
     const isViewing = isViewingDM(message.channelId);
 
-    console.log('[DM:NEW]', {
-      messageId: message.id,
-      channelId: message.channelId,
-      isViewingDM: isViewing,
-      isOwnMessage
-    });
-
     if (message.channelId) {
       // Always update message cache directly (faster than invalidate + refetch)
       const dmKey = queryKeys.dmMessages(message.channelId, undefined);
@@ -127,7 +120,7 @@ export function registerDMHandlers(
     if (!message || !message.id) {
       return;
     }
-    
+
     if (message.channelId) {
       // Update message in dmMessages cache with isPinned: true
       queryClient.setQueryData<PaginatedMessages>(
@@ -136,9 +129,14 @@ export function registerDMHandlers(
           if (!old?.items) return old;
           return {
             ...old,
-            items: old.items.map((m) => 
-              m.id === message.id 
-                ? { ...m, isPinned: true, pinnedAt: message.pinnedAt, pinnedBy: message.pinnedBy }
+            items: old.items.map((m) =>
+              m.id === message.id
+                ? {
+                    ...m,
+                    isPinned: true,
+                    pinnedAt: message.pinnedAt,
+                    pinnedBy: message.pinnedBy
+                  }
                 : m
             )
           };
@@ -168,8 +166,8 @@ export function registerDMHandlers(
           if (!old?.items) return old;
           return {
             ...old,
-            items: old.items.map((m) => 
-              m.id === message.id 
+            items: old.items.map((m) =>
+              m.id === message.id
                 ? { ...m, isPinned: false, pinnedAt: null, pinnedBy: null }
                 : m
             )

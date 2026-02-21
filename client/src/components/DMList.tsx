@@ -8,6 +8,7 @@ import { useAuthStore } from '../store/auth';
 import { useDMChannels, queryKeys } from '../hooks/useQuery';
 import { useUserSearch } from '../hooks/useUserSearch';
 import { useDMCallStore } from '../store/dmCallStore';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 import { getOtherUser } from '../utils/dmUtils';
 import DMListHeader from './dm/DMListHeader';
 import DMSearchPanel from './dm/DMSearchPanel';
@@ -37,6 +38,10 @@ export default function DMList({
   const { data: dmChannels, isLoading, refetch } = useDMChannels();
   const { startCall } = useDMCallStore();
   const queryClient = useQueryClient();
+  const [mutedChannels, setMutedChannels] = useLocalStorage<string[]>(
+    'mutedDMChannels',
+    []
+  );
 
   const [showNewDM, setShowNewDM] = useState(false);
   const { searchQuery, searchResults, handleSearch, clearSearch } =
@@ -79,10 +84,19 @@ export default function DMList({
     [onInviteToServer]
   );
 
-  const handleMuteNotifications = useCallback((channelId: string) => {
-    // TODO: Implement mute notifications
-    logger.log('Mute notifications for:', channelId);
-  }, []);
+  const handleMuteNotifications = useCallback(
+    (channelId: string) => {
+      const isMuted = mutedChannels.includes(channelId);
+      if (isMuted) {
+        logger.log('Unmuting notifications for:', channelId);
+        setMutedChannels(mutedChannels.filter((id) => id !== channelId));
+      } else {
+        logger.log('Muting notifications for:', channelId);
+        setMutedChannels([...mutedChannels, channelId]);
+      }
+    },
+    [mutedChannels, setMutedChannels]
+  );
 
   const handleDeleteConversation = useCallback(
     async (channelId: string) => {
@@ -159,6 +173,7 @@ export default function DMList({
                 otherUser={otherUser}
                 unreadCount={channel.unreadCount}
                 isSelected={selectedId === channel.id}
+                isMuted={mutedChannels.includes(channel.id)}
                 onClick={() => onSelectDM(channel.id, otherUser)}
                 onStartCall={() => handleStartCall(channel.id, otherUser)}
                 onInviteToServer={() => handleInviteToServer(otherUser)}

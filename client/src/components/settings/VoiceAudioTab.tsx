@@ -53,11 +53,9 @@ export default function VoiceAudioTab() {
   useEffect(() => {
     initializeRNNoise()
       .then(() => {
-        console.log('✅ RNNoise AI initialized');
         setRnnoiseReady(true);
       })
-      .catch((err) => {
-        console.error('❌ RNNoise initialization failed:', err);
+      .catch(() => {
         setRnnoiseReady(false);
       });
   }, []);

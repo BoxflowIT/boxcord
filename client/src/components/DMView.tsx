@@ -17,7 +17,12 @@ import { voiceService } from '../services/voice.service';
 import { startRingingSound, stopRingingSound } from '../utils/voiceSound';
 import { useAuthStore } from '../store/auth';
 import { useDMCallStore } from '../store/dmCallStore';
-import { useDMMessages, useDMChannels, queryKeys } from '../hooks/useQuery';
+import {
+  useDMMessages,
+  useDMChannels,
+  queryKeys,
+  useOnlineUsers
+} from '../hooks/useQuery';
 import type { PaginatedMessages } from '../types';
 import { usePinnedDMs } from '../hooks/queries/dm';
 import { useMessageActions } from '../hooks/useMessageActions';
@@ -59,6 +64,13 @@ export default function DMView() {
     // Use user data embedded in participant
     return otherParticipant?.user;
   }, [channelId, dmChannels, user]);
+
+  // Get online users for presence status
+  const { data: onlineUsers = [] } = useOnlineUsers();
+  const isOtherUserOnline = useMemo(() => {
+    if (!otherUser) return false;
+    return onlineUsers.some((u) => u.id === otherUser.id);
+  }, [otherUser, onlineUsers]);
 
   // React Query hook for messages - single source of truth
   const { data: messagesData, isLoading: loadingMessages } =
@@ -353,7 +365,7 @@ export default function DMView() {
           otherUser.firstName?.charAt(0) ?? otherUser.email.charAt(0)
         ).toUpperCase()}
         avatarUrl={otherUser.avatarUrl}
-        isOnline={true} // TODO: Add online status
+        isOnline={isOtherUserOnline}
         onStartCall={handleStartCall}
       />
 

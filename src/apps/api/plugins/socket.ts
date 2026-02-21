@@ -84,7 +84,7 @@ export function setupSocketHandlers(
 ) {
   const messageService = new MessageService(prisma);
   const pushService = new PushService(prisma);
-  const voiceService = new VoiceService(prisma);
+  const _voiceService = new VoiceService(prisma);
   const onlineUsers = new Map<string, Set<string>>(); // channelId -> Set of userIds
   const isDev = process.env.NODE_ENV !== 'production';
   const allowMockTokens = isDev || process.env.ALLOW_MOCK_TOKENS === 'true';
@@ -126,7 +126,7 @@ export function setupSocketHandlers(
       // Decode header to get kid for signature verification
       const header = JSON.parse(decodeBase64Url(parts[0]));
       const payload = JSON.parse(decodeBase64Url(parts[1]));
-      
+
       if (!payload.sub) {
         app.log.error('Socket auth: No sub claim in token');
         return next(new Error('Invalid token - missing sub'));
@@ -143,16 +143,19 @@ export function setupSocketHandlers(
         try {
           const key = await socketJwksClient.getSigningKey(header.kid);
           const signingKey = key.getPublicKey();
-          
+
           // Verify signature
           jsonwebtoken.verify(token, signingKey, {
             algorithms: ['RS256'],
             issuer: payload.iss
           });
-          
+
           app.log.debug('Socket auth: JWT signature verified successfully');
         } catch (verifyErr) {
-          app.log.error('Socket auth: JWT signature verification failed: %s', verifyErr instanceof Error ? verifyErr.message : String(verifyErr));
+          app.log.error(
+            'Socket auth: JWT signature verification failed: %s',
+            verifyErr instanceof Error ? verifyErr.message : String(verifyErr)
+          );
           return next(new Error('Invalid token signature'));
         }
       } else if (!isDev) {
@@ -649,6 +652,7 @@ export function setupSocketHandlers(
           if (message) {
             io.to(`channel:${message.channelId}`).emit('reaction:update', {
               messageId: data.messageId,
+              channelId: message.channelId,
               userId,
               emoji: data.emoji,
               added
@@ -977,7 +981,7 @@ export function setupSocketHandlers(
       // Status should be managed by explicit user actions or timeout-based cleanup
 
       // Remove from channel tracking
-      onlineUsers.forEach((users, channelId) => {
+      onlineUsers.forEach((users, _channelId) => {
         users.delete(userId);
       });
     });

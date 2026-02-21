@@ -14,7 +14,9 @@ export interface UserDNDPayload {
   dndUntil?: Date | null;
 }
 
-export function registerUserStatusHandlers(context: SocketHandlerContext): void {
+export function registerUserStatusHandlers(
+  context: SocketHandlerContext
+): void {
   const { socket, queryClient } = context;
 
   // user:status-changed - User custom status updated

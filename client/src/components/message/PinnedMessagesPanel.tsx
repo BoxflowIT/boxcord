@@ -41,7 +41,7 @@ export function PinnedMessagesPanel({
   if (pinnedMessages.length === 0) return null;
 
   const currentMessage = pinnedMessages[currentIndex];
-  
+
   // Defensive check - if current message is undefined, don't render
   if (!currentMessage) {
     return null;

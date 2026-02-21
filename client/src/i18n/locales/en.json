@@ -204,6 +204,7 @@
     "markAsRead": "Mark as read",
     "inviteToServer": "Invite to server",
     "muteNotifications": "Mute notifications",
+    "unmuteNotifications": "Unmute notifications",
     "deleteConversation": "Delete conversation",
     "loadingUser": "Loading user...",
     "sendDirectMessage": "Send direct message",

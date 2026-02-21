@@ -35,7 +35,9 @@ export default function ProfileDisplay({
       {(customStatus || statusEmoji) && (
         <div className="flex items-center gap-2 text-sm">
           {statusEmoji && <span className="text-xl">{statusEmoji}</span>}
-          {customStatus && <p className="text-gray-300 italic">"{customStatus}"</p>}
+          {customStatus && (
+            <p className="text-gray-300 italic">"{customStatus}"</p>
+          )}
         </div>
       )}
 

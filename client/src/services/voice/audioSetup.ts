@@ -11,6 +11,7 @@ import {
   cleanupAudioPipeline,
   AudioPipelineNodes
 } from '../../utils/audioPipeline';
+import { logger } from '../../utils/logger';
 import type { AudioPipelineState } from './types';
 
 /**
@@ -32,7 +33,6 @@ export function getAudioConstraints(): MediaTrackConstraints {
     channelCount: { ideal: 1 }
   };
 
-  console.log('🎤 Voice audio constraints:', constraints);
   return constraints;
 }
 
@@ -53,9 +53,7 @@ export async function setupAudioForCall(
 
   // Apply RNNoise AI noise suppression if enabled
   if (audioSettings.useRNNoise && isRNNoiseAvailable()) {
-    console.log(
-      '🤖 Applying RNNoise AI to voice call (browser noise suppression OFF)...'
-    );
+    logger.debug('🤖 Applying RNNoise AI to voice call...');
     state.originalLocalStream = state.localStream;
     try {
       if (!state.audioContext) {
@@ -65,17 +63,16 @@ export async function setupAudioForCall(
         state.originalLocalStream,
         state.audioContext
       );
-      console.log('✅ RNNoise AI active in voice call');
+      logger.debug('✅ RNNoise AI active in voice call');
     } catch (error) {
-      console.error('❌ RNNoise failed, using original stream:', error);
+      logger.error('❌ RNNoise failed, using original stream:', error);
       state.localStream = state.originalLocalStream;
       state.originalLocalStream = null;
     }
   } else if (audioSettings.useRNNoise) {
-    console.warn('⚠️ RNNoise enabled but not available');
+    logger.warn('⚠️ RNNoise enabled but not available');
     state.originalLocalStream = null;
   } else {
-    console.log('ℹ️ Using browser native noise suppression for voice call');
     state.originalLocalStream = null;
   }
 
@@ -98,7 +95,7 @@ export async function setupAudioForCall(
   // This ensures voice calls use the processed audio (with VAD gate, compression, etc.)
   state.localStream = state.audioPipeline.destination.stream;
 
-  console.log('🎙️ Discord-quality voice processing active');
+  logger.debug('🎙️ Discord-quality voice processing active');
 
   // Apply mute state if already muted
   if (store.isMuted) {

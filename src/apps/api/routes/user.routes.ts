@@ -268,7 +268,7 @@ export async function userRoutes(app: FastifyInstance) {
     {
       preHandler: app.validateBody(statusBody)
     },
-    async (request, reply) => {
+    async (request, _reply) => {
       const { status, statusEmoji } = request.body;
 
       const user = await userService.updateCustomStatus(
@@ -298,7 +298,7 @@ export async function userRoutes(app: FastifyInstance) {
     {
       preHandler: app.validateBody(dndBody)
     },
-    async (request, reply) => {
+    async (request, _reply) => {
       const { dndMode, dndUntil } = request.body;
 
       const user = await userService.updateDNDMode(

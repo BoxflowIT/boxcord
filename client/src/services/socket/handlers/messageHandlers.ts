@@ -110,17 +110,78 @@ export function registerMessageHandlers(context: SocketHandlerContext): void {
     }
   );
 
-  // reaction:update - Reaction toggled
+  // reaction:update - Reaction toggled (from WebSocket)
   socket.on(
     'reaction:update',
     (data: {
       messageId: string;
+      channelId: string;
       userId: string;
       emoji: string;
       added: boolean;
     }) => {
       logger.log('Reaction update:', data);
-      // TODO: Handle reaction update in cache
+      updateReactionCache(queryClient, data);
     }
   );
+
+  // reaction:toggle - Reaction toggled (from REST API)
+  socket.on(
+    'reaction:toggle',
+    (data: {
+      messageId: string;
+      channelId: string;
+      userId: string;
+      emoji: string;
+      added: boolean;
+    }) => {
+      logger.log('Reaction toggle:', data);
+      updateReactionCache(queryClient, data);
+    }
+  );
+}
+
+// Helper function to update reaction in message cache
+function updateReactionCache(
+  queryClient: SocketHandlerContext['queryClient'],
+  data: {
+    messageId: string;
+    channelId: string;
+    userId: string;
+    emoji: string;
+    added: boolean;
+  }
+) {
+  const exactKey = queryKeys.messages(data.channelId, undefined);
+  queryClient.setQueryData<PaginatedMessages>(exactKey, (old) => {
+    if (!old?.items) return old;
+    return {
+      ...old,
+      items: old.items.map((m) => {
+        if (m.id !== data.messageId) return m;
+
+        const currentReactions = m.reactions || [];
+        let newReactions: Array<{ emoji: string; userId: string }>;
+
+        if (data.added) {
+          // Add reaction if not already present
+          const exists = currentReactions.some(
+            (r) => r.emoji === data.emoji && r.userId === data.userId
+          );
+          if (exists) return m;
+          newReactions = [
+            ...currentReactions,
+            { emoji: data.emoji, userId: data.userId }
+          ];
+        } else {
+          // Remove reaction
+          newReactions = currentReactions.filter(
+            (r) => !(r.emoji === data.emoji && r.userId === data.userId)
+          );
+        }
+
+        return { ...m, reactions: newReactions };
+      })
+    };
+  });
 }

@@ -166,7 +166,8 @@ export function GlobalSearch({ onClose, onResultClick }: GlobalSearchProps) {
                   <>
                     <HashIcon size="sm" />
                     <span>
-                      {result.channel?.workspace?.name || 'Unknown'} / #{result.channel?.name || 'Unknown'}
+                      {result.channel?.workspace?.name || 'Unknown'} / #
+                      {result.channel?.name || 'Unknown'}
                     </span>
                   </>
                 ) : (

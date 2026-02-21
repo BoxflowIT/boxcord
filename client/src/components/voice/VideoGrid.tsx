@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { useVoiceStore, useVoiceUsers } from '../../store/voiceStore';
 import { voiceService } from '../../services/voice.service';
 import { CloseIcon } from '../ui/Icons';
+import { logger } from '../../utils/logger';
 
 export function VideoGrid() {
   const localStream = useVoiceStore((s) => s.localStream);
@@ -19,14 +20,6 @@ export function VideoGrid() {
   useEffect(() => {
     if (cameraVideoRef.current && localStream && isVideoEnabled) {
       const videoTracks = localStream.getVideoTracks();
-      console.log(
-        '📹 Camera: Available video tracks:',
-        videoTracks.map((t) => ({
-          label: t.label,
-          kind: t.kind,
-          displaySurface: t.getSettings().displaySurface
-        }))
-      );
 
       // Find camera track - must NOT be a screen/monitor/display
       const cameraTrack = videoTracks.find((track) => {
@@ -42,14 +35,11 @@ export function VideoGrid() {
       });
 
       if (cameraTrack) {
-        console.log('✅ Camera track found:', cameraTrack.label);
         const stream = new MediaStream([cameraTrack]);
         cameraVideoRef.current.srcObject = stream;
         cameraVideoRef.current
           .play()
-          .catch((e) => console.error('Camera play error:', e));
-      } else {
-        console.warn('⚠️ No camera track found');
+          .catch((e) => logger.error('Camera play error:', e));
       }
     }
   }, [localStream, isVideoEnabled]);
@@ -58,14 +48,6 @@ export function VideoGrid() {
   useEffect(() => {
     if (screenVideoRef.current && localStream && isScreenSharing) {
       const videoTracks = localStream.getVideoTracks();
-      console.log(
-        '🖥️ Screen: Available video tracks:',
-        videoTracks.map((t) => ({
-          label: t.label,
-          kind: t.kind,
-          displaySurface: t.getSettings().displaySurface
-        }))
-      );
 
       // Find screen share track - check displaySurface first, then label keywords
       const screenTrack = videoTracks.find((track) => {
@@ -81,25 +63,11 @@ export function VideoGrid() {
       });
 
       if (screenTrack) {
-        console.log(
-          '✅ Screen share track found:',
-          screenTrack.label,
-          screenTrack.getSettings()
-        );
         const stream = new MediaStream([screenTrack]);
         screenVideoRef.current.srcObject = stream;
         screenVideoRef.current
           .play()
-          .catch((e) => console.error('Screen play error:', e));
-      } else {
-        console.warn('⚠️ No screen share track found');
-        console.warn(
-          'Available tracks:',
-          videoTracks.map((t) => ({
-            label: t.label,
-            settings: t.getSettings()
-          }))
-        );
+          .catch((e) => logger.error('Screen play error:', e));
       }
     }
   }, [localStream, isScreenSharing]);
@@ -190,10 +158,13 @@ export function VideoGrid() {
           ) : (
             // Layout without screen share: Just camera and peers in grid
             <div className="h-full">
-              <div className="grid gap-4 h-full" style={{
-                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                gridAutoRows: 'minmax(200px, 1fr)'
-              }}>
+              <div
+                className="grid gap-4 h-full"
+                style={{
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                  gridAutoRows: 'minmax(200px, 1fr)'
+                }}
+              >
                 {isVideoEnabled && (
                   <VideoContainer
                     videoRef={cameraVideoRef}
@@ -245,7 +216,9 @@ function VideoContainer({
           ...(mirrored && { transform: 'scaleX(-1)' })
         }}
       />
-      <div className={`absolute ${isScreenShare ? 'top-3 left-3 bg-green-600' : 'bottom-2 left-2 bg-black/80'} px-2 py-1 rounded text-xs font-medium text-white z-10 ${isScreenShare ? 'flex items-center gap-2' : ''}`}>
+      <div
+        className={`absolute ${isScreenShare ? 'top-3 left-3 bg-green-600' : 'bottom-2 left-2 bg-black/80'} px-2 py-1 rounded text-xs font-medium text-white z-10 ${isScreenShare ? 'flex items-center gap-2' : ''}`}
+      >
         {isScreenShare && (
           <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
         )}

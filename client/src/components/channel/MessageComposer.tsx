@@ -105,18 +105,40 @@ export default function MessageComposer({
     [handleSend]
   );
 
-  const handleFileSelect = useCallback(async (file: File) => {
-    setUploading(true);
-    try {
-      // Handle file upload here - you might want to upload it and get a URL
-      logger.info('File selected:', file.name);
-      // TODO: Implement file upload logic
-    } catch (error) {
-      logger.error('Failed to upload file:', error);
-    } finally {
-      setUploading(false);
-    }
-  }, []);
+  const handleFileSelect = useCallback(
+    async (file: File) => {
+      setUploading(true);
+      try {
+        // Upload file to server
+        const result = await api.uploadFile(file);
+        const fileUrl = 'url' in result ? result.url : result.fileUrl;
+
+        // Determine message format based on file type
+        const isImage = file.type.startsWith('image/');
+        const isVideo = file.type.startsWith('video/');
+
+        let messageContent: string;
+        if (isImage) {
+          // Send as image embed
+          messageContent = `![${file.name}](${fileUrl})`;
+        } else if (isVideo) {
+          // Send as video link
+          messageContent = `🎬 [${file.name}](${fileUrl})`;
+        } else {
+          // Send as file attachment
+          messageContent = `📎 [${file.name}](${fileUrl})`;
+        }
+
+        onSend(messageContent);
+        logger.info('File uploaded and sent:', file.name);
+      } catch (error) {
+        logger.error('Failed to upload file:', error);
+      } finally {
+        setUploading(false);
+      }
+    },
+    [onSend]
+  );
 
   return (
     <div className="relative">

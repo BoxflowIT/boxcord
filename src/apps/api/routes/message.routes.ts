@@ -98,7 +98,7 @@ export async function messageRoutes(app: FastifyInstance) {
     {
       preHandler: app.validateBody(schemas.pinMessage)
     },
-    async (request, reply) => {
+    async (request, _reply) => {
       const message = await messageService.pinMessage(
         request.params.id,
         request.user.id,
@@ -117,7 +117,7 @@ export async function messageRoutes(app: FastifyInstance) {
     {
       preHandler: app.validateBody(schemas.pinMessage)
     },
-    async (request, reply) => {
+    async (request, _reply) => {
       const message = await messageService.unpinMessage(
         request.params.id,
         request.body.channelId

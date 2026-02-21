@@ -12,6 +12,7 @@ import {
   AudioPipelineNodes
 } from '../utils/audioPipeline';
 import { applyRNNoise, cleanupRNNoise } from '../utils/rnnoise';
+import { logger } from '../utils/logger';
 
 export interface UseMicTestReturn {
   isTesting: boolean;
@@ -66,7 +67,6 @@ export function useMicTest(rnnoiseReady: boolean): UseMicTestReturn {
         }
       };
 
-      console.log('🎤 Starting mic test:', constraints.audio);
       streamRef.current =
         await navigator.mediaDevices.getUserMedia(constraints);
 
@@ -74,20 +74,12 @@ export function useMicTest(rnnoiseReady: boolean): UseMicTestReturn {
       const audioTrack = streamRef.current.getAudioTracks()[0];
       if (audioTrack) {
         const settings = audioTrack.getSettings();
-        console.log('✅ Applied audio settings:', {
-          sampleRate: settings.sampleRate,
-          echoCancellation: settings.echoCancellation,
-          noiseSuppression: settings.noiseSuppression,
-          autoGainControl: settings.autoGainControl,
-          channelCount: settings.channelCount
-        });
+        logger.debug('✅ Applied audio settings:', settings);
       }
 
       // Apply RNNoise if enabled
       if (useRNNoise && rnnoiseReady) {
-        console.log(
-          '🤖 Applying RNNoise AI (browser noise suppression OFF)...'
-        );
+        logger.debug('🤖 Applying RNNoise AI...');
         originalStreamRef.current = streamRef.current; // Save original stream reference
         try {
           audioContextRef.current = new AudioContext();
@@ -95,11 +87,9 @@ export function useMicTest(rnnoiseReady: boolean): UseMicTestReturn {
             originalStreamRef.current,
             audioContextRef.current
           );
-          console.log(
-            '✅ RNNoise active - AI processing audio, browser suppression disabled'
-          );
+          logger.debug('✅ RNNoise active');
         } catch (error) {
-          console.error('❌ RNNoise failed, using original stream:', error);
+          logger.error('❌ RNNoise failed, using original stream:', error);
           streamRef.current = originalStreamRef.current;
           originalStreamRef.current = null;
           audioContextRef.current = new AudioContext();
@@ -107,11 +97,6 @@ export function useMicTest(rnnoiseReady: boolean): UseMicTestReturn {
       } else {
         originalStreamRef.current = null; // No RNNoise, no need to track original
         audioContextRef.current = new AudioContext();
-        if (useRNNoise && !rnnoiseReady) {
-          console.warn('⚠️ RNNoise enabled but not ready yet');
-        } else {
-          console.log('ℹ️ Using browser native noise suppression');
-        }
       }
 
       // Create analyser for level monitoring
@@ -246,7 +231,6 @@ export function useMicTest(rnnoiseReady: boolean): UseMicTestReturn {
   // Restart test when settings change
   useEffect(() => {
     if (isTesting) {
-      console.log('🔄 Restarting mic test with new settings');
       stopTest();
       setTimeout(() => startTest(), 100);
     }

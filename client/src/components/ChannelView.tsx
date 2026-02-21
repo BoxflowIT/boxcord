@@ -275,10 +275,24 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
 
     setUploading(true);
     try {
-      // First send a message mentioning the file
-      socketService.sendMessage(channelId, `📎 ${file.name}`);
-      // Note: In a real implementation, you'd create a message and upload in one call
-      // For now, this is a simplified version
+      // Upload file to server
+      const result = await api.uploadFile(file);
+      const fileUrl = 'url' in result ? result.url : result.fileUrl;
+
+      // Determine message format based on file type
+      const isImage = file.type.startsWith('image/');
+      const isVideo = file.type.startsWith('video/');
+
+      let messageContent: string;
+      if (isImage) {
+        messageContent = `![${file.name}](${fileUrl})`;
+      } else if (isVideo) {
+        messageContent = `🎬 [${file.name}](${fileUrl})`;
+      } else {
+        messageContent = `📎 [${file.name}](${fileUrl})`;
+      }
+
+      socketService.sendMessage(channelId, messageContent);
     } catch (err) {
       logger.error('Failed to upload file:', err);
     } finally {

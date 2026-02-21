@@ -1,5 +1,6 @@
 // Video & Screen Share Manager for Voice Calls
 import { useVoiceStore } from '../../store/voiceStore';
+import { logger } from '../../utils/logger';
 import type { AudioPipelineState } from './types';
 
 /**
@@ -32,10 +33,9 @@ export async function enableVideo(
       // The remote peer will see the new track when they receive the signal
 
       store.setVideoEnabled(true);
-      console.log('✅ Video enabled');
     }
   } catch (error) {
-    console.error('❌ Failed to enable video:', error);
+    logger.error('❌ Failed to enable video:', error);
     throw new Error(
       'Could not access camera. Please check camera permissions.'
     );
@@ -61,7 +61,6 @@ export function disableVideo(audioState: AudioPipelineState): void {
   // Note: SimplePeer will automatically handle track removal via renegotiation
 
   store.setVideoEnabled(false);
-  console.log('✅ Video disabled');
 }
 
 /**
@@ -74,8 +73,6 @@ export async function startScreenShare(
   try {
     const store = useVoiceStore.getState();
 
-    console.log('🖥️ Starting screen share...');
-
     // Get display media stream
     const screenStream = await navigator.mediaDevices.getDisplayMedia({
       video: {
@@ -85,16 +82,6 @@ export async function startScreenShare(
       audio: false // Don't capture system audio for now
     });
 
-    console.log('✅ Got screen stream:', {
-      id: screenStream.id,
-      tracks: screenStream.getTracks().map((t) => ({
-        kind: t.kind,
-        label: t.label,
-        enabled: t.enabled,
-        readyState: t.readyState
-      }))
-    });
-
     // Note: We keep existing camera video tracks
     // Screen share is added as an additional video track
     // SimplePeer will handle multiple video tracks
@@ -102,40 +89,21 @@ export async function startScreenShare(
     // Add screen share tracks
     const screenTracks = screenStream.getVideoTracks();
     if (audioState.localStream && screenTracks.length > 0) {
-      console.log('➕ Adding screen tracks to localStream');
-      const beforeTracks = audioState.localStream.getTracks().length;
-
       screenTracks.forEach((track) => {
         audioState.localStream!.addTrack(track);
-        console.log('  - Added track:', track.label, track.getSettings());
 
         // Handle screen share stop event (when user clicks "Stop sharing" in browser)
         track.onended = () => {
-          console.log('🛑 Screen share ended by user');
           stopScreenShare(audioState);
         };
       });
 
-      const afterTracks = audioState.localStream.getTracks().length;
-      console.log(`📊 LocalStream tracks: ${beforeTracks} → ${afterTracks}`);
-      console.log(
-        '📹 All tracks:',
-        audioState.localStream.getTracks().map((t) => ({
-          kind: t.kind,
-          label: t.label,
-          displaySurface: t.getSettings().displaySurface
-        }))
-      );
-
       // Note: SimplePeer will automatically handle track renegotiation
 
       store.setScreenSharing(true);
-      console.log('✅ Screen sharing started, state updated');
-    } else {
-      console.error('❌ No localStream or no screen tracks');
     }
   } catch (error) {
-    console.error('❌ Failed to start screen share:', error);
+    logger.error('❌ Failed to start screen share:', error);
     // User probably cancelled
     if ((error as Error).name === 'NotAllowedError') {
       throw new Error('Screen share permission denied');
@@ -153,18 +121,8 @@ export function stopScreenShare(audioState: AudioPipelineState): void {
 
   if (!audioState.localStream) return;
 
-  console.log('🛑 Stopping screen share...');
-  const beforeTracks = audioState.localStream.getTracks().length;
-
   // Stop and remove ONLY screen share tracks (keep camera video if enabled)
   const videoTracks = audioState.localStream.getVideoTracks();
-  console.log(
-    '📹 Current video tracks:',
-    videoTracks.map((t) => ({
-      label: t.label,
-      displaySurface: t.getSettings().displaySurface
-    }))
-  );
 
   videoTracks.forEach((track) => {
     // Check displaySurface first, then label keywords to identify screen share tracks
@@ -177,17 +135,12 @@ export function stopScreenShare(audioState: AudioPipelineState): void {
       label.includes('display');
 
     if (isScreenTrack) {
-      console.log('  - Stopping screen track:', track.label);
       track.stop();
       audioState.localStream!.removeTrack(track);
     }
   });
 
-  const afterTracks = audioState.localStream.getTracks().length;
-  console.log(`📊 LocalStream tracks: ${beforeTracks} → ${afterTracks}`);
-
   store.setScreenSharing(false);
-  console.log('✅ Screen sharing stopped');
 }
 
 /**
