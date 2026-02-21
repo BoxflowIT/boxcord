@@ -36,10 +36,10 @@ export function ForwardMessageModal({
     const fetchTargets = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch all workspaces first
         const workspaces = await api.getWorkspaces();
-        
+
         // Fetch channels for each workspace
         const allChannels: Channel[] = [];
         for (const workspace of workspaces) {
@@ -63,8 +63,9 @@ export function ForwardMessageModal({
             const otherParticipant = dm.participants.find(
               (p) => p.userId !== currentUser?.id
             );
-            const otherUser = otherParticipant?.user || dm.participants[0]?.user;
-            
+            const otherUser =
+              otherParticipant?.user || dm.participants[0]?.user;
+
             return {
               id: dm.id,
               name: otherUser?.firstName || otherUser?.email || 'Unknown',

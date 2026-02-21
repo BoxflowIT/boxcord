@@ -9,7 +9,9 @@ export interface ModerationPayload {
   reason?: string;
 }
 
-export function registerModerationHandlers(context: SocketHandlerContext): void {
+export function registerModerationHandlers(
+  context: SocketHandlerContext
+): void {
   const { socket, queryClient, getCurrentUserId } = context;
 
   // user:kicked - User kicked from workspace
@@ -59,7 +61,14 @@ export function registerModerationHandlers(context: SocketHandlerContext): void 
   // user:unbanned - User ban removed
   socket.on(
     'user:unbanned',
-    ({ workspaceId, userId }: { workspaceId: string; userId: string; moderatorId: string }) => {
+    ({
+      workspaceId,
+      userId
+    }: {
+      workspaceId: string;
+      userId: string;
+      moderatorId: string;
+    }) => {
       const currentUserId = getCurrentUserId();
 
       // If current user was unbanned, show success message

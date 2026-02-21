@@ -186,7 +186,9 @@ export const api = {
       body: JSON.stringify({ channelId })
     }),
   getPinnedMessages: (channelId: string) =>
-    request<Message[]>(`/messages/pinned?channelId=${channelId}&_t=${Date.now()}`),
+    request<Message[]>(
+      `/messages/pinned?channelId=${channelId}&_t=${Date.now()}`
+    ),
 
   // Global Search
   globalSearch: (query: string) =>

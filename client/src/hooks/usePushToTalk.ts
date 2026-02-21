@@ -2,6 +2,7 @@
 import { useEffect, useCallback } from 'react';
 import { useVoiceStore } from '../store/voiceStore';
 import { voiceService } from '../services/voice.service';
+import { logger } from '../utils/logger';
 
 interface UsePushToTalkOptions {
   enabled: boolean;
@@ -40,7 +41,7 @@ export function usePushToTalk({ enabled, key = 'v' }: UsePushToTalkOptions) {
         // Only unmute if currently muted
         if (isMuted) {
           voiceService.toggleMute();
-          console.log('🎤 PTT: Unmuted (key pressed)');
+          logger.debug('🎤 PTT: Unmuted (key pressed)');
         }
       }
     },
@@ -69,7 +70,7 @@ export function usePushToTalk({ enabled, key = 'v' }: UsePushToTalkOptions) {
         // Mute again when key is released
         if (!isMuted) {
           voiceService.toggleMute();
-          console.log('🎤 PTT: Muted (key released)');
+          logger.debug('🎤 PTT: Muted (key released)');
         }
       }
     },
@@ -86,7 +87,7 @@ export function usePushToTalk({ enabled, key = 'v' }: UsePushToTalkOptions) {
     // Auto-mute when PTT is enabled
     if (!isMuted) {
       voiceService.toggleMute();
-      console.log('🎤 PTT mode enabled - auto-muted');
+      logger.debug('🎤 PTT mode enabled - auto-muted');
     }
 
     return () => {

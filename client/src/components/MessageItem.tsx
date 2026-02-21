@@ -114,7 +114,9 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
           onCancelEdit={onCancelEdit}
           onEdit={() => onEdit(messageId, content)}
           onDelete={() => onDelete(messageId)}
-          onForward={onForward ? () => onForward(messageId, content) : undefined}
+          onForward={
+            onForward ? () => onForward(messageId, content) : undefined
+          }
           onPin={onPin ? () => onPin(messageId) : undefined}
           isPinned={isPinned}
           canPin={canPin}
@@ -139,7 +141,9 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
           onCancelEdit={onCancelEdit}
           onEdit={() => onEdit(messageId, content)}
           onDelete={() => onDelete(messageId)}
-          onForward={onForward ? () => onForward(messageId, content) : undefined}
+          onForward={
+            onForward ? () => onForward(messageId, content) : undefined
+          }
           onPin={onPin ? () => onPin(messageId) : undefined}
           isPinned={isPinned}
           canPin={canPin}

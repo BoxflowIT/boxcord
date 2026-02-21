@@ -14,9 +14,7 @@ export function LanguageTab() {
   const currentLanguage = i18n.language;
 
   const handleLanguageChange = (languageCode: string) => {
-    console.log('🌍 Changing language to:', languageCode);
     i18n.changeLanguage(languageCode);
-    console.log('🌍 Current language after change:', i18n.language);
   };
 
   return (

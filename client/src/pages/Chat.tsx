@@ -46,22 +46,18 @@ export default function Chat() {
 
     // Handle page refresh - cleanup voice and disconnect socket BEFORE unload
     const handleBeforeUnload = () => {
-      console.log('🔄 [Chat] Page unloading - cleaning up...');
-      
       // Leave voice channel if connected (silent - NetworkError expected)
       const { isConnected } = useVoiceStore.getState();
       if (isConnected) {
-        console.log('🔴 [Chat] Leaving voice channel before unload');
         voiceService.leaveChannel().catch(() => {
           // Silently ignore - NetworkError is expected during page unload
         });
       }
-      
+
       // CRITICAL: Cleanup stale sessions on server using fetch with keepalive
       // keepalive ensures request completes even after page unloads
       const token = useAuthStore.getState().token;
       if (token) {
-        console.log('🧹 [Chat] Cleaning up stale voice sessions (keepalive)');
         fetch('/api/v1/voice/users/me/sessions', {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },
@@ -70,7 +66,7 @@ export default function Chat() {
           // Ignore errors during unload
         });
       }
-      
+
       socketService.disconnect();
     };
 

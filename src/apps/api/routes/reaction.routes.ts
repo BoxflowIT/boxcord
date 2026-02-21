@@ -50,6 +50,7 @@ export async function reactionRoutes(app: FastifyInstance) {
         if (message) {
           app.io.to(`channel:${message.channelId}`).emit('reaction:toggle', {
             messageId: request.params.messageId,
+            channelId: message.channelId,
             userId: request.user.id,
             emoji: request.body.emoji,
             added

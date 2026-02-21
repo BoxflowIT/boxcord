@@ -10,7 +10,7 @@ const pushService = new PushService(prisma);
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
 
 if (!VAPID_PUBLIC_KEY) {
-  // eslint-disable-next-line no-console
+   
   console.warn(
     '[PUSH] VAPID_PUBLIC_KEY not set. Push notifications will not work. Generate keys with: npx web-push generate-vapid-keys'
   );

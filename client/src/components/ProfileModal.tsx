@@ -130,7 +130,7 @@ export default function ProfileModal({
     try {
       // Update custom status
       await api.updateCustomStatus(status, emoji);
-      
+
       // Update DND mode if duration specified
       if (dndUntil) {
         await api.updateDNDMode(true, dndUntil.toISOString());
@@ -138,11 +138,13 @@ export default function ProfileModal({
         // Clear DND mode if no duration specified
         await api.updateDNDMode(false, undefined);
       }
-      
+
       // Invalidate queries to refresh UI
       await queryClient.invalidateQueries({ queryKey: ['user', 'current'] });
-      await queryClient.invalidateQueries({ queryKey: ['workspace', 'members'] });
-      
+      await queryClient.invalidateQueries({
+        queryKey: ['workspace', 'members']
+      });
+
       // Close modal on success
       setShowCustomStatus(false);
     } catch (err) {

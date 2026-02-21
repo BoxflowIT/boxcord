@@ -1,6 +1,13 @@
 // DM Context Menu - Right-click menu for DM list items
 import { useTranslation } from 'react-i18next';
-import { Phone, UserPlus, BellOff, Trash2, MessageSquare } from 'lucide-react';
+import {
+  Phone,
+  UserPlus,
+  BellOff,
+  Bell,
+  Trash2,
+  MessageSquare
+} from 'lucide-react';
 import MenuItem from '../menu/MenuItem';
 
 interface UserInfo {
@@ -13,6 +20,7 @@ interface UserInfo {
 interface DMContextMenuProps {
   channelId: string;
   otherUser: UserInfo;
+  isMuted?: boolean;
   onStartCall?: () => void;
   onInviteToServer?: () => void;
   onMuteNotifications?: () => void;
@@ -21,6 +29,7 @@ interface DMContextMenuProps {
 }
 
 export default function DMContextMenu({
+  isMuted = false,
   onStartCall,
   onInviteToServer,
   onMuteNotifications,
@@ -56,8 +65,10 @@ export default function DMContextMenu({
 
       {/* Mute notifications */}
       <MenuItem
-        icon={<BellOff size={16} />}
-        label={t('dm.muteNotifications')}
+        icon={isMuted ? <Bell size={16} /> : <BellOff size={16} />}
+        label={
+          isMuted ? t('dm.unmuteNotifications') : t('dm.muteNotifications')
+        }
         onClick={onMuteNotifications}
       />
 

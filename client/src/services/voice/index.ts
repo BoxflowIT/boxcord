@@ -8,6 +8,7 @@ import {
   playVoiceJoinSound,
   playVoiceLeaveSound
 } from '../../utils/voiceSound';
+import { logger } from '../../utils/logger';
 
 // Modular imports
 import type {
@@ -155,11 +156,6 @@ class VoiceService {
     const store = useVoiceStore.getState();
     const { currentChannelId, currentSessionId } = store;
 
-    console.log('🔴 Leaving channel...', {
-      currentChannelId,
-      currentSessionId
-    });
-
     if (!currentChannelId || !currentSessionId) {
       console.warn('⚠️ Already disconnected from voice channel');
       return;
@@ -168,14 +164,12 @@ class VoiceService {
     try {
       // CRITICAL: Set disconnected state IMMEDIATELY before any async operations
       // This prevents UI from showing "connected" state during leave process
-      console.log('🔴 [IMMEDIATE] Setting disconnected state');
       store.setConnected(false);
       store.setCurrentChannel(null, null);
 
       // Invalidate React Query cache immediately to hide user from list
       const queryClient = getQueryClient();
       if (queryClient) {
-        console.log('🗑️ [IMMEDIATE] Invalidating voice users cache for:', currentChannelId);
         queryClient.setQueryData(['voiceChannelUsers', currentChannelId], []);
       }
 
@@ -192,22 +186,17 @@ class VoiceService {
         channelId: currentChannelId
       });
 
-      console.log('🧹 Cleaning up voice connection...');
       this.cleanup();
-
-      console.log('🔄 Resetting voice store...');
       store.reset();
-
-      console.log('✅ Successfully left voice channel');
     } catch (error) {
       // NetworkError is expected during page unload - don't log it
-      const isNetworkError = error instanceof TypeError && 
-        error.message.includes('NetworkError');
-      
+      const isNetworkError =
+        error instanceof TypeError && error.message.includes('NetworkError');
+
       if (!isNetworkError) {
-        console.error('❌ Failed to leave voice channel:', error);
+        logger.error('❌ Failed to leave voice channel:', error);
       }
-      
+
       // Even if API call fails, cleanup locally
       this.cleanup();
       store.reset();
@@ -226,7 +215,7 @@ class VoiceService {
       // Play join sound (same as channel voice)
       playVoiceJoinSound();
 
-      console.log('✅ Joined DM voice call:', channelId);
+      logger.debug('✅ Joined DM voice call:', channelId);
     } catch (error) {
       console.error('Failed to join DM call:', error);
       this.cleanup();
@@ -241,9 +230,8 @@ class VoiceService {
 
       // Simply cleanup - no API call needed for DM
       this.cleanup();
-      console.log('✅ Left DM voice call');
     } catch (error) {
-      console.error('Failed to leave DM call:', error);
+      logger.error('Failed to leave DM call:', error);
     }
   }
 

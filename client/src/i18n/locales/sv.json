@@ -208,6 +208,7 @@
     "markAsRead": "Markera som läst",
     "inviteToServer": "Bjud in till server",
     "muteNotifications": "Stäng av notiser",
+    "unmuteNotifications": "Slå på notiser",
     "deleteConversation": "Ta bort konversation",
     "loadingUser": "Laddar användare...",
     "sendDirectMessage": "Skicka direktmeddelande",

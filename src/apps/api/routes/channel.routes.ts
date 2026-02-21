@@ -3,7 +3,6 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { prisma } from '../../../03-infrastructure/database/client.js';
 import { ChannelService } from '../../../02-application/services/channel.service.js';
-import type { ChannelType } from '../../../01-domain/entities/channel.js';
 
 const channelService = new ChannelService(prisma);
 

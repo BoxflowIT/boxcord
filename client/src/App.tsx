@@ -5,6 +5,7 @@ import { useVoiceStore } from './store/voiceStore';
 import { setQueryClient } from './services/socket';
 import { useEffect } from 'react';
 import Spinner from './components/ui/Spinner';
+import { ErrorBoundary } from './components/utility';
 import CustomLogin from './pages/CustomLogin';
 import ForgotPassword from './pages/ForgotPassword';
 import JoinPage from './pages/JoinPage';
@@ -32,33 +33,16 @@ function App() {
 
   // Reset voice store on mount to clear any stale state
   useEffect(() => {
-    console.log('🔄 [App] Component mounted - checking voice store state');
-    const voiceState = useVoiceStore.getState();
-    console.log('  Current voice state:', {
-      isConnected: voiceState.isConnected,
-      currentChannelId: voiceState.currentChannelId,
-      isVideoEnabled: voiceState.isVideoEnabled
-    });
-    
-    console.log('🔄 [App] Resetting voice store to initial state');
     resetVoiceStore();
-    
-    // Verify reset worked
-    const afterReset = useVoiceStore.getState();
-    console.log('  After reset:', {
-      isConnected: afterReset.isConnected,
-      currentChannelId: afterReset.currentChannelId
-    });
-    
+
     // Clean up old localStorage keys from previous versions
     const oldKeys = ['voiceStore', 'voice-storage', 'voice-state'];
     oldKeys.forEach((key) => {
       if (localStorage.getItem(key)) {
-        console.log('🧹 [App] Removing old localStorage key:', key);
         localStorage.removeItem(key);
       }
     });
-    
+
     // NOTE: Voice session cleanup is now handled in beforeunload (Chat.tsx)
     // using navigator.sendBeacon to ensure it completes before page unloads
   }, [resetVoiceStore, token]);
@@ -92,7 +76,6 @@ function App() {
           if (ctx.state === 'suspended') {
             await ctx.resume();
           }
-          console.log('✅ AudioContext initialized after user interaction');
           // Remove listener after first successful init
           document.removeEventListener('click', initAudioContext);
           document.removeEventListener('keydown', initAudioContext);
@@ -117,29 +100,31 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {isLoading && <Spinner />}
-      <Routes>
-        <Route path="/login" element={<CustomLogin />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route
-          path="/join/:code"
-          element={
-            isAuthenticated ? <JoinPage /> : <Navigate to="/login" replace />
-          }
-        />
-        <Route
-          path="/chat/*"
-          element={
-            isAuthenticated ? <Chat /> : <Navigate to="/login" replace />
-          }
-        />
-        <Route
-          path="*"
-          element={
-            <Navigate to={isAuthenticated ? '/chat' : '/login'} replace />
-          }
-        />
-      </Routes>
+      <ErrorBoundary>
+        {isLoading && <Spinner />}
+        <Routes>
+          <Route path="/login" element={<CustomLogin />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route
+            path="/join/:code"
+            element={
+              isAuthenticated ? <JoinPage /> : <Navigate to="/login" replace />
+            }
+          />
+          <Route
+            path="/chat/*"
+            element={
+              isAuthenticated ? <Chat /> : <Navigate to="/login" replace />
+            }
+          />
+          <Route
+            path="*"
+            element={
+              <Navigate to={isAuthenticated ? '/chat' : '/login'} replace />
+            }
+          />
+        </Routes>
+      </ErrorBoundary>
     </QueryClientProvider>
   );
 }

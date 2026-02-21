@@ -34,7 +34,9 @@ export function useReactions(messageId: string | undefined) {
 // Pinned messages in a channel
 export function usePinnedMessages(channelId: string | undefined) {
   return useQuery({
-    queryKey: channelId ? ['pinnedMessages', channelId] : ['pinnedMessages-null'],
+    queryKey: channelId
+      ? ['pinnedMessages', channelId]
+      : ['pinnedMessages-null'],
     queryFn: () => (channelId ? api.getPinnedMessages(channelId) : []),
     enabled: !!channelId,
     staleTime: 0, // Always refetch on mount to get fresh data

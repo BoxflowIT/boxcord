@@ -73,19 +73,24 @@ export default function MessageListDisplay({
   messagesEndRef
 }: MessageListDisplayProps) {
   const { t } = useTranslation();
-  
+
   // Forward message state
   const [forwardingMessage, setForwardingMessage] = useState<{
     id: string;
     content: string;
   } | null>(null);
 
-  const handleForward = async (targetId: string, targetType: 'channel' | 'dm') => {
+  const handleForward = async (
+    targetId: string,
+    targetType: 'channel' | 'dm'
+  ) => {
     if (!forwardingMessage) return;
 
     try {
       if (targetType === 'channel') {
-        await api.post(`/channels/${targetId}/messages`, { content: forwardingMessage.content });
+        await api.post(`/channels/${targetId}/messages`, {
+          content: forwardingMessage.content
+        });
       } else {
         await api.sendDM(targetId, forwardingMessage.content);
       }
@@ -150,7 +155,9 @@ export default function MessageListDisplay({
             onCancelEdit={onCancelEdit}
             onEdit={onEdit}
             onDelete={onDelete}
-            onForward={(messageId, content) => setForwardingMessage({ id: messageId, content })}
+            onForward={(messageId, content) =>
+              setForwardingMessage({ id: messageId, content })
+            }
             onPin={onPin}
             isPinned={message.isPinned}
             canPin={canPin}
@@ -161,14 +168,14 @@ export default function MessageListDisplay({
         ))}
         <div ref={messagesEndRef} />
 
-      {/* Forward Message Modal */}
-      {forwardingMessage && (
-        <ForwardMessageModal
-          messageContent={forwardingMessage.content}
-          onForward={handleForward}
-          onClose={() => setForwardingMessage(null)}
-        />
-      )}
+        {/* Forward Message Modal */}
+        {forwardingMessage && (
+          <ForwardMessageModal
+            messageContent={forwardingMessage.content}
+            onForward={handleForward}
+            onClose={() => setForwardingMessage(null)}
+          />
+        )}
       </div>
     </div>
   );

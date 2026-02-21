@@ -47,7 +47,7 @@ export class SearchService {
       throw new ValidationError('Search query must be at least 2 characters');
     }
 
-    const searchTerm = `%${query.trim()}%`;
+    const _searchTerm = `%${query.trim()}%`;
     const limit = Math.min(params.limit ?? 50, 100);
 
     // Search in channels where user is a member
