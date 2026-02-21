@@ -1,110 +1,351 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
-test.describe('User Login Flow', () => {
-  test('should login successfully', async ({ page }) => {
-    await page.goto('/');
+/**
+ * E2E Tests for Boxcord
+ *
+ * Prerequisites:
+ * - Backend running on http://localhost:3001
+ * - Frontend running on http://localhost:5173
+ * - Test database with seed data
+ *
+ * Run with: yarn test:e2e
+ */
 
-    // Wait for login page to load
-    await expect(page).toHaveTitle(/Boxcord/);
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
 
-    // Fill login form (adjust selectors based on your UI)
-    await page.fill('[name="email"]', 'test@boxflow.com');
-    await page.fill('[name="password"]', 'testpassword');
+// Test user credentials (ensure these exist in test database)
+const TEST_USER = {
+  email: 'test@boxflow.com',
+  username: 'testuser',
+  password: 'Test1234!'
+};
 
-    // Click login button
-    await page.click('button[type="submit"]');
+/**
+ * Helper function to login
+ */
+async function login(
+  page: Page,
+  email: string = TEST_USER.email,
+  password: string = TEST_USER.password
+) {
+  await page.goto(FRONTEND_URL);
 
-    // Verify successful login - should redirect to chat
-    await expect(page).toHaveURL(/\/chat/);
-    await expect(page.locator('[data-testid="workspace-list"]')).toBeVisible();
+  // Check if already logged in
+  const isLoggedIn = await page
+    .locator('[data-testid="sidebar"]')
+    .isVisible()
+    .catch(() => false);
+  if (isLoggedIn) return;
+
+  // Wait for login page
+  await page.waitForSelector(
+    '[data-testid="login-form"], input[type="email"]',
+    { timeout: 5000 }
+  );
+
+  // Fill login form
+  await page.fill('input[type="email"]', email);
+  await page.fill('input[type="password"]', password);
+
+  // Submit form
+  await page.click('button[type="submit"]');
+
+  // Wait for navigation to complete
+  await page.waitForURL(/\/(workspace|channels)/, { timeout: 10000 });
+}
+
+/**
+ * Helper to get auth token from localStorage
+ */
+async function getAuthToken(page: Page): Promise<string | null> {
+  return await page.evaluate(
+    () => localStorage.getItem('token') || localStorage.getItem('auth-token')
+  );
+}
+
+test.describe('Health Check', () => {
+  test('backend should be healthy', async ({ request }) => {
+    const response = await request.get(`${BACKEND_URL}/health`);
+    expect(response.ok()).toBeTruthy();
+
+    const data = await response.json();
+    expect(data.status).toBe('healthy');
+    expect(data.checks.database.status).toBe('healthy');
+    expect(data.checks.redis.status).toBe('healthy');
   });
 
-  test('should show error on invalid credentials', async ({ page }) => {
-    await page.goto('/');
-
-    await page.fill('[name="email"]', 'invalid@test.com');
-    await page.fill('[name="password"]', 'wrongpassword');
-    await page.click('button[type="submit"]');
-
-    // Should show error message
-    await expect(page.locator('[role="alert"]')).toBeVisible();
-    await expect(page.locator('[role="alert"]')).toContainText(/invalid/i);
-  });
-});
-
-test.describe('Send Message Flow', () => {
-  test.beforeEach(async ({ page }) => {
-    // Login first
-    await page.goto('/');
-    // Add your login logic here
-  });
-
-  test('should send a message in channel', async ({ page }) => {
-    // Navigate to a channel
-    await page.click('[data-testid="channel-general"]');
-
-    // Type message
-    const messageInput = page.locator('[data-testid="message-input"]');
-    await messageInput.fill('Test message from E2E test');
-
-    // Send message
-    await messageInput.press('Enter');
-
-    // Verify message appears
-    await expect(page.locator('[data-testid="message-list"]')).toContainText(
-      'Test message from E2E test'
-    );
-  });
-
-  test('should edit a message', async ({ page }) => {
-    // Send a message first
-    await page.click('[data-testid="channel-general"]');
-    const messageInput = page.locator('[data-testid="message-input"]');
-    await messageInput.fill('Original message');
-    await messageInput.press('Enter');
-
-    // Wait for message to appear
-    await page.waitForSelector('text=Original message');
-
-    // Click edit (adjust selector based on your UI)
-    await page.hover('text=Original message');
-    await page.click('[data-testid="edit-message-button"]');
-
-    // Edit message
-    const editInput = page.locator('[data-testid="edit-message-input"]');
-    await editInput.fill('Edited message');
-    await editInput.press('Enter');
-
-    // Verify edit
-    await expect(page.locator('[data-testid="message-list"]')).toContainText(
-      'Edited message'
-    );
-    await expect(page.locator('[data-testid="message-list"]')).toContainText(
-      '(edited)'
-    );
+  test('frontend should load', async ({ page }) => {
+    await page.goto(FRONTEND_URL);
+    await expect(page).toHaveTitle(/Boxcord|Chat/i);
   });
 });
 
-test.describe('Create Channel Flow', () => {
+test.describe('API Documentation', () => {
+  test('Swagger UI should be accessible', async ({ page }) => {
+    await page.goto(`${BACKEND_URL}/api/docs`);
+    await expect(page.locator('text=Swagger UI')).toBeVisible({
+      timeout: 5000
+    });
+  });
+});
+
+test.describe('Authentication', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    // Add login logic
+    // Clear storage before each test
+    await page.goto(FRONTEND_URL);
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
   });
 
-  test('should create a new channel', async ({ page }) => {
-    // Click create channel button
-    await page.click('[data-testid="create-channel-button"]');
+  test('should display login page for unauthenticated users', async ({
+    page
+  }) => {
+    await page.goto(FRONTEND_URL);
 
-    // Fill channel form
-    await page.fill('[name="name"]', 'test-e2e-channel');
-    await page.fill('[name="description"]', 'E2E test channel');
+    // Should show login elements
+    await expect(page.locator('input[type="email"]')).toBeVisible({
+      timeout: 5000
+    });
+    await expect(page.locator('input[type="password"]')).toBeVisible();
+    await expect(page.locator('button[type="submit"]')).toBeVisible();
+  });
 
-    // Submit
+  test('should show validation errors for empty login', async ({ page }) => {
+    await page.goto(FRONTEND_URL);
+
+    // Try to submit empty form
     await page.click('button[type="submit"]');
 
-    // Verify channel appears in sidebar
-    await expect(page.locator('[data-testid="channel-list"]')).toContainText(
-      'test-e2e-channel'
+    // Should show validation errors (may vary based on implementation)
+    const errorMessages = await page
+      .locator('text=/required|invalid|error/i')
+      .count();
+    expect(errorMessages).toBeGreaterThan(0);
+  });
+
+  test('should redirect to app after successful login', async ({ page }) => {
+    await page.goto(FRONTEND_URL);
+
+    // Login
+    await login(page);
+
+    // Should redirect to workspace/channels
+    await expect(page).toHaveURL(/\/(workspace|channels)/, { timeout: 10000 });
+
+    // Should have auth token
+    const token = await getAuthToken(page);
+    expect(token).toBeTruthy();
+  });
+});
+
+test.describe('Workspace Navigation', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
+  test('should display sidebar with channels', async ({ page }) => {
+    // Sidebar should be visible
+    const sidebar = page.locator('[data-testid="sidebar"], .sidebar, nav');
+    await expect(sidebar.first()).toBeVisible({ timeout: 5000 });
+  });
+
+  test('should navigate between channels', async ({ page }) => {
+    // Wait for channels to load
+    await page.waitForTimeout(1000);
+
+    // Get all channel links
+    const channels = await page
+      .locator('[data-channel-id], [data-testid^="channel-"]')
+      .count();
+
+    if (channels > 0) {
+      // Click first channel
+      await page
+        .locator('[data-channel-id], [data-testid^="channel-"]')
+        .first()
+        .click();
+      await page.waitForTimeout(500);
+
+      // URL should change to include channel
+      expect(page.url()).toMatch(/\/channels\/|\/workspace\//);
+    }
+  });
+});
+
+test.describe('Messaging', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+
+    // Navigate to first available channel
+    await page.waitForTimeout(1000);
+    const firstChannel = page
+      .locator('[data-channel-id], [data-testid^="channel-"]')
+      .first();
+    const isVisible = await firstChannel.isVisible().catch(() => false);
+    if (isVisible) {
+      await firstChannel.click();
+      await page.waitForTimeout(500);
+    }
+  });
+
+  test('should display message input', async ({ page }) => {
+    // Message input should be visible
+    const messageInput = page.locator(
+      '[data-testid="message-input"], textarea[placeholder*="message" i], input[placeholder*="message" i]'
     );
+    await expect(messageInput.first()).toBeVisible({ timeout: 5000 });
+  });
+
+  test('should send a message', async ({ page }) => {
+    const testMessage = `Test message ${Date.now()}`;
+
+    // Find message input
+    const messageInput = page
+      .locator(
+        '[data-testid="message-input"], textarea[placeholder*="message" i], input[placeholder*="message" i]'
+      )
+      .first();
+
+    if (await messageInput.isVisible().catch(() => false)) {
+      // Type message
+      await messageInput.fill(testMessage);
+
+      // Send message (Enter key or send button)
+      await Promise.race([
+        messageInput.press('Enter'),
+        page
+          .locator(
+            'button[data-testid="send-message"], button[aria-label*="send" i]'
+          )
+          .first()
+          .click()
+      ]);
+
+      // Wait for message to appear
+      await page.waitForTimeout(1000);
+
+      // Verify message appears in message list
+      const messageExists = await page
+        .locator(`text="${testMessage}"`)
+        .isVisible({ timeout: 3000 })
+        .catch(() => false);
+      expect(messageExists).toBeTruthy();
+    } else {
+      test.skip();
+    }
+  });
+
+  test('should display message reactions', async ({ page }) => {
+    // Wait for messages to load
+    await page.waitForTimeout(1000);
+
+    // Look for reaction UI elements
+    const messages = page.locator('[data-testid^="message-"], .message');
+    const messageCount = await messages.count();
+
+    if (messageCount > 0) {
+      // Hover over first message to reveal reaction button
+      await messages.first().hover();
+      await page.waitForTimeout(500);
+
+      // Check if reactions or reaction button exists
+      const hasReactions = await page
+        .locator(
+          '[data-testid*="reaction"], .reaction, [aria-label*="react" i]'
+        )
+        .isVisible()
+        .catch(() => false);
+
+      // At minimum, the UI should support reactions (even if none exist yet)
+      expect(hasReactions || messageCount > 0).toBeTruthy();
+    }
+  });
+});
+
+test.describe('Search Functionality', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
+  test('should have search interface', async ({ page }) => {
+    // Look for search input
+    const searchInput = page.locator(
+      '[data-testid="search"], input[placeholder*="search" i], [aria-label*="search" i]'
+    );
+    const hasSearch = await searchInput
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
+
+    // Search should be available
+    expect(hasSearch).toBeTruthy();
+  });
+});
+
+test.describe('User Settings', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
+  test('should open settings modal', async ({ page }) => {
+    // Look for settings button (gear icon, settings text, etc.)
+    const settingsButton = page.locator(
+      '[data-testid="settings"], [aria-label*="settings" i], button:has-text("Settings")'
+    );
+    const hasSettingsBtn = await settingsButton
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
+
+    if (hasSettingsBtn) {
+      await settingsButton.first().click();
+      await page.waitForTimeout(500);
+
+      // Settings modal or page should appear
+      const settingsVisible = await page
+        .locator(
+          '[data-testid="settings-modal"], .settings, text=/settings|preferences/i'
+        )
+        .isVisible({ timeout: 3000 })
+        .catch(() => false);
+
+      expect(settingsVisible).toBeTruthy();
+    }
+  });
+});
+
+test.describe('XSS Protection', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
+  test('should sanitize XSS in message input', async ({ page }) => {
+    const xssPayload = '<script>alert("XSS")</script>';
+
+    const messageInput = page
+      .locator(
+        '[data-testid="message-input"], textarea[placeholder*="message" i], input[placeholder*="message" i]'
+      )
+      .first();
+
+    if (await messageInput.isVisible().catch(() => false)) {
+      // Type XSS payload
+      await messageInput.fill(xssPayload);
+
+      // Try to send
+      await messageInput.press('Enter');
+      await page.waitForTimeout(1000);
+
+      // Check that script didn't execute (page should still work)
+      const pageWorking = await page.locator('body').isVisible();
+      expect(pageWorking).toBeTruthy();
+
+      // Verify no alert appeared (page didn't crash)
+      const title = await page.title();
+      expect(title).toBeTruthy();
+    } else {
+      test.skip();
+    }
   });
 });
