@@ -10,4 +10,4 @@
 //   - socket/handlers/presenceHandlers.ts - User presence
 // ============================================================================
 
-export { socketService, setQueryClient } from './socket/index';
+export { socketService, setQueryClient, getQueryClient } from './socket/index';

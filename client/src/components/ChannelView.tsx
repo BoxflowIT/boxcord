@@ -9,12 +9,14 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
+import type { Message } from '../types';
 import { api } from '../services/api';
 import { logger } from '../utils/logger';
 import { socketService } from '../services/socket';
 import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
-import { useMessages, useChannels } from '../hooks/useQuery';
+import { useMessages, useChannels, queryKeys } from '../hooks/useQuery';
+import type { PaginatedMessages } from '../types';
 import { usePinnedMessages } from '../hooks/queries/message';
 import { useMessageActions } from '../hooks/useMessageActions';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -123,17 +125,54 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     onShowSlashCommands: setShowSlashCommands
   });
 
-  // Stable callbacks for message actions - WebSocket ONLY (no API calls)
+  // Stable callbacks for message actions - optimistic cache update + WebSocket
   const handleEditChannelMessage = useCallback(
     async (messageId: string, content: string) => {
+      // Optimistic update
+      if (channelId) {
+        const cacheKey = queryKeys.messages(channelId, undefined);
+        queryClient.setQueryData<PaginatedMessages>(cacheKey, (old) => {
+          if (!old?.items) return old;
+          return {
+            ...old,
+            items: old.items.map((m) =>
+              m.id === messageId ? { ...m, content, edited: true } : m
+            )
+          };
+        });
+      }
+      // Send to server via WebSocket
       socketService.editMessage(messageId, content);
     },
-    []
+    [channelId, queryClient]
   );
 
-  const handleDeleteChannelMessage = useCallback(async (messageId: string) => {
-    socketService.deleteMessage(messageId);
-  }, []);
+  const handleDeleteChannelMessage = useCallback(
+    async (messageId: string) => {
+      // Optimistic update - remove from cache immediately
+      if (channelId) {
+        const cacheKey = queryKeys.messages(channelId, undefined);
+        queryClient.setQueryData<PaginatedMessages>(cacheKey, (old) => {
+          if (!old?.items) return old;
+          return {
+            ...old,
+            items: old.items.filter((m) => m.id !== messageId)
+          };
+        });
+        // Also remove from pinned messages if present
+        queryClient.setQueryData<Message[]>(
+          ['pinnedMessages', channelId],
+          (old) => {
+            if (!old) return old;
+            return old.filter((m) => m.id !== messageId);
+          }
+        );
+      }
+      // Send to server via WebSocket
+      socketService.deleteMessage(messageId);
+    },
+    [channelId, queryClient]
+  );
 
   const {
     editingMessageId,
@@ -286,7 +325,40 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
           element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }}
         onUnpin={async (messageId) => {
-          await api.unpinMessage(messageId, channelId!);
+          if (!channelId) return;
+
+          try {
+            await api.unpinMessage(messageId, channelId);
+
+            // Directly update cache - remove from pinned list
+            queryClient.setQueryData<Message[]>(
+              ['pinnedMessages', channelId],
+              (old) => old?.filter((m) => m.id !== messageId) ?? []
+            );
+
+            // Update message in messages list
+            queryClient.setQueryData(
+              ['messages', channelId],
+              (old: { items: Message[] } | undefined) => {
+                if (!old?.items) return old;
+                return {
+                  ...old,
+                  items: old.items.map((m) =>
+                    m.id === messageId
+                      ? {
+                          ...m,
+                          isPinned: false,
+                          pinnedAt: null,
+                          pinnedBy: null
+                        }
+                      : m
+                  )
+                };
+              }
+            );
+          } catch (error) {
+            console.error('Failed to unpin message:', error);
+          }
         }}
         canUnpin={true}
       />
@@ -310,16 +382,54 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
         onPin={async (messageId) => {
           const message = channelMessages.find((m) => m.id === messageId);
           if (!message || !channelId) return;
-          
-          if (message.isPinned) {
-            await api.unpinMessage(messageId, channelId);
-          } else {
-            await api.pinMessage(messageId, channelId);
+
+          try {
+            let updatedMessage: Message;
+            if (message.isPinned) {
+              updatedMessage = await api.unpinMessage(messageId, channelId);
+
+              // Directly update cache - remove from pinned list
+              queryClient.setQueryData<Message[]>(
+                ['pinnedMessages', channelId],
+                (old) => old?.filter((m) => m.id !== messageId) ?? []
+              );
+            } else {
+              updatedMessage = await api.pinMessage(messageId, channelId);
+
+              // Directly update cache - add to pinned list
+              queryClient.setQueryData<Message[]>(
+                ['pinnedMessages', channelId],
+                (old) => {
+                  if (!old) return [updatedMessage];
+                  if (old.some((m) => m.id === messageId)) return old;
+                  return [...old, updatedMessage];
+                }
+              );
+            }
+
+            // Update message in messages list
+            queryClient.setQueryData(
+              ['messages', channelId],
+              (old: { items: Message[] } | undefined) => {
+                if (!old?.items) return old;
+                return {
+                  ...old,
+                  items: old.items.map((m) =>
+                    m.id === messageId
+                      ? {
+                          ...m,
+                          isPinned: updatedMessage.isPinned,
+                          pinnedAt: updatedMessage.pinnedAt,
+                          pinnedBy: updatedMessage.pinnedBy
+                        }
+                      : m
+                  )
+                };
+              }
+            );
+          } catch (error) {
+            console.error('Failed to pin/unpin message:', error);
           }
-          
-          // Refresh messages to show updated pin state
-          await queryClient.invalidateQueries({ queryKey: ['messages', channelId] });
-          await queryClient.invalidateQueries({ queryKey: ['pinnedMessages', channelId] });
         }}
         canPin={true}
         messagesEndRef={messagesEndRef}

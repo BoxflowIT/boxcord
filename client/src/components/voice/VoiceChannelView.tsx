@@ -67,9 +67,7 @@ export function VoiceChannelView({
       await voiceService.toggleVideo();
     } catch (err) {
       console.error('Failed to toggle video:', err);
-      setError(
-        err instanceof Error ? err.message : 'Failed to toggle video'
-      );
+      setError(err instanceof Error ? err.message : 'Failed to toggle video');
     }
   };
 
@@ -179,8 +177,8 @@ export function VoiceChannelView({
             {/* Voice users list */}
             <div className="flex-1 overflow-y-auto">
               {/* Video grid (if video/screen share is active) */}
-              <VideoGrid className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" />
-              
+              <VideoGrid />
+
               {/* Voice users list */}
               <VoiceUserList />
             </div>

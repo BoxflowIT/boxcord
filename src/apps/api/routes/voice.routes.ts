@@ -174,4 +174,12 @@ export async function voiceRoutes(app: FastifyInstance) {
     const session = await voiceService.getCurrentSession(request.user.id);
     return { success: true, data: session };
   });
+
+  // Cleanup all active voice sessions for current user
+  // Used on app mount to clean up stale sessions from previous page loads
+  app.delete('/users/me/sessions', async (request, reply) => {
+    await voiceService.cleanupUserSessions(request.user.id);
+    app.log.debug(`Cleaned up voice sessions for user: ${request.user.id}`);
+    return reply.status(204).send();
+  });
 }

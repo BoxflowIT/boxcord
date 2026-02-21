@@ -445,14 +445,45 @@ export class DirectMessageService {
       );
     }
 
-    return this.prisma.directMessage.update({
+    const updated = await this.prisma.directMessage.update({
       where: { id: messageId },
       data: {
         isPinned: true,
         pinnedAt: new Date(),
         pinnedBy: userId
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatarUrl: true
+          }
+        },
+        attachments: {
+          select: {
+            id: true,
+            messageId: true,
+            fileName: true,
+            fileUrl: true,
+            fileType: true,
+            fileSize: true
+          }
+        },
+        reactions: {
+          select: {
+            id: true,
+            messageId: true,
+            emoji: true,
+            userId: true
+          }
+        }
       }
     });
+
+    return updated;
   }
 
   async unpinMessage(
@@ -483,14 +514,45 @@ export class DirectMessageService {
       );
     }
 
-    return this.prisma.directMessage.update({
+    const updated = await this.prisma.directMessage.update({
       where: { id: messageId },
       data: {
         isPinned: false,
         pinnedAt: null,
         pinnedBy: null
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatarUrl: true
+          }
+        },
+        attachments: {
+          select: {
+            id: true,
+            messageId: true,
+            fileName: true,
+            fileUrl: true,
+            fileType: true,
+            fileSize: true
+          }
+        },
+        reactions: {
+          select: {
+            id: true,
+            messageId: true,
+            emoji: true,
+            userId: true
+          }
+        }
       }
     });
+
+    return updated;
   }
 
   async getPinnedMessages(
@@ -514,6 +576,15 @@ export class DirectMessageService {
         isPinned: true
       },
       include: {
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatarUrl: true
+          }
+        },
         attachments: true,
         reactions: true
       },

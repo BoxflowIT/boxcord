@@ -41,6 +41,11 @@ export function PinnedMessagesPanel({
   if (pinnedMessages.length === 0) return null;
 
   const currentMessage = pinnedMessages[currentIndex];
+  
+  // Defensive check - if current message is undefined, don't render
+  if (!currentMessage) {
+    return null;
+  }
 
   const handleNext = () => {
     setCurrentIndex((prev) => (prev + 1) % pinnedMessages.length);
@@ -53,6 +58,9 @@ export function PinnedMessagesPanel({
   };
 
   const getAuthorName = (msg: PinnedMessage) => {
+    if (!msg) {
+      return 'Unknown';
+    }
     if (msg.author?.firstName || msg.author?.lastName) {
       return `${msg.author.firstName || ''} ${msg.author.lastName || ''}`.trim();
     }

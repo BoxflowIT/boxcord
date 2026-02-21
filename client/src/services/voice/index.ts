@@ -1,6 +1,6 @@
 // Voice Channel Service - WebRTC Audio Management
 import SimplePeer from 'simple-peer';
-import { socketService } from '../socket';
+import { socketService, getQueryClient } from '../socket';
 import { useVoiceStore } from '../../store/voiceStore';
 import { useAuthStore } from '../../store/auth';
 import { SOCKET_EVENTS } from '../../../../src/00-core/constants';
@@ -155,12 +155,34 @@ class VoiceService {
     const store = useVoiceStore.getState();
     const { currentChannelId, currentSessionId } = store;
 
-    if (!currentChannelId || !currentSessionId) return;
+    console.log('🔴 Leaving channel...', {
+      currentChannelId,
+      currentSessionId
+    });
+
+    if (!currentChannelId || !currentSessionId) {
+      console.warn('⚠️ Already disconnected from voice channel');
+      return;
+    }
 
     try {
+      // CRITICAL: Set disconnected state IMMEDIATELY before any async operations
+      // This prevents UI from showing "connected" state during leave process
+      console.log('🔴 [IMMEDIATE] Setting disconnected state');
+      store.setConnected(false);
+      store.setCurrentChannel(null, null);
+
+      // Invalidate React Query cache immediately to hide user from list
+      const queryClient = getQueryClient();
+      if (queryClient) {
+        console.log('🗑️ [IMMEDIATE] Invalidating voice users cache for:', currentChannelId);
+        queryClient.setQueryData(['voiceChannelUsers', currentChannelId], []);
+      }
+
       // Play leave sound BEFORE cleanup (so audio context is still active)
       playVoiceLeaveSound();
 
+      // Now do API call and socket emit (these may take time)
       await this.apiRequest(
         `/api/v1/voice/sessions/${currentSessionId}/leave`,
         { method: 'POST' }
@@ -169,10 +191,26 @@ class VoiceService {
       this.socket?.emit(SOCKET_EVENTS.VOICE_LEAVE, {
         channelId: currentChannelId
       });
+
+      console.log('🧹 Cleaning up voice connection...');
+      this.cleanup();
+
+      console.log('🔄 Resetting voice store...');
+      store.reset();
+
+      console.log('✅ Successfully left voice channel');
+    } catch (error) {
+      // NetworkError is expected during page unload - don't log it
+      const isNetworkError = error instanceof TypeError && 
+        error.message.includes('NetworkError');
+      
+      if (!isNetworkError) {
+        console.error('❌ Failed to leave voice channel:', error);
+      }
+      
+      // Even if API call fails, cleanup locally
       this.cleanup();
       store.reset();
-    } catch (error) {
-      console.error('Failed to leave voice channel:', error);
     }
   }
 

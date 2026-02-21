@@ -74,6 +74,8 @@ export async function startScreenShare(
   try {
     const store = useVoiceStore.getState();
 
+    console.log('🖥️ Starting screen share...');
+
     // Get display media stream
     const screenStream = await navigator.mediaDevices.getDisplayMedia({
       video: {
@@ -83,6 +85,16 @@ export async function startScreenShare(
       audio: false // Don't capture system audio for now
     });
 
+    console.log('✅ Got screen stream:', {
+      id: screenStream.id,
+      tracks: screenStream.getTracks().map((t) => ({
+        kind: t.kind,
+        label: t.label,
+        enabled: t.enabled,
+        readyState: t.readyState
+      }))
+    });
+
     // Note: We keep existing camera video tracks
     // Screen share is added as an additional video track
     // SimplePeer will handle multiple video tracks
@@ -90,19 +102,37 @@ export async function startScreenShare(
     // Add screen share tracks
     const screenTracks = screenStream.getVideoTracks();
     if (audioState.localStream && screenTracks.length > 0) {
+      console.log('➕ Adding screen tracks to localStream');
+      const beforeTracks = audioState.localStream.getTracks().length;
+
       screenTracks.forEach((track) => {
         audioState.localStream!.addTrack(track);
+        console.log('  - Added track:', track.label, track.getSettings());
 
         // Handle screen share stop event (when user clicks "Stop sharing" in browser)
         track.onended = () => {
+          console.log('🛑 Screen share ended by user');
           stopScreenShare(audioState);
         };
       });
 
+      const afterTracks = audioState.localStream.getTracks().length;
+      console.log(`📊 LocalStream tracks: ${beforeTracks} → ${afterTracks}`);
+      console.log(
+        '📹 All tracks:',
+        audioState.localStream.getTracks().map((t) => ({
+          kind: t.kind,
+          label: t.label,
+          displaySurface: t.getSettings().displaySurface
+        }))
+      );
+
       // Note: SimplePeer will automatically handle track renegotiation
 
       store.setScreenSharing(true);
-      console.log('✅ Screen sharing started');
+      console.log('✅ Screen sharing started, state updated');
+    } else {
+      console.error('❌ No localStream or no screen tracks');
     }
   } catch (error) {
     console.error('❌ Failed to start screen share:', error);
@@ -123,16 +153,38 @@ export function stopScreenShare(audioState: AudioPipelineState): void {
 
   if (!audioState.localStream) return;
 
+  console.log('🛑 Stopping screen share...');
+  const beforeTracks = audioState.localStream.getTracks().length;
+
   // Stop and remove ONLY screen share tracks (keep camera video if enabled)
   const videoTracks = audioState.localStream.getVideoTracks();
+  console.log(
+    '📹 Current video tracks:',
+    videoTracks.map((t) => ({
+      label: t.label,
+      displaySurface: t.getSettings().displaySurface
+    }))
+  );
+
   videoTracks.forEach((track) => {
-    // Only stop display surface tracks (screen share), not camera tracks
+    // Check displaySurface first, then label keywords to identify screen share tracks
+    const label = track.label.toLowerCase();
     const settings = track.getSettings();
-    if (settings.displaySurface) {
+    const isScreenTrack =
+      settings.displaySurface ||
+      label.includes('screen') ||
+      label.includes('monitor') ||
+      label.includes('display');
+
+    if (isScreenTrack) {
+      console.log('  - Stopping screen track:', track.label);
       track.stop();
       audioState.localStream!.removeTrack(track);
     }
   });
+
+  const afterTracks = audioState.localStream.getTracks().length;
+  console.log(`📊 LocalStream tracks: ${beforeTracks} → ${afterTracks}`);
 
   store.setScreenSharing(false);
   console.log('✅ Screen sharing stopped');

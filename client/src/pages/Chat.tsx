@@ -8,6 +8,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { socketService } from '../services/socket';
+import { voiceService } from '../services/voice.service';
+import { useVoiceStore } from '../store/voiceStore';
+import { useAuthStore } from '../store/auth';
 import { useChatStore } from '../store/chat';
 import { useWorkspaces, useChannels } from '../hooks/useQuery';
 import Sidebar from '../components/Sidebar';
@@ -41,8 +44,33 @@ export default function Chat() {
     // Connect to WebSocket
     socketService.connect();
 
-    // Handle page refresh - disconnect socket BEFORE unload to prevent 400 errors
+    // Handle page refresh - cleanup voice and disconnect socket BEFORE unload
     const handleBeforeUnload = () => {
+      console.log('🔄 [Chat] Page unloading - cleaning up...');
+      
+      // Leave voice channel if connected (silent - NetworkError expected)
+      const { isConnected } = useVoiceStore.getState();
+      if (isConnected) {
+        console.log('🔴 [Chat] Leaving voice channel before unload');
+        voiceService.leaveChannel().catch(() => {
+          // Silently ignore - NetworkError is expected during page unload
+        });
+      }
+      
+      // CRITICAL: Cleanup stale sessions on server using fetch with keepalive
+      // keepalive ensures request completes even after page unloads
+      const token = useAuthStore.getState().token;
+      if (token) {
+        console.log('🧹 [Chat] Cleaning up stale voice sessions (keepalive)');
+        fetch('/api/v1/voice/users/me/sessions', {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+          keepalive: true // Ensures request completes even after page closes
+        }).catch(() => {
+          // Ignore errors during unload
+        });
+      }
+      
       socketService.disconnect();
     };
 

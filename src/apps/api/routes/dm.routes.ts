@@ -145,7 +145,8 @@ export async function dmRoutes(app: FastifyInstance) {
 
     // Emit via socket to participants
     if (app.io) {
-      app.io.to(`dm:${request.body.channelId}`).emit('dm:pinned', message);
+      const room = `dm:${request.body.channelId}`;
+      app.io.to(room).emit('dm:pinned', message);
     }
 
     return { success: true, data: message };
@@ -164,7 +165,8 @@ export async function dmRoutes(app: FastifyInstance) {
 
     // Emit via socket to participants
     if (app.io) {
-      app.io.to(`dm:${request.body.channelId}`).emit('dm:unpinned', message);
+      const room = `dm:${request.body.channelId}`;
+      app.io.to(room).emit('dm:unpinned', message);
     }
 
     return { success: true, data: message };

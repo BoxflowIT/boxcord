@@ -38,6 +38,10 @@ export function setQueryClient(client: QueryClient) {
   queryClient = client;
 }
 
+export function getQueryClient(): QueryClient | null {
+  return queryClient;
+}
+
 class SocketService {
   private socket: Socket | null = null;
   private connecting: boolean = false;
@@ -260,10 +264,12 @@ class SocketService {
   // ============================================
 
   joinDM(channelId: string) {
+    console.log('[SOCKET] Joining DM room:', channelId);
     this.socket?.emit('dm:join', channelId);
   }
 
   leaveDM(channelId: string) {
+    console.log('[SOCKET] Leaving DM room:', channelId);
     this.socket?.emit('dm:leave', channelId);
   }
 

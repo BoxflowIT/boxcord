@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from './store/auth';
+import { useVoiceStore } from './store/voiceStore';
 import { setQueryClient } from './services/socket';
 import { useEffect } from 'react';
 import Spinner from './components/ui/Spinner';
@@ -27,6 +28,40 @@ setQueryClient(queryClient);
 
 function App() {
   const { token, isLoading } = useAuthStore();
+  const resetVoiceStore = useVoiceStore((state) => state.reset);
+
+  // Reset voice store on mount to clear any stale state
+  useEffect(() => {
+    console.log('🔄 [App] Component mounted - checking voice store state');
+    const voiceState = useVoiceStore.getState();
+    console.log('  Current voice state:', {
+      isConnected: voiceState.isConnected,
+      currentChannelId: voiceState.currentChannelId,
+      isVideoEnabled: voiceState.isVideoEnabled
+    });
+    
+    console.log('🔄 [App] Resetting voice store to initial state');
+    resetVoiceStore();
+    
+    // Verify reset worked
+    const afterReset = useVoiceStore.getState();
+    console.log('  After reset:', {
+      isConnected: afterReset.isConnected,
+      currentChannelId: afterReset.currentChannelId
+    });
+    
+    // Clean up old localStorage keys from previous versions
+    const oldKeys = ['voiceStore', 'voice-storage', 'voice-state'];
+    oldKeys.forEach((key) => {
+      if (localStorage.getItem(key)) {
+        console.log('🧹 [App] Removing old localStorage key:', key);
+        localStorage.removeItem(key);
+      }
+    });
+    
+    // NOTE: Voice session cleanup is now handled in beforeunload (Chat.tsx)
+    // using navigator.sendBeacon to ensure it completes before page unloads
+  }, [resetVoiceStore, token]);
 
   // Apply saved appearance settings on mount
   useEffect(() => {
