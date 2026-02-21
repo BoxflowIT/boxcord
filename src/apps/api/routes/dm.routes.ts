@@ -9,16 +9,16 @@ const dmService = new DirectMessageService(prisma);
 
 // Local schemas
 const createDMChannelBody = z.object({
-  userId: z.string().uuid()
+  userId: z.string().min(1)
 });
 
 const getMessagesQuery = z.object({
-  cursor: z.string().uuid().optional(),
+  cursor: z.string().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(100).optional()
 });
 
 const channelIdBody = z.object({
-  channelId: z.string().uuid()
+  channelId: z.string().min(1)
 });
 
 export async function dmRoutes(app: FastifyInstance) {

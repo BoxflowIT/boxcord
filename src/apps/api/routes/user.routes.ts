@@ -22,7 +22,7 @@ const presenceBody = z.object({
 });
 
 const batchBody = z.object({
-  userIds: z.array(z.string().uuid()).min(1).max(100)
+  userIds: z.array(z.string().min(1)).min(1).max(100)
 });
 
 const roleBody = z.object({

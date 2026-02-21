@@ -9,13 +9,13 @@ const messageService = new MessageService(prisma);
 
 // Query schemas for this route
 const getMessagesQuery = z.object({
-  channelId: z.string().uuid(),
-  cursor: z.string().uuid().optional(),
+  channelId: z.string().min(1),
+  cursor: z.string().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(100).optional()
 });
 
 const pinnedQuery = z.object({
-  channelId: z.string().uuid()
+  channelId: z.string().min(1)
 });
 
 export async function messageRoutes(app: FastifyInstance) {

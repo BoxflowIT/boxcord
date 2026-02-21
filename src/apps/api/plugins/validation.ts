@@ -3,16 +3,20 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
 import { z, ZodError, ZodSchema } from 'zod';
 
+// ID schema - accepts any non-empty string (UUID or legacy format like ws-1)
+const id = z.string().min(1);
+
 // Common validation schemas
 export const schemas = {
   // ID schemas
-  uuid: z.string().uuid(),
+  uuid: id,
+  id, // flexible ID for backward compatibility
 
   // Message schemas
   createMessage: z.object({
-    channelId: z.string().uuid(),
+    channelId: id,
     content: z.string().min(1).max(4000),
-    parentId: z.string().uuid().optional()
+    parentId: id.optional()
   }),
 
   updateMessage: z.object({
@@ -29,9 +33,9 @@ export const schemas = {
         /^[a-z0-9-]+$/,
         'Channel name must be lowercase with hyphens only'
       ),
-    workspaceId: z.string().uuid(),
+    workspaceId: id,
     type: z.enum(['TEXT', 'VOICE']).optional(),
-    categoryId: z.string().uuid().optional()
+    categoryId: id.optional()
   }),
 
   updateChannel: z.object({
@@ -81,12 +85,12 @@ export const schemas = {
 
   // Pin schemas
   pinMessage: z.object({
-    channelId: z.string().uuid()
+    channelId: id
   }),
 
   // Invite schemas
   createInvite: z.object({
-    workspaceId: z.string().uuid(),
+    workspaceId: id,
     maxUses: z.number().int().min(1).max(100).optional(),
     expiresInDays: z.number().int().min(1).max(30).optional()
   }),
@@ -103,7 +107,7 @@ export const schemas = {
   // Category schemas
   createCategory: z.object({
     name: z.string().min(1).max(100),
-    workspaceId: z.string().uuid()
+    workspaceId: id
   }),
 
   updateCategory: z.object({
@@ -114,27 +118,27 @@ export const schemas = {
   // Search schemas
   search: z.object({
     query: z.string().min(1).max(200),
-    workspaceId: z.string().uuid().optional(),
-    channelId: z.string().uuid().optional(),
+    workspaceId: id.optional(),
+    channelId: id.optional(),
     limit: z.number().int().min(1).max(50).optional()
   }),
 
   // Chatbot command schema
   chatbotCommand: z.object({
     command: z.string().min(1).max(500),
-    channelId: z.string().uuid().optional(),
-    workspaceId: z.string().uuid().optional()
+    channelId: id.optional(),
+    workspaceId: id.optional()
   }),
 
   // Moderation schemas
   kickMember: z.object({
-    workspaceId: z.string().uuid(),
-    userId: z.string().uuid()
+    workspaceId: id,
+    userId: id
   }),
 
   updateMemberRole: z.object({
-    workspaceId: z.string().uuid(),
-    userId: z.string().uuid(),
+    workspaceId: id,
+    userId: id,
     role: z.enum(['OWNER', 'ADMIN', 'MEMBER'])
   })
 } as const;
