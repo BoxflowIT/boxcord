@@ -6,14 +6,14 @@ import { ChannelService } from '../../../02-application/services/channel.service
 
 const channelService = new ChannelService(prisma);
 
-// Local query schemas
+// Local query schemas - allow any string ID for backward compatibility with legacy IDs
 const getChannelsQuery = z.object({
-  workspaceId: z.string().uuid()
+  workspaceId: z.string().min(1)
 });
 
 // Channel creation schema (more permissive name for existing channels)
 const createChannelBody = z.object({
-  workspaceId: z.string().uuid(),
+  workspaceId: z.string().min(1),
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
   type: z.enum(['TEXT', 'VOICE']).optional(),

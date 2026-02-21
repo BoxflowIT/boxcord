@@ -11,7 +11,7 @@ const dmService = new DirectMessageService(prisma);
 // Search query schema
 const searchQuery = z.object({
   q: z.string().min(2, 'Search query must be at least 2 characters').max(200),
-  cursor: z.string().uuid().optional(),
+  cursor: z.string().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(100).optional()
 });
 

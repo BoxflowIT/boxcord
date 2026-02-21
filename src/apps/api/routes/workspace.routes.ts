@@ -9,7 +9,7 @@ const workspaceService = new WorkspaceService(prisma);
 
 // Local schemas
 const addMemberBody = z.object({
-  userId: z.string().uuid(),
+  userId: z.string().min(1),
   role: z.enum(['ADMIN', 'MEMBER']).optional()
 });
 

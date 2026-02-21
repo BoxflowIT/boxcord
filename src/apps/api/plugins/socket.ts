@@ -152,11 +152,15 @@ export function setupSocketHandlers(
 
           app.log.debug('Socket auth: JWT signature verified successfully');
         } catch (verifyErr) {
-          app.log.error(
+          app.log.warn(
             'Socket auth: JWT signature verification failed: %s',
             verifyErr instanceof Error ? verifyErr.message : String(verifyErr)
           );
-          return next(new Error('Invalid token signature'));
+          // In dev mode, accept the token even if JWKS verification fails (matches REST API behavior)
+          if (!isDev) {
+            return next(new Error('Invalid token signature'));
+          }
+          app.log.warn('Socket auth: Accepting token anyway in dev mode');
         }
       } else if (!isDev) {
         // In production, require proper Cognito tokens

@@ -4,6 +4,14 @@ import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
+// Type assertion to work around React 18 incompatibility
+const CodeHighlighter = SyntaxHighlighter as unknown as React.ComponentType<{
+  style: React.CSSProperties | Record<string, React.CSSProperties>;
+  language: string;
+  PreTag: string;
+  children: string;
+}>;
+
 interface MarkdownContentProps {
   content: string;
 }
@@ -22,13 +30,13 @@ export function MarkdownContent({ content }: MarkdownContentProps) {
 
             return !isInline && language ? (
               <div className="rounded-md my-2 overflow-hidden">
-                <SyntaxHighlighter
-                  style={vscDarkPlus as any}
+                <CodeHighlighter
+                  style={vscDarkPlus}
                   language={language}
                   PreTag="div"
                 >
                   {String(children).replace(/\n$/, '')}
-                </SyntaxHighlighter>
+                </CodeHighlighter>
               </div>
             ) : (
               <code
