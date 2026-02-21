@@ -24,8 +24,8 @@
     "validate": "./scripts/pre-push.sh"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.992.0",
-    "@aws-sdk/s3-request-presigner": "^3.992.0",
+    "@aws-sdk/client-s3": "^3.995.0",
+    "@aws-sdk/s3-request-presigner": "^3.995.0",
     "@fastify/compress": "^8.3.1",
     "@fastify/cors": "^11.2.0",
     "@fastify/helmet": "^12.0.1",
