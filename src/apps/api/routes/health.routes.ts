@@ -18,7 +18,6 @@ interface HealthStatus {
 export async function healthRoutes(app: FastifyInstance) {
   // Public health check (no auth required)
   app.get('/health', async (request, reply) => {
-    const startTime = Date.now();
     const health: HealthStatus = {
       status: 'healthy',
       timestamp: new Date().toISOString(),
