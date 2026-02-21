@@ -8,7 +8,7 @@ import {
 
 async function metricsPlugin(fastify: FastifyInstance) {
   // Hook to measure request duration
-  fastify.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.addHook('onRequest', async (request: FastifyRequest) => {
     // @ts-expect-error - Adding custom property for timing
     request.startTime = Date.now();
   });
