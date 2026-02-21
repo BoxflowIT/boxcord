@@ -169,6 +169,23 @@ export async function voiceRoutes(app: FastifyInstance) {
     }
   );
 
+  // Get active users for all voice channels in workspace (batch optimization)
+  app.get<{ Params: { workspaceId: string } }>(
+    '/workspaces/:workspaceId/voice-users',
+    async (request, reply) => {
+      const voiceUsers = await voiceService.getWorkspaceVoiceUsers(
+        request.params.workspaceId
+      );
+
+      // Don't cache - this is real-time data that changes when users join/leave
+      reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+      reply.header('Pragma', 'no-cache');
+      reply.header('Expires', '0');
+
+      return { success: true, data: voiceUsers };
+    }
+  );
+
   // Get current voice session
   app.get('/sessions/current', async (request) => {
     const session = await voiceService.getCurrentSession(request.user.id);

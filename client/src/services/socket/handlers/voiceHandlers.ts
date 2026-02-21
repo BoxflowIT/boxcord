@@ -68,11 +68,20 @@ export function registerVoiceHandlers(context: SocketHandlerContext): void {
   socket.on('voice:users-updated', (data: VoiceUsersUpdatedPayload) => {
     logger.log('Voice users updated:', data.channelId);
 
-    // Refetch immediately instead of just invalidating
+    // Refetch per-channel query (kept for backward compatibility)
     queryClient.refetchQueries({
       queryKey: ['voiceChannelUsers', data.channelId],
       exact: true
     });
+
+    // Refetch workspace batch query (optimization)
+    const currentWorkspaceId = context.getCurrentWorkspaceId();
+    if (currentWorkspaceId) {
+      queryClient.refetchQueries({
+        queryKey: ['workspaceVoiceUsers', currentWorkspaceId],
+        exact: true
+      });
+    }
   });
 
   // ============================================

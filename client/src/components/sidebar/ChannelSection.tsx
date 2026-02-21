@@ -1,6 +1,7 @@
 // Reusable Channel Section Component
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
+import { useWorkspaceVoiceUsers } from '../../hooks/useQuery';
 import {
   PlusIcon,
   EditIcon,
@@ -118,23 +119,17 @@ function VoiceChannelWithUsers({
   isSelected,
   onSelect,
   onEdit,
-  onDelete
+  onDelete,
+  voiceUsers = []
 }: {
   channel: Channel;
   isSelected: boolean;
   onSelect: () => void;
   onEdit: (e: React.MouseEvent) => void;
   onDelete: (e: React.MouseEvent) => void;
+  voiceUsers?: VoiceUser[];
 }) {
   const { t } = useTranslation();
-  // Fetch voice users for this channel (updated via socket events)
-  const { data: voiceUsers = [] } = useQuery({
-    queryKey: ['voiceChannelUsers', channel.id],
-    queryFn: () => api.getVoiceChannelUsers(channel.id),
-    staleTime: 0, // Always fresh, refetch on mount
-    refetchOnMount: true,
-    refetchOnWindowFocus: false
-  });
 
   // Fetch user info for all users
   const { data: onlineUsers = [] } = useQuery<UserInfo[]>({
@@ -282,6 +277,7 @@ function SectionHeader({
 // ============================================================================
 
 interface ChannelSectionProps {
+  workspaceId?: string;
   channels: Channel[];
   currentChannelId?: string;
   onChannelSelect: (channel: Channel) => void;
@@ -291,6 +287,7 @@ interface ChannelSectionProps {
 }
 
 export default function ChannelSection({
+  workspaceId,
   channels,
   currentChannelId,
   onChannelSelect,
@@ -299,6 +296,9 @@ export default function ChannelSection({
   onCreateChannel
 }: ChannelSectionProps) {
   const { t } = useTranslation();
+  // Batch fetch all voice channel users for this workspace (optimization)
+  const { data: workspaceVoiceUsers = {} } =
+    useWorkspaceVoiceUsers(workspaceId);
   // Deduplicate and sort channels
   const uniqueChannels = channels.reduce<Channel[]>((acc, channel) => {
     if (!acc.some((ch) => ch.id === channel.id)) {
@@ -352,6 +352,7 @@ export default function ChannelSection({
             onSelect={() => onChannelSelect(channel)}
             onEdit={(e) => onEditChannel(channel, e)}
             onDelete={(e) => onDeleteChannel(channel, e)}
+            voiceUsers={workspaceVoiceUsers[channel.id] || []}
           />
         ))
       )}
