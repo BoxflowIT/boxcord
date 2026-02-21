@@ -50,6 +50,9 @@ jobs:
       - name: TypeScript check
         run: yarn typecheck
 
+      - name: Lint backend
+        run: yarn lint
+
       - name: Run backend tests
         run: yarn test
         env:
@@ -67,6 +70,14 @@ jobs:
       - name: Install client dependencies
         working-directory: ./client
         run: yarn install --frozen-lockfile --ignore-engines
+
+      - name: Client TypeScript check
+        working-directory: ./client
+        run: yarn tsc --noEmit
+
+      - name: Lint client
+        working-directory: ./client
+        run: yarn lint
 
       - name: Run client tests
         working-directory: ./client
