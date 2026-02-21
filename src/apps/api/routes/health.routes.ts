@@ -2,6 +2,7 @@
 import type { FastifyInstance } from 'fastify';
 import { prisma } from '../../../03-infrastructure/database/client.js';
 import { redisCache } from '../../../03-infrastructure/cache/redis.cache.js';
+import { register } from '../../../03-infrastructure/monitoring/metrics.service.js';
 
 interface HealthStatus {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -111,5 +112,20 @@ export async function healthRoutes(app: FastifyInstance) {
       alive: true,
       uptime: process.uptime()
     });
+  });
+
+  // Prometheus metrics endpoint
+  app.get('/metrics', async (request, reply) => {
+    try {
+      const metrics = await register.metrics();
+      return reply
+        .code(200)
+        .header('Content-Type', register.contentType)
+        .send(metrics);
+    } catch (error) {
+      return reply.code(500).send({
+        error: error instanceof Error ? error.message : 'Failed to collect metrics'
+      });
+    }
   });
 }

@@ -19,6 +19,7 @@ import { jwtPlugin } from './plugins/jwt.js';
 import { setupSocketHandlers } from './plugins/socket.js';
 import { errorHandler } from './plugins/error-handler.js';
 import cachePlugin from './plugins/cache.js';
+import metricsPlugin from './plugins/metrics.plugin.js';
 import securityPlugin from './plugins/security.js';
 import rateLimitPlugin from './plugins/rate-limit.js';
 import validationPlugin from './plugins/validation.js';
@@ -75,6 +76,9 @@ async function main() {
 
   // Cache plugin for performance
   await app.register(cachePlugin);
+
+  // Metrics plugin for monitoring
+  await app.register(metricsPlugin);
 
   // Custom error handler
   app.setErrorHandler(errorHandler);
