@@ -1,6 +1,6 @@
-# Node.js 22.12+ for Prisma compatibility  
+# Node.js 20 LTS for Prisma compatibility (supports 20.19+)
 [phases.setup]
-nixPkgs = ["nodejs_22", "yarn-1_x", "openssl"]
+nixPkgs = ["nodejs_20", "yarn-1_x", "openssl"]
 
 [phases.install]
 cmds = ["yarn install --frozen-lockfile --ignore-engines"]
