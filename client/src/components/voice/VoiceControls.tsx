@@ -1,5 +1,6 @@
 import { useVoiceStore } from '../../store/voiceStore';
 import { voiceService } from '../../services/voice.service';
+import { logger } from '../../utils/logger';
 import {
   MicIcon,
   MicOffIcon,
@@ -17,7 +18,7 @@ export function VoiceControls() {
     try {
       await voiceService.toggleMute();
     } catch (error) {
-      console.error('Failed to toggle mute:', error);
+      logger.error('Failed to toggle mute:', error);
     }
   };
 
@@ -25,7 +26,7 @@ export function VoiceControls() {
     try {
       await voiceService.toggleDeafen();
     } catch (error) {
-      console.error('Failed to toggle deafen:', error);
+      logger.error('Failed to toggle deafen:', error);
     }
   };
 
@@ -33,7 +34,7 @@ export function VoiceControls() {
     try {
       await voiceService.leaveChannel();
     } catch (error) {
-      console.error('Failed to leave channel:', error);
+      logger.error('Failed to leave channel:', error);
     }
   };
 
