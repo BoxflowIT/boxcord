@@ -179,6 +179,11 @@ export const api = {
     request<PaginatedMessages>(
       `/messages?channelId=${channelId}${cursor ? `&cursor=${cursor}` : ''}`
     ),
+  createMessage: (channelId: string, content: string) =>
+    request<Message>('/messages', {
+      method: 'POST',
+      body: JSON.stringify({ channelId, content })
+    }),
   editMessage: (messageId: string, content: string) =>
     request<Message>(`/messages/${messageId}`, {
       method: 'PATCH',

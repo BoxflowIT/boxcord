@@ -7,7 +7,6 @@ import { MessageItem } from '../MessageItem';
 import { ForwardMessageModal } from '../message/ForwardMessageModal';
 import { renderEnhancedMessage } from '../../utils/messageRendering';
 import { api } from '../../services/api';
-import { socketService } from '../../services/socket';
 import { toast } from '../../store/notification';
 
 interface Message {
@@ -90,8 +89,8 @@ export default function MessageListDisplay({
 
     try {
       if (targetType === 'channel') {
-        // Use WebSocket to send channel messages
-        socketService.sendMessage(targetId, forwardingMessage.content);
+        // Use REST API for reliable message forwarding
+        await api.createMessage(targetId, forwardingMessage.content);
       } else {
         await api.sendDM(targetId, forwardingMessage.content);
       }
