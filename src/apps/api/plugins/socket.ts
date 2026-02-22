@@ -18,7 +18,11 @@ const jwksUri = `https://cognito-idp.${COGNITO_REGION}.amazonaws.com/${COGNITO_U
 const socketJwksClient = new JwksClient({
   jwksUri,
   cache: true,
-  cacheMaxAge: 600000 // 10 minutes
+  cacheMaxAge: 600000, // 10 minutes
+  timeout: 10000, // 10 second timeout
+  requestHeaders: {
+    'User-Agent': 'Boxcord-Socket-Auth/1.0'
+  }
 });
 
 interface AuthenticatedSocket extends Socket {
@@ -42,6 +46,30 @@ function decodeBase64Url(str: string): string {
   let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
   while (base64.length % 4) base64 += '=';
   return Buffer.from(base64, 'base64').toString();
+}
+
+// Test JWKS connectivity on startup
+async function testJwksConnectivity(app: FastifyInstance): Promise<void> {
+  try {
+    app.log.info(`Testing JWKS connectivity: ${jwksUri}`);
+    const response = await fetch(jwksUri);
+
+    if (!response.ok) {
+      throw new Error(
+        `JWKS endpoint returned ${response.status}: ${response.statusText}`
+      );
+    }
+
+    const jwks = (await response.json()) as { keys?: unknown[] };
+    app.log.info(
+      `JWKS connectivity test passed - ${jwks.keys?.length || 0} keys found at ${jwksUri}`
+    );
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    app.log.error(
+      `JWKS connectivity test FAILED: ${errorMsg} (uri: ${jwksUri}, pool: ${COGNITO_USER_POOL_ID}, region: ${COGNITO_REGION})`
+    );
+  }
 }
 
 // Helper: Route WebRTC signaling data to target user
@@ -90,6 +118,11 @@ export function setupSocketHandlers(
   const onlineUsers = new Map<string, Set<string>>(); // channelId -> Set of userIds
   const isDev = process.env.NODE_ENV !== 'production';
   const allowMockTokens = isDev || process.env.ALLOW_MOCK_TOKENS === 'true';
+
+  // Test JWKS connectivity on startup
+  testJwksConnectivity(app).catch((err) => {
+    app.log.error('Failed to test JWKS connectivity on startup:', err);
+  });
 
   // Auth middleware - verify JWT before allowing connection
   io.use(async (socket: AuthenticatedSocket, next) => {
@@ -143,6 +176,10 @@ export function setupSocketHandlers(
       // Verify signature if it's a Cognito token
       if (payload.iss && payload.iss.includes('cognito-idp') && header.kid) {
         try {
+          app.log.debug(
+            `Socket auth: Verifying Cognito token (kid: ${header.kid}, alg: ${header.alg}, iss: ${payload.iss}, sub: ${payload.sub}, exp: ${new Date(payload.exp * 1000).toISOString()})`
+          );
+
           const key = await socketJwksClient.getSigningKey(header.kid);
           const signingKey = key.getPublicKey();
 
@@ -154,19 +191,34 @@ export function setupSocketHandlers(
 
           app.log.debug('Socket auth: JWT signature verified successfully');
         } catch (verifyErr) {
-          app.log.warn(
-            'Socket auth: JWT signature verification failed: %s',
-            verifyErr instanceof Error ? verifyErr.message : String(verifyErr)
+          const errorMsg =
+            verifyErr instanceof Error ? verifyErr.message : String(verifyErr);
+          const errorName =
+            verifyErr instanceof Error ? verifyErr.name : 'UnknownError';
+
+          app.log.error(
+            `Socket auth: JWT signature verification failed - ${errorName}: ${errorMsg} (kid: ${header.kid}, iss: ${payload.iss}, jwksUri: ${jwksUri})`
           );
+
           // In dev mode, accept the token even if JWKS verification fails (matches REST API behavior)
           if (!isDev) {
+            // Provide more specific error messages
+            if (errorMsg.includes('Unable to find a signing key')) {
+              return next(new Error('Invalid token key ID'));
+            } else if (errorMsg.includes('jwt expired')) {
+              return next(new Error('Token expired'));
+            } else if (errorMsg.includes('jwt issuer invalid')) {
+              return next(new Error('Invalid token issuer'));
+            }
             return next(new Error('Invalid token signature'));
           }
           app.log.warn('Socket auth: Accepting token anyway in dev mode');
         }
       } else if (!isDev) {
         // In production, require proper Cognito tokens
-        app.log.error('Socket auth: Non-Cognito token in production');
+        app.log.error(
+          `Socket auth: Non-Cognito token in production (hasIssuer: ${!!payload.iss}, iss: ${payload.iss}, hasKid: ${!!header.kid}, kid: ${header.kid})`
+        );
         return next(new Error('Invalid token issuer'));
       }
 
