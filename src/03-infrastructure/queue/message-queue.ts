@@ -9,8 +9,9 @@
  * Benefits: Prevents timeouts, better reliability, automatic retries
  */
 
-import { Queue, Worker, QueueEvents } from 'bullmq';
+import { Queue, Worker, QueueEvents, type Job } from 'bullmq';
 import type { FastifyInstance } from 'fastify';
+import { logger } from '../../00-core/logger.js';
 
 interface EmailJobPayload {
   to: string;
@@ -125,7 +126,7 @@ export async function queueEmail(data: EmailJobPayload): Promise<void> {
     });
   } else {
     // Direct execution without queue
-    await processEmailJob({ data } as any);
+    await processEmailJob({ data } as Job<EmailJobPayload>);
   }
 }
 
@@ -144,7 +145,7 @@ export async function queueWebhook(data: WebhookJobPayload): Promise<void> {
     });
   } else {
     // Direct execution without queue
-    await processWebhookJob({ data } as any);
+    await processWebhookJob({ data } as Job<WebhookJobPayload>);
   }
 }
 
@@ -164,7 +165,7 @@ export async function queueNotification(
     });
   } else {
     // Direct execution without queue
-    await processNotificationJob({ data } as any);
+    await processNotificationJob({ data } as Job<NotificationJobPayload>);
   }
 }
 
@@ -172,14 +173,14 @@ export async function queueNotification(
  * Process email job
  * TODO: Integrate with actual email service (SendGrid, SES, etc.)
  */
-async function processEmailJob(job: any): Promise<void> {
-  const { to, subject, body: _body } = job.data as EmailJobPayload;
+async function processEmailJob(job: Job<EmailJobPayload>): Promise<void> {
+  const { to, subject } = job.data;
 
   // Simulate email sending
-  console.log(`📧 Sending email to ${to}: ${subject}`);
+  logger.info(`📧 Sending email to ${to}: ${subject}`);
 
   // TODO: Implement actual email service
-  // await sendGridService.send({ to, subject, body: _body });
+  // await sendGridService.send({ to, subject, body: job.data.body });
 
   // Simulate processing time
   await new Promise((resolve) => setTimeout(resolve, 100));
@@ -188,11 +189,10 @@ async function processEmailJob(job: any): Promise<void> {
 /**
  * Process webhook job
  */
-async function processWebhookJob(job: any): Promise<void> {
-  const { url, method, headers } = job.data as WebhookJobPayload;
-  const _body = (job.data as WebhookJobPayload).body;
+async function processWebhookJob(job: Job<WebhookJobPayload>): Promise<void> {
+  const { url, method, headers, body } = job.data;
 
-  console.log(`🪝 Sending webhook ${method} to ${url}`);
+  logger.info(`🪝 Sending webhook ${method} to ${url}`);
 
   try {
     const response = await fetch(url, {
@@ -201,7 +201,7 @@ async function processWebhookJob(job: any): Promise<void> {
         'Content-Type': 'application/json',
         ...headers
       },
-      body: _body ? JSON.stringify(_body) : undefined
+      body: body ? JSON.stringify(body) : undefined
     });
 
     if (!response.ok) {
@@ -210,7 +210,7 @@ async function processWebhookJob(job: any): Promise<void> {
       );
     }
   } catch (err) {
-    console.error(
+    logger.error(
       `❌ Webhook failed: ${err instanceof Error ? err.message : String(err)}`
     );
     throw err; // Will trigger retry
@@ -221,14 +221,15 @@ async function processWebhookJob(job: any): Promise<void> {
  * Process notification job
  * TODO: Integrate with push notification service
  */
-async function processNotificationJob(job: any): Promise<void> {
-  const { userId, type } = job.data as NotificationJobPayload;
-  const _data = (job.data as NotificationJobPayload).data;
+async function processNotificationJob(
+  job: Job<NotificationJobPayload>
+): Promise<void> {
+  const { userId, type } = job.data;
 
-  console.log(`🔔 Sending ${type} notification to user ${userId}`);
+  logger.info(`🔔 Sending ${type} notification to user ${userId}`);
 
   // TODO: Implement push notification service
-  // await pushService.send(userId, { type, data });
+  // await pushService.send(userId, { type, data: job.data.data });
 
   // Simulate processing time
   await new Promise((resolve) => setTimeout(resolve, 50));
@@ -237,7 +238,7 @@ async function processNotificationJob(job: any): Promise<void> {
 /**
  * Get queue statistics
  */
-export async function getQueueStats(): Promise<Record<string, any>> {
+export async function getQueueStats(): Promise<Record<string, unknown>> {
   if (!REDIS_AVAILABLE) {
     return {
       mode: 'direct-execution',
@@ -245,7 +246,7 @@ export async function getQueueStats(): Promise<Record<string, any>> {
     };
   }
 
-  const stats: Record<string, any> = {
+  const stats: Record<string, unknown> = {
     mode: 'bullmq',
     redis: true
   };
