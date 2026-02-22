@@ -43,6 +43,7 @@ interface MessageCompactProps {
 }
 
 export function MessageCompact({
+  messageId,
   content,
   createdAt,
   attachments,
@@ -87,6 +88,7 @@ export function MessageCompact({
           />
         ) : (
           <MessageBody
+            messageId={messageId}
             content={content}
             attachments={attachments}
             reactions={reactions}

@@ -50,6 +50,7 @@ interface MessageWithHeaderProps {
 }
 
 export function MessageWithHeader({
+  messageId,
   content,
   createdAt,
   edited,
@@ -103,6 +104,7 @@ export function MessageWithHeader({
           />
         ) : (
           <MessageBody
+            messageId={messageId}
             content={content}
             attachments={attachments}
             reactions={reactions}

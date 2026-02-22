@@ -6,6 +6,8 @@ import { MessageActions } from './MessageActions';
 import type { MessageAttachment, MessageReaction } from './index';
 
 interface MessageBodyProps {
+  messageId: string;
+  dmMessageId?: string;
   content: string;
   attachments?: MessageAttachment[];
   reactions: MessageReaction[];
@@ -25,6 +27,8 @@ interface MessageBodyProps {
 }
 
 export function MessageBody({
+  messageId,
+  dmMessageId,
   content,
   attachments = [],
   reactions,
@@ -47,6 +51,8 @@ export function MessageBody({
       {showActions && (
         <div className="message-actions">
           <MessageActions
+            messageId={messageId}
+            dmMessageId={dmMessageId}
             onQuickReaction={onQuickReaction}
             onEdit={onEdit}
             onDelete={onDelete}
