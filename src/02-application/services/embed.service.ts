@@ -74,7 +74,7 @@ async function fetchOEmbed(url: string): Promise<EmbedData | null> {
     if (!response.ok) return null;
 
     const data = (await response.json()) as {
-      type?: string;
+      type?: 'link' | 'video' | 'audio' | 'photo' | 'rich';
       title?: string;
       description?: string;
       provider_name?: string;
@@ -105,8 +105,8 @@ async function fetchOEmbed(url: string): Promise<EmbedData | null> {
       height: data.height,
       duration: data.duration
     };
-  } catch (error) {
-    logger.warn('Failed to fetch oEmbed:', url, error);
+  } catch {
+    logger.warn(`Failed to fetch oEmbed: ${url}`);
     return null;
   }
 }
@@ -192,8 +192,8 @@ export async function fetchUrlMetadata(url: string): Promise<EmbedData | null> {
 
     const html = await response.text();
     return parseOpenGraph(html, url);
-  } catch (error) {
-    logger.warn('Failed to fetch URL metadata:', url, error);
+  } catch {
+    logger.warn(`Failed to fetch URL metadata: ${url}`);
     return null;
   }
 }
