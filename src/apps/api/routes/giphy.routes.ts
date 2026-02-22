@@ -15,6 +15,11 @@ import {
 } from '../../../02-application/services/giphy.service.js';
 
 export default async function giphyRoutes(fastify: FastifyInstance) {
+  // All giphy routes require authentication
+  fastify.addHook('onRequest', async (request) => {
+    await fastify.authenticate(request);
+  });
+
   /**
    * Search GIFs
    * GET /api/v1/giphy/search?q=...&limit=25&offset=0

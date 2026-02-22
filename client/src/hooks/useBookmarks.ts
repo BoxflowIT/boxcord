@@ -4,8 +4,18 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuthStore } from '../store/auth';
 
 const API_BASE = '/api/v1';
+
+// Helper to get auth headers
+function getAuthHeaders(): HeadersInit {
+  const token = useAuthStore.getState().token;
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` })
+  };
+}
 
 export interface Bookmark {
   id: string;
@@ -69,7 +79,7 @@ export function useBookmarks(workspaceId?: string) {
         : `${API_BASE}/bookmarks`;
 
       const response = await fetch(url, {
-        credentials: 'include'
+        headers: getAuthHeaders()
       });
 
       if (!response.ok) {
@@ -98,7 +108,7 @@ export function useIsBookmarked(messageId?: string, dmMessageId?: string) {
       if (dmMessageId) params.set('dmMessageId', dmMessageId);
 
       const response = await fetch(`${API_BASE}/bookmarks/check?${params}`, {
-        credentials: 'include'
+        headers: getAuthHeaders()
       });
 
       if (!response.ok) {
@@ -124,7 +134,7 @@ export function useBookmarkCount(workspaceId?: string) {
         : `${API_BASE}/bookmarks/count`;
 
       const response = await fetch(url, {
-        credentials: 'include'
+        headers: getAuthHeaders()
       });
 
       if (!response.ok) {
@@ -147,10 +157,7 @@ export function useAddBookmark() {
     mutationFn: async (input: AddBookmarkInput) => {
       const response = await fetch(`${API_BASE}/bookmarks`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
+        headers: getAuthHeaders(),
         body: JSON.stringify(input)
       });
 
@@ -180,7 +187,7 @@ export function useRemoveBookmark() {
     mutationFn: async (bookmarkId: string) => {
       const response = await fetch(`${API_BASE}/bookmarks/${bookmarkId}`, {
         method: 'DELETE',
-        credentials: 'include'
+        headers: getAuthHeaders()
       });
 
       if (!response.ok) {
@@ -218,7 +225,7 @@ export function useRemoveBookmarkByMessage() {
 
       const response = await fetch(endpoint, {
         method: 'DELETE',
-        credentials: 'include'
+        headers: getAuthHeaders()
       });
 
       if (!response.ok) {
@@ -252,10 +259,7 @@ export function useUpdateBookmarkNote() {
     }) => {
       const response = await fetch(`${API_BASE}/bookmarks/${bookmarkId}/note`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
+        headers: getAuthHeaders(),
         body: JSON.stringify({ note })
       });
 
