@@ -40,7 +40,8 @@ export async function messageRoutes(app: FastifyInstance) {
           limit: request.query.limit
         }
       );
-      reply.cache({ maxAge: 30, staleWhileRevalidate: 120 }); // 30s cache, 2min stale
+      // NO CACHE: Messages update frequently via WebSocket
+      reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
       return { success: true, data: result };
     }
   );
@@ -144,7 +145,8 @@ export async function messageRoutes(app: FastifyInstance) {
       const messages = await messageService.getPinnedMessages(
         request.query.channelId
       );
-      reply.cache({ maxAge: 30 });
+      // NO CACHE: Pinned messages can change
+      reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
       return { success: true, data: messages };
     }
   );
