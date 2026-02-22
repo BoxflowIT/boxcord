@@ -112,6 +112,7 @@ model Channel {
     category  ChannelCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
     messages  Message[]
     members   ChannelMember[]
+    permissions ChannelPermission[]
 
     @@unique([workspaceId, name])
     @@index([workspaceId])
@@ -149,6 +150,36 @@ model ChannelMember {
     @@index([channelId])
     @@index([userId])
     @@map("channel_members")
+}
+
+model ChannelPermission {
+    id        String     @id @default(uuid())
+    channelId String     @map("channel_id")
+    role      MemberRole // Permission override for specific role
+    
+    // View permissions
+    canViewChannel Boolean @default(true) @map("can_view_channel")
+    
+    // Message permissions
+    canSendMessages   Boolean @default(true) @map("can_send_messages")
+    canAddReactions   Boolean @default(true) @map("can_add_reactions")
+    canAttachFiles    Boolean @default(true) @map("can_attach_files")
+    canEmbed          Boolean @default(true) @map("can_embed") // Links with rich embeds
+    canMentionEveryone Boolean @default(false) @map("can_mention_everyone")
+    
+    // Management permissions
+    canManageMessages Boolean @default(false) @map("can_manage_messages") // Delete/pin others' messages
+    canManageChannel  Boolean @default(false) @map("can_manage_channel") // Edit channel settings
+    canManageMembers  Boolean @default(false) @map("can_manage_members") // Add/remove members
+    
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+    @@unique([channelId, role], name: "channelId_role")
+    @@index([channelId])
+    @@map("channel_permissions")
 }
 
 // ============================================
