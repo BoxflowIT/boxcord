@@ -428,7 +428,7 @@ export default function DMView() {
               }
             );
           } catch (error) {
-            console.error('Failed to unpin message:', error);
+            logger.error('Failed to unpin message:', error);
           }
         }}
         canUnpin={true}
@@ -511,7 +511,7 @@ export default function DMView() {
               }
             );
           } catch (error) {
-            console.error('Failed to pin/unpin message:', error);
+            logger.error('Failed to pin/unpin message:', error);
           }
         }}
         canPin={true}

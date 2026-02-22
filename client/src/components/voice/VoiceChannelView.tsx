@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useVoiceStore, useVoiceControls } from '../../store/voiceStore';
 import { voiceService } from '../../services/voice.service';
 import { usePushToTalk } from '../../hooks/usePushToTalk';
+import { logger } from '../../utils/logger';
 import { VoiceUserList } from './VoiceUserList';
 import { VoiceControls } from './EnhancedVoiceControls';
 import { VideoGrid } from './VideoGrid';
@@ -42,7 +43,7 @@ export function VoiceChannelView({
       setError(null);
       await voiceService.joinChannel(channelId);
     } catch (err) {
-      console.error('Failed to join voice channel:', err);
+      logger.error('Failed to join voice channel:', err);
       setError(
         err instanceof Error
           ? err.message
@@ -56,7 +57,7 @@ export function VoiceChannelView({
       setError(null);
       await voiceService.leaveChannel();
     } catch (err) {
-      console.error('Failed to leave voice channel:', err);
+      logger.error('Failed to leave voice channel:', err);
       setError('Failed to leave voice channel');
     }
   };
@@ -66,7 +67,7 @@ export function VoiceChannelView({
       setError(null);
       await voiceService.toggleVideo();
     } catch (err) {
-      console.error('Failed to toggle video:', err);
+      logger.error('Failed to toggle video:', err);
       setError(err instanceof Error ? err.message : 'Failed to toggle video');
     }
   };
@@ -76,7 +77,7 @@ export function VoiceChannelView({
       setError(null);
       await voiceService.toggleScreenShare();
     } catch (err) {
-      console.error('Failed to toggle screen share:', err);
+      logger.error('Failed to toggle screen share:', err);
       setError(
         err instanceof Error ? err.message : 'Failed to toggle screen share'
       );

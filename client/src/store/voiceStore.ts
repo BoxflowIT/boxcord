@@ -83,17 +83,14 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
 
   // Channel state
   setCurrentChannel: (channelId, sessionId) => {
-    console.log('📍 [voiceStore] setCurrentChannel:', { channelId, sessionId });
     set({ currentChannelId: channelId, currentSessionId: sessionId });
   },
 
   setConnecting: (isConnecting) => {
-    console.log('⏳ [voiceStore] setConnecting:', isConnecting);
     set({ isConnecting });
   },
 
   setConnected: (isConnected) => {
-    console.log('🔌 [voiceStore] setConnected:', isConnected);
     set({ isConnected });
   },
 
@@ -160,23 +157,18 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
     });
 
     // Cleanup peers
-    peers.forEach((peer, userId) => {
-      console.log('🧹 Destroying peer:', userId);
+    peers.forEach((peer) => {
       peer.destroy();
     });
 
     // Stop media tracks
     if (localStream) {
-      const tracks = localStream.getTracks();
-      console.log('🛑 Stopping tracks:', tracks.length);
-      tracks.forEach((track) => {
-        console.log('  - Stopping track:', track.kind, track.label);
+      localStream.getTracks().forEach((track) => {
         track.stop();
       });
     }
 
     set(createInitialState());
-    console.log('✅ Voice store reset complete');
   }
 }));
 
