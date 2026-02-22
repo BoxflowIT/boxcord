@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../../services/api';
 import { logger } from '../../utils/logger';
 import { useChannelInput } from '../../hooks/useChannelInput';
+import { usePermissionCheck } from '../../hooks/usePermissions';
 import FileUpload from '../FileUpload';
 import EmojiPicker from '../ui/EmojiPicker';
 import MentionAutocomplete from '../MentionAutocomplete';
@@ -32,6 +33,10 @@ export default function MessageComposer({
   const [uploading, setUploading] = useState(false);
   const [showMentions, setShowMentions] = useState(false);
   const [showSlashCommands, setShowSlashCommands] = useState(false);
+
+  // Permission checks
+  const canSendMessages = usePermissionCheck(channelId, 'canSendMessages');
+  const canAttachFiles = usePermissionCheck(channelId, 'canAttachFiles');
 
   // Use shared input hook for input handling
   const {
@@ -152,57 +157,76 @@ export default function MessageComposer({
 
   return (
     <div className="relative">
-      {/* Autocomplete popups */}
-      {showMentions && (
-        <div className="absolute bottom-full mb-2 left-0 right-0">
-          <MentionAutocomplete
-            inputValue={inputValue}
-            cursorPosition={cursorPosition}
-            onSelect={handleMentionSelect}
-            onClose={() => setShowMentions(false)}
-            position={{ top: 0, left: 0 }}
-          />
+      {/* Permission denied message */}
+      {!canSendMessages && (
+        <div className="boxflow-bg-primary boxflow-border rounded-lg p-4 text-center">
+          <p className="text-text-tertiary">
+            {t('channel.noPermissionToSend', {
+              defaultValue:
+                'You do not have permission to send messages in this channel'
+            })}
+          </p>
         </div>
       )}
 
-      {showSlashCommands && (
-        <div className="absolute bottom-full mb-2 left-0 right-0">
-          <SlashCommandAutocomplete
-            inputValue={inputValue.substring(1)}
-            onSelect={handleSlashCommandSelect}
-            onClose={() => {}}
-          />
-        </div>
+      {canSendMessages && (
+        <>
+          {/* Autocomplete popups */}
+          {showMentions && (
+            <div className="absolute bottom-full mb-2 left-0 right-0">
+              <MentionAutocomplete
+                inputValue={inputValue}
+                cursorPosition={cursorPosition}
+                onSelect={handleMentionSelect}
+                onClose={() => setShowMentions(false)}
+                position={{ top: 0, left: 0 }}
+              />
+            </div>
+          )}
+
+          {showSlashCommands && (
+            <div className="absolute bottom-full mb-2 left-0 right-0">
+              <SlashCommandAutocomplete
+                inputValue={inputValue.substring(1)}
+                onSelect={handleSlashCommandSelect}
+                onClose={() => {}}
+              />
+            </div>
+          )}
+
+          {/* Input area */}
+          <div className="boxflow-bg-primary boxflow-border rounded-lg p-4">
+            <textarea
+              ref={textareaRef}
+              value={inputValue}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              placeholder={placeholder}
+              className="w-full bg-transparent boxflow-text resize-none outline-none"
+              rows={3}
+            />
+
+            {/* Actions */}
+            <div className="flex items-center gap-2 mt-2">
+              <FileUpload
+                onFileSelect={handleFileSelect}
+                disabled={uploading || !canAttachFiles}
+              />
+              <EmojiPicker
+                onEmojiSelect={handleEmojiSelect}
+                onGifSelect={handleGifSelect}
+              />
+              <button
+                onClick={handleSend}
+                disabled={!inputValue.trim() || uploading}
+                className="ml-auto px-4 py-2 boxflow-bg-accent boxflow-text rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+              >
+                {uploading ? t('common.uploading') : t('common.send')}
+              </button>
+            </div>
+          </div>
+        </>
       )}
-
-      {/* Input area */}
-      <div className="boxflow-bg-primary boxflow-border rounded-lg p-4">
-        <textarea
-          ref={textareaRef}
-          value={inputValue}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          className="w-full bg-transparent boxflow-text resize-none outline-none"
-          rows={3}
-        />
-
-        {/* Actions */}
-        <div className="flex items-center gap-2 mt-2">
-          <FileUpload onFileSelect={handleFileSelect} disabled={uploading} />
-          <EmojiPicker
-            onEmojiSelect={handleEmojiSelect}
-            onGifSelect={handleGifSelect}
-          />
-          <button
-            onClick={handleSend}
-            disabled={!inputValue.trim() || uploading}
-            className="ml-auto px-4 py-2 boxflow-bg-accent boxflow-text rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-          >
-            {uploading ? t('common.uploading') : t('common.send')}
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
