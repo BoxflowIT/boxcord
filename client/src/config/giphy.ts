@@ -14,7 +14,7 @@
  */
 
 export const GIPHY_API_KEY =
-  import.meta.env.VITE_GIPHY_API_KEY || 'your_giphy_api_key_here';
+  import.meta.env.VITE_GIPHY_API_KEY || 'E2USScP1hkaRhjQzx6MRjbGYuoO4p38N';
 
 // Rate limits for public beta key:
 // - 42 requests per hour
@@ -25,5 +25,6 @@ export const GIPHY_CONFIG = {
   apiKey: GIPHY_API_KEY,
   rating: 'g', // g, pg, pg-13, r
   limit: 10, // Number of GIFs per page
-  enabled: GIPHY_API_KEY !== 'your_giphy_api_key_here'
+  enabled:
+    GIPHY_API_KEY !== 'your_giphy_api_key_here' && GIPHY_API_KEY.length > 0
 };
