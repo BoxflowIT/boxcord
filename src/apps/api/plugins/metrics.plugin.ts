@@ -7,9 +7,11 @@ import {
 } from '../../../03-infrastructure/monitoring/metrics.service.js';
 
 async function metricsPlugin(fastify: FastifyInstance) {
+  const requestStartTimes = new Map<string, number>();
+
   // Hook to measure request duration
   fastify.addHook('onRequest', async (request: FastifyRequest) => {
-    (request as any).startTime = Date.now();
+    requestStartTimes.set(request.id, Date.now());
   });
 
   // Hook to record metrics after response
@@ -21,7 +23,9 @@ async function metricsPlugin(fastify: FastifyInstance) {
       if (skipRoutes.includes(request.url)) return;
 
       // Calculate duration
-      const duration = (Date.now() - (request as any).startTime) / 1000; // Convert to seconds
+      const startTime = requestStartTimes.get(request.id) ?? Date.now();
+      const duration = (Date.now() - startTime) / 1000; // Convert to seconds
+      requestStartTimes.delete(request.id);
 
       // Normalize route path (replace IDs with placeholders)
       const route = normalizeRoute(request.url);

@@ -1,7 +1,7 @@
 // Input Sanitization Middleware
 // Protects against XSS attacks, SQL injection, and other injection vulnerabilities
 
-import type { FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
 import xssFilter from 'xss';
 
@@ -27,7 +27,7 @@ const xssOptions = {
 /**
  * Recursively sanitize object properties
  */
-function sanitizeObject(obj: any): any {
+function sanitizeObject(obj: unknown): unknown {
   if (typeof obj === 'string') {
     return xssFilter(obj, xssOptions);
   }
@@ -37,10 +37,10 @@ function sanitizeObject(obj: any): any {
   }
 
   if (obj && typeof obj === 'object') {
-    const sanitized: any = {};
+    const sanitized: Record<string, unknown> = {};
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
-        sanitized[key] = sanitizeObject(obj[key]);
+        sanitized[key] = sanitizeObject((obj as Record<string, unknown>)[key]);
       }
     }
     return sanitized;
@@ -74,7 +74,7 @@ const SKIP_SANITIZATION_ROUTES = new Set([
   '/metrics'
 ]);
 
-async function sanitizationPlugin(fastify: any) {
+async function sanitizationPlugin(fastify: FastifyInstance) {
   // Pre-handler to sanitize incoming requests
   fastify.addHook(
     'preHandler',
@@ -88,14 +88,16 @@ async function sanitizationPlugin(fastify: any) {
 
       // Sanitize request body
       if (request.body && typeof request.body === 'object') {
-        const sanitized: any = {};
+        const sanitized: Record<string, unknown> = {};
         for (const key in request.body) {
           if (Object.prototype.hasOwnProperty.call(request.body, key)) {
             // Skip sensitive fields that need exact values
             if (SKIP_SANITIZATION_FIELDS.has(key.toLowerCase())) {
-              sanitized[key] = (request.body as any)[key];
+              sanitized[key] = (request.body as Record<string, unknown>)[key];
             } else {
-              sanitized[key] = sanitizeObject((request.body as any)[key]);
+              sanitized[key] = sanitizeObject(
+                (request.body as Record<string, unknown>)[key]
+              );
             }
           }
         }
@@ -104,10 +106,12 @@ async function sanitizationPlugin(fastify: any) {
 
       // Sanitize query parameters
       if (request.query && typeof request.query === 'object') {
-        const sanitized: any = {};
+        const sanitized: Record<string, unknown> = {};
         for (const key in request.query) {
           if (Object.prototype.hasOwnProperty.call(request.query, key)) {
-            sanitized[key] = sanitizeObject((request.query as any)[key]);
+            sanitized[key] = sanitizeObject(
+              (request.query as Record<string, unknown>)[key]
+            );
           }
         }
         request.query = sanitized;

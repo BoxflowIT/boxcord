@@ -1,5 +1,6 @@
 // Moderation Service - User moderation (kick, ban)
 import type { ExtendedPrismaClient } from '../../03-infrastructure/database/client.js';
+import type { AuditLog } from '@prisma/client';
 import {
   NotFoundError,
   ForbiddenError,
@@ -161,7 +162,7 @@ export class ModerationService {
       targetType?: string;
       limit?: number;
     }
-  ): Promise<any[]> {
+  ): Promise<AuditLog[]> {
     // Verify user is admin
     await this.verifyModeratorPermission(workspaceId, userId);
 

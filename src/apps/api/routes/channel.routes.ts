@@ -105,10 +105,11 @@ export async function channelRoutes(app: FastifyInstance) {
         app.log.info(
           `Added user ${request.user.id} as member of channel ${channel.id}`
         );
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Only ignore duplicate errors, throw everything else
-        if (!err.message?.includes('Unique constraint')) {
-          app.log.error('Failed to create channel member:', err);
+        const error = err as Error;
+        if (!error.message?.includes('Unique constraint')) {
+          app.log.error({ err }, 'Failed to create channel member');
           throw err;
         }
         app.log.info(
