@@ -26,7 +26,7 @@ export function errorHandler(
       method: request.method,
       url: request.url,
       ip: request.ip,
-      user: (request as any).user?.id,
+      user: request.user?.id,
       headers: {
         'user-agent': request.headers['user-agent'],
         referer: request.headers['referer']
@@ -42,7 +42,7 @@ export function errorHandler(
         extra: {
           url: request.url,
           method: request.method,
-          userId: (request as any).user?.id,
+          userId: request.user?.id,
           ip: request.ip
         }
       });

@@ -1,7 +1,7 @@
 // Structured Logging Middleware
 // Adds request tracking, user context, and performance metrics to logs
 
-import type { FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
 import { randomUUID } from 'crypto';
 
@@ -12,13 +12,14 @@ declare module 'fastify' {
   }
 }
 
-async function loggingPlugin(fastify: any) {
+async function loggingPlugin(fastify: FastifyInstance) {
   // Add request ID and timing to all requests
   fastify.addHook(
     'onRequest',
     async (request: FastifyRequest, reply: FastifyReply) => {
       // Generate unique request ID
       request.requestId = randomUUID();
+      request.startTime = Date.now();
       request.startTime = Date.now();
 
       // Add request ID to response headers
@@ -27,7 +28,7 @@ async function loggingPlugin(fastify: any) {
       // Add request ID to logger context
       request.log = request.log.child({
         requestId: request.requestId,
-        userId: (request as any).user?.id,
+        userId: request.user?.id,
         ip: request.ip,
         userAgent: request.headers['user-agent']
       });
@@ -46,7 +47,7 @@ async function loggingPlugin(fastify: any) {
         url: request.url,
         statusCode: reply.statusCode,
         responseTime: `${responseTime}ms`,
-        userId: (request as any).user?.id,
+        userId: request.user?.id,
         ip: request.ip,
         userAgent: request.headers['user-agent']
       };
@@ -82,7 +83,7 @@ async function loggingPlugin(fastify: any) {
             headers: request.headers,
             body: request.body
           },
-          userId: (request as any).user?.id
+          userId: request.user?.id
         },
         'Request error'
       );

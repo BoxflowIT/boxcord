@@ -1,9 +1,8 @@
 // Redis Cache Service - Distributed caching layer for Prisma queries
-import IORedis from 'ioredis';
+import { Redis } from 'ioredis';
 import { logger } from '../../00-core/logger.js';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type RedisClientType = any;
+type RedisClientType = Redis;
 
 export interface CacheService {
   get(key: string): Promise<unknown | null>;
@@ -32,8 +31,7 @@ class RedisCacheService implements CacheService {
 
   private initializeRedis() {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.client = new (IORedis as any)(process.env.REDIS_URL!, {
+      this.client = new Redis(process.env.REDIS_URL!, {
         maxRetriesPerRequest: 3,
         retryStrategy: (times: number) => {
           if (times > 3) {
@@ -82,7 +80,7 @@ class RedisCacheService implements CacheService {
     return this.connected && this.client !== null;
   }
 
-  async get(key: string): Promise<any | null> {
+  async get(key: string): Promise<unknown | null> {
     if (!this.isConnected()) return null;
 
     try {
@@ -95,7 +93,7 @@ class RedisCacheService implements CacheService {
     }
   }
 
-  async set(key: string, value: any, ttlSeconds?: number): Promise<void> {
+  async set(key: string, value: unknown, ttlSeconds?: number): Promise<void> {
     if (!this.isConnected()) return;
 
     try {
@@ -154,7 +152,7 @@ class RedisCacheService implements CacheService {
 
 // In-memory fallback cache (lightweight implementation)
 class InMemoryCacheService implements CacheService {
-  private cache = new Map<string, { value: any; expires: number }>();
+  private cache = new Map<string, { value: unknown; expires: number }>();
   private readonly defaultTTL: number;
 
   constructor() {
@@ -166,7 +164,7 @@ class InMemoryCacheService implements CacheService {
     return true; // In-memory is always "connected"
   }
 
-  async get(key: string): Promise<any | null> {
+  async get(key: string): Promise<unknown | null> {
     const entry = this.cache.get(key);
     if (!entry) return null;
 
@@ -178,7 +176,7 @@ class InMemoryCacheService implements CacheService {
     return entry.value;
   }
 
-  async set(key: string, value: any, ttlSeconds?: number): Promise<void> {
+  async set(key: string, value: unknown, ttlSeconds?: number): Promise<void> {
     const ttl = (ttlSeconds ?? this.defaultTTL / 1000) * 1000;
     this.cache.set(key, {
       value,
@@ -239,7 +237,7 @@ class InMemoryCacheService implements CacheService {
 let cacheService: CacheService;
 let redisCache: {
   isConnected: () => boolean;
-  get: (key: string) => Promise<any | null>;
+  get: (key: string) => Promise<unknown | null>;
 };
 
 if (process.env.REDIS_URL && process.env.NODE_ENV !== 'test') {

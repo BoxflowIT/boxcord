@@ -1,8 +1,13 @@
 // Rate Limiting Plugin
 import type { FastifyInstance, FastifyRequest } from 'fastify';
+import type { Redis } from 'ioredis';
 import fp from 'fastify-plugin';
 import rateLimit from '@fastify/rate-limit';
 import { cacheService } from '../../../03-infrastructure/cache/redis.cache.js';
+
+interface RedisCache {
+  client?: Redis;
+}
 
 // Rate limit configurations for different endpoint types
 export const RATE_LIMIT_CONFIGS = {
@@ -16,7 +21,7 @@ export const RATE_LIMIT_CONFIGS = {
 async function rateLimitPlugin(app: FastifyInstance) {
   // Use Redis for rate limiting if connected, otherwise in-memory
   const redisClient = cacheService.isConnected()
-    ? (cacheService as any).client
+    ? (cacheService as RedisCache).client
     : undefined;
 
   await app.register(rateLimit, {
@@ -35,19 +40,22 @@ async function rateLimitPlugin(app: FastifyInstance) {
     }),
     keyGenerator: (request: FastifyRequest) => {
       // Use user ID if authenticated, otherwise use IP
-      return (request as any).user?.id || request.ip;
+      return request.user?.id || request.ip;
     }
   });
 
   // Helper to apply custom rate limits to specific routes
-  app.decorate('applyRateLimit', function(config: keyof typeof RATE_LIMIT_CONFIGS) {
-    const limits = RATE_LIMIT_CONFIGS[config];
-    return {
-      config: {
-        rateLimit: limits
-      }
-    };
-  });
+  app.decorate(
+    'applyRateLimit',
+    function (config: keyof typeof RATE_LIMIT_CONFIGS) {
+      const limits = RATE_LIMIT_CONFIGS[config];
+      return {
+        config: {
+          rateLimit: limits
+        }
+      };
+    }
+  );
 }
 
 export default fp(rateLimitPlugin, {

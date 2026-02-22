@@ -2,7 +2,7 @@
 import { PrismaClient } from '@prisma/client';
 import { cacheService } from '../cache/redis.cache.js';
 
-function getCacheKey(model: string, operation: string, args: any): string {
+function getCacheKey(model: string, operation: string, args: unknown): string {
   return `prisma:${model}:${operation}:${JSON.stringify(args)}`;
 }
 
