@@ -1025,6 +1025,27 @@
     fastify-plugin "^5.0.0"
     ws "^8.16.0"
 
+"@giphy/js-fetch-api@^5.7.0":
+  version "5.7.0"
+  resolved "https://registry.yarnpkg.com/@giphy/js-fetch-api/-/js-fetch-api-5.7.0.tgz#933e2c3147b25551c40baa3905c93fb7a18c6d18"
+  integrity sha512-5W8j7QUEnWRhW2KKlRhwHNCz0HwUeW0SlFryKFrqzE5XB8kjoAwZ2GvwtLNnkpjN0cniLE+bSGAzMKcL5Bt5Vg==
+  dependencies:
+    "@giphy/js-types" "*"
+    "@giphy/js-util" "*"
+
+"@giphy/js-types@*":
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/@giphy/js-types/-/js-types-5.1.0.tgz#af7c7d3b8190bf89e25da0e693935871b2c53b0b"
+  integrity sha512-BZYCDtYNRR7cUWkbDLB4wmm3qmWMsVCQdUiBNOfmZ3yAazCgygKJoDI/5Rq4CK5MBaOc5LVdF8viC2WtoBdaPA==
+
+"@giphy/js-util@*":
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/@giphy/js-util/-/js-util-5.2.0.tgz#864b8495daa1e5cef773bf6bb80488558c4e04fe"
+  integrity sha512-Qt7pGh2cqiNmXLeWAgb459wK8+BuMLtIxTfg4ZksnPHPsLthiHT9hhzs2QhqUh7Pp/HOq+Cbv2etGDfnq+xiKA==
+  dependencies:
+    "@giphy/js-types" "*"
+    uuid "^9.0.0"
+
 "@humanfs/core@^0.19.1":
   version "0.19.1"
   resolved "https://registry.yarnpkg.com/@humanfs/core/-/core-0.19.1.tgz#17c55ca7d426733fe3c561906b8173c336b40a77"
@@ -5231,6 +5252,11 @@ uuid@11.1.0:
   version "11.1.0"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-11.1.0.tgz#9549028be1753bb934fc96e2bca09bb4105ae912"
   integrity sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==
+
+uuid@^9.0.0:
+  version "9.0.1"
+  resolved "https://registry.yarnpkg.com/uuid/-/uuid-9.0.1.tgz#e188d4c8853cc722220392c424cd637f32293f30"
+  integrity sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==
 
 vary@^1:
   version "1.1.2"

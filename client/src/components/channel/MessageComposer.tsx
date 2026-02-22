@@ -141,6 +141,15 @@ export default function MessageComposer({
     [onSend]
   );
 
+  const handleGifSelect = useCallback(
+    (gifUrl: string) => {
+      // Send GIF URL directly (EmojiPicker already provides the URL)
+      onSend(gifUrl);
+      logger.info('GIF sent:', gifUrl);
+    },
+    [onSend]
+  );
+
   return (
     <div className="relative">
       {/* Autocomplete popups */}
@@ -181,7 +190,10 @@ export default function MessageComposer({
         {/* Actions */}
         <div className="flex items-center gap-2 mt-2">
           <FileUpload onFileSelect={handleFileSelect} disabled={uploading} />
-          <EmojiPicker onEmojiSelect={handleEmojiSelect} />
+          <EmojiPicker
+            onEmojiSelect={handleEmojiSelect}
+            onGifSelect={handleGifSelect}
+          />
           <button
             onClick={handleSend}
             disabled={!inputValue.trim() || uploading}
