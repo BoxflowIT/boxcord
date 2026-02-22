@@ -6,6 +6,7 @@ import { api } from '../services/api';
 import { signOut } from '../services/cognito';
 import { logger } from '../utils/logger';
 import { useAuthStore } from '../store/auth';
+import { queryKeys } from '../hooks/queries/constants';
 import {
   useUser,
   useCurrentUser,
@@ -140,9 +141,12 @@ export default function ProfileModal({
       }
 
       // Invalidate queries to refresh UI
-      await queryClient.invalidateQueries({ queryKey: ['user', 'current'] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.currentUser });
+      // Invalidate all workspace member queries
       await queryClient.invalidateQueries({
-        queryKey: ['workspace', 'members']
+        predicate: (query) =>
+          Array.isArray(query.queryKey) &&
+          query.queryKey[0] === 'workspaceMembers'
       });
 
       // Close modal on success

@@ -17,16 +17,24 @@ export interface UserDNDPayload {
 export function registerUserStatusHandlers(
   context: SocketHandlerContext
 ): void {
-  const { socket, queryClient } = context;
+  const { socket, queryClient, getCurrentUserId } = context;
 
   // user:status-changed - User custom status updated
   socket.on('user:status-changed', (payload: UserStatusPayload) => {
     const { userId } = payload;
+    const currentUserId = getCurrentUserId();
 
     // Invalidate user queries to refetch with new status
     queryClient.invalidateQueries({
       queryKey: queryKeys.user(userId)
     });
+
+    // If this is the current user, also invalidate currentUser query
+    if (userId === currentUserId) {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.currentUser
+      });
+    }
 
     // Invalidate all workspace members lists that might include this user
     // Using exact: false to match all workspaceMembers queries regardless of workspace ID
@@ -39,11 +47,19 @@ export function registerUserStatusHandlers(
   // user:dnd-changed - User DND mode updated
   socket.on('user:dnd-changed', (payload: UserDNDPayload) => {
     const { userId } = payload;
+    const currentUserId = getCurrentUserId();
 
     // Invalidate user queries to refetch with new DND status
     queryClient.invalidateQueries({
       queryKey: queryKeys.user(userId)
     });
+
+    // If this is the current user, also invalidate currentUser query
+    if (userId === currentUserId) {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.currentUser
+      });
+    }
 
     // Invalidate all workspace members lists that might include this user
     queryClient.invalidateQueries({
