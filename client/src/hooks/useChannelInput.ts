@@ -1,6 +1,7 @@
 // Custom hook for channel input state and handlers
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { socketService } from '../services/socket';
+import { useDrafts } from './useDrafts';
 
 interface UseChannelInputProps {
   channelId?: string;
@@ -18,11 +19,25 @@ export function useChannelInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<number>();
 
+  // Draft management
+  const { loadDraft, saveDraft, clearDraft } = useDrafts(channelId);
+
+  // Load draft when channel changes
+  useEffect(() => {
+    if (channelId) {
+      const draft = loadDraft();
+      setInputValue(draft);
+    }
+  }, [channelId, loadDraft]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     const cursor = e.target.selectionStart ?? 0;
     setInputValue(value);
     setCursorPosition(cursor);
+
+    // Auto-save draft
+    saveDraft(value);
 
     // Check if we should show slash command autocomplete
     if (value.startsWith('/') && !value.includes(' ')) {
@@ -102,7 +117,10 @@ export function useChannelInput({
     [inputValue]
   );
 
-  const clearInput = () => setInputValue('');
+  const clearInput = () => {
+    setInputValue('');
+    clearDraft();
+  };
 
   return {
     inputValue,
@@ -113,6 +131,7 @@ export function useChannelInput({
     handleSlashCommandSelect,
     handleEmojiSelect,
     clearInput,
-    setInputValue
+    setInputValue,
+    clearDraft
   };
 }
