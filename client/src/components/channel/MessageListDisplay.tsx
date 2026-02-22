@@ -7,6 +7,8 @@ import { MessageItem } from '../MessageItem';
 import { ForwardMessageModal } from '../message/ForwardMessageModal';
 import { renderEnhancedMessage } from '../../utils/messageRendering';
 import { api } from '../../services/api';
+import { socketService } from '../../services/socket';
+import { toast } from '../../store/notification';
 
 interface Message {
   id: string;
@@ -88,17 +90,16 @@ export default function MessageListDisplay({
 
     try {
       if (targetType === 'channel') {
-        await api.post(`/channels/${targetId}/messages`, {
-          content: forwardingMessage.content
-        });
+        // Use WebSocket to send channel messages
+        socketService.sendMessage(targetId, forwardingMessage.content);
       } else {
         await api.sendDM(targetId, forwardingMessage.content);
       }
       setForwardingMessage(null);
-      alert(t('messages.forwardSuccess'));
+      toast.success(t('messages.forwardSuccess'));
     } catch (error) {
       console.error('Failed to forward message:', error);
-      alert(t('messages.forwardError'));
+      toast.error(t('messages.forwardError'));
     }
   };
 
