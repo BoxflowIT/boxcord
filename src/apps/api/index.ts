@@ -43,11 +43,20 @@ async function main() {
   // Create Fastify instance
   const app = Fastify({
     logger: false, // Use Pino directly instead
-    // Connection pooling
-    connectionTimeout: 10000,
-    keepAliveTimeout: 65000,
-    // Request payload optimization (increased for voice channels)
-    bodyLimit: 100 * 1024 * 1024 // 100MB max for audio uploads
+    // Connection settings optimized for high load
+    connectionTimeout: 30000, // 30s for slow clients
+    keepAliveTimeout: 72000, // 72s (longer than ALB/nginx default 60s)
+    requestTimeout: 30000, // 30s max request duration
+    // Request payload optimization
+    bodyLimit: 50 * 1024 * 1024, // 50MB max (reduced from 100MB)
+    // Performance tuning
+    disableRequestLogging: true, // We use custom logging plugin
+    trustProxy: true, // Trust X-Forwarded-* headers from load balancer
+    ignoreTrailingSlash: true, // /health and /health/ are the same
+    caseSensitive: false, // Case-insensitive routing
+    // Request ID tracking
+    requestIdHeader: 'x-request-id',
+    requestIdLogLabel: 'requestId'
   });
 
   // Register plugins
