@@ -9,6 +9,7 @@ interface MemberListItemProps {
   avatarUrl?: string;
   displayName: string;
   customStatus?: string;
+  statusEmoji?: string;
   status: UserStatus;
   isCurrentUser?: boolean;
   onClick: () => void;
@@ -20,6 +21,7 @@ export default function MemberListItem({
   avatarUrl,
   displayName,
   customStatus,
+  statusEmoji,
   status,
   isCurrentUser = false,
   onClick,
@@ -46,8 +48,11 @@ export default function MemberListItem({
         {/* Name and custom status */}
         <div className="flex-1 min-w-0 text-left">
           <p className="text-sm text-boxflow-light truncate">{displayName}</p>
-          {customStatus && (
-            <p className="text-subtle truncate">{customStatus}</p>
+          {(customStatus || statusEmoji) && (
+            <p className="text-subtle truncate">
+              {statusEmoji && <span className="mr-1">{statusEmoji}</span>}
+              {customStatus}
+            </p>
           )}
         </div>
       </button>

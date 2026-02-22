@@ -20,6 +20,7 @@ import ProfileDisplay from './profile/ProfileDisplay';
 import ProfileForm from './profile/ProfileForm';
 import ProfileEditActions from './profile/ProfileEditActions';
 import ProfileAvatar from './profile/ProfileAvatar';
+import type { User } from '../types';
 
 interface ProfileModalProps {
   userId?: string; // If provided, show other user's profile
@@ -141,14 +142,40 @@ export default function ProfileModal({
         await api.updateDNDMode(false, undefined);
       }
 
-      // Invalidate queries to refresh UI
-      await queryClient.invalidateQueries({ queryKey: queryKeys.currentUser });
-      // Invalidate all workspace member queries
-      await queryClient.invalidateQueries({
-        predicate: (query) =>
-          Array.isArray(query.queryKey) &&
-          query.queryKey[0] === 'workspaceMembers'
+      const userId = currentUser?.id;
+      if (!userId) return;
+
+      // Update currentUser cache immediately for instant UI update
+      queryClient.setQueryData<User>(queryKeys.currentUser, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          status: status || undefined,
+          statusEmoji: emoji || undefined,
+          dndMode: !!dndUntil,
+          dndUntil: dndUntil?.toISOString()
+        };
       });
+
+      // Update workspace members cache directly for immediate UI update
+      // This avoids 304 responses from browser cache
+      queryClient.setQueriesData<User[]>(
+        { queryKey: ['workspaceMembers'], exact: false },
+        (old) => {
+          if (!old) return old;
+          return old.map((member) =>
+            member.id === userId
+              ? {
+                  ...member,
+                  status: status || undefined,
+                  statusEmoji: emoji || undefined,
+                  dndMode: !!dndUntil,
+                  dndUntil: dndUntil?.toISOString()
+                }
+              : member
+          );
+        }
+      );
 
       // Close modal on success
       setShowCustomStatus(false);

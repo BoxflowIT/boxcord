@@ -6,7 +6,7 @@ import { CloseIcon } from '../ui/Icons';
 interface CustomStatusModalProps {
   currentStatus?: string;
   currentEmoji?: string;
-  onSave: (status: string, emoji: string, dndUntil?: Date) => void;
+  onSave: (status: string, emoji: string, dndUntil?: Date) => Promise<void>;
   onClose: () => void;
 }
 
@@ -40,8 +40,9 @@ export function CustomStatusModal({
   const [status, setStatus] = useState(currentStatus);
   const [emoji, setEmoji] = useState(currentEmoji);
   const [dndDuration, setDndDuration] = useState<string>('');
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     let dndUntil: Date | undefined;
 
     if (dndDuration) {
@@ -63,13 +64,29 @@ export function CustomStatusModal({
       }
     }
 
-    onSave(status, emoji, dndUntil);
-    onClose();
+    setSaving(true);
+    try {
+      await onSave(status, emoji, dndUntil);
+      // Parent handles closing modal on success
+    } catch {
+      // Parent handles error toast
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-gray-900 rounded-lg p-6 w-full max-w-md">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClose();
+      }}
+    >
+      <div
+        className="bg-gray-900 rounded-lg p-6 w-full max-w-md"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold">{t('profile.customStatus')}</h2>
@@ -158,13 +175,15 @@ export function CustomStatusModal({
         <div className="flex gap-3">
           <button
             onClick={handleSave}
-            className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded font-medium transition-colors"
+            disabled={saving}
+            className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed rounded font-medium transition-colors"
           >
-            {t('common.save')}
+            {saving ? t('common.saving') : t('common.save')}
           </button>
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded font-medium transition-colors"
+            disabled={saving}
+            className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:cursor-not-allowed rounded font-medium transition-colors"
           >
             {t('common.cancel')}
           </button>
