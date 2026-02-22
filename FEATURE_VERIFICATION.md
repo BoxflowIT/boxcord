@@ -113,7 +113,7 @@
 
 **Technical details:**
 - Uses ForwardMessageModal component
-- Calls `api.post('/channels/${id}/messages')` or `api.sendDM()`
+- Uses `socketService.sendMessage()` for channels or `api.sendDM()` for DMs
 - onForward prop chain: MessageActions → MessageBody → MessageWithHeader → MessageItem → MessageListDisplay
 
 ---

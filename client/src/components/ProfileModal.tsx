@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { signOut } from '../services/cognito';
 import { logger } from '../utils/logger';
+import { toast } from '../store/notification';
 import { useAuthStore } from '../store/auth';
 import { queryKeys } from '../hooks/queries/constants';
 import {
@@ -116,7 +117,7 @@ export default function ProfileModal({
       {
         onError: (err) => {
           logger.error('Failed to change role:', err);
-          alert(t('common.couldNotChangeRole'));
+          toast.error(t('common.couldNotChangeRole'));
         }
         // Cache updated automatically via invalidation
       }
@@ -153,7 +154,7 @@ export default function ProfileModal({
       setShowCustomStatus(false);
     } catch (err) {
       logger.error('Failed to update status:', err);
-      alert(t('errors.generic'));
+      toast.error(t('errors.generic'));
     }
   };
 

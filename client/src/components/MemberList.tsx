@@ -14,6 +14,7 @@ import { socketService } from '../services/socket';
 import { getUserDisplayName } from '../utils/user';
 import { api } from '../services/api';
 import { logger } from '../utils/logger';
+import { toast } from '../store/notification';
 import ProfileModal from './ProfileModal';
 import { ModerationModal } from './moderation/ModerationModal';
 import MemberListHeader from './member/MemberListHeader';
@@ -131,7 +132,7 @@ export default function MemberList() {
       setModerationUserId(null);
     } catch (err) {
       logger.error('Failed to kick user:', err);
-      alert(t('errors.generic'));
+      toast.error(t('errors.generic'));
     }
   };
 
@@ -144,7 +145,7 @@ export default function MemberList() {
       setModerationUserId(null);
     } catch (err) {
       logger.error('Failed to ban user:', err);
-      alert(t('errors.generic'));
+      toast.error(t('errors.generic'));
     }
   };
 
