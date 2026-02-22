@@ -2,6 +2,7 @@
 import { AttachmentPreview } from '../FileUpload';
 import { cn } from '../../utils/classNames';
 import { isOnlyGifUrl, renderGif } from '../../utils/gifRenderer';
+import { MessageEmbed } from './MessageEmbed';
 
 export interface MessageAttachment {
   id: string;
@@ -43,6 +44,9 @@ export function MessageContent({
           {renderContent ? renderContent(content) : content}
         </div>
       )}
+
+      {/* Rich media embeds */}
+      {!isGif && <MessageEmbed content={content} />}
 
       {/* Attachments */}
       {attachments.length > 0 && (
