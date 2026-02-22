@@ -1,12 +1,13 @@
 // Redis Cache Service - Distributed caching layer for Prisma queries
 import IORedis from 'ioredis';
+import { logger } from '../../00-core/logger.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RedisClientType = any;
 
 export interface CacheService {
-  get(key: string): Promise<any | null>;
-  set(key: string, value: any, ttlSeconds?: number): Promise<void>;
+  get(key: string): Promise<unknown | null>;
+  set(key: string, value: unknown, ttlSeconds?: number): Promise<void>;
   del(key: string): Promise<void>;
   deletePattern(pattern: string): Promise<void>;
   clear(): Promise<void>;
@@ -25,7 +26,7 @@ class RedisCacheService implements CacheService {
     if (process.env.REDIS_URL) {
       this.initializeRedis();
     } else {
-      console.log('ℹ️  Redis not configured, using in-memory cache only');
+      logger.info('ℹ️  Redis not configured, using in-memory cache only');
     }
   }
 
@@ -36,7 +37,7 @@ class RedisCacheService implements CacheService {
         maxRetriesPerRequest: 3,
         retryStrategy: (times: number) => {
           if (times > 3) {
-            console.warn(
+            logger.warn(
               '⚠️  Redis connection failed, falling back to in-memory cache'
             );
             return null; // Stop retrying
@@ -44,7 +45,7 @@ class RedisCacheService implements CacheService {
           return Math.min(times * 100, 2000); // Exponential backoff
         },
         reconnectOnError: (err: Error) => {
-          console.error('Redis connection error:', err.message);
+          logger.error({ err }, 'Redis connection error');
           return false; // Don't reconnect on errors
         },
         lazyConnect: true, // Don't connect immediately
@@ -53,7 +54,7 @@ class RedisCacheService implements CacheService {
 
       this.client.on('connect', () => {
         this.connected = true;
-        console.log('✅ Redis cache connected');
+        logger.info('✅ Redis cache connected');
       });
 
       this.client.on('error', (error: Error) => {
@@ -236,7 +237,10 @@ class InMemoryCacheService implements CacheService {
 
 // Export singleton instance with automatic fallback
 let cacheService: CacheService;
-let redisCache: { isConnected: () => boolean; get: (key: string) => Promise<any | null> };
+let redisCache: {
+  isConnected: () => boolean;
+  get: (key: string) => Promise<any | null>;
+};
 
 if (process.env.REDIS_URL && process.env.NODE_ENV !== 'test') {
   const redisService = new RedisCacheService();

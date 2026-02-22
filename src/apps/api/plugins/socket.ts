@@ -57,7 +57,9 @@ async function routeWebRTCSignal(
   const targetSockets = await io.in(room).fetchSockets();
 
   for (const targetSocket of targetSockets) {
-    if ((targetSocket as any).userId === targetUserId) {
+    if (
+      (targetSocket as unknown as AuthenticatedSocket).userId === targetUserId
+    ) {
       targetSocket.emit(eventName, {
         fromUserId,
         [eventName.includes('offer')
@@ -808,7 +810,10 @@ export function setupSocketHandlers(
           const targetSockets = await io.fetchSockets();
 
           for (const targetSocket of targetSockets) {
-            if ((targetSocket as any).userId === data.targetUserId) {
+            if (
+              (targetSocket as unknown as AuthenticatedSocket).userId ===
+              data.targetUserId
+            ) {
               // Notify other user of incoming call with caller info
               targetSocket.emit('dm:call:incoming', {
                 channelId: data.channelId,
