@@ -50,12 +50,9 @@ export function MessageEmbed({ content }: MessageEmbedProps) {
     const fetchEmbeds = async () => {
       setLoading(true);
       try {
-        const response = await api.post<{ data: EmbedData[] }>(
-          '/embeds/parse',
-          {
-            content
-          }
-        );
+        const response = await api.post<EmbedData[]>('/embeds/parse', {
+          content
+        });
         setEmbeds(response.data || []);
       } catch (error) {
         logger.error('Failed to fetch embeds:', error);
