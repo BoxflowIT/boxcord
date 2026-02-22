@@ -36,14 +36,15 @@ export default function MessageComposer({
   // Use shared input hook for input handling
   const {
     inputValue,
-    setInputValue,
     cursorPosition,
     textareaRef,
     handleInputChange: baseHandleInputChange,
     handleMentionSelect,
     handleSlashCommandSelect,
-    handleEmojiSelect
+    handleEmojiSelect,
+    clearInput
   } = useChannelInput({
+    channelId,
     onShowMentions: setShowMentions,
     onShowSlashCommands: setShowSlashCommands
   });
@@ -65,7 +66,7 @@ export default function MessageComposer({
     if (!inputValue.trim()) return;
 
     const content = inputValue.trim();
-    setInputValue('');
+    clearInput(); // Clear input and draft
 
     // Handle slash commands
     if (content.startsWith('/')) {
@@ -93,7 +94,7 @@ export default function MessageComposer({
 
     // Send regular message
     onSend(content);
-  }, [inputValue, channelId, workspaceId, onSend, onBotResponse]);
+  }, [inputValue, channelId, workspaceId, onSend, onBotResponse, clearInput]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

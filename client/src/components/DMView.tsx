@@ -31,6 +31,7 @@ import { useProcessedMessages } from '../hooks/useProcessedMessages';
 import { useMessageScroll } from '../hooks/useMessageScroll';
 import { useMarkAsRead } from '../hooks/useMarkAsRead';
 import { useSocketRoom } from '../hooks/useSocketRoom';
+import { useDrafts } from '../hooks/useDrafts';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import { LoadingState } from './ui/LoadingSpinner';
 import { DMHeader } from './dm/DMHeader';
@@ -96,6 +97,17 @@ export default function DMView() {
   const messagesEndRef = useMessageScroll(messages);
   useMarkAsRead({ channelId, isDM: true });
   useSocketRoom(channelId, 'dm');
+
+  // Draft management for DMs
+  const { loadDraft, saveDraft, clearDraft } = useDrafts(channelId);
+
+  // Load draft when channel changes
+  useEffect(() => {
+    if (channelId) {
+      const draft = loadDraft();
+      setInputValue(draft);
+    }
+  }, [channelId, loadDraft]);
 
   // Handle call ringing sound and timeout
   useEffect(() => {
@@ -259,6 +271,7 @@ export default function DMView() {
 
     const content = inputValue.trim();
     setInputValue('');
+    clearDraft(); // Clear saved draft
     setSending(true);
 
     try {
@@ -268,6 +281,7 @@ export default function DMView() {
       logger.error('Failed to send DM:', err);
       // Restore input on error
       setInputValue(content);
+      saveDraft(content);
     } finally {
       setSending(false);
     }
@@ -511,7 +525,10 @@ export default function DMView() {
         uploading={uploading}
         sending={sending}
         textareaRef={textareaRef}
-        onInputChange={(e) => setInputValue(e.target.value)}
+        onInputChange={(e) => {
+          setInputValue(e.target.value);
+          saveDraft(e.target.value);
+        }}
         onKeyDown={handleKeyDown}
         onFileSelect={handleFileSelect}
         onEmojiSelect={handleEmojiSelect}
