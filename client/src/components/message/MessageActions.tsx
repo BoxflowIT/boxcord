@@ -1,8 +1,11 @@
-// Reusable Message Actions Bar - Quick reactions + edit/delete/pin/forward
+// Reusable Message Actions Bar - Quick reactions + edit/delete/pin/forward/bookmark
 import { useTranslation } from 'react-i18next';
 import { EditIcon, TrashIcon, PinIcon, SendIcon } from '../ui/Icons';
+import { BookmarkButton } from '../action/BookmarkButton';
 
 interface MessageActionsProps {
+  messageId?: string;
+  dmMessageId?: string;
   onQuickReaction: (emoji: string) => void;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -17,6 +20,8 @@ interface MessageActionsProps {
 const DEFAULT_QUICK_REACTIONS = ['👍', '❤️', '😂', '🎉', '🔥'];
 
 export function MessageActions({
+  messageId,
+  dmMessageId,
   onQuickReaction,
   onEdit,
   onDelete,
@@ -45,6 +50,9 @@ export function MessageActions({
 
       {/* Divider */}
       <div className="w-px h-4 bg-boxflow-hover mx-1" />
+
+      {/* Bookmark button */}
+      <BookmarkButton messageId={messageId} dmMessageId={dmMessageId} />
 
       {/* Pin button (for users with permission) */}
       {canPin && onPin && (

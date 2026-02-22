@@ -21,6 +21,7 @@ import { categoryRoutes } from './category.routes.js';
 import { moderationRoutes } from './moderation.routes.js';
 import { healthRoutes } from './health.routes.js';
 import embedRoutes from './embed.routes.js';
+import bookmarkRoutes from './bookmark.routes.js';
 
 export async function registerRoutes(app: FastifyInstance) {
   // Health checks (no prefix, no auth required)
@@ -58,6 +59,7 @@ export async function registerRoutes(app: FastifyInstance) {
       await api.register(categoryRoutes, { prefix: '/workspaces' });
       await api.register(moderationRoutes, { prefix: '/workspaces' });
       await api.register(embedRoutes, { prefix: '/embeds' });
+      await api.register(bookmarkRoutes);
     },
     { prefix: '/api/v1' }
   );

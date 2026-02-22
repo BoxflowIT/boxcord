@@ -34,6 +34,7 @@ model User {
     directMessages       DirectMessage[]            @relation("DirectMessageAuthor")
     dmParticipants       DirectMessageParticipant[]
     workspaceMemberships WorkspaceMember[]
+    bookmarks            BookmarkedMessage[]
 
     @@map("users")
 }
@@ -54,6 +55,7 @@ model Workspace {
     channelCategories ChannelCategory[]
     members           WorkspaceMember[]
     invites           WorkspaceInvite[]
+    bookmarks         BookmarkedMessage[]
 
     @@map("workspaces")
 }
@@ -174,6 +176,7 @@ model Message {
     author      User         @relation(fields: [authorId], references: [id])
     attachments Attachment[]
     reactions   Reaction[]
+    bookmarks   BookmarkedMessage[]
 
     @@index([channelId, createdAt])
     @@index([channelId, isPinned, createdAt]) // Optimize pinned message queries
@@ -255,6 +258,7 @@ model DirectMessage {
     author      User                 @relation("DirectMessageAuthor", fields: [authorId], references: [id], onDelete: Cascade)
     attachments DMAttachment[]
     reactions   DMReaction[]
+    bookmarks   BookmarkedMessage[]
 
     @@index([channelId, createdAt])
     @@index([channelId, isPinned, createdAt]) // Optimize pinned DM queries
@@ -342,6 +346,33 @@ model AuditLog {
     @@index([userId])
     @@index([createdAt])
     @@map("audit_logs")
+}
+
+// ============================================
+// BOOKMARKED MESSAGES
+// ============================================
+
+model BookmarkedMessage {
+    id            String   @id @default(uuid())
+    userId        String   @map("user_id")
+    messageId     String?  @map("message_id")
+    dmMessageId   String?  @map("dm_message_id")
+    workspaceId   String?  @map("workspace_id")
+    note          String? // Optional user note
+    createdAt     DateTime @default(now()) @map("created_at")
+
+    user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+    message     Message?       @relation(fields: [messageId], references: [id], onDelete: Cascade)
+    dmMessage   DirectMessage? @relation(fields: [dmMessageId], references: [id], onDelete: Cascade)
+    workspace   Workspace?     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, messageId])
+    @@unique([userId, dmMessageId])
+    @@index([userId])
+    @@index([messageId])
+    @@index([dmMessageId])
+    @@index([createdAt])
+    @@map("bookmarked_messages")
 }
 
 // ============================================
