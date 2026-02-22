@@ -201,7 +201,8 @@ export default function MemberList() {
                       userId={user.id}
                       avatarUrl={user.avatarUrl}
                       displayName={displayName}
-                      customStatus={user.presence?.customStatus}
+                      customStatus={user.status || user.presence?.customStatus}
+                      statusEmoji={user.statusEmoji}
                       status={
                         (user.presence?.status ?? 'OFFLINE') as UserStatus
                       }
