@@ -29,14 +29,16 @@ export async function workspaceRoutes(app: FastifyInstance) {
     const workspaces = await workspaceService.getUserWorkspaces(
       request.user.id
     );
-    reply.cache({ maxAge: 300, staleWhileRevalidate: 600 }); // 5min cache, 10min stale
+    // NO CACHE: Workspace list can change
+    reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
     return { success: true, data: workspaces };
   });
 
   // Get single workspace
   app.get<{ Params: { id: string } }>('/:id', async (request, reply) => {
     const workspace = await workspaceService.getWorkspace(request.params.id);
-    reply.cache({ maxAge: 300, staleWhileRevalidate: 600 });
+    // NO CACHE: Workspace data can change
+    reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
     return { success: true, data: workspace };
   });
 
@@ -69,7 +71,8 @@ export async function workspaceRoutes(app: FastifyInstance) {
       const members = await workspaceService.getWorkspaceMembers(
         request.params.id
       );
-      reply.cache({ maxAge: 60, staleWhileRevalidate: 300 }); // 1min cache, 5min stale
+      // NO CACHE: Member roles can change
+      reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
       return { success: true, data: members };
     }
   );

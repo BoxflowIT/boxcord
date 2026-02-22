@@ -20,6 +20,7 @@ export default async function bookmarkRoutes(fastify: FastifyInstance) {
    * POST /api/v1/bookmarks
    */
   fastify.post('/bookmarks', async (request) => {
+    await fastify.authenticate(request);
     const { messageId, dmMessageId, workspaceId, note } = request.body as {
       messageId?: string;
       dmMessageId?: string;
@@ -48,6 +49,7 @@ export default async function bookmarkRoutes(fastify: FastifyInstance) {
    * DELETE /api/v1/bookmarks/:id
    */
   fastify.delete('/bookmarks/:id', async (request) => {
+    await fastify.authenticate(request);
     const { id } = request.params as { id: string };
     const userId = request.user?.id;
 
@@ -66,6 +68,7 @@ export default async function bookmarkRoutes(fastify: FastifyInstance) {
    * DELETE /api/v1/bookmarks/dm/:dmMessageId
    */
   fastify.delete('/bookmarks/message/:messageId', async (request) => {
+    await fastify.authenticate(request);
     const { messageId } = request.params as { messageId: string };
     const userId = request.user?.id;
 
@@ -79,6 +82,7 @@ export default async function bookmarkRoutes(fastify: FastifyInstance) {
   });
 
   fastify.delete('/bookmarks/dm/:dmMessageId', async (request) => {
+    await fastify.authenticate(request);
     const { dmMessageId } = request.params as { dmMessageId: string };
     const userId = request.user?.id;
 
@@ -96,6 +100,7 @@ export default async function bookmarkRoutes(fastify: FastifyInstance) {
    * GET /api/v1/bookmarks?workspaceId=...
    */
   fastify.get('/bookmarks', async (request) => {
+    await fastify.authenticate(request);
     const { workspaceId } = request.query as { workspaceId?: string };
     const userId = request.user?.id;
 
@@ -114,6 +119,7 @@ export default async function bookmarkRoutes(fastify: FastifyInstance) {
    * GET /api/v1/bookmarks/check?dmMessageId=...
    */
   fastify.get('/bookmarks/check', async (request) => {
+    await fastify.authenticate(request);
     const { messageId, dmMessageId } = request.query as {
       messageId?: string;
       dmMessageId?: string;
@@ -134,6 +140,7 @@ export default async function bookmarkRoutes(fastify: FastifyInstance) {
    * PATCH /api/v1/bookmarks/:id/note
    */
   fastify.patch('/bookmarks/:id/note', async (request) => {
+    await fastify.authenticate(request);
     const { id } = request.params as { id: string };
     const { note } = request.body as { note: string };
     const userId = request.user?.id;
@@ -152,6 +159,7 @@ export default async function bookmarkRoutes(fastify: FastifyInstance) {
    * GET /api/v1/bookmarks/count?workspaceId=...
    */
   fastify.get('/bookmarks/count', async (request) => {
+    await fastify.authenticate(request);
     const { workspaceId } = request.query as { workspaceId?: string };
     const userId = request.user?.id;
 
