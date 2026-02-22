@@ -7,9 +7,7 @@ import {
 
 export default async function embedRoutes(app: FastifyInstance) {
   // Get metadata for a single URL
-  app.get<{
-    QueryString: { url: string };
-  }>(
+  app.get(
     '/embeds/preview',
     {
       schema: {
@@ -23,7 +21,7 @@ export default async function embedRoutes(app: FastifyInstance) {
       }
     },
     async (request, reply) => {
-      const { url } = request.query;
+      const { url } = request.query as { url: string };
 
       const embed = await fetchUrlMetadata(url);
 
@@ -42,9 +40,7 @@ export default async function embedRoutes(app: FastifyInstance) {
   );
 
   // Get embeds for all URLs in content
-  app.post<{
-    Body: { content: string };
-  }>(
+  app.post(
     '/embeds/parse',
     {
       schema: {
@@ -58,7 +54,7 @@ export default async function embedRoutes(app: FastifyInstance) {
       }
     },
     async (request) => {
-      const { content } = request.body;
+      const { content } = request.body as { content: string };
 
       const embeds = await fetchMessageEmbeds(content);
 
