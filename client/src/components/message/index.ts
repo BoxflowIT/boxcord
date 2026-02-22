@@ -8,6 +8,7 @@ export { MessageEditForm } from './MessageEditForm';
 export { MessageBody } from './MessageBody';
 export { MessageWithHeader } from './MessageWithHeader';
 export { MessageCompact } from './MessageCompact';
+export { MessageEmbed } from './MessageEmbed';
 
 // Re-export types
 export type { MessageAttachment } from './MessageContent';
