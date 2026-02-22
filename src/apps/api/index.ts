@@ -27,6 +27,8 @@ import sanitizationPlugin from './plugins/sanitization.js';
 import swaggerPlugin from './plugins/swagger.js';
 import loggingPlugin from './plugins/logging.js';
 import { registerRoutes } from './routes/index.js';
+import { setupRedisAdapter } from '../../03-infrastructure/redis/socket-adapter.js';
+import { initializeQueues } from '../../03-infrastructure/queue/message-queue.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -155,8 +157,14 @@ async function main() {
     pingInterval: 45000 // Ping every 45 seconds (longer = fewer requests)
   });
 
+  // Setup Redis adapter for clustering (enables multiple replicas)
+  await setupRedisAdapter(io, app);
+
   // Setup socket handlers (not as Fastify plugin)
   setupSocketHandlers(io, app, prisma);
+
+  // Initialize message queues for background jobs
+  await initializeQueues(app);
 
   // Attach io to app for use in routes
   app.decorate('io', io);

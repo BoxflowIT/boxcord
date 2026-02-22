@@ -2,6 +2,8 @@ import { FastifyInstance } from 'fastify';
 import { Server as SocketIOServer } from 'socket.io';
 import { logger } from '../00-core/logger.js';
 import { prisma } from '../03-infrastructure/database/client.js';
+import { closeRedisAdapter } from '../03-infrastructure/redis/socket-adapter.js';
+import { closeQueues } from '../03-infrastructure/queue/message-queue.js';
 
 interface ShutdownOptions {
   server: FastifyInstance;
@@ -51,11 +53,15 @@ export function setupGracefulShutdown({ server, io }: ShutdownOptions) {
 
       await io.close();
 
-      // 3. Close database connections
+      // 3. Close Redis adapter and message queues
+      logger.info('Closing Redis adapter and message queues...');
+      await Promise.all([closeRedisAdapter(server), closeQueues(server)]);
+
+      // 4. Close database connections
       logger.info('Closing database connections...');
       await prisma.$disconnect();
 
-      // 4. Cleanup complete
+      // 5. Cleanup complete
       clearTimeout(forceExitTimeout);
       logger.info('Graceful shutdown completed successfully');
       process.exit(0);
