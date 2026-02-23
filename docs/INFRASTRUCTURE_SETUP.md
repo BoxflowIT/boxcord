@@ -409,8 +409,8 @@ This phase deploys a basic high-availability setup with 2-3 application instance
        environment:
          NODE_ENV: production
          PORT: 3001
-         DATABASE_URL: postgresql://boxcord_app:PASSWORD@db.example.com:5432/boxcord_production?connection_limit=30&pool_timeout=10
-         REDIS_URL: redis://:AUTH_TOKEN@redis.example.com:6379
+         DATABASE_URL: postgresql://boxcord_app:<YOUR_PASSWORD>@db.example.com:5432/boxcord_production?connection_limit=30&pool_timeout=10
+         REDIS_URL: redis://:<YOUR_REDIS_TOKEN>@redis.example.com:6379
          AWS_S3_BUCKET: boxcord-files-prod
          AWS_REGION: us-east-1
          JWT_SECRET: <SECURE_JWT_SECRET>
@@ -436,8 +436,8 @@ This phase deploys a basic high-availability setup with 2-3 application instance
        environment:
          NODE_ENV: production
          PORT: 3001
-         DATABASE_URL: postgresql://boxcord_app:PASSWORD@db.example.com:5432/boxcord_production?connection_limit=30&pool_timeout=10
-         REDIS_URL: redis://:AUTH_TOKEN@redis.example.com:6379
+         DATABASE_URL: postgresql://boxcord_app:<YOUR_PASSWORD>@db.example.com:5432/boxcord_production?connection_limit=30&pool_timeout=10
+         REDIS_URL: redis://:<YOUR_REDIS_TOKEN>@redis.example.com:6379
          AWS_S3_BUCKET: boxcord-files-prod
          AWS_REGION: us-east-1
          JWT_SECRET: <SECURE_JWT_SECRET>
@@ -458,8 +458,8 @@ This phase deploys a basic high-availability setup with 2-3 application instance
        environment:
          NODE_ENV: production
          PORT: 3001
-         DATABASE_URL: postgresql://boxcord_app:PASSWORD@db.example.com:5432/boxcord_production?connection_limit=30&pool_timeout=10
-         REDIS_URL: redis://:AUTH_TOKEN@redis.example.com:6379
+         DATABASE_URL: postgresql://boxcord_app:<YOUR_PASSWORD>@db.example.com:5432/boxcord_production?connection_limit=30&pool_timeout=10
+         REDIS_URL: redis://:<YOUR_REDIS_TOKEN>@redis.example.com:6379
          AWS_S3_BUCKET: boxcord-files-prod
          AWS_REGION: us-east-1
          JWT_SECRET: <SECURE_JWT_SECRET>
@@ -639,7 +639,7 @@ This phase adds read replicas, WebSocket clustering, message queue workers, and 
    
    Add to environment variables:
    ```env
-   DATABASE_READ_REPLICA_URL=postgresql://boxcord_app:PASSWORD@replica-1.xxxxx.us-east-1.rds.amazonaws.com:5432/boxcord_production
+   DATABASE_READ_REPLICA_URL=postgresql://boxcord_app:<YOUR_PASSWORD>@replica-1.xxxxx.us-east-1.rds.amazonaws.com:5432/boxcord_production
    ```
 
 4. **Implement Read/Write Client Separation:**
@@ -709,7 +709,7 @@ This phase adds read replicas, WebSocket clustering, message queue workers, and 
 
 2. **Create Replication User:**
    ```sql
-   CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD 'secure_replication_password';
+   CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD '<YOUR_REPLICATION_PASSWORD>';
    ```
 
 3. **Configure `pg_hba.conf`:**
@@ -1277,7 +1277,7 @@ ECONNREFUSED: Connection refused
 **Solutions:**
 1. Verify Redis is running:
    ```bash
-   redis-cli -h <REDIS_HOST> -a <AUTH_TOKEN> ping
+   redis-cli -h <REDIS_HOST> -a <YOUR_REDIS_TOKEN> ping
    ```
 
 2. Check security groups (AWS):
@@ -1299,7 +1299,7 @@ ECONNREFUSED: Connection refused
 4. Check connection string format:
    ```env
    # Correct format
-   REDIS_URL=redis://:AUTH_TOKEN@host:6379
+   REDIS_URL=redis://:<YOUR_REDIS_TOKEN>@host:6379
    ```
 
 #### 5. Slow Query Performance
