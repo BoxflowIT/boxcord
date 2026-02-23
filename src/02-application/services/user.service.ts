@@ -24,7 +24,7 @@ export interface UpdateUserInput {
   firstName?: string;
   lastName?: string;
   avatarUrl?: string | null;
-  bio?: string;
+  bio?: string | null;
   statusText?: string | null;
   statusEmoji?: string | null;
 }
