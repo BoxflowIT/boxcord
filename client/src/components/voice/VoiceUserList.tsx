@@ -5,6 +5,7 @@ import { useCurrentUser } from '../../hooks/useQuery';
 import { MicIcon, MicOffIcon, HeadphonesOffIcon } from '../ui/Icons';
 import { UserVolumeMenu } from './UserVolumeMenu';
 import { useState } from 'react';
+import { getUserDisplayName } from '../../utils/user';
 import type { User } from '../../types';
 
 interface VoiceUser {
@@ -39,10 +40,7 @@ export function VoiceUserList() {
   // Fetch user details for all voice users
   const { data: onlineUsers = [] } = useQuery<User[]>({
     queryKey: ['users', 'online'],
-    queryFn: async () => {
-      const response = await api.get('/users/online');
-      return response.data as unknown as User[];
-    },
+    queryFn: () => api.getOnlineUsers(),
     staleTime: 30000
   });
 
@@ -87,9 +85,7 @@ export function VoiceUserList() {
           const user = isLocalUser
             ? currentUser
             : onlineUsers.find((u) => u.id === voiceUser.userId);
-          const displayName = user
-            ? `${user.firstName} ${user.lastName}`.trim() || user.email
-            : 'Unknown User';
+          const displayName = user ? getUserDisplayName(user) : 'Unknown User';
 
           return (
             <VoiceUserItem

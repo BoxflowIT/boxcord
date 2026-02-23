@@ -72,8 +72,13 @@ export class UserService {
         avatarUrl: true,
         bio: true,
         role: true,
+        status: true,
+        statusEmoji: true,
+        dndMode: true,
+        dndUntil: true,
         createdAt: true,
-        updatedAt: true
+        updatedAt: true,
+        presence: true
       }
     });
   }
@@ -89,6 +94,10 @@ export class UserService {
         avatarUrl: true,
         bio: true,
         role: true,
+        status: true,
+        statusEmoji: true,
+        dndMode: true,
+        dndUntil: true,
         createdAt: true,
         updatedAt: true,
         presence: true
@@ -145,8 +154,13 @@ export class UserService {
         avatarUrl: true,
         bio: true,
         role: true,
+        status: true,
+        statusEmoji: true,
+        dndMode: true,
+        dndUntil: true,
         createdAt: true,
-        updatedAt: true
+        updatedAt: true,
+        presence: true
       }
     });
   }

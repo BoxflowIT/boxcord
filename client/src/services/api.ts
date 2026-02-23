@@ -313,7 +313,10 @@ export const api = {
   updateCustomStatus: (status: string, statusEmoji: string) =>
     request<User>('/users/me/status', {
       method: 'PATCH',
-      body: JSON.stringify({ status, statusEmoji })
+      body: JSON.stringify({
+        status: status || null,
+        statusEmoji: statusEmoji || null
+      })
     }),
   updateDNDMode: (dndMode: boolean, dndUntil?: string) =>
     request<User>('/users/me/dnd', {

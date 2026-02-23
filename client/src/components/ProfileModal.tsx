@@ -8,6 +8,7 @@ import { logger } from '../utils/logger';
 import { toast } from '../store/notification';
 import { useAuthStore } from '../store/auth';
 import { queryKeys } from '../hooks/queries/constants';
+import { useDMOperations } from '../hooks/useDMOperations';
 import {
   useUser,
   useCurrentUser,
@@ -46,6 +47,7 @@ export default function ProfileModal({
   const { mutate: updateProfile, isPending: saving } = useUpdateProfile();
   const { mutate: updateUserRole, isPending: changingRole } =
     useUpdateUserRole();
+  const { startDM } = useDMOperations();
 
   const [editing, setEditing] = useState(false);
   const [showCustomStatus, setShowCustomStatus] = useState(false);
@@ -85,7 +87,8 @@ export default function ProfileModal({
           updateUser({
             firstName: updatedProfile.firstName,
             lastName: updatedProfile.lastName,
-            avatarUrl: updatedProfile.avatarUrl
+            avatarUrl: updatedProfile.avatarUrl,
+            bio: updatedProfile.bio
           });
         }
         // Cache updated automatically via invalidation
@@ -193,7 +196,7 @@ export default function ProfileModal({
       onClick={onClose}
     >
       <div
-        className="bg-boxflow-dark rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-boxflow-hover-50"
+        className="bg-boxflow-dark rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-boxflow-hover-50"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header/Banner */}
@@ -292,10 +295,11 @@ export default function ProfileModal({
                 </div>
               )}
 
-              {!isOwnProfile && (
+              {!isOwnProfile && profile && (
                 <button
-                  onClick={() => {
-                    /* Start DM */
+                  onClick={async () => {
+                    await startDM(profile.id);
+                    onClose();
                   }}
                   className="w-full px-4 py-2 gradient-primary text-white rounded-lg shadow-primary transition-all"
                 >

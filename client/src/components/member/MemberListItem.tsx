@@ -15,6 +15,7 @@ interface MemberListItemProps {
   onClick: () => void;
   onStartDM?: (e: React.MouseEvent) => void;
   onModerate?: (e: React.MouseEvent) => void;
+  onContextMenu?: (e: React.MouseEvent) => void;
 }
 
 export default function MemberListItem({
@@ -26,11 +27,12 @@ export default function MemberListItem({
   isCurrentUser = false,
   onClick,
   onStartDM,
-  onModerate
+  onModerate,
+  onContextMenu
 }: MemberListItemProps) {
   const { t } = useTranslation();
   return (
-    <div className="group list-item-interactive">
+    <div className="group list-item-interactive" onContextMenu={onContextMenu}>
       <button
         onClick={onClick}
         className="flex-1 flex items-center gap-3 min-w-0"

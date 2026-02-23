@@ -9,7 +9,8 @@ import type { MessageAttachment, MessageReaction } from './index';
 
 interface MessageWithHeaderProps {
   // Message data
-  messageId: string;
+  messageId?: string;
+  dmMessageId?: string;
   content: string;
   createdAt: string;
   edited: boolean;
@@ -51,6 +52,7 @@ interface MessageWithHeaderProps {
 
 export function MessageWithHeader({
   messageId,
+  dmMessageId,
   content,
   createdAt,
   edited,
@@ -105,6 +107,7 @@ export function MessageWithHeader({
         ) : (
           <MessageBody
             messageId={messageId}
+            dmMessageId={dmMessageId}
             content={content}
             attachments={attachments}
             reactions={reactions}

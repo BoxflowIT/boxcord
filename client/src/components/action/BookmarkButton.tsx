@@ -22,9 +22,10 @@ export function BookmarkButton({
   dmMessageId,
   className = ''
 }: BookmarkButtonProps) {
+  // Only check one of messageId or dmMessageId, not both
   const { data: isBookmarked, isLoading } = useIsBookmarked(
-    messageId,
-    dmMessageId
+    dmMessageId ? undefined : messageId,
+    dmMessageId ? dmMessageId : undefined
   );
   const addBookmark = useAddBookmark();
   const removeBookmark = useRemoveBookmarkByMessage();
@@ -34,13 +35,28 @@ export function BookmarkButton({
     e.stopPropagation();
 
     if (isBookmarked) {
-      await removeBookmark.mutateAsync({ messageId, dmMessageId });
+      // Only send one of messageId or dmMessageId, not both
+      const removePayload: { messageId?: string; dmMessageId?: string } = {};
+      if (dmMessageId) {
+        removePayload.dmMessageId = dmMessageId;
+      } else if (messageId) {
+        removePayload.messageId = messageId;
+      }
+      await removeBookmark.mutateAsync(removePayload);
     } else {
-      await addBookmark.mutateAsync({
-        messageId,
-        dmMessageId,
-        workspaceId: currentWorkspace?.id
-      });
+      // Only send one of messageId or dmMessageId, not both
+      const addPayload: {
+        messageId?: string;
+        dmMessageId?: string;
+        workspaceId?: string;
+      } = {};
+      if (dmMessageId) {
+        addPayload.dmMessageId = dmMessageId;
+      } else if (messageId) {
+        addPayload.messageId = messageId;
+        addPayload.workspaceId = currentWorkspace?.id;
+      }
+      await addBookmark.mutateAsync(addPayload);
     }
   };
 
