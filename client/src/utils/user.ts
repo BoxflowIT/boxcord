@@ -6,7 +6,7 @@
 export function getUserDisplayName(user: {
   firstName?: string | null;
   lastName?: string | null;
-  email: string;
+  email?: string | null;
 }): string {
   if (user.firstName && user.lastName) {
     return `${user.firstName} ${user.lastName}`;
@@ -14,7 +14,10 @@ export function getUserDisplayName(user: {
   if (user.firstName) {
     return user.firstName;
   }
-  return user.email.split('@')[0];
+  if (user.email) {
+    return user.email.split('@')[0];
+  }
+  return 'Unknown User';
 }
 
 /**
@@ -23,7 +26,7 @@ export function getUserDisplayName(user: {
 export function getUserInitials(user: {
   firstName?: string | null;
   lastName?: string | null;
-  email: string;
+  email?: string | null;
 }): string {
   if (user.firstName && user.lastName) {
     return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
@@ -31,5 +34,8 @@ export function getUserInitials(user: {
   if (user.firstName) {
     return user.firstName[0].toUpperCase();
   }
-  return user.email[0].toUpperCase();
+  if (user.email) {
+    return user.email[0].toUpperCase();
+  }
+  return '?';
 }

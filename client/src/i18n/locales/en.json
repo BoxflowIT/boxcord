@@ -216,7 +216,8 @@
     "noMembers": "No members",
     "noUsersFound": "No users found",
     "searchPlaceholder": "Search by name or email...",
-    "searchMembers": "Search members"
+    "searchMembers": "Search members",
+    "viewProfile": "View profile"
   },
   "workspace": {
     "title": "Workspace",
@@ -368,6 +369,7 @@
   "moderation": {
     "title": "Moderation",
     "moderateUser": "Moderate {{user}}",
+    "changeRole": "Change Role",
     "kick": "Kick",
     "ban": "Ban",
     "unban": "Unban",

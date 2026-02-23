@@ -2,10 +2,12 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from './store/auth';
 import { useVoiceStore } from './store/voiceStore';
+import { useNotificationStore } from './store/notification';
 import { setQueryClient } from './services/socket';
 import { useEffect } from 'react';
 import Spinner from './components/ui/Spinner';
 import { ErrorBoundary } from './components/utility';
+import ToastContainer from './components/notification/ToastContainer';
 import CustomLogin from './pages/CustomLogin';
 import ForgotPassword from './pages/ForgotPassword';
 import JoinPage from './pages/JoinPage';
@@ -98,10 +100,14 @@ function App() {
   // User is authenticated if token exists in store
   const isAuthenticated = !!token;
 
+  // Get toasts from notification store
+  const { toasts, removeToast } = useNotificationStore();
+
   return (
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
         {isLoading && <Spinner />}
+        <ToastContainer toasts={toasts} onRemove={removeToast} />
         <Routes>
           <Route path="/login" element={<CustomLogin />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />

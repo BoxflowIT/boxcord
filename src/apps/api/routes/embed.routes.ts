@@ -6,6 +6,11 @@ import {
 } from '../../../02-application/services/embed.service.js';
 
 export default async function embedRoutes(app: FastifyInstance) {
+  // All embed routes require authentication
+  app.addHook('onRequest', async (request) => {
+    await app.authenticate(request);
+  });
+
   // Get metadata for a single URL
   app.get(
     '/embeds/preview',

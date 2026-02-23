@@ -220,7 +220,8 @@
     "noMembers": "Inga medlemmar",
     "noUsersFound": "Inga användare hittades",
     "searchPlaceholder": "Sök efter namn eller e-post...",
-    "searchMembers": "Sök medlemmar"
+    "searchMembers": "Sök medlemmar",
+    "viewProfile": "Visa profil"
   },
   "workspace": {
     "title": "Workspace",
@@ -372,6 +373,7 @@
   "moderation": {
     "title": "Moderering",
     "moderateUser": "Moderera {{user}}",
+    "changeRole": "Ändra roll",
     "kick": "Sparka ut",
     "ban": "Banna",
     "unban": "Avbanna",

@@ -58,8 +58,13 @@ describe('UserService', () => {
           avatarUrl: true,
           bio: true,
           role: true,
+          status: true,
+          statusEmoji: true,
+          dndMode: true,
+          dndUntil: true,
           createdAt: true,
-          updatedAt: true
+          updatedAt: true,
+          presence: true
         }
       });
       expect(result).toEqual(expectedUser);
@@ -129,6 +134,10 @@ describe('UserService', () => {
           avatarUrl: true,
           bio: true,
           role: true,
+          status: true,
+          statusEmoji: true,
+          dndMode: true,
+          dndUntil: true,
           createdAt: true,
           updatedAt: true,
           presence: true

@@ -4,9 +4,19 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuthStore } from '../store/auth';
 import { logger } from '../utils/logger';
 
 const API_BASE = '/api/v1';
+
+// Helper to get auth headers
+function getAuthHeaders(): HeadersInit {
+  const token = useAuthStore.getState().token;
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` })
+  };
+}
 
 export type MemberRole = 'OWNER' | 'ADMIN' | 'MEMBER';
 
@@ -53,7 +63,7 @@ export function useChannelPermissions(channelId?: string) {
       const response = await fetch(
         `${API_BASE}/permissions?channelId=${channelId}`,
         {
-          credentials: 'include'
+          headers: getAuthHeaders()
         }
       );
 
@@ -82,7 +92,7 @@ export function useUserPermissions(channelId?: string) {
       const response = await fetch(
         `${API_BASE}/permissions/me?channelId=${channelId}`,
         {
-          credentials: 'include'
+          headers: getAuthHeaders()
         }
       );
 
@@ -116,7 +126,7 @@ export function useHasPermission(
       const response = await fetch(
         `${API_BASE}/permissions/check?channelId=${channelId}&permission=${permission}`,
         {
-          credentials: 'include'
+          headers: getAuthHeaders()
         }
       );
 
@@ -150,10 +160,7 @@ export function useSetPermissions() {
     }) => {
       const response = await fetch(`${API_BASE}/permissions`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           channelId,
           role,
@@ -202,7 +209,7 @@ export function useResetPermissions() {
         `${API_BASE}/permissions?channelId=${channelId}&role=${role}`,
         {
           method: 'DELETE',
-          credentials: 'include'
+          headers: getAuthHeaders()
         }
       );
 

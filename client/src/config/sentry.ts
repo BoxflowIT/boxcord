@@ -13,7 +13,6 @@ export function initSentry() {
 
   // Only initialize if DSN is provided
   if (!dsn) {
-    console.log('Sentry: No DSN provided, skipping initialization');
     return;
   }
 
@@ -45,6 +44,4 @@ export function initSentry() {
       return event;
     }
   });
-
-  console.log(`Sentry initialized for ${environment} environment`);
 }

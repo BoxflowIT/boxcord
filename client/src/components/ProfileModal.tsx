@@ -5,7 +5,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { signOut } from '../services/cognito';
 import { logger } from '../utils/logger';
+import { toast } from '../store/notification';
 import { useAuthStore } from '../store/auth';
+import { queryKeys } from '../hooks/queries/constants';
+import { useDMOperations } from '../hooks/useDMOperations';
 import {
   useUser,
   useCurrentUser,
@@ -18,6 +21,7 @@ import ProfileDisplay from './profile/ProfileDisplay';
 import ProfileForm from './profile/ProfileForm';
 import ProfileEditActions from './profile/ProfileEditActions';
 import ProfileAvatar from './profile/ProfileAvatar';
+import type { User } from '../types';
 
 interface ProfileModalProps {
   userId?: string; // If provided, show other user's profile
@@ -43,6 +47,7 @@ export default function ProfileModal({
   const { mutate: updateProfile, isPending: saving } = useUpdateProfile();
   const { mutate: updateUserRole, isPending: changingRole } =
     useUpdateUserRole();
+  const { startDM } = useDMOperations();
 
   const [editing, setEditing] = useState(false);
   const [showCustomStatus, setShowCustomStatus] = useState(false);
@@ -82,7 +87,8 @@ export default function ProfileModal({
           updateUser({
             firstName: updatedProfile.firstName,
             lastName: updatedProfile.lastName,
-            avatarUrl: updatedProfile.avatarUrl
+            avatarUrl: updatedProfile.avatarUrl,
+            bio: updatedProfile.bio
           });
         }
         // Cache updated automatically via invalidation
@@ -115,7 +121,7 @@ export default function ProfileModal({
       {
         onError: (err) => {
           logger.error('Failed to change role:', err);
-          alert(t('common.couldNotChangeRole'));
+          toast.error(t('common.couldNotChangeRole'));
         }
         // Cache updated automatically via invalidation
       }
@@ -139,17 +145,46 @@ export default function ProfileModal({
         await api.updateDNDMode(false, undefined);
       }
 
-      // Invalidate queries to refresh UI
-      await queryClient.invalidateQueries({ queryKey: ['user', 'current'] });
-      await queryClient.invalidateQueries({
-        queryKey: ['workspace', 'members']
+      const userId = currentUser?.id;
+      if (!userId) return;
+
+      // Update currentUser cache immediately for instant UI update
+      queryClient.setQueryData<User>(queryKeys.currentUser, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          status: status || undefined,
+          statusEmoji: emoji || undefined,
+          dndMode: !!dndUntil,
+          dndUntil: dndUntil?.toISOString()
+        };
       });
+
+      // Update workspace members cache directly for immediate UI update
+      // This avoids 304 responses from browser cache
+      queryClient.setQueriesData<User[]>(
+        { queryKey: ['workspaceMembers'], exact: false },
+        (old) => {
+          if (!old) return old;
+          return old.map((member) =>
+            member.id === userId
+              ? {
+                  ...member,
+                  status: status || undefined,
+                  statusEmoji: emoji || undefined,
+                  dndMode: !!dndUntil,
+                  dndUntil: dndUntil?.toISOString()
+                }
+              : member
+          );
+        }
+      );
 
       // Close modal on success
       setShowCustomStatus(false);
     } catch (err) {
       logger.error('Failed to update status:', err);
-      alert(t('errors.generic'));
+      toast.error(t('errors.generic'));
     }
   };
 
@@ -161,7 +196,7 @@ export default function ProfileModal({
       onClick={onClose}
     >
       <div
-        className="bg-boxflow-dark rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-boxflow-hover-50"
+        className="bg-boxflow-dark rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-boxflow-hover-50"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header/Banner */}
@@ -260,10 +295,11 @@ export default function ProfileModal({
                 </div>
               )}
 
-              {!isOwnProfile && (
+              {!isOwnProfile && profile && (
                 <button
-                  onClick={() => {
-                    /* Start DM */
+                  onClick={async () => {
+                    await startDM(profile.id);
+                    onClose();
                   }}
                   className="w-full px-4 py-2 gradient-primary text-white rounded-lg shadow-primary transition-all"
                 >

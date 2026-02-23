@@ -31,7 +31,9 @@ window.addEventListener('unhandledrejection', (event) => {
 
 // Initialize RNNoise AI noise suppression
 initializeRNNoise()
-  .then(() => console.log('✅ RNNoise AI ready'))
+  .then(() => {
+    // RNNoise AI ready
+  })
   .catch((err) => console.error('⚠️ RNNoise initialization failed:', err));
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

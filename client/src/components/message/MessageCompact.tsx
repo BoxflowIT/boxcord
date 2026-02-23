@@ -8,7 +8,8 @@ import type { MessageAttachment, MessageReaction } from './index';
 
 interface MessageCompactProps {
   // Message data
-  messageId: string;
+  messageId?: string;
+  dmMessageId?: string;
   content: string;
   createdAt: string;
   attachments?: MessageAttachment[];
@@ -44,6 +45,7 @@ interface MessageCompactProps {
 
 export function MessageCompact({
   messageId,
+  dmMessageId,
   content,
   createdAt,
   attachments,
@@ -89,6 +91,7 @@ export function MessageCompact({
         ) : (
           <MessageBody
             messageId={messageId}
+            dmMessageId={dmMessageId}
             content={content}
             attachments={attachments}
             reactions={reactions}

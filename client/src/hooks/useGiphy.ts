@@ -4,8 +4,18 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { useAuthStore } from '../store/auth';
 
 const API_BASE = '/api/v1';
+
+// Helper to get auth headers
+function getAuthHeaders(): HeadersInit {
+  const token = useAuthStore.getState().token;
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` })
+  };
+}
 
 export interface GiphyGif {
   id: string;
@@ -59,7 +69,7 @@ export function useGiphySearch(query: string, limit = 25, offset = 0) {
     queryFn: async () => {
       const response = await fetch(
         `${API_BASE}/giphy/search?q=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`,
-        { credentials: 'include' }
+        { headers: getAuthHeaders() }
       );
 
       if (!response.ok) {
@@ -83,7 +93,7 @@ export function useGiphyTrending(limit = 25, offset = 0) {
     queryFn: async () => {
       const response = await fetch(
         `${API_BASE}/giphy/trending?limit=${limit}&offset=${offset}`,
-        { credentials: 'include' }
+        { headers: getAuthHeaders() }
       );
 
       if (!response.ok) {
@@ -106,7 +116,7 @@ export function useGiphyStickers(query: string, limit = 25, offset = 0) {
     queryFn: async () => {
       const response = await fetch(
         `${API_BASE}/giphy/stickers/search?q=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`,
-        { credentials: 'include' }
+        { headers: getAuthHeaders() }
       );
 
       if (!response.ok) {
@@ -130,7 +140,7 @@ export function useGiphyTrendingStickers(limit = 25, offset = 0) {
     queryFn: async () => {
       const response = await fetch(
         `${API_BASE}/giphy/stickers/trending?limit=${limit}&offset=${offset}`,
-        { credentials: 'include' }
+        { headers: getAuthHeaders() }
       );
 
       if (!response.ok) {
@@ -155,7 +165,7 @@ export function useGiphyRandom(tag?: string) {
         ? `${API_BASE}/giphy/random?tag=${encodeURIComponent(tag)}`
         : `${API_BASE}/giphy/random`;
 
-      const response = await fetch(url, { credentials: 'include' });
+      const response = await fetch(url, { headers: getAuthHeaders() });
 
       if (!response.ok) {
         throw new Error('Failed to get random GIF');

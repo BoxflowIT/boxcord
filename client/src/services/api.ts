@@ -179,6 +179,11 @@ export const api = {
     request<PaginatedMessages>(
       `/messages?channelId=${channelId}${cursor ? `&cursor=${cursor}` : ''}`
     ),
+  createMessage: (channelId: string, content: string) =>
+    request<Message>('/messages', {
+      method: 'POST',
+      body: JSON.stringify({ channelId, content })
+    }),
   editMessage: (messageId: string, content: string) =>
     request<Message>(`/messages/${messageId}`, {
       method: 'PATCH',
@@ -261,8 +266,8 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify({ content })
     }),
-  deleteDM: (messageId: string) =>
-    request<void>(`/dm/messages/${messageId}`, {
+  deleteDM: (channelId: string) =>
+    request<void>(`/dm/channels/${channelId}`, {
       method: 'DELETE'
     }),
   markDMAsRead: (channelId: string) =>
@@ -308,7 +313,10 @@ export const api = {
   updateCustomStatus: (status: string, statusEmoji: string) =>
     request<User>('/users/me/status', {
       method: 'PATCH',
-      body: JSON.stringify({ status, statusEmoji })
+      body: JSON.stringify({
+        status: status || null,
+        statusEmoji: statusEmoji || null
+      })
     }),
   updateDNDMode: (dndMode: boolean, dndUntil?: string) =>
     request<User>('/users/me/dnd', {

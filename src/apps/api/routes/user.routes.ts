@@ -65,14 +65,16 @@ export async function userRoutes(app: FastifyInstance) {
           firstName: boxtimeUser.firstName,
           lastName: boxtimeUser.lastName
         });
-        reply.cache({ maxAge: 300, staleWhileRevalidate: 600 }); // 5min cache
+        // NO CACHE: User data can change (status, role, profile) and needs to be fresh
+        reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
         return { success: true, data: updated };
       }
     } catch {
       // Boxtime unavailable, continue with local data
     }
 
-    reply.cache({ maxAge: 300, staleWhileRevalidate: 600 }); // 5min cache
+    // NO CACHE: User data can change (status, role, profile) and needs to be fresh
+    reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
     return { success: true, data: localUser };
   });
 

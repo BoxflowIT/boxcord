@@ -8,6 +8,8 @@ export interface MemberUser {
   lastName?: string;
   avatarUrl?: string;
   role: string;
+  status?: string; // Custom status message
+  statusEmoji?: string; // Custom status emoji
   presence?: {
     status: string;
     customStatus?: string;

@@ -65,6 +65,7 @@ export const schemas = {
     firstName: z.string().min(1).max(50).optional(),
     lastName: z.string().min(1).max(50).optional(),
     avatarUrl: z.string().url().optional().nullable(),
+    bio: z.string().max(500).optional().nullable(),
     statusText: z.string().max(128).optional().nullable(),
     statusEmoji: z.string().max(10).optional().nullable()
   }),

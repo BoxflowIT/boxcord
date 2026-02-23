@@ -1,5 +1,5 @@
 // Direct Messages List Component
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
@@ -49,7 +49,16 @@ export default function DMList({
       currentUserId: user?.id
     });
 
-  const channels = dmChannels || [];
+  // Deduplicate channels by ID (防止重复)
+  const channels = useMemo(() => {
+    if (!dmChannels) return [];
+    const seen = new Set<string>();
+    return dmChannels.filter((ch) => {
+      if (seen.has(ch.id)) return false;
+      seen.add(ch.id);
+      return true;
+    });
+  }, [dmChannels]);
 
   const handleStartDM = async (selectedUser: UserInfo) => {
     try {

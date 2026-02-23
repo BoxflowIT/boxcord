@@ -7,6 +7,8 @@ import { MessageItem } from '../MessageItem';
 import { ForwardMessageModal } from '../message/ForwardMessageModal';
 import { renderEnhancedMessage } from '../../utils/messageRendering';
 import { api } from '../../services/api';
+import { toast } from '../../store/notification';
+import { getUserDisplayName, getUserInitials } from '../../utils/user';
 
 interface Message {
   id: string;
@@ -27,6 +29,7 @@ interface Message {
   author?: {
     firstName?: string;
     lastName?: string;
+    email?: string;
     avatarUrl?: string;
   };
 }
@@ -88,17 +91,16 @@ export default function MessageListDisplay({
 
     try {
       if (targetType === 'channel') {
-        await api.post(`/channels/${targetId}/messages`, {
-          content: forwardingMessage.content
-        });
+        // Use REST API for reliable message forwarding
+        await api.createMessage(targetId, forwardingMessage.content);
       } else {
         await api.sendDM(targetId, forwardingMessage.content);
       }
       setForwardingMessage(null);
-      alert(t('messages.forwardSuccess'));
+      toast.success(t('messages.forwardSuccess'));
     } catch (error) {
       console.error('Failed to forward message:', error);
-      alert(t('messages.forwardError'));
+      toast.error(t('messages.forwardError'));
     }
   };
 
@@ -136,13 +138,13 @@ export default function MessageListDisplay({
             authorName={
               message.authorId === currentUserId
                 ? 'Du'
-                : message.author?.firstName && message.author?.lastName
-                  ? `${message.author.firstName} ${message.author.lastName}`
-                  : (message.author?.firstName ?? message.authorId.slice(0, 8))
+                : message.author
+                  ? getUserDisplayName(message.author)
+                  : 'Unknown'
             }
-            authorInitial={(
-              message.author?.firstName?.[0] ?? message.authorId[0]
-            ).toUpperCase()}
+            authorInitial={
+              message.author ? getUserInitials(message.author) : '?'
+            }
             authorAvatarUrl={
               message.authorId === currentUserId
                 ? currentUserAvatar

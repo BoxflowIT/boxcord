@@ -66,7 +66,9 @@ export async function dmRoutes(app: FastifyInstance) {
     {
       preHandler: app.validateQuery(getMessagesQuery)
     },
-    async (request) => {
+    async (request, reply) => {
+      // NO CACHE: Messages update frequently via WebSocket
+      reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
       const result = await dmService.getMessages(
         request.params.channelId,
         request.user.id,

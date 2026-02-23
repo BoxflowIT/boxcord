@@ -1,5 +1,6 @@
 // User Moderation Event Handlers
 import { queryKeys } from '../../../hooks/useQuery';
+import { toast } from '../../../store/notification';
 import type { SocketHandlerContext } from '../types';
 
 export interface ModerationPayload {
@@ -19,15 +20,15 @@ export function registerModerationHandlers(
     const { workspaceId, userId, reason } = payload;
     const currentUserId = getCurrentUserId();
 
-    // If current user was kicked, show alert and redirect to home
+    // If current user was kicked, show toast and redirect to home
     if (userId === currentUserId) {
-      // Using simple alert since this is an immediate action before app state updates
-      // TODO: Consider using a more sophisticated modal/toast notification system
       const message = reason
         ? `You were kicked from the workspace. Reason: ${reason}`
         : 'You were kicked from the workspace.';
-      alert(message);
-      window.location.href = '/';
+      toast.warning(message, 10000);
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
       return;
     }
 
@@ -42,13 +43,15 @@ export function registerModerationHandlers(
     const { workspaceId, userId, reason } = payload;
     const currentUserId = getCurrentUserId();
 
-    // If current user was banned, show alert and redirect to home
+    // If current user was banned, show toast and redirect to home
     if (userId === currentUserId) {
       const message = reason
         ? `You were banned from the workspace. Reason: ${reason}`
         : 'You were banned from the workspace.';
-      alert(message);
-      window.location.href = '/';
+      toast.error(message, 10000);
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
       return;
     }
 
@@ -73,7 +76,9 @@ export function registerModerationHandlers(
 
       // If current user was unbanned, show success message
       if (userId === currentUserId) {
-        alert('Your ban has been removed. You can now rejoin the workspace.');
+        toast.success(
+          'Your ban has been removed. You can now rejoin the workspace.'
+        );
       }
 
       // Invalidate workspace members list to reflect unban

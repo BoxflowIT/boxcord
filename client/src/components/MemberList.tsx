@@ -1,5 +1,6 @@
 // Member List Component - Shows online/offline users grouped by role
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/auth';
 import { useChatStore } from '../store/chat';
@@ -14,12 +15,14 @@ import { socketService } from '../services/socket';
 import { getUserDisplayName } from '../utils/user';
 import { api } from '../services/api';
 import { logger } from '../utils/logger';
+import { toast } from '../store/notification';
 import ProfileModal from './ProfileModal';
 import { ModerationModal } from './moderation/ModerationModal';
 import MemberListHeader from './member/MemberListHeader';
 import MemberSearch from './member/MemberSearch';
 import MemberSection from './member/MemberSection';
 import MemberListItem from './member/MemberListItem';
+import MemberContextMenu from './member/MemberContextMenu';
 import type { UserStatus } from './member/StatusIndicator';
 
 export default function MemberList() {
@@ -36,6 +39,13 @@ export default function MemberList() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showModeration, setShowModeration] = useState(false);
   const [moderationUserId, setModerationUserId] = useState<string | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    user: MemberUser;
+  } | null>(null);
+  const [adjustedPosition, setAdjustedPosition] = useState({ x: 0, y: 0 });
+  const contextMenuRef = useRef<HTMLDivElement>(null);
 
   const { filteredUsers, groupedByRole, roleOrder } = useMemberListData({
     users,
@@ -106,6 +116,36 @@ export default function MemberList() {
     };
   }, []);
 
+  // Adjust context menu position to stay within viewport
+  useLayoutEffect(() => {
+    if (contextMenu && contextMenuRef.current) {
+      const menu = contextMenuRef.current;
+      const rect = menu.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const padding = 10;
+
+      let newX = contextMenu.x;
+      let newY = contextMenu.y;
+
+      // If menu goes off right edge, move it left
+      if (contextMenu.x + rect.width > viewportWidth - padding) {
+        newX = viewportWidth - rect.width - padding;
+      }
+
+      // If menu goes off bottom edge, show it above the click point
+      if (contextMenu.y + rect.height > viewportHeight - padding) {
+        newY = contextMenu.y - rect.height;
+        if (newY < padding) newY = padding;
+      }
+
+      // Ensure not off left edge
+      if (newX < padding) newX = padding;
+
+      setAdjustedPosition({ x: newX, y: newY });
+    }
+  }, [contextMenu]);
+
   const handleUserClick = (userId: string) => {
     setSelectedUserId(userId);
     setShowProfile(true);
@@ -122,6 +162,15 @@ export default function MemberList() {
     setShowModeration(true);
   };
 
+  const handleContextMenu = (e: React.MouseEvent, user: MemberUser) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setAdjustedPosition({ x: e.clientX, y: e.clientY }); // Initial position
+    setContextMenu({ x: e.clientX, y: e.clientY, user });
+  };
+
+  const closeContextMenu = () => setContextMenu(null);
+
   const handleKickUser = async (userId: string, reason?: string) => {
     if (!currentWorkspace?.id) return;
 
@@ -131,7 +180,7 @@ export default function MemberList() {
       setModerationUserId(null);
     } catch (err) {
       logger.error('Failed to kick user:', err);
-      alert(t('errors.generic'));
+      toast.error(t('errors.generic'));
     }
   };
 
@@ -144,7 +193,7 @@ export default function MemberList() {
       setModerationUserId(null);
     } catch (err) {
       logger.error('Failed to ban user:', err);
-      alert(t('errors.generic'));
+      toast.error(t('errors.generic'));
     }
   };
 
@@ -200,7 +249,8 @@ export default function MemberList() {
                       userId={user.id}
                       avatarUrl={user.avatarUrl}
                       displayName={displayName}
-                      customStatus={user.presence?.customStatus}
+                      customStatus={user.status || user.presence?.customStatus}
+                      statusEmoji={user.statusEmoji}
                       status={
                         (user.presence?.status ?? 'OFFLINE') as UserStatus
                       }
@@ -216,6 +266,7 @@ export default function MemberList() {
                           ? (e) => handleModerate(user.id, e)
                           : undefined
                       }
+                      onContextMenu={(e) => handleContextMenu(e, user)}
                     />
                   );
                 })}
@@ -249,6 +300,68 @@ export default function MemberList() {
           }}
         />
       )}
+
+      {/* Context Menu - rendered in portal to escape overflow constraints */}
+      {contextMenu &&
+        createPortal(
+          <>
+            {/* Backdrop to close on click outside */}
+            <div
+              className="fixed inset-0 z-[100]"
+              onClick={closeContextMenu}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                closeContextMenu();
+              }}
+            />
+            <div
+              ref={contextMenuRef}
+              style={{
+                position: 'fixed',
+                left: adjustedPosition.x,
+                top: adjustedPosition.y,
+                maxHeight: 'calc(100vh - 20px)',
+                overflowY: 'auto'
+              }}
+              className="z-[101] min-w-[200px] bg-boxflow-darker border border-boxflow-border rounded-lg shadow-xl"
+            >
+              <MemberContextMenu
+                userId={contextMenu.user.id}
+                displayName={getUserDisplayName(contextMenu.user)}
+                isCurrentUser={contextMenu.user.id === currentUser?.id}
+                canModerate={
+                  isAdmin &&
+                  contextMenu.user.id !== currentUser?.id &&
+                  contextMenu.user.role !== 'SUPER_ADMIN' &&
+                  contextMenu.user.role !== 'ADMIN'
+                }
+                onViewProfile={() => {
+                  handleUserClick(contextMenu.user.id);
+                  closeContextMenu();
+                }}
+                onSendMessage={async () => {
+                  await startDM(contextMenu.user.id);
+                  closeContextMenu();
+                }}
+                onChangeRole={() => {
+                  handleUserClick(contextMenu.user.id);
+                  closeContextMenu();
+                }}
+                onKick={() => {
+                  setModerationUserId(contextMenu.user.id);
+                  setShowModeration(true);
+                  closeContextMenu();
+                }}
+                onBan={() => {
+                  setModerationUserId(contextMenu.user.id);
+                  setShowModeration(true);
+                  closeContextMenu();
+                }}
+              />
+            </div>
+          </>,
+          document.body
+        )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 // Hook for image upload with validation and base64 conversion
 import { useState } from 'react';
+import { toast } from '../store/notification';
 
 interface UseImageUploadOptions {
   maxSizeMB?: number;
@@ -23,7 +24,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
       if (!file.type.startsWith('image/')) {
         const message = 'Vänligen välj en bildfil';
         onError?.(message);
-        alert(message);
+        toast.error(message);
         resolve(null);
         return;
       }
@@ -32,7 +33,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
       if (file.size > maxSizeMB * 1024 * 1024) {
         const message = `Bilden är för stor. Max ${maxSizeMB}MB.`;
         onError?.(message);
-        alert(message);
+        toast.error(message);
         resolve(null);
         return;
       }
@@ -49,7 +50,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
         setUploading(false);
         const message = 'Kunde inte läsa filen';
         onError?.(message);
-        alert(message);
+        toast.error(message);
         resolve(null);
       };
       reader.readAsDataURL(file);

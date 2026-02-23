@@ -1,87 +1,87 @@
-# GIF Support i Boxcord
+# GIF Support in Boxcord
 
-Boxcord stödjer GIF-bilder i chattar via Giphy integration! 🎉
+Boxcord supports GIF images in chats via Giphy integration! 🎉
 
-## Funktioner
+## Features
 
-- **GIF-väljare** med sök och trending GIFs
-- **Auto-rendering** av GIF-URLs som bilder i meddelanden
-- Stöd för flera GIF-plattformar (Giphy, Tenor, Imgur)
-- **Responsiv design** med grid-layout
-- **Lätt att använda** - klicka på GIF-knappen bredvid emoji-väljaren
+- **GIF picker** with search and trending GIFs
+- **Auto-rendering** of GIF URLs as images in messages
+- Support for multiple GIF platforms (Giphy, Tenor, Imgur)
+- **Responsive design** with grid layout
+- **Easy to use** - click the GIF button next to the emoji picker
 
-## Installation & Konfiguration
+## Installation & Configuration
 
-### 1. Skaffa Giphy API-nyckel (GRATIS)
+### 1. Get Giphy API Key (FREE)
 
-1. Gå till [Giphy Developers](https://developers.giphy.com/)
-2. Skapa ett konto (gratis)
-3. Klicka på **"Create an App"**
-4. Välj **"API"** (inte SDK)
-5. Fyll i app-information:
-   - **App Name:** Boxcord (eller valfritt namn)
+1. Go to [Giphy Developers](https://developers.giphy.com/)
+2. Create an account (free)
+3. Click **"Create an App"**
+4. Choose **"API"** (not SDK)
+5. Fill in app information:
+   - **App Name:** Boxcord (or any name)
    - **App Description:** Chat application with GIF support
-6. Acceptera villkoren och klicka **"Create App"**
-7. Kopiera din **API Key**
+6. Accept the terms and click **"Create App"**
+7. Copy your **API Key**
 
-### 2. Lägg till API-nyckeln i projektet
+### 2. Add API Key to Project
 
-**I client-mappen:**
+**In the client folder:**
 
-Skapa en `.env.local` fil (eller uppdatera befintlig):
+Create a `.env.local` file (or update existing):
 
 ```env
 VITE_GIPHY_API_KEY=your_actual_api_key_here
 ```
 
-**Viktigt:** Använd `.env.local` och INTE `.env` för att undvika att commita nyckeln till Git!
+**Important:** Use `.env.local` and NOT `.env` to avoid committing the key to Git!
 
-### 3. Starta om utvecklingsservern
+### 3. Restart Development Server
 
 ```bash
 cd client
 npm run dev
 ```
 
-## Användning
+## Usage
 
-### I Chatten
+### In Chat
 
-1. Öppna valfri kanal eller DM
-2. Klicka på **GIF-knappen** (bredvid emoji-väljaren)
-3. Sök efter GIFs eller bläddra bland trending
-4. Klicka på en GIF för att skicka den direkt
+1. Open any channel or DM
+2. Click the **GIF button** (next to emoji picker)
+3. Search for GIFs or browse trending
+4. Click a GIF to send it directly
 
-### Skicka GIFs manuellt
+### Send GIFs Manually
 
-Du kan också klistra in GIF-URLs direkt i chatten:
-- Giphy-länkar (giphy.com, media.giphy.com)
-- Tenor-länkar (tenor.com)
-- Imgur GIFs (i.imgur.com med .gif-ändelse)
-- Vilken giltig GIF-URL som helst
+You can also paste GIF URLs directly in chat:
+- Giphy links (giphy.com, media.giphy.com)
+- Tenor links (tenor.com)
+- Imgur GIFs (i.imgur.com with .gif extension)
+- Any valid GIF URL
 
-URLs som är **endast** en GIF-länk kommer automatiskt renderas som bilder!
+URLs that are **only** a GIF link will automatically render as images!
 
 ## Rate Limits
 
-Giphy's gratis API har följande begränsningar:
-- **42 requests per timme**
-- **1000 requests per dag**
+Giphy's free API has the following limitations:
+- **42 requests per hour**
+- **1000 requests per day**
 
-För production med fler användare, överväg att:
-1. Uppgradera till Giphy's betald plan
-2. Implementera caching på serversidan
-3. Begränsa sökfrekvens per användare
+For production with more users, consider:
+1. Upgrading to Giphy's paid plan
+2. Implementing server-side caching
+3. Limiting search frequency per user
 
-## Tekniska detaljer
+## Technical Details
 
-### Komponenter
+### Components
 
-- **`GifPicker.tsx`** - GIF-väljare med sök och grid
-- **`gifRenderer.tsx`** - Detekterar och renderar GIF-URLs
-- **`MessageContent.tsx`** - Uppdaterad för att visa GIFs
+- **`GifPicker.tsx`** - GIF picker with search and grid
+- **`gifRenderer.tsx`** - Detects and renders GIF URLs
+- **`MessageContent.tsx`** - Updated to display GIFs
 
-### Stödda domäner
+### Supported Domains
 
 ```typescript
 const GIF_DOMAINS = [
@@ -95,67 +95,67 @@ const GIF_DOMAINS = [
 ];
 ```
 
-### Konfiguration
+### Configuration
 
-Se `client/src/config/giphy.ts` för Giphy-inställningar:
+See `client/src/config/giphy.ts` for Giphy settings:
 
 ```typescript
 export const GIPHY_CONFIG = {
   apiKey: GIPHY_API_KEY,
-  rating: 'g', // Innehållsklassificering: g, pg, pg-13, r
-  limit: 10, // Antal GIFs per sida
+  rating: 'g', // Content rating: g, pg, pg-13, r
+  limit: 10, // Number of GIFs per page
   enabled: GIPHY_API_KEY !== 'your_giphy_api_key_here'
 };
 ```
 
-## Felsökning
+## Troubleshooting
 
-### GIF-knappen syns inte
+### GIF Button Not Visible
 
-- Kontrollera att `VITE_GIPHY_API_KEY` är korrekt satt i `.env.local`
-- Starta om utvecklingsservern: `npm run dev`
+- Check that `VITE_GIPHY_API_KEY` is correctly set in `.env.local`
+- Restart development server: `npm run dev`
 
 ### "Failed to fetch GIFs"
 
-- Verifiera att API-nyckeln är giltig
-- Kontrollera rate limits (42/timme, 1000/dag)
-- Kolla nätverksfliken i DevTools för felmeddelanden
+- Verify that API key is valid
+- Check rate limits (42/hour, 1000/day)
+- Check network tab in DevTools for error messages
 
-### GIFs renderas inte
+### GIFs Not Rendering
 
-- Kontrollera att URL:en är från en stödd domän
-- Se till att URL:en är korrekt formaterad (börjar med http:// eller https://)
-- Kontrollera konsolen för eventuella CORS-fel
+- Check that URL is from a supported domain
+- Ensure URL is correctly formatted (starts with http:// or https://)
+- Check console for any CORS errors
 
-## Exempel
+## Examples
 
-### Skicka en GIF via väljaren
+### Send a GIF via Picker
 
-1. Klicka på GIF-knappen
-2. Sök "happy cat"
-3. Klicka på valfri GIF
-4. GIF:en skickas direkt!
+1. Click the GIF button
+2. Search "happy cat"
+3. Click any GIF
+4. GIF is sent directly!
 
-### Skicka en GIF via URL
+### Send a GIF via URL
 
-Klistra in URL:en direkt:
+Paste the URL directly:
 ```
 https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif
 ```
 
-URL:en kommer automatiskt renderas som en bild! 🎉
+The URL will automatically render as an image! 🎉
 
-## Alternativ till Giphy
+## Alternatives to Giphy
 
-Om du inte vill använda Giphy kan du:
-1. Klistra in GIF-URLs från Tenor, Imgur, eller andra tjänster
-2. Implementera en annan GIF-provider
-3. Ladda upp egna GIFs som bilagor
+If you don't want to use Giphy, you can:
+1. Paste GIF URLs from Tenor, Imgur, or other services
+2. Implement another GIF provider
+3. Upload your own GIFs as attachments
 
-## Licens & Attribution
+## License & Attribution
 
-Giphy kräver attribution enligt deras villkor. GifPicker komponenten inkluderar automatiskt "Powered by GIPHY" i footern.
+Giphy requires attribution per their terms. The GifPicker component automatically includes "Powered by GIPHY" in the footer.
 
 ---
 
-**Njut av GIFs i Boxcord!** 🎊✨
+**Enjoy GIFs in Boxcord!** 🎊✨
