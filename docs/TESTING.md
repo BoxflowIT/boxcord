@@ -208,31 +208,40 @@ client/tests/
 
 ## Next Steps
 
-1. **Test Coverage**
-   - [ ] Write more E2E test scenarios
-   - [ ] Add authenticated E2E flows (requires test user)
-   - [ ] Test file upload/download flows
-   - [ ] Test WebSocket real-time features
+### Current Development
 
-2. **Load Testing**
+1. **Load Testing Enhancements**
    - [x] ~~Optimize for extreme load (500+ users)~~ ✅ COMPLETED
-   - [ ] Run load tests on staging environment
-   - [ ] Test with production-like data volumes
-   - [ ] Test WebSocket concurrent connections
-   - [ ] Stress test with 1000+ concurrent users
+   - [ ] Run load tests on staging environment before production deployment
+   - [ ] Test WebSocket concurrent connections under load
+   - [ ] Stress test with 1000+ concurrent users (requires horizontal scaling)
 
-3. **Monitoring**
-   - [ ] Set up performance monitoring in production
+2. **Test Coverage Expansion**
+   - [ ] Add authenticated E2E flows (requires test user setup)
+   - [ ] Test file upload/download flows end-to-end
+   - [ ] Test WebSocket real-time features (presence, typing indicators)
+
+3. **Performance Enhancements**
+   - [x] ~~Database query optimization and indexing~~ ✅ COMPLETED (see [DATABASE_INDEX_OPTIMIZATION.md](./DATABASE_INDEX_OPTIMIZATION.md))
+   - [x] ~~Redis caching layer~~ ✅ PARTIALLY IMPLEMENTED (cache configured, works when Redis available)
+   - [ ] Implement database read replicas (for 2,000+ concurrent users)
+   - [ ] Message queue for background jobs (webhooks, notifications)
+
+### Future Deployment Considerations
+
+*These are deployment/infrastructure tasks, not code changes:*
+
+1. **Production Monitoring**
    - [ ] Configure CloudWatch/Grafana dashboards
-   - [ ] Set up alerting for performance degradation
+   - [ ] Set up alerting for performance degradation (>200ms p95)
    - [ ] Track real user metrics (RUM)
+   - [ ] Monitor error rates and uptime (target: 99.9%)
 
-4. **Further Optimizations** (Optional)
-   - [ ] Implement Redis caching layer (already partially done)
-   - [ ] Add database read replicas
-   - [ ] Message queue for background jobs
-   - [ ] CDN for static assets
-   - [ ] Query optimization and indexing
+2. **Infrastructure Scaling**
+   - [ ] CDN for static assets (CloudFront, Cloudflare)
+   - [ ] Load balancer with auto-scaling (for 1,000+ users)
+   - [ ] Redis cluster for high availability
+   - [ ] Geographic distribution for global users
 
 ## Troubleshooting
 
