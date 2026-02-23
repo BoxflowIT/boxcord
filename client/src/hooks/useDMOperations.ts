@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { logger } from '../utils/logger';
+import { toast } from '../store/notification';
 
 /**
  * Hook for DM channel operations
@@ -16,6 +17,7 @@ export function useDMOperations() {
       navigate(`/chat/dm/${channel.id}`);
     } catch (err) {
       logger.error('Failed to create DM channel:', err);
+      toast.error('Failed to start conversation. Please try again.');
     }
   };
 

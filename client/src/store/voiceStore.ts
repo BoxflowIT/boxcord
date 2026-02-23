@@ -151,11 +151,6 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
   reset: () => {
     const { peers, localStream } = get();
 
-    console.log('🔄 Resetting voice store...', {
-      peerCount: peers.size,
-      hasLocalStream: !!localStream
-    });
-
     // Cleanup peers
     peers.forEach((peer) => {
       peer.destroy();

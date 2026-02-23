@@ -20,18 +20,15 @@ const workletAddedContexts = new WeakSet<AudioContext>();
  */
 export async function initializeRNNoise(): Promise<void> {
   if (isInitialized) {
-    console.log('ℹ️ RNNoise already initialized');
     return;
   }
 
   try {
-    console.log('🤖 Loading RNNoise WASM binary...');
     rnnoiseWasmBinary = await loadRnnoise({
       url: rnnoiseWasmPath,
       simdUrl: rnnoiseSimdWasmPath
     });
     isInitialized = true;
-    console.log('✅ RNNoise WASM loaded successfully');
   } catch (error) {
     console.error('❌ Failed to load RNNoise:', error);
     isInitialized = false;
@@ -56,7 +53,6 @@ export async function applyRNNoise(
   try {
     // Add worklet module once per AudioContext
     if (!workletAddedContexts.has(audioContext)) {
-      console.log('📥 Adding RNNoise worklet module...');
       await audioContext.audioWorklet.addModule(rnnoiseWorkletPath);
       workletAddedContexts.add(audioContext);
     }
@@ -74,8 +70,6 @@ export async function applyRNNoise(
     // Connect: Input -> RNNoise AI -> Output
     source.connect(rnnoiseNode);
     rnnoiseNode.connect(destination);
-
-    console.log('✨ RNNoise AI active - background noise removed!');
 
     // NOTE: We keep the original stream running because the AudioWorklet needs it!
     // The processed stream (destination.stream) is what we use for output.
