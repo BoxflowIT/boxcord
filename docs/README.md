@@ -41,6 +41,7 @@ Make Boxcord fast and efficient:
 
 Deploy and scale Boxcord:
 
+- [**Infrastructure Setup**](INFRASTRUCTURE_SETUP.md) - Complete deployment guide for 1,000-3,000+ users
 - [**Production Deployment**](PRODUCTION.md) - Railway, Docker, environment variables
 - [**Scaling Strategy**](SCALING_STRATEGY.md) - Horizontal scaling, load balancing, Redis clustering
 - [**Backup & Recovery**](BACKUP_RECOVERY.md) - Database backups, disaster recovery procedures
@@ -57,10 +58,11 @@ Deploy and scale Boxcord:
 5. [Caching Strategy](CACHING.md)
 
 **For DevOps/Operations:**
-1. [Production Deployment](PRODUCTION.md)
-2. [Scaling Strategy](SCALING_STRATEGY.md)
-3. [Performance Optimizations](PERFORMANCE_OPTIMIZATIONS.md)
-4. [Backup & Recovery](BACKUP_RECOVERY.md)
+1. [Infrastructure Setup](INFRASTRUCTURE_SETUP.md)
+2. [Production Deployment](PRODUCTION.md)
+3. [Scaling Strategy](SCALING_STRATEGY.md)
+4. [Performance Optimizations](PERFORMANCE_OPTIMIZATIONS.md)
+5. [Backup & Recovery](BACKUP_RECOVERY.md)
 
 **For Product/Business:**
 1. [Features Overview](FEATURES.md)
@@ -98,6 +100,7 @@ Deploy and scale Boxcord:
 | Document | Status | Last Updated | Completeness |
 |----------|--------|--------------|--------------|
 | [API.md](API.md) | ✅ Current | Feb 23, 2026 | 100% |
+| [INFRASTRUCTURE_SETUP.md](INFRASTRUCTURE_SETUP.md) | ✅ Current | Feb 23, 2026 | 100% |
 | [FEATURES.md](FEATURES.md) | ✅ Current | Feb 2026 | 100% |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | ✅ Current | - | 90% |
 | [VOICE_ARCHITECTURE.md](VOICE_ARCHITECTURE.md) | ✅ Current | - | 95% |
