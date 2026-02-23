@@ -11,8 +11,6 @@ import sv from './locales/sv.json';
 const savedLanguage = localStorage.getItem('language');
 const defaultLanguage = savedLanguage || 'en';
 
-console.log('🌍 i18n initializing with language:', defaultLanguage);
-
 i18n
   .use(initReactI18next) // Passes i18n down to react-i18next
   .init({

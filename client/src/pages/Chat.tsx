@@ -186,9 +186,6 @@ export default function Chat() {
               onResultClick={(result) => {
                 if (result.type === 'channel') {
                   navigate(`/chat/channels/${result.channel?.id}`);
-                } else {
-                  // Navigate to DM (we'd need dmChannelId from result)
-                  console.log('Navigate to DM:', result);
                 }
                 setShowGlobalSearch(false);
               }}

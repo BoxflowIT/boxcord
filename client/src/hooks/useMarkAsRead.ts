@@ -27,15 +27,8 @@ export function useMarkAsRead({
     // For channels, also need workspaceId; for DMs it's optional
     if (!isDM && !workspaceId) return;
 
-    logger.log(
-      `[MARK_AS_READ] Starting timer for ${isDM ? 'DM' : 'channel'}: ${channelId}`
-    );
-
     const timer = setTimeout(async () => {
       try {
-        logger.log(
-          `[MARK_AS_READ] Marking ${isDM ? 'DM' : 'channel'} as read: ${channelId}`
-        );
         if (isDM) {
           await api.markDMAsRead(channelId);
           // Update cache directly with setQueryData (avoids race conditions with refetch)
@@ -45,7 +38,6 @@ export function useMarkAsRead({
               ch.id === channelId ? { ...ch, unreadCount: 0 } : ch
             );
           });
-          logger.log(`[MARK_AS_READ] DM marked as read, cache updated`);
         } else {
           await api.post(`/channels/${channelId}/read`);
           // Update cache directly with setQueryData (avoids race conditions with refetch)
@@ -58,7 +50,6 @@ export function useMarkAsRead({
               );
             }
           );
-          logger.log(`[MARK_AS_READ] Channel marked as read, cache updated`);
         }
       } catch (error) {
         // Silently ignore errors for non-existent channels (foreign key constraint violations)
@@ -74,7 +65,6 @@ export function useMarkAsRead({
     }, 1000);
 
     return () => {
-      logger.log(`[MARK_AS_READ] Cleanup - clearing timer for: ${channelId}`);
       clearTimeout(timer);
     };
   }, [channelId, workspaceId, isDM, queryClient]);

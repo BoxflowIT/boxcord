@@ -343,6 +343,10 @@ export default function MemberList() {
                   await startDM(contextMenu.user.id);
                   closeContextMenu();
                 }}
+                onChangeRole={() => {
+                  handleUserClick(contextMenu.user.id);
+                  closeContextMenu();
+                }}
                 onKick={() => {
                   setModerationUserId(contextMenu.user.id);
                   setShowModeration(true);

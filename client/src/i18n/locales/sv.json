@@ -373,6 +373,7 @@
   "moderation": {
     "title": "Moderering",
     "moderateUser": "Moderera {{user}}",
+    "changeRole": "Ändra roll",
     "kick": "Sparka ut",
     "ban": "Banna",
     "unban": "Avbanna",

@@ -98,18 +98,6 @@ export function createAudioPipeline(
   limiter.connect(outputGain);
   outputGain.connect(destination); // Connect to destination to get processed stream
 
-  console.log('🎛️ Audio pipeline configured:', {
-    preGain: fullConfig.preGain,
-    highPassFilter: `${fullConfig.highPassFrequency}Hz`,
-    vadGate: 'enabled (RNNoise AI handles noise suppression)',
-    compression: `${fullConfig.compressorRatio}:1 @ ${fullConfig.compressorThreshold}dB`,
-    limiter: `${fullConfig.limiterThreshold}dB`,
-    outputGain: fullConfig.outputGain,
-    inputSensitivity: fullConfig.inputSensitivity
-      ? `${(fullConfig.inputSensitivity * 100).toFixed(0)}% (controls VAD)`
-      : 'default'
-  });
-
   return {
     source,
     preGain,

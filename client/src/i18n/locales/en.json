@@ -369,6 +369,7 @@
   "moderation": {
     "title": "Moderation",
     "moderateUser": "Moderate {{user}}",
+    "changeRole": "Change Role",
     "kick": "Kick",
     "ban": "Ban",
     "unban": "Unban",

@@ -101,7 +101,6 @@ class SocketService {
     // Register connection event handlers
     socket.on('connect', () => {
       this.connecting = false;
-      logger.log('[SOCKET] Connected! Socket ID:', socket.id);
       this.executePendingOperations();
     });
 
@@ -110,9 +109,8 @@ class SocketService {
       logger.error('Socket connection error:', error.message);
     });
 
-    socket.on('disconnect', (reason) => {
+    socket.on('disconnect', (_reason) => {
       this.connecting = false;
-      logger.log('[SOCKET] Disconnected:', reason);
     });
 
     socket.on('error', (error: { message: string }) => {
@@ -123,11 +121,9 @@ class SocketService {
 
     // Only register event listeners once PER SOCKET INSTANCE
     if (this.listenersRegistered) {
-      logger.log('[SOCKET] Listeners already registered, skipping');
       return;
     }
     this.listenersRegistered = true;
-    logger.log('[SOCKET] Registering event listeners...');
 
     // Create handler context
     if (!queryClient) {
@@ -264,12 +260,10 @@ class SocketService {
   // ============================================
 
   joinDM(channelId: string) {
-    console.log('[SOCKET] Joining DM room:', channelId);
     this.socket?.emit('dm:join', channelId);
   }
 
   leaveDM(channelId: string) {
-    console.log('[SOCKET] Leaving DM room:', channelId);
     this.socket?.emit('dm:leave', channelId);
   }
 
