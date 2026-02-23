@@ -266,8 +266,8 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify({ content })
     }),
-  deleteDM: (messageId: string) =>
-    request<void>(`/dm/messages/${messageId}`, {
+  deleteDM: (channelId: string) =>
+    request<void>(`/dm/channels/${channelId}`, {
       method: 'DELETE'
     }),
   markDMAsRead: (channelId: string) =>
