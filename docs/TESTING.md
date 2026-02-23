@@ -111,7 +111,7 @@ Normal Load (100-200 users):
 
 **Conclusion:** System is production-ready for extreme load (500+ concurrent users) with all performance targets achieved. 
 
-**📖 For optimization details, see:** [docs/PERFORMANCE_TUNNING.md](./PERFORMANCE_TUNNING.md)
+**📖 For optimization details, see:** [docs/PERFORMANCE_OPTIMIZATIONS.md](./PERFORMANCE_OPTIMIZATIONS.md)
 
 **Test File:** [`tests/load/api-load-test.js`](../tests/load/api-load-test.js)
 

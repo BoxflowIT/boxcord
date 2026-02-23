@@ -4,7 +4,7 @@ This document outlines the architecture and implementation steps to scale Boxcor
 
 ## Current Capacity (Single Instance)
 
-After performance optimizations (see [PERFORMANCE_TUNNING.md](./PERFORMANCE_TUNNING.md)):
+After performance optimizations (see [PERFORMANCE_OPTIMIZATIONS.md](./PERFORMANCE_OPTIMIZATIONS.md)):
 
 - **500 concurrent users**: Excellent performance
   - p95: 17.76ms
