@@ -54,78 +54,147 @@ export function VideoGrid() {
 
   // Setup camera video
   useEffect(() => {
-    if (cameraVideoRef.current && localStream && isVideoEnabled) {
-      const videoTracks = localStream.getVideoTracks();
-
-      // Find camera track - must NOT be a screen/monitor/display
-      const cameraTrack = videoTracks.find((track) => {
-        const label = track.label.toLowerCase();
-        const settings = track.getSettings();
-        // Screen share tracks have displaySurface set OR contain screen/monitor/display in label
-        const isScreenTrack =
-          settings.displaySurface ||
-          label.includes('screen') ||
-          label.includes('monitor') ||
-          label.includes('display');
-        return !isScreenTrack; // Camera is anything that's NOT a screen share
-      });
-
-      if (cameraTrack) {
-        const stream = new MediaStream([cameraTrack]);
-        cameraVideoRef.current.srcObject = stream;
-        cameraVideoRef.current
-          .play()
-          .catch((e) => logger.error('Camera play error:', e));
-      }
+    const camRef = cameraVideoRef.current;
+    if (!camRef || !localStream || !isVideoEnabled) {
+      return;
     }
-  }, [localStream, isVideoEnabled]);
+
+    const videoTracks = localStream.getVideoTracks();
+    logger.debug('Camera setup - video tracks:', videoTracks.length);
+
+    // Find camera track - must NOT be a screen/monitor/display
+    const cameraTrack = videoTracks.find((track) => {
+      const label = track.label.toLowerCase();
+      const settings = track.getSettings();
+      logger.debug('Track:', { label, settings });
+
+      // Screen share tracks have displaySurface set OR contain screen/monitor/display in label
+      const isScreenTrack =
+        settings.displaySurface ||
+        label.includes('screen') ||
+        label.includes('monitor') ||
+        label.includes('display');
+      return !isScreenTrack; // Camera is anything that's NOT a screen share
+    });
+
+    if (cameraTrack) {
+      const stream = new MediaStream([cameraTrack]);
+      camRef.srcObject = stream;
+      camRef.play().catch((e) => logger.error('Camera play error:', e));
+      logger.debug('Camera track set:', cameraTrack.label);
+    } else if (videoTracks.length > 0 && !isScreenSharing) {
+      // Fallback: if no explicit camera track found and not screen sharing, use first track
+      const stream = new MediaStream([videoTracks[0]]);
+      camRef.srcObject = stream;
+      camRef.play().catch((e) => logger.error('Camera play error:', e));
+      logger.debug('Using fallback camera track:', videoTracks[0].label);
+    }
+
+    // Cleanup
+    return () => {
+      if (camRef) {
+        camRef.srcObject = null;
+      }
+    };
+  }, [localStream, isVideoEnabled, isScreenSharing]);
 
   // Setup screen share video
   useEffect(() => {
-    if (screenVideoRef.current && localStream && isScreenSharing) {
-      const videoTracks = localStream.getVideoTracks();
+    const screenRef = screenVideoRef.current;
+    if (!screenRef || !localStream || !isScreenSharing) {
+      return;
+    }
 
-      // Find screen share track - check displaySurface first, then label keywords
-      const screenTrack = videoTracks.find((track) => {
-        const label = track.label.toLowerCase();
-        const settings = track.getSettings();
-        // Screen share tracks have displaySurface OR contain screen/monitor/display in label
-        return (
-          settings.displaySurface ||
-          label.includes('screen') ||
-          label.includes('monitor') ||
-          label.includes('display')
-        );
-      });
+    const videoTracks = localStream.getVideoTracks();
+    logger.debug('Screen setup - video tracks:', videoTracks.length);
 
-      if (screenTrack) {
-        const stream = new MediaStream([screenTrack]);
-        screenVideoRef.current.srcObject = stream;
-        screenVideoRef.current
-          .play()
-          .catch((e) => logger.error('Screen play error:', e));
+    // Find screen share track - check displaySurface first, then label keywords
+    const screenTrack = videoTracks.find((track) => {
+      const label = track.label.toLowerCase();
+      const settings = track.getSettings();
+      logger.debug('Track:', { label, settings });
+
+      // Screen share tracks have displaySurface OR contain screen/monitor/display in label
+      return (
+        settings.displaySurface ||
+        label.includes('screen') ||
+        label.includes('monitor') ||
+        label.includes('display')
+      );
+    });
+
+    if (screenTrack) {
+      const stream = new MediaStream([screenTrack]);
+      screenRef.srcObject = stream;
+      screenRef.play().catch((e) => logger.error('Screen play error:', e));
+      logger.debug('Screen track set:', screenTrack.label);
+    } else if (videoTracks.length > 0) {
+      // Fallback: if screen sharing is active but can't identify track, use last track
+      const stream = new MediaStream([videoTracks[videoTracks.length - 1]]);
+      screenRef.srcObject = stream;
+      screenRef.play().catch((e) => logger.error('Screen play error:', e));
+      logger.debug(
+        'Using fallback screen track:',
+        videoTracks[videoTracks.length - 1].label
+      );
+    }
+
+    // Cleanup
+    return () => {
+      if (screenRef) {
+        screenRef.srcObject = null;
+      }
+    };
+  }, [localStream, isScreenSharing]);
+
+  // Auto-reset to fullscreen when video/screen is disabled
+  useEffect(() => {
+    if (!isVideoEnabled && !isScreenSharing && voiceUsers.length === 0) {
+      // Only reset if we're in a video mode (not already in fullscreen)
+      if (videoWindow.mode !== 'fullscreen') {
+        setVideoWindowMode('fullscreen');
       }
     }
-  }, [localStream, isScreenSharing]);
+  }, [
+    isVideoEnabled,
+    isScreenSharing,
+    voiceUsers.length,
+    videoWindow.mode,
+    setVideoWindowMode
+  ]);
+
+  // Don't show fullscreen modal if minimized, floating, or in PiP
+  if (
+    videoWindow.mode === 'minimized' ||
+    videoWindow.mode === 'pip' ||
+    videoWindow.mode === 'floating'
+  ) {
+    return null;
+  }
 
   // Only show video grid if video or screen share is enabled
   if (!isVideoEnabled && !isScreenSharing && voiceUsers.length === 0) {
     return null;
   }
 
-  // Don't show fullscreen modal if minimized or in PiP
-  if (videoWindow.mode === 'minimized' || videoWindow.mode === 'pip') {
-    return null;
-  }
-
   const handleClose = () => {
-    // Properly disable video and stop tracks, not just hide the UI
+    // Exit PiP if active before closing
+    if (isPipActive && document.pictureInPictureElement) {
+      document
+        .exitPictureInPicture()
+        .catch((e) => logger.error('PiP exit error:', e));
+    }
+
+    // Disable video and screen share
     if (isVideoEnabled) {
       voiceService.disableVideo();
     }
     if (isScreenSharing) {
       voiceService.stopScreenShare();
     }
+
+    // Reset window mode to fullscreen for next time
+    setVideoWindowMode('fullscreen');
   };
 
   const handleMinimize = () => {

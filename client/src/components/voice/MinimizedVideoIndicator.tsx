@@ -17,16 +17,40 @@ export function MinimizedVideoIndicator() {
   const voiceUsers = useVoiceUsers();
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // Auto-reset to fullscreen when video/screen is disabled
+  useEffect(() => {
+    if (
+      videoWindow.mode === 'minimized' &&
+      !isVideoEnabled &&
+      !isScreenSharing &&
+      voiceUsers.length === 0
+    ) {
+      setVideoWindowMode('fullscreen');
+    }
+  }, [
+    isVideoEnabled,
+    isScreenSharing,
+    voiceUsers.length,
+    videoWindow.mode,
+    setVideoWindowMode
+  ]);
+
   // Setup local video preview
   useEffect(() => {
-    if (videoRef.current && localStream) {
-      if (isVideoEnabled || isScreenSharing) {
-        videoRef.current.srcObject = localStream;
-        videoRef.current
-          .play()
-          .catch((e) => logger.error('Minimized video play error:', e));
-      }
+    const vidRef = videoRef.current;
+    if (vidRef && localStream && (isVideoEnabled || isScreenSharing)) {
+      vidRef.srcObject = localStream;
+      vidRef
+        .play()
+        .catch((e) => logger.error('Minimized video play error:', e));
     }
+
+    // Cleanup when video is disabled
+    return () => {
+      if (vidRef) {
+        vidRef.srcObject = null;
+      }
+    };
   }, [localStream, isVideoEnabled, isScreenSharing]);
 
   // Only show if minimized and video/screen is active

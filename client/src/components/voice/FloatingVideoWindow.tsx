@@ -59,52 +59,76 @@ export function FloatingVideoWindow() {
 
   // Setup camera video
   useEffect(() => {
-    if (cameraVideoRef.current && localStream && isVideoEnabled) {
-      const videoTracks = localStream.getVideoTracks();
-      const cameraTrack = videoTracks.find((track) => {
-        const label = track.label.toLowerCase();
-        const settings = track.getSettings();
-        const isScreenTrack =
-          settings.displaySurface ||
-          label.includes('screen') ||
-          label.includes('monitor') ||
-          label.includes('display');
-        return !isScreenTrack;
-      });
-
-      if (cameraTrack) {
-        const stream = new MediaStream([cameraTrack]);
-        cameraVideoRef.current.srcObject = stream;
-        cameraVideoRef.current
-          .play()
-          .catch((e) => logger.error('Camera play error:', e));
-      }
+    const camRef = cameraVideoRef.current;
+    if (!camRef || !localStream || !isVideoEnabled) {
+      return;
     }
-  }, [localStream, isVideoEnabled]);
+
+    const videoTracks = localStream.getVideoTracks();
+    const cameraTrack = videoTracks.find((track) => {
+      const label = track.label.toLowerCase();
+      const settings = track.getSettings();
+      const isScreenTrack =
+        settings.displaySurface ||
+        label.includes('screen') ||
+        label.includes('monitor') ||
+        label.includes('display');
+      return !isScreenTrack;
+    });
+
+    if (cameraTrack) {
+      const stream = new MediaStream([cameraTrack]);
+      camRef.srcObject = stream;
+      camRef.play().catch((e) => logger.error('Camera play error:', e));
+    } else if (videoTracks.length > 0 && !isScreenSharing) {
+      // Fallback: use first track if no camera explicitly found
+      const stream = new MediaStream([videoTracks[0]]);
+      camRef.srcObject = stream;
+      camRef.play().catch((e) => logger.error('Camera play error:', e));
+    }
+
+    return () => {
+      if (camRef) {
+        camRef.srcObject = null;
+      }
+    };
+  }, [localStream, isVideoEnabled, isScreenSharing]);
 
   // Setup screen share video
   useEffect(() => {
-    if (screenVideoRef.current && localStream && isScreenSharing) {
-      const videoTracks = localStream.getVideoTracks();
-      const screenTrack = videoTracks.find((track) => {
-        const label = track.label.toLowerCase();
-        const settings = track.getSettings();
-        return (
-          settings.displaySurface ||
-          label.includes('screen') ||
-          label.includes('monitor') ||
-          label.includes('display')
-        );
-      });
-
-      if (screenTrack) {
-        const stream = new MediaStream([screenTrack]);
-        screenVideoRef.current.srcObject = stream;
-        screenVideoRef.current
-          .play()
-          .catch((e) => logger.error('Screen play error:', e));
-      }
+    const screenRef = screenVideoRef.current;
+    if (!screenRef || !localStream || !isScreenSharing) {
+      return;
     }
+
+    const videoTracks = localStream.getVideoTracks();
+    const screenTrack = videoTracks.find((track) => {
+      const label = track.label.toLowerCase();
+      const settings = track.getSettings();
+      return (
+        settings.displaySurface ||
+        label.includes('screen') ||
+        label.includes('monitor') ||
+        label.includes('display')
+      );
+    });
+
+    if (screenTrack) {
+      const stream = new MediaStream([screenTrack]);
+      screenRef.srcObject = stream;
+      screenRef.play().catch((e) => logger.error('Screen play error:', e));
+    } else if (videoTracks.length > 0) {
+      // Fallback: use last track if screen share not explicitly found
+      const stream = new MediaStream([videoTracks[videoTracks.length - 1]]);
+      screenRef.srcObject = stream;
+      screenRef.play().catch((e) => logger.error('Screen play error:', e));
+    }
+
+    return () => {
+      if (screenRef) {
+        screenRef.srcObject = null;
+      }
+    };
   }, [localStream, isScreenSharing]);
 
   // Custom resize implementation (must be before early returns)
@@ -164,6 +188,47 @@ export function FloatingVideoWindow() {
     };
   }, [isResizing, setVideoWindowSize, size]);
 
+  // Handle PiP events
+  useEffect(() => {
+    const handleEnterPip = () => {
+      setIsPipActive(true);
+      setVideoWindowMode('pip');
+    };
+
+    const handleLeavePip = () => {
+      setIsPipActive(false);
+      if (videoWindow.mode === 'pip') {
+        setVideoWindowMode('floating');
+      }
+    };
+
+    document.addEventListener('enterpictureinpicture', handleEnterPip);
+    document.addEventListener('leavepictureinpicture', handleLeavePip);
+
+    return () => {
+      document.removeEventListener('enterpictureinpicture', handleEnterPip);
+      document.removeEventListener('leavepictureinpicture', handleLeavePip);
+    };
+  }, [setVideoWindowMode, videoWindow.mode]);
+
+  // Auto-reset to fullscreen when video/screen is disabled
+  useEffect(() => {
+    if (
+      videoWindow.mode === 'floating' &&
+      !isVideoEnabled &&
+      !isScreenSharing &&
+      voiceUsers.length === 0
+    ) {
+      setVideoWindowMode('fullscreen');
+    }
+  }, [
+    isVideoEnabled,
+    isScreenSharing,
+    voiceUsers.length,
+    videoWindow.mode,
+    setVideoWindowMode
+  ]);
+
   // Don't show if not in floating mode
   if (videoWindow.mode !== 'floating') {
     return null;
@@ -175,12 +240,23 @@ export function FloatingVideoWindow() {
   }
 
   const handleClose = () => {
+    // Exit PiP if active before closing
+    if (isPipActive && document.pictureInPictureElement) {
+      document
+        .exitPictureInPicture()
+        .catch((e) => logger.error('PiP exit error:', e));
+    }
+
+    // Disable video and screen share
     if (isVideoEnabled) {
       voiceService.disableVideo();
     }
     if (isScreenSharing) {
       voiceService.stopScreenShare();
     }
+
+    // Reset window mode to fullscreen for next time
+    setVideoWindowMode('fullscreen');
   };
 
   const handleMinimize = () => {
@@ -196,12 +272,11 @@ export function FloatingVideoWindow() {
     if (!videoElement || !isPipSupported) return;
 
     try {
-      if (isPipActive) {
+      if (isPipActive || document.pictureInPictureElement) {
         await document.exitPictureInPicture();
       } else {
         await videoElement.requestPictureInPicture();
       }
-      setIsPipActive(!isPipActive);
     } catch (error) {
       logger.error('PiP error:', error);
     }
