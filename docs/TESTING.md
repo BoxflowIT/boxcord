@@ -201,7 +201,7 @@ client/tests/
 | Test Type | Status | Coverage | Notes |
 |-----------|--------|----------|-------|
 | Unit Tests | ✅ Passing | 61 tests | Backend services |
-| E2E Tests | ✅ Ready | 12 scenarios | Playwright configured |
+| E2E Tests | ✅ Ready | 42+ scenarios | Playwright configured (user flows, auth flows, file uploads, WebSocket) |
 | Load Tests | ✅ **OPTIMIZED** | 4 scenarios | All targets achieved (500+ users) |
 | XSS Tests | ✅ Passing | 6 payloads | Sanitization active |
 | Code Coverage | ✅ Configured | 70% threshold | Using v8 |
@@ -217,15 +217,15 @@ client/tests/
    - [ ] Stress test with 1000+ concurrent users (requires horizontal scaling)
 
 2. **Test Coverage Expansion**
-   - [ ] Add authenticated E2E flows (requires test user setup)
-   - [ ] Test file upload/download flows end-to-end
-   - [ ] Test WebSocket real-time features (presence, typing indicators)
+   - [x] ~~Add authenticated E2E flows~~ ✅ COMPLETED (auth-flows.spec.ts - 11 test cases)
+   - [x] ~~Test file upload/download flows~~ ✅ COMPLETED (file-upload.spec.ts - 10 test cases)
+   - [x] ~~Test WebSocket real-time features~~ ✅ COMPLETED (websocket-realtime.spec.ts - 9 test cases)
 
 3. **Performance Enhancements**
    - [x] ~~Database query optimization and indexing~~ ✅ COMPLETED (see [DATABASE_INDEX_OPTIMIZATION.md](./DATABASE_INDEX_OPTIMIZATION.md))
    - [x] ~~Redis caching layer~~ ✅ PARTIALLY IMPLEMENTED (cache configured, works when Redis available)
+   - [x] ~~Message queue for background jobs~~ ✅ COMPLETED (BullMQ implemented for webhooks, notifications, emails)
    - [ ] Implement database read replicas (for 2,000+ concurrent users)
-   - [ ] Message queue for background jobs (webhooks, notifications)
 
 ### Future Deployment Considerations
 
