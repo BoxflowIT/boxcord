@@ -4,20 +4,26 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   define: {
-    global: 'globalThis'
+    global: 'globalThis',
+    'process.env': {}
+  },
+  resolve: {
+    alias: {
+      util: 'util/'
+    }
   },
   server: {
     port: 5173,
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
-        changeOrigin: true,
+        changeOrigin: true
       },
       '/socket.io': {
         target: 'http://localhost:3001',
         changeOrigin: true,
-        ws: true,
-      },
-    },
-  },
+        ws: true
+      }
+    }
+  }
 });
