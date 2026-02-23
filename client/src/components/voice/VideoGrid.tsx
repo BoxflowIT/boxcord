@@ -1,20 +1,56 @@
 // Video Grid - Display video streams in voice call
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useVoiceStore, useVoiceUsers } from '../../store/voiceStore';
 import { voiceService } from '../../services/voice.service';
-import { CloseIcon } from '../ui/Icons';
+import { CloseIcon, MinimizeIcon, PipIcon, FloatWindowIcon } from '../ui/Icons';
 import { logger } from '../../utils/logger';
 
 export function VideoGrid() {
   const localStream = useVoiceStore((s) => s.localStream);
   const voiceUsers = useVoiceUsers();
-  const { isVideoEnabled, isScreenSharing } = useVoiceStore((s) => ({
-    isVideoEnabled: s.isVideoEnabled,
-    isScreenSharing: s.isScreenSharing
-  }));
+  const { isVideoEnabled, isScreenSharing, videoWindow, setVideoWindowMode } =
+    useVoiceStore((s) => ({
+      isVideoEnabled: s.isVideoEnabled,
+      isScreenSharing: s.isScreenSharing,
+      videoWindow: s.videoWindow,
+      setVideoWindowMode: s.setVideoWindowMode
+    }));
+
+  const [isPipSupported, setIsPipSupported] = useState(false);
+  const [isPipActive, setIsPipActive] = useState(false);
 
   const cameraVideoRef = useRef<HTMLVideoElement>(null);
   const screenVideoRef = useRef<HTMLVideoElement>(null);
+
+  // Check PiP support
+  useEffect(() => {
+    setIsPipSupported(
+      'pictureInPictureEnabled' in document && document.pictureInPictureEnabled
+    );
+  }, []);
+
+  // Handle PiP events
+  useEffect(() => {
+    const handleEnterPip = () => {
+      setIsPipActive(true);
+      setVideoWindowMode('pip');
+    };
+
+    const handleLeavePip = () => {
+      setIsPipActive(false);
+      if (videoWindow.mode === 'pip') {
+        setVideoWindowMode('fullscreen');
+      }
+    };
+
+    document.addEventListener('enterpictureinpicture', handleEnterPip);
+    document.addEventListener('leavepictureinpicture', handleLeavePip);
+
+    return () => {
+      document.removeEventListener('enterpictureinpicture', handleEnterPip);
+      document.removeEventListener('leavepictureinpicture', handleLeavePip);
+    };
+  }, [setVideoWindowMode, videoWindow.mode]);
 
   // Setup camera video
   useEffect(() => {
@@ -77,6 +113,11 @@ export function VideoGrid() {
     return null;
   }
 
+  // Don't show fullscreen modal if minimized or in PiP
+  if (videoWindow.mode === 'minimized' || videoWindow.mode === 'pip') {
+    return null;
+  }
+
   const handleClose = () => {
     // Properly disable video and stop tracks, not just hide the UI
     if (isVideoEnabled) {
@@ -84,6 +125,29 @@ export function VideoGrid() {
     }
     if (isScreenSharing) {
       voiceService.stopScreenShare();
+    }
+  };
+
+  const handleMinimize = () => {
+    setVideoWindowMode('minimized');
+  };
+
+  const handleFloat = () => {
+    setVideoWindowMode('floating');
+  };
+
+  const handlePip = async () => {
+    const videoElement = screenVideoRef.current || cameraVideoRef.current;
+    if (!videoElement || !isPipSupported) return;
+
+    try {
+      if (isPipActive) {
+        await document.exitPictureInPicture();
+      } else {
+        await videoElement.requestPictureInPicture();
+      }
+    } catch (error) {
+      logger.error('PiP error:', error);
     }
   };
 
@@ -108,13 +172,53 @@ export function VideoGrid() {
                   : 'Video call active'}
             </p>
           </div>
-          <button
-            onClick={handleClose}
-            className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-300 hover:text-white"
-            title="Close video"
-          >
-            <CloseIcon size="md" />
-          </button>
+
+          {/* Window Controls */}
+          <div className="flex items-center gap-2">
+            {/* Minimize Button */}
+            <button
+              onClick={handleMinimize}
+              className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-300 hover:text-white"
+              title="Minimize video"
+            >
+              <MinimizeIcon size="md" />
+            </button>
+
+            {/* Float Window Button */}
+            <button
+              onClick={handleFloat}
+              className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-300 hover:text-white"
+              title="Float window"
+            >
+              <FloatWindowIcon size="md" />
+            </button>
+
+            {/* Picture-in-Picture Button */}
+            {isPipSupported && (
+              <button
+                onClick={handlePip}
+                className={`p-2 hover:bg-gray-700 rounded-lg transition-colors ${
+                  isPipActive
+                    ? 'text-blue-400 bg-blue-500/20'
+                    : 'text-gray-300 hover:text-white'
+                }`}
+                title={
+                  isPipActive ? 'Exit Picture-in-Picture' : 'Picture-in-Picture'
+                }
+              >
+                <PipIcon size="md" />
+              </button>
+            )}
+
+            {/* Close Button */}
+            <button
+              onClick={handleClose}
+              className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-300 hover:text-white"
+              title="Close video"
+            >
+              <CloseIcon size="md" />
+            </button>
+          </div>
         </div>
 
         {/* Video Content */}

@@ -6,6 +6,8 @@ import { logger } from '../../utils/logger';
 import { VoiceUserList } from './VoiceUserList';
 import { VoiceControls } from './EnhancedVoiceControls';
 import { VideoGrid } from './VideoGrid';
+import { MinimizedVideoIndicator } from './MinimizedVideoIndicator';
+import { FloatingVideoWindow } from './FloatingVideoWindow';
 import {
   VoiceChannelIcon,
   VoiceConnectIcon,
@@ -179,6 +181,12 @@ export function VoiceChannelView({
             <div className="flex-1 overflow-y-auto">
               {/* Video grid (if video/screen share is active) */}
               <VideoGrid />
+
+              {/* Minimized video indicator (floating) */}
+              <MinimizedVideoIndicator />
+
+              {/* Floating video window (draggable + resizable) */}
+              <FloatingVideoWindow />
 
               {/* Voice users list */}
               <VoiceUserList />

@@ -55,6 +55,23 @@ Complete list of all implemented features in Boxcord.
 - ✅ **Output volume control** - Adjust playback volume
 - ✅ **Monitor mode** - "Hear yourself" for mic testing
 
+### Video Communication
+- ✅ **Video calls** - 1-on-1 and group video calls
+- ✅ **Screen sharing** - Share screen in voice channels
+- ✅ **Camera + Screen combo** - Show camera and screen simultaneously
+- ✅ **Video grid layout** - Automatic layout for multiple participants
+- ✅ **Mirrored local video** - See yourself as others see you
+
+### Video Window Controls
+- ✅ **Fullscreen mode** - Immersive video experience
+- ✅ **Minimize video** - Collapse to small floating indicator
+- ✅ **Floating window** - Draggable and resizable video window
+- ✅ **Picture-in-Picture** - Browser native PiP support
+- ✅ **Window state persistence** - Remember window position and size
+- ✅ **Drag to reposition** - Move floating window anywhere
+- ✅ **Resize window** - Custom resize with min/max constraints
+- ✅ **Quick mode switching** - Toggle between fullscreen, floating, minimized, PiP
+
 **📖 See:** [VOICE_ARCHITECTURE.md](VOICE_ARCHITECTURE.md)
 
 ## 🌍 Workspaces & Channels
@@ -299,8 +316,6 @@ Complete list of all implemented features in Boxcord.
 ## 🎯 Coming Soon
 
 ### Planned Features
-- ⏳ **Video calls** - 1-on-1 and group video
-- ⏳ **Screen sharing** - Share screen in voice channels
 - ⏳ **Thread support** - Threaded conversations
 - ⏳ **Polls** - Create polls in channels
 - ⏳ **Advanced search** - Filters, date range, attachments
