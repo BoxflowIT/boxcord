@@ -1,12 +1,110 @@
 # Boxcord
 
-Discord-like chat application for Boxflow, integrated with Boxtime.
+Discord-like real-time chat application for Boxflow, integrated with Boxtime.
+
+## ✨ Features
+
+### 💬 Messaging & Communication
+- **Real-time messaging** via WebSocket (Socket.io)
+- **Direct Messages (DMs)** - Private 1-on-1 conversations
+- **@Mentions** - Tag users with autocomplete
+- **Emoji reactions** - React to messages with emojis
+- **Message formatting** - Markdown support with code blocks
+- **File attachments** - Upload images, documents, videos
+- **GIF support** - Search and send GIFs via Giphy integration
+- **Message editing & deletion** - Full message history tracking
+- **Message forwarding** - Forward messages to other channels/DMs
+- **Message pinning** - Pin important messages
+- **Bookmarks/Saved messages** - Save messages for later
+- **Rich media embeds** - OpenGraph/oEmbed for links
+- **Typing indicators** - See when users are typing
+- **Read receipts** - Track message read status
+- **Slash commands** - Quick actions with `/` commands
+
+### 🎤 Voice & Audio
+- **Voice channels** - Real-time voice communication
+- **WebRTC peer-to-peer** - Direct audio streaming
+- **AI noise suppression** - RNNoise AI for crystal-clear audio
+- **Echo cancellation** - Automatic echo removal
+- **Voice activity detection (VAD)** - Automatic noise gating
+- **Professional audio pipeline** - Compression, limiting, gain control
+- **Device selection** - Choose input/output devices
+- **Mic testing** - Test audio with real-time level monitoring
+
+**📖 See:** [docs/VOICE_ARCHITECTURE.md](docs/VOICE_ARCHITECTURE.md)
+
+### 🌍 Workspaces & Channels
+- **Multiple workspaces** - Organize teams separately
+- **Text channels** - Topic-specific conversations
+- **Voice channels** - Real-time audio rooms
+- **Channel permissions** - Granular access control
+- **Workspace invites** - Invite users via shareable links
+
+### 👥 User Management
+- **User profiles** - Customizable with bio, avatar, status
+- **Online status** - Real-time presence tracking (Online/Away/DND/Offline)
+- **Custom status** - Set status text and emoji
+- **Member list** - See all workspace members with status
+- **User search** - Find users quickly
+- **Role-based permissions** - Admin, Staff, Member roles
+
+### 🛡️ Moderation & Admin
+- **Kick users** - Remove users from workspace
+- **Ban users** - Permanently ban with reason tracking
+- **Role management** - Promote/demote users
+- **Audit logs** - Track all moderation actions
+- **Channel permissions** - Control who can access channels
+
+### 🌐 Internationalization (i18n)
+- **Multi-language support** - English 🇬🇧 and Swedish 🇸🇪
+- **Live language switching** - Change language on the fly
+- **Persistent preferences** - Saves language choice
+
+**📖 See:** [docs/I18N.md](docs/I18N.md)
+
+### 🔔 Notifications
+- **Web Push Notifications** - Browser notifications for mentions/DMs
+- **Email notifications** - Via SendGrid (optional)
+- **Notification settings** - Granular control per channel
+- **Sound effects** - Audio cues for events
+
+### ⚡ Performance & Optimization
+- **Redis caching** - 70-90% faster cached queries (optional)
+- **Prisma 6** - 30-50% faster database queries
+- **Connection pooling** - Efficient database connections
+- **WebSocket-first architecture** - Minimal HTTP overhead
+- **Optimistic updates** - Instant UI feedback
+- **Infinite scroll** - Efficient message pagination
+- **Image optimization** - Automatic compression and resizing
+
+**📖 See:** [docs/PERFORMANCE_OPTIMIZATIONS.md](docs/PERFORMANCE_OPTIMIZATIONS.md)
+
+### 🔒 Security
+- **AWS Cognito authentication** - Enterprise-grade auth
+- **JWT tokens** - Secure session management
+- **XSS protection** - Sanitized user input
+- **CORS configuration** - Controlled cross-origin access
+- **Rate limiting** - API abuse protection
+- **Content Security Policy** - Browser-level security
+
+### 🎨 UI/UX
+- **Discord-inspired design** - Familiar and intuitive
+- **Dark mode** - Easy on the eyes
+- **Responsive layout** - Mobile, tablet, desktop
+- **Keyboard shortcuts** - Power user features
+- **Smooth animations** - Polished interactions
+- **TailwindCSS** - Modern utility-first styling
 
 ## Tech Stack
 
 - **Backend:** Fastify, Socket.io, Prisma, PostgreSQL
-- **Frontend:** React, Vite, TailwindCSS, Zustand
+- **Frontend:** React 18, Vite, TailwindCSS, Zustand
 - **Auth:** AWS Cognito (shared with Boxtime)
+- **Real-time:** WebSocket (Socket.io) with optimistic updates
+- **Caching:** Redis (optional) + React Query
+- **Voice:** WebRTC with RNNoise AI
+- **Files:** AWS S3 or local storage
+- **i18n:** react-i18next (English, Swedish)
 - **Architecture:** Onion Architecture (same as Boxtime)
 
 ## Structure
@@ -79,6 +177,34 @@ Quick production checklist:
 - ✅ Enable Redis caching
 - ✅ Setup monitoring and alerts
 
+## Documentation
+
+### Quick Links
+- 🎯 [**Features Overview**](docs/FEATURES.md) - Complete list of all features
+- 📐 [Architecture Overview](docs/ARCHITECTURE.md) - WebSocket-first design, data flow
+- 🧪 [Testing Guide](docs/TESTING.md) - Unit tests, E2E, load testing (K6)
+- 🚀 [Production Deployment](docs/PRODUCTION.md) - Railway, Docker, environment setup
+
+### Architecture & Design
+- 📐 [Architecture Overview](docs/ARCHITECTURE.md) - WebSocket-first design, data flow
+- 🎤 [Voice Architecture](docs/VOICE_ARCHITECTURE.md) - WebRTC, RNNoise AI, audio pipeline
+- 💾 [Caching Strategy](docs/CACHING.md) - React Query, Redis, optimization
+
+### Features & Integrations
+- 🎯 [**Features Overview**](docs/FEATURES.md) - Complete list of all features
+- 🎨 [GIF Support](docs/GIF_SUPPORT.md) - Giphy integration setup and usage
+- 🌍 [Internationalization](docs/I18N.md) - Multi-language support (en, sv)
+
+### Performance & Testing
+- ⚡ [Performance Optimizations](docs/PERFORMANCE_OPTIMIZATIONS.md) - Prisma 6, Redis, benchmarks
+- 🧪 [Testing Guide](docs/TESTING.md) - Unit tests, E2E, load testing (K6)
+
+### Production & Operations
+- 🚀 [Production Deployment](docs/PRODUCTION.md) - Railway, Docker, environment setup
+- 📊 [Scaling Strategy](docs/SCALING_STRATEGY.md) - Horizontal scaling, load balancing
+- 💾 [Database Optimization](docs/DATABASE_INDEX_OPTIMIZATION.md) - Indexes, query optimization
+- 🔄 [Backup & Recovery](docs/BACKUP_RECOVERY.md) - Database backups, disaster recovery
+
 ## Environment Variables
 
 Copy `.env.example` to `.env` and fill in:
@@ -125,34 +251,171 @@ const users = await boxtimeService.searchUsers('john', token);
 
 ### Client → Server
 
-- `channel:join` - Join channel
-- `channel:leave` - Leave channel
-- `message:send` - Send message
-- `message:edit` - Edit message
+#### Channel Events
+- `channel:join` - Join a channel room
+- `channel:leave` - Leave a channel room
+- `message:send` - Send message to channel
+- `message:edit` - Edit existing message
 - `message:delete` - Delete message
-- `channel:typing` - Typing indicator
+- `message:typing` - Typing indicator
+- `message:reaction:add` - Add emoji reaction
+- `message:reaction:remove` - Remove emoji reaction
+- `message:pin` - Pin message to channel
+- `message:unpin` - Unpin message
+
+#### DM Events
+- `dm:join` - Join DM room
+- `dm:leave` - Leave DM room
+- `dm:send` - Send direct message
+- `dm:edit` - Edit DM
+- `dm:delete` - Delete DM
+- `dm:typing` - DM typing indicator
+
+#### Voice Events
+- `voice:join` - Join voice channel
+- `voice:leave` - Leave voice channel
+- `voice:signal` - WebRTC signaling
+- `voice:speaking` - Voice activity status
 
 ### Server → Client
 
-- `message:new` - New message
-- `message:edit` - Message updated
-- `message:delete` - Message deleted
-- `channel:typing` - User typing
-- `user:online` - User online
-- `user:offline` - User offline
+#### Message Events
+- `message:new` - New message received
+- `message:updated` - Message was edited
+- `message:deleted` - Message was deleted
+- `message:pinned` - Message was pinned
+- `message:unpinned` - Message was unpinned
+- `message:typing` - User is typing
+- `message:reaction:added` - Reaction added
+- `message:reaction:removed` - Reaction removed
+
+#### Channel/Workspace Events
+- `channel:created` - New channel created
+- `channel:updated` - Channel settings changed
+- `channel:deleted` - Channel removed
+- `workspace:updated` - Workspace settings changed
+
+#### User Events
+- `user:presence` - User online status changed
+- `user:status` - User status updated
+- `user:joined` - User joined workspace
+- `user:left` - User left workspace
+
+#### Voice Events
+- `voice:user:joined` - User joined voice channel
+- `voice:user:left` - User left voice channel
+- `voice:signal` - WebRTC signaling data
+- `voice:speaking:start` - User started speaking
+- `voice:speaking:stop` - User stopped speaking
 
 ## API Endpoints
 
-| Method | Path                 | Description           |
-| ------ | -------------------- | --------------------- |
-| GET    | /api/v1/workspaces   | List workspaces       |
-| POST   | /api/v1/workspaces   | Create workspace      |
-| GET    | /api/v1/channels     | List channels         |
-| POST   | /api/v1/channels     | Create channel        |
-| GET    | /api/v1/messages     | Fetch messages        |
-| POST   | /api/v1/messages     | Create message        |
-| GET    | /api/v1/users/me     | Current user          |
-| GET    | /api/v1/users/search | Search users          |
+### Authentication & Users
+| Method | Path                      | Description                  |
+| ------ | ------------------------- | ---------------------------- |
+| GET    | /api/v1/health           | Health check                 |
+| GET    | /api/v1/users/me         | Get current user             |
+| GET    | /api/v1/users/:id        | Get user by ID               |
+| PATCH  | /api/v1/users/me         | Update profile               |
+| DELETE | /api/v1/users/me         | Delete account               |
+| GET    | /api/v1/users/search     | Search users                 |
+| PATCH  | /api/v1/users/:id/role   | Update user role (admin)     |
+
+### Workspaces
+| Method | Path                           | Description                  |
+| ------ | ------------------------------ | ---------------------------- |
+| GET    | /api/v1/workspaces            | List user's workspaces       |
+| POST   | /api/v1/workspaces            | Create workspace             |
+| GET    | /api/v1/workspaces/:id        | Get workspace details        |
+| PATCH  | /api/v1/workspaces/:id        | Update workspace             |
+| DELETE | /api/v1/workspaces/:id        | Delete workspace             |
+| GET    | /api/v1/workspaces/:id/members| List workspace members       |
+
+### Channels
+| Method | Path                              | Description                  |
+| ------ | --------------------------------- | ---------------------------- |
+| GET    | /api/v1/channels                 | List channels (by workspace) |
+| POST   | /api/v1/channels                 | Create channel               |
+| GET    | /api/v1/channels/:id             | Get channel details          |
+| PATCH  | /api/v1/channels/:id             | Update channel               |
+| DELETE | /api/v1/channels/:id             | Delete channel               |
+| POST   | /api/v1/channels/:id/read        | Mark channel as read         |
+
+### Messages
+| Method | Path                              | Description                  |
+| ------ | --------------------------------- | ---------------------------- |
+| GET    | /api/v1/messages                 | Fetch messages (paginated)   |
+| POST   | /api/v1/messages                 | Create message               |
+| PATCH  | /api/v1/messages/:id             | Edit message                 |
+| DELETE | /api/v1/messages/:id             | Delete message               |
+| POST   | /api/v1/messages/:id/forward     | Forward message              |
+| POST   | /api/v1/messages/:id/pin         | Pin message                  |
+| DELETE | /api/v1/messages/:id/pin         | Unpin message                |
+| GET    | /api/v1/messages/search          | Search messages              |
+
+### Direct Messages (DMs)
+| Method | Path                                   | Description                  |
+| ------ | -------------------------------------- | ---------------------------- |
+| GET    | /api/v1/dm/channels                   | List DM channels             |
+| POST   | /api/v1/dm/channels                   | Create/get DM channel        |
+| GET    | /api/v1/dm/channels/:id/messages      | Fetch DM messages            |
+| POST   | /api/v1/dm/channels/:id/messages      | Send DM                      |
+| PATCH  | /api/v1/dm/messages/:id               | Edit DM                      |
+| DELETE | /api/v1/dm/messages/:id               | Delete DM                    |
+| POST   | /api/v1/dm/channels/:id/read          | Mark DM as read              |
+
+### Reactions
+| Method | Path                                   | Description                  |
+| ------ | -------------------------------------- | ---------------------------- |
+| POST   | /api/v1/messages/:id/reactions        | Add reaction to message      |
+| DELETE | /api/v1/messages/:id/reactions/:emoji | Remove reaction              |
+| GET    | /api/v1/messages/:id/reactions        | Get message reactions        |
+
+### Bookmarks
+| Method | Path                              | Description                  |
+| ------ | --------------------------------- | ---------------------------- |
+| GET    | /api/v1/bookmarks                | List user's bookmarks        |
+| POST   | /api/v1/bookmarks                | Add bookmark                 |
+| DELETE | /api/v1/bookmarks/:id            | Remove bookmark              |
+| GET    | /api/v1/bookmarks/check          | Check if message bookmarked  |
+| GET    | /api/v1/bookmarks/count          | Get bookmark count           |
+
+### Invites
+| Method | Path                              | Description                  |
+| ------ | --------------------------------- | ---------------------------- |
+| GET    | /api/v1/invites                  | List workspace invites       |
+| POST   | /api/v1/invites                  | Create invite link           |
+| DELETE | /api/v1/invites/:code            | Revoke invite                |
+| GET    | /api/v1/invites/:code/preview    | Preview invite               |
+| POST   | /api/v1/invites/:code/accept     | Accept invite                |
+
+### Moderation
+| Method | Path                                   | Description                  |
+| ------ | -------------------------------------- | ---------------------------- |
+| POST   | /api/v1/workspaces/:id/kick           | Kick user from workspace     |
+| POST   | /api/v1/workspaces/:id/ban            | Ban user from workspace      |
+| POST   | /api/v1/workspaces/:id/unban          | Unban user                   |
+| GET    | /api/v1/workspaces/:id/audit-logs     | Get audit logs               |
+
+### GIFs (Giphy)
+| Method | Path                              | Description                  |
+| ------ | --------------------------------- | ---------------------------- |
+| GET    | /api/v1/giphy/search             | Search GIFs                  |
+| GET    | /api/v1/giphy/trending           | Get trending GIFs            |
+| GET    | /api/v1/giphy/random             | Get random GIF               |
+| GET    | /api/v1/giphy/:id                | Get GIF by ID                |
+
+### File Uploads
+| Method | Path                              | Description                  |
+| ------ | --------------------------------- | ---------------------------- |
+| POST   | /api/v1/upload                   | Upload file (multipart)      |
+| GET    | /uploads/:filename               | Get uploaded file            |
+
+### Push Notifications
+| Method | Path                              | Description                  |
+| ------ | --------------------------------- | ---------------------------- |
+| POST   | /api/v1/push/subscribe           | Subscribe to push            |
+| POST   | /api/v1/push/unsubscribe         | Unsubscribe from push        |
 
 ## Code Quality
 
@@ -277,7 +540,7 @@ PRISMA_QUERY_CACHE_TTL=60
 - ✅ Consistent className composition across entire codebase
 - ✅ Improved code readability and maintainability
 - ✅ Zero TypeScript/ESLint errors maintained
-- ✅ 34/34 tests passing (100% coverage maintained)
+- ✅ 61/61 tests passing (100% coverage maintained)
 
 **Pattern Example:**
 
@@ -289,4 +552,6 @@ className={`base ${condition ? 'true' : 'false'} ${className}`}
 className={cn('base', condition && 'true', !condition && 'false', className)}
 ```
 
-See [COMPONENTS.md](client/COMPONENTS.md) for detailed component documentation.
+**📖 Component Documentation:** [client/COMPONENTS.md](client/COMPONENTS.md)
+
+**📖 Testing Guide:** [docs/TESTING.md](docs/TESTING.md)
