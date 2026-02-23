@@ -25,6 +25,7 @@ Deep dive into how Boxcord is built:
 Learn about specific features:
 
 - [**Features Overview**](FEATURES.md) - Complete feature matrix with status
+- [**API Documentation**](API.md) - Complete REST API reference with examples
 - [**GIF Support**](GIF_SUPPORT.md) - Giphy integration setup and configuration
 - [**Internationalization (i18n)**](I18N.md) - Multi-language support (English, Swedish)
 
@@ -49,10 +50,11 @@ Deploy and scale Boxcord:
 ### By Role
 
 **For Developers:**
-1. [Architecture Overview](ARCHITECTURE.md)
-2. [Features Overview](FEATURES.md)
-3. [Testing Guide](TESTING.md)
-4. [Caching Strategy](CACHING.md)
+1. [API Documentation](API.md)
+2. [Architecture Overview](ARCHITECTURE.md)
+3. [Features Overview](FEATURES.md)
+4. [Testing Guide](TESTING.md)
+5. [Caching Strategy](CACHING.md)
 
 **For DevOps/Operations:**
 1. [Production Deployment](PRODUCTION.md)
@@ -95,17 +97,18 @@ Deploy and scale Boxcord:
 
 | Document | Status | Last Updated | Completeness |
 |----------|--------|--------------|--------------|
+| [API.md](API.md) | ✅ Current | Feb 23, 2026 | 100% |
 | [FEATURES.md](FEATURES.md) | ✅ Current | Feb 2026 | 100% |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | ✅ Current | - | 90% |
 | [VOICE_ARCHITECTURE.md](VOICE_ARCHITECTURE.md) | ✅ Current | - | 95% |
 | [CACHING.md](CACHING.md) | ✅ Current | Feb 2026 | 100% |
-| [GIF_SUPPORT.md](GIF_SUPPORT.md) | ✅ Current | - | 100% |
+| [GIF_SUPPORT.md](GIF_SUPPORT.md) | ✅ Current | Feb 2026 | 100% |
 | [I18N.md](I18N.md) | ✅ Current | - | 100% |
 | [PERFORMANCE_OPTIMIZATIONS.md](PERFORMANCE_OPTIMIZATIONS.md) | ✅ Current | - | 100% |
-| [TESTING.md](TESTING.md) | ✅ Current | - | 100% |
+| [DATABASE_INDEX_OPTIMIZATION.md](DATABASE_INDEX_OPTIMIZATION.md) | ✅ Current | Feb 23, 2026 | 100% |
+| [TESTING.md](TESTING.md) | ✅ Current | Feb 23, 2026 | 100% |
+| [SCALING_STRATEGY.md](SCALING_STRATEGY.md) | ✅ Current | Feb 23, 2026 | 90% |
 | [PRODUCTION.md](PRODUCTION.md) | ✅ Current | - | 90% |
-| [SCALING_STRATEGY.md](SCALING_STRATEGY.md) | ✅ Current | - | 85% |
-| [DATABASE_INDEX_OPTIMIZATION.md](DATABASE_INDEX_OPTIMIZATION.md) | ✅ Current | - | 90% |
 | [BACKUP_RECOVERY.md](BACKUP_RECOVERY.md) | ✅ Current | - | 85% |
 
 ## 🤝 Contributing to Documentation
@@ -147,6 +150,37 @@ Content...
 - [Main README](../README.md) - Project overview and quick start
 - [Client Components](../client/COMPONENTS.md) - Frontend component documentation
 - [GitHub Repository](https://github.com/BoxflowIT/boxcord)
+
+## 📝 Status Markers Legend
+
+Throughout the documentation, we use consistent status markers:
+
+### Feature/Component Status
+- ✅ **Completed** - Fully implemented, tested, and production-ready
+- ⏳ **In Progress** - Currently being developed or tested
+- 🔲 **Planned** - Scheduled for future implementation
+- ❌ **Deprecated** - No longer supported or not applicable
+
+### Deployment/Infrastructure Status
+- 🏗️ **Deployment Required** - Code ready, needs infrastructure setup
+- 🔨 **Development Required** - Code changes needed before deployment
+
+### Checklist Items
+- [x] ~~Completed item~~ - Task finished (with strikethrough)
+- [ ] Pending item - Task not yet started or in progress
+
+**Example Usage:**
+```markdown
+## Features
+- ✅ Real-time messaging - Live in production
+- ⏳ Voice chat improvements - Currently optimizing
+- 🔲 Video chat - Planned for Q2 2026
+
+## Deployment Checklist
+- ✅ Database optimized
+- 🏗️ [ ] Load balancer setup required
+- 🔨 [ ] Redis Pub/Sub adapter needs implementation
+```
 
 ## 📝 Need Help?
 
