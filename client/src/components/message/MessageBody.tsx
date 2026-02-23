@@ -6,7 +6,7 @@ import { MessageActions } from './MessageActions';
 import type { MessageAttachment, MessageReaction } from './index';
 
 interface MessageBodyProps {
-  messageId: string;
+  messageId?: string;
   dmMessageId?: string;
   content: string;
   attachments?: MessageAttachment[];

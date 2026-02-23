@@ -95,7 +95,8 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
     >
       {showHeader ? (
         <MessageWithHeader
-          messageId={messageId}
+          messageId={isDM ? undefined : messageId}
+          dmMessageId={isDM ? messageId : undefined}
           content={content}
           createdAt={createdAt}
           edited={edited}
@@ -126,7 +127,8 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
         />
       ) : (
         <MessageCompact
-          messageId={messageId}
+          messageId={isDM ? undefined : messageId}
+          dmMessageId={isDM ? messageId : undefined}
           content={content}
           createdAt={createdAt}
           attachments={attachments}

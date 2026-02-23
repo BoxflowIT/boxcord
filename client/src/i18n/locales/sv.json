@@ -220,7 +220,8 @@
     "noMembers": "Inga medlemmar",
     "noUsersFound": "Inga användare hittades",
     "searchPlaceholder": "Sök efter namn eller e-post...",
-    "searchMembers": "Sök medlemmar"
+    "searchMembers": "Sök medlemmar",
+    "viewProfile": "Visa profil"
   },
   "workspace": {
     "title": "Workspace",

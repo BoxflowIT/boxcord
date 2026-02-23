@@ -8,6 +8,7 @@ import { ForwardMessageModal } from '../message/ForwardMessageModal';
 import { renderEnhancedMessage } from '../../utils/messageRendering';
 import { api } from '../../services/api';
 import { toast } from '../../store/notification';
+import { getUserDisplayName, getUserInitials } from '../../utils/user';
 
 interface Message {
   id: string;
@@ -28,6 +29,7 @@ interface Message {
   author?: {
     firstName?: string;
     lastName?: string;
+    email?: string;
     avatarUrl?: string;
   };
 }
@@ -136,13 +138,13 @@ export default function MessageListDisplay({
             authorName={
               message.authorId === currentUserId
                 ? 'Du'
-                : message.author?.firstName && message.author?.lastName
-                  ? `${message.author.firstName} ${message.author.lastName}`
-                  : (message.author?.firstName ?? message.authorId.slice(0, 8))
+                : message.author
+                  ? getUserDisplayName(message.author)
+                  : 'Unknown'
             }
-            authorInitial={(
-              message.author?.firstName?.[0] ?? message.authorId[0]
-            ).toUpperCase()}
+            authorInitial={
+              message.author ? getUserInitials(message.author) : '?'
+            }
             authorAvatarUrl={
               message.authorId === currentUserId
                 ? currentUserAvatar

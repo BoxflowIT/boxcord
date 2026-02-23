@@ -4,6 +4,11 @@
  */
 
 import { prisma } from '../../03-infrastructure/database/client.js';
+import {
+  ValidationError,
+  NotFoundError,
+  ForbiddenError
+} from '../../00-core/errors.js';
 
 export interface CreateBookmarkInput {
   userId: string;
@@ -64,7 +69,9 @@ export async function addBookmark(input: CreateBookmarkInput) {
 
   // Validate: must have either messageId or dmMessageId, not both
   if ((messageId && dmMessageId) || (!messageId && !dmMessageId)) {
-    throw new Error('Must provide either messageId or dmMessageId, not both');
+    throw new ValidationError(
+      'Must provide either messageId or dmMessageId, not both'
+    );
   }
 
   // Check if already bookmarked
@@ -76,19 +83,45 @@ export async function addBookmark(input: CreateBookmarkInput) {
   });
 
   if (existing) {
-    throw new Error('Message already bookmarked');
+    throw new ValidationError('Message already bookmarked');
   }
 
-  // Create bookmark
-  return prisma.bookmarkedMessage.create({
-    data: {
-      userId,
-      messageId,
-      dmMessageId,
-      workspaceId,
-      note
+  // Create bookmark - only include fields that have values
+  const bookmarkData: {
+    userId: string;
+    messageId?: string;
+    dmMessageId?: string;
+    workspaceId?: string;
+    note?: string;
+  } = { userId };
+
+  if (messageId) {
+    bookmarkData.messageId = messageId;
+  }
+  if (dmMessageId) {
+    bookmarkData.dmMessageId = dmMessageId;
+  }
+  if (workspaceId) {
+    bookmarkData.workspaceId = workspaceId;
+  }
+  if (note) {
+    bookmarkData.note = note;
+  }
+
+  try {
+    return await prisma.bookmarkedMessage.create({
+      data: bookmarkData
+    });
+  } catch (error: any) {
+    // Foreign key constraint violation
+    if (error.code === 'P2003') {
+      throw new NotFoundError(
+        messageId ? 'Message' : 'DM Message',
+        messageId || dmMessageId || ''
+      );
     }
-  });
+    throw error;
+  }
 }
 
 /**
@@ -101,11 +134,11 @@ export async function removeBookmark(bookmarkId: string, userId: string) {
   });
 
   if (!bookmark) {
-    throw new Error('Bookmark not found');
+    throw new NotFoundError('Bookmark', bookmarkId);
   }
 
   if (bookmark.userId !== userId) {
-    throw new Error('Unauthorized: Bookmark belongs to another user');
+    throw new ForbiddenError('Bookmark belongs to another user');
   }
 
   return prisma.bookmarkedMessage.delete({
@@ -122,7 +155,9 @@ export async function removeBookmarkByMessage(
   dmMessageId?: string
 ) {
   if ((messageId && dmMessageId) || (!messageId && !dmMessageId)) {
-    throw new Error('Must provide either messageId or dmMessageId, not both');
+    throw new ValidationError(
+      'Must provide either messageId or dmMessageId, not both'
+    );
   }
 
   const bookmark = await prisma.bookmarkedMessage.findFirst({
@@ -133,7 +168,7 @@ export async function removeBookmarkByMessage(
   });
 
   if (!bookmark) {
-    throw new Error('Bookmark not found');
+    throw new NotFoundError('Bookmark', messageId || dmMessageId || '');
   }
 
   return prisma.bookmarkedMessage.delete({
@@ -205,7 +240,9 @@ export async function isBookmarked(
   dmMessageId?: string
 ): Promise<boolean> {
   if ((messageId && dmMessageId) || (!messageId && !dmMessageId)) {
-    throw new Error('Must provide either messageId or dmMessageId, not both');
+    throw new ValidationError(
+      'Must provide either messageId or dmMessageId, not both'
+    );
   }
 
   const bookmark = await prisma.bookmarkedMessage.findFirst({
@@ -232,11 +269,11 @@ export async function updateBookmarkNote(
   });
 
   if (!bookmark) {
-    throw new Error('Bookmark not found');
+    throw new NotFoundError('Bookmark', bookmarkId);
   }
 
   if (bookmark.userId !== userId) {
-    throw new Error('Unauthorized: Bookmark belongs to another user');
+    throw new ForbiddenError('Bookmark belongs to another user');
   }
 
   return prisma.bookmarkedMessage.update({

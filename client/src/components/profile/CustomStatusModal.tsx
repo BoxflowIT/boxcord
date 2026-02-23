@@ -23,6 +23,7 @@ const PRESET_EMOJIS = [
   '💪'
 ];
 const PRESET_STATUSES = [
+  { emoji: '', text: '' }, // Clear status
   { emoji: '😴', text: 'Away' },
   { emoji: '💻', text: 'Working' },
   { emoji: '🏖️', text: 'On vacation' },
@@ -139,15 +140,19 @@ export function CustomStatusModal({
           <div className="space-y-2">
             {PRESET_STATUSES.map((preset) => (
               <button
-                key={preset.text}
+                key={preset.text || 'clear'}
                 onClick={() => {
-                  setEmoji(preset.emoji);
+                  setEmoji(preset.emoji || '');
                   setStatus(preset.text);
                 }}
                 className="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-800 transition-colors text-left"
               >
-                <span className="text-xl">{preset.emoji}</span>
-                <span>{preset.text}</span>
+                {preset.emoji ? (
+                  <span className="text-xl">{preset.emoji}</span>
+                ) : (
+                  <span className="text-xl text-gray-500">🚫</span>
+                )}
+                <span>{preset.text || t('profile.clearStatus')}</span>
               </button>
             ))}
           </div>
