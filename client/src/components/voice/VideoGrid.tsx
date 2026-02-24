@@ -1,185 +1,207 @@
 // Video Grid - Display video streams in voice call
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { useVoiceStore, useVoiceUsers } from '../../store/voiceStore';
 import { voiceService } from '../../services/voice.service';
 import { CloseIcon, MinimizeIcon, PipIcon, FloatWindowIcon } from '../ui/Icons';
 import { logger } from '../../utils/logger';
+import {
+  setupVideoElement,
+  clearVideoElement
+} from '../../utils/videoStreamHelpers';
+import { useShallow } from 'zustand/react/shallow';
+import { VideoContainer } from './VideoContainer';
+import { PeerVideo } from './PeerVideo';
+import { usePictureInPicture } from '../../hooks/usePictureInPicture';
 
 export function VideoGrid() {
   const localStream = useVoiceStore((s) => s.localStream);
   const voiceUsers = useVoiceUsers();
-  const { isVideoEnabled, isScreenSharing, videoWindow, setVideoWindowMode } =
-    useVoiceStore((s) => ({
+
+  // Use useShallow to properly handle object selectors
+  const { isVideoEnabled, isScreenSharing, setVideoWindowMode } = useVoiceStore(
+    useShallow((s) => ({
       isVideoEnabled: s.isVideoEnabled,
       isScreenSharing: s.isScreenSharing,
-      videoWindow: s.videoWindow,
       setVideoWindowMode: s.setVideoWindowMode
-    }));
+    }))
+  );
 
-  const [isPipSupported, setIsPipSupported] = useState(false);
-  const [isPipActive, setIsPipActive] = useState(false);
+  // Select videoWindow state separately for proper updates
+  const videoWindowMode = useVoiceStore((s) => s.videoWindow.mode);
+  const videoWindowPreviousMode = useVoiceStore(
+    (s) => s.videoWindow.previousMode
+  );
 
+  // Use state for video elements so useEffect runs when they mount
+  const [cameraVideoElement, setCameraVideoElement] =
+    useState<HTMLVideoElement | null>(null);
+  const [screenVideoElement, setScreenVideoElement] =
+    useState<HTMLVideoElement | null>(null);
+
+  // Separate elements for PiP (always mounted off-screen)
+  const [pipCameraElement, setPipCameraElement] =
+    useState<HTMLVideoElement | null>(null);
+  const [pipScreenElement, setPipScreenElement] =
+    useState<HTMLVideoElement | null>(null);
+
+  // Create refs for compatibility with hooks
   const cameraVideoRef = useRef<HTMLVideoElement>(null);
   const screenVideoRef = useRef<HTMLVideoElement>(null);
 
-  // Check PiP support
-  useEffect(() => {
-    setIsPipSupported(
-      'pictureInPictureEnabled' in document && document.pictureInPictureEnabled
-    );
+  // Callback refs for UI VideoContainers - only update their own state
+  const cameraRefCallback = useCallback((element: HTMLVideoElement | null) => {
+    setCameraVideoElement(element);
   }, []);
 
-  // Handle PiP events
-  useEffect(() => {
-    const handleEnterPip = () => {
-      setIsPipActive(true);
-      setVideoWindowMode('pip');
-    };
+  const screenRefCallback = useCallback((element: HTMLVideoElement | null) => {
+    setScreenVideoElement(element);
+  }, []);
 
-    const handleLeavePip = () => {
-      setIsPipActive(false);
-      if (videoWindow.mode === 'pip') {
-        setVideoWindowMode('fullscreen');
+  // PiP callback refs - always mounted for PiP (no dependencies to avoid re-mounting)
+  const pipCameraRefCallback = useCallback(
+    (element: HTMLVideoElement | null) => {
+      setPipCameraElement(element);
+      // Update main ref for PiP hook to use
+      if (element) {
+        (cameraVideoRef as any).current = element;
       }
-    };
+    },
+    []
+  );
 
-    document.addEventListener('enterpictureinpicture', handleEnterPip);
-    document.addEventListener('leavepictureinpicture', handleLeavePip);
+  const pipScreenRefCallback = useCallback(
+    (element: HTMLVideoElement | null) => {
+      setPipScreenElement(element);
+      // Update main ref for PiP hook to use
+      if (element) {
+        (screenVideoRef as any).current = element;
+      }
+    },
+    []
+  );
 
-    return () => {
-      document.removeEventListener('enterpictureinpicture', handleEnterPip);
-      document.removeEventListener('leavepictureinpicture', handleLeavePip);
-    };
-  }, [setVideoWindowMode, videoWindow.mode]);
+  // Custom hooks for video stream setup and PiP handling
+  const {
+    isPipSupported,
+    isPipActive,
+    isVideoReady,
+    setIsVideoReady,
+    handlePip
+  } = usePictureInPicture({
+    cameraVideoRef,
+    screenVideoRef,
+    localStream,
+    onModeChange: setVideoWindowMode,
+    previousMode: videoWindowPreviousMode
+  });
 
-  // Setup camera video
+  // Setup camera video - runs when cameraVideoElement mounts
   useEffect(() => {
-    const camRef = cameraVideoRef.current;
-    if (!camRef || !localStream || !isVideoEnabled) {
+    if (!cameraVideoElement || !localStream || !isVideoEnabled) {
+      clearVideoElement(cameraVideoElement);
+      setIsVideoReady(false);
       return;
     }
 
-    const videoTracks = localStream.getVideoTracks();
-    logger.debug('Camera setup - video tracks:', videoTracks.length);
+    setupVideoElement(cameraVideoElement, localStream, false)
+      .then(() => {
+        cameraVideoElement.addEventListener(
+          'canplay',
+          () => setIsVideoReady(true),
+          { once: true }
+        );
+        if (cameraVideoElement.readyState >= 2) {
+          setIsVideoReady(true);
+        }
+      })
+      .catch((error) => logger.error('[VideoGrid] Camera setup error:', error));
 
-    // Find camera track - must NOT be a screen/monitor/display
-    const cameraTrack = videoTracks.find((track) => {
-      const label = track.label.toLowerCase();
-      const settings = track.getSettings();
-      logger.debug('Track:', { label, settings });
-
-      // Screen share tracks have displaySurface set OR contain screen/monitor/display in label
-      const isScreenTrack =
-        settings.displaySurface ||
-        label.includes('screen') ||
-        label.includes('monitor') ||
-        label.includes('display');
-      return !isScreenTrack; // Camera is anything that's NOT a screen share
-    });
-
-    if (cameraTrack) {
-      const stream = new MediaStream([cameraTrack]);
-      camRef.srcObject = stream;
-      camRef.play().catch((e) => logger.error('Camera play error:', e));
-      logger.debug('Camera track set:', cameraTrack.label);
-    } else if (videoTracks.length > 0 && !isScreenSharing) {
-      // Fallback: if no explicit camera track found and not screen sharing, use first track
-      const stream = new MediaStream([videoTracks[0]]);
-      camRef.srcObject = stream;
-      camRef.play().catch((e) => logger.error('Camera play error:', e));
-      logger.debug('Using fallback camera track:', videoTracks[0].label);
-    }
-
-    // Cleanup
     return () => {
-      if (camRef) {
-        camRef.srcObject = null;
-      }
+      clearVideoElement(cameraVideoElement);
+      setIsVideoReady(false);
     };
-  }, [localStream, isVideoEnabled, isScreenSharing]);
+  }, [cameraVideoElement, localStream, isVideoEnabled, setIsVideoReady]);
 
-  // Setup screen share video
+  // Setup screen share video - runs when screenVideoElement mounts
   useEffect(() => {
-    const screenRef = screenVideoRef.current;
-    if (!screenRef || !localStream || !isScreenSharing) {
+    if (!screenVideoElement || !localStream || !isScreenSharing) {
+      clearVideoElement(screenVideoElement);
       return;
     }
 
-    const videoTracks = localStream.getVideoTracks();
-    logger.debug('Screen setup - video tracks:', videoTracks.length);
+    setupVideoElement(screenVideoElement, localStream, true)
+      .then(() => {
+        screenVideoElement.addEventListener(
+          'canplay',
+          () => setIsVideoReady(true),
+          { once: true }
+        );
+        if (screenVideoElement.readyState >= 2) {
+          setIsVideoReady(true);
+        }
+      })
+      .catch((error) => logger.error('[VideoGrid] Screen setup error:', error));
 
-    // Find screen share track - check displaySurface first, then label keywords
-    const screenTrack = videoTracks.find((track) => {
-      const label = track.label.toLowerCase();
-      const settings = track.getSettings();
-      logger.debug('Track:', { label, settings });
+    return () => clearVideoElement(screenVideoElement);
+  }, [screenVideoElement, localStream, isScreenSharing, setIsVideoReady]);
 
-      // Screen share tracks have displaySurface OR contain screen/monitor/display in label
-      return (
-        settings.displaySurface ||
-        label.includes('screen') ||
-        label.includes('monitor') ||
-        label.includes('display')
-      );
-    });
-
-    if (screenTrack) {
-      const stream = new MediaStream([screenTrack]);
-      screenRef.srcObject = stream;
-      screenRef.play().catch((e) => logger.error('Screen play error:', e));
-      logger.debug('Screen track set:', screenTrack.label);
-    } else if (videoTracks.length > 0) {
-      // Fallback: if screen sharing is active but can't identify track, use last track
-      const stream = new MediaStream([videoTracks[videoTracks.length - 1]]);
-      screenRef.srcObject = stream;
-      screenRef.play().catch((e) => logger.error('Screen play error:', e));
-      logger.debug(
-        'Using fallback screen track:',
-        videoTracks[videoTracks.length - 1].label
-      );
-    }
-
-    // Cleanup
-    return () => {
-      if (screenRef) {
-        screenRef.srcObject = null;
-      }
-    };
-  }, [localStream, isScreenSharing]);
-
-  // Auto-reset to fullscreen when video/screen is disabled
+  // Setup PiP camera video (always mounted off-screen)
   useEffect(() => {
-    if (!isVideoEnabled && !isScreenSharing && voiceUsers.length === 0) {
-      // Only reset if we're in a video mode (not already in fullscreen)
-      if (videoWindow.mode !== 'fullscreen') {
-        setVideoWindowMode('fullscreen');
-      }
+    if (!pipCameraElement || !localStream || !isVideoEnabled) {
+      clearVideoElement(pipCameraElement);
+      return;
     }
-  }, [
+
+    setupVideoElement(pipCameraElement, localStream, false).catch((error) =>
+      logger.error('[VideoGrid] PiP camera setup error:', error)
+    );
+
+    return () => clearVideoElement(pipCameraElement);
+  }, [pipCameraElement, localStream, isVideoEnabled]);
+
+  // Setup PiP screen video (always mounted off-screen)
+  useEffect(() => {
+    if (!pipScreenElement || !localStream || !isScreenSharing) {
+      clearVideoElement(pipScreenElement);
+      return;
+    }
+
+    setupVideoElement(pipScreenElement, localStream, true).catch((error) =>
+      logger.error('[VideoGrid] PiP screen setup error:', error)
+    );
+
+    return () => clearVideoElement(pipScreenElement);
+  }, [pipScreenElement, localStream, isScreenSharing]);
+
+  // Note: No auto-reset logic - each mode component (FloatingVideoWindowNew, MinimizedVideoIndicatorNew)
+  // handles its own cleanup when no video is active. VideoGrid only renders in fullscreen mode.
+
+  // Exit PiP when switching to another mode (minimize, float, etc)
+  useEffect(() => {
+    if (videoWindowMode !== 'pip' && document.pictureInPictureElement) {
+      document
+        .exitPictureInPicture()
+        .catch((e) => logger.error('PiP exit error:', e));
+    }
+  }, [videoWindowMode]);
+
+  // IMPORTANT: Keep video elements mounted even in PiP mode so PiP can continue using them!
+  // Only hide the UI when not in fullscreen
+  const shouldShowUI =
+    videoWindowMode === 'fullscreen' &&
+    (isVideoEnabled || isScreenSharing || voiceUsers.length > 0);
+
+  logger.debug('[VideoGrid] Render decision:', {
+    videoWindowMode,
+    shouldShowUI,
     isVideoEnabled,
     isScreenSharing,
-    voiceUsers.length,
-    videoWindow.mode,
-    setVideoWindowMode
-  ]);
-
-  // Don't show fullscreen modal if minimized, floating, or in PiP
-  if (
-    videoWindow.mode === 'minimized' ||
-    videoWindow.mode === 'pip' ||
-    videoWindow.mode === 'floating'
-  ) {
-    return null;
-  }
-
-  // Only show video grid if video or screen share is enabled
-  if (!isVideoEnabled && !isScreenSharing && voiceUsers.length === 0) {
-    return null;
-  }
+    voiceUsersCount: voiceUsers.length
+  });
 
   const handleClose = () => {
     // Exit PiP if active before closing
-    if (isPipActive && document.pictureInPictureElement) {
+    if (document.pictureInPictureElement) {
       document
         .exitPictureInPicture()
         .catch((e) => logger.error('PiP exit error:', e));
@@ -197,120 +219,176 @@ export function VideoGrid() {
     setVideoWindowMode('fullscreen');
   };
 
-  const handleMinimize = () => {
+  const handleMinimize = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
+    logger.info('[VideoGrid] Minimize clicked, switching to minimized');
     setVideoWindowMode('minimized');
   };
 
-  const handleFloat = () => {
+  const handleFloat = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
+    logger.info('[VideoGrid] Float clicked, switching to floating');
     setVideoWindowMode('floating');
   };
 
-  const handlePip = async () => {
-    const videoElement = screenVideoRef.current || cameraVideoRef.current;
-    if (!videoElement || !isPipSupported) return;
-
-    try {
-      if (isPipActive) {
-        await document.exitPictureInPicture();
-      } else {
-        await videoElement.requestPictureInPicture();
-      }
-    } catch (error) {
-      logger.error('PiP error:', error);
-    }
-  };
-
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-      <div className="bg-gray-900 rounded-xl shadow-2xl border border-gray-700 w-full h-full max-w-7xl max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-gray-800 border-b border-gray-700 flex-shrink-0">
-          <div>
-            <h3 className="text-xl font-semibold text-white">
-              {isScreenSharing && isVideoEnabled
-                ? 'Camera + Screen Share'
-                : isScreenSharing
-                  ? 'Screen Share'
-                  : 'Video Call'}
-            </h3>
-            <p className="text-sm text-gray-400 mt-1">
-              {isScreenSharing && isVideoEnabled
-                ? 'Sharing camera and screen'
-                : isScreenSharing
-                  ? 'Sharing your screen'
-                  : 'Video call active'}
-            </p>
-          </div>
+    <>
+      {/* Hidden video elements - kept mounted for PiP even when UI is hidden */}
+      <div
+        style={{
+          position: 'fixed',
+          left: '-9999px',
+          top: '-9999px',
+          pointerEvents: 'none'
+        }}
+      >
+        <video
+          ref={pipCameraRefCallback}
+          autoPlay
+          muted
+          playsInline
+          style={{ width: '1px', height: '1px' }}
+        />
+        <video
+          ref={pipScreenRefCallback}
+          autoPlay
+          muted
+          playsInline
+          style={{ width: '1px', height: '1px' }}
+        />
+      </div>
 
-          {/* Window Controls */}
-          <div className="flex items-center gap-2">
-            {/* Minimize Button */}
-            <button
-              onClick={handleMinimize}
-              className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-300 hover:text-white"
-              title="Minimize video"
-            >
-              <MinimizeIcon size="md" />
-            </button>
-
-            {/* Float Window Button */}
-            <button
-              onClick={handleFloat}
-              className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-300 hover:text-white"
-              title="Float window"
-            >
-              <FloatWindowIcon size="md" />
-            </button>
-
-            {/* Picture-in-Picture Button */}
-            {isPipSupported && (
-              <button
-                onClick={handlePip}
-                className={`p-2 hover:bg-gray-700 rounded-lg transition-colors ${
-                  isPipActive
-                    ? 'text-blue-400 bg-blue-500/20'
-                    : 'text-gray-300 hover:text-white'
-                }`}
-                title={
-                  isPipActive ? 'Exit Picture-in-Picture' : 'Picture-in-Picture'
-                }
-              >
-                <PipIcon size="md" />
-              </button>
-            )}
-
-            {/* Close Button */}
-            <button
-              onClick={handleClose}
-              className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-300 hover:text-white"
-              title="Close video"
-            >
-              <CloseIcon size="md" />
-            </button>
-          </div>
-        </div>
-
-        {/* Video Content */}
-        <div className="flex-1 p-6 bg-gray-950 overflow-hidden">
-          {isScreenSharing ? (
-            // Layout when screen sharing: Screen on top, camera/peers below
-            <div className="flex flex-col gap-4 h-full">
-              {/* Screen share - 70% height */}
-              <div className="flex-[7] min-h-0">
-                <VideoContainer
-                  videoRef={screenVideoRef}
-                  label="Your Screen"
-                  isScreenShare
-                />
+      {/* Only show fullscreen modal UI when in fullscreen mode */}
+      {shouldShowUI && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+          <div className="bg-gray-900 rounded-xl shadow-2xl border border-gray-700 w-full h-full max-w-7xl max-h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 bg-gray-800 border-b border-gray-700 flex-shrink-0">
+              <div>
+                <h3 className="text-xl font-semibold text-white">
+                  {isScreenSharing && isVideoEnabled
+                    ? 'Camera + Screen Share'
+                    : isScreenSharing
+                      ? 'Screen Share'
+                      : 'Video Call'}
+                </h3>
+                <p className="text-sm text-gray-400 mt-1">
+                  {isScreenSharing && isVideoEnabled
+                    ? 'Sharing camera and screen'
+                    : isScreenSharing
+                      ? 'Sharing your screen'
+                      : 'Video call active'}
+                </p>
               </div>
 
-              {/* Camera and peers - 30% height */}
-              {(isVideoEnabled || voiceUsers.length > 0) && (
-                <div className="flex-[3] min-h-0">
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 h-full">
+              {/* Window Controls */}
+              <div className="flex items-center gap-2">
+                {/* Minimize Button */}
+                <button
+                  onClick={handleMinimize}
+                  className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-300 hover:text-white"
+                  title="Minimize video"
+                >
+                  <MinimizeIcon size="md" />
+                </button>
+
+                {/* Float Window Button */}
+                <button
+                  onClick={handleFloat}
+                  className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-300 hover:text-white"
+                  title="Float window"
+                >
+                  <FloatWindowIcon size="md" />
+                </button>
+
+                {/* Picture-in-Picture Button */}
+                {isPipSupported && (
+                  <button
+                    onClick={handlePip}
+                    disabled={!isVideoReady}
+                    className={`p-2 hover:bg-gray-700 rounded-lg transition-colors ${
+                      isPipActive
+                        ? 'text-blue-400 bg-blue-500/20'
+                        : 'text-gray-300 hover:text-white'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    title={
+                      !isVideoReady
+                        ? 'Video is loading...'
+                        : isPipActive
+                          ? 'Exit Picture-in-Picture'
+                          : 'Picture-in-Picture'
+                    }
+                  >
+                    <PipIcon size="md" />
+                  </button>
+                )}
+
+                {/* Close Button */}
+                <button
+                  onClick={handleClose}
+                  className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-300 hover:text-white"
+                  title="Close video"
+                >
+                  <CloseIcon size="md" />
+                </button>
+              </div>
+            </div>
+
+            {/* Video Content */}
+            <div className="flex-1 p-6 bg-gray-950 overflow-hidden">
+              {isScreenSharing ? (
+                // Layout when screen sharing: Screen on top, camera/peers below
+                <div className="flex flex-col gap-4 h-full">
+                  {/* Screen share - 70% height */}
+                  <div className="flex-[7] min-h-0">
+                    <VideoContainer
+                      videoRef={screenRefCallback}
+                      label="Your Screen"
+                      isScreenShare
+                      showLiveIndicator
+                    />
+                  </div>
+
+                  {/* Camera and peers - 30% height */}
+                  {(isVideoEnabled || voiceUsers.length > 0) && (
+                    <div className="flex-[3] min-h-0">
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 h-full">
+                        {isVideoEnabled && (
+                          <VideoContainer
+                            videoRef={cameraRefCallback}
+                            label="You"
+                            mirrored
+                          />
+                        )}
+                        {voiceUsers
+                          .filter(
+                            (user) =>
+                              user.userId !==
+                              useVoiceStore.getState().currentSessionId
+                          )
+                          .map((user) => (
+                            <PeerVideo key={user.userId} userId={user.userId} />
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // Layout without screen share: Just camera and peers in grid
+                <div className="h-full">
+                  <div
+                    className="grid gap-4 h-full"
+                    style={{
+                      gridTemplateColumns:
+                        'repeat(auto-fit, minmax(300px, 1fr))',
+                      gridAutoRows: 'minmax(200px, 1fr)'
+                    }}
+                  >
                     {isVideoEnabled && (
                       <VideoContainer
-                        videoRef={cameraVideoRef}
+                        videoRef={cameraRefCallback}
                         label="You"
                         mirrored
                       />
@@ -328,114 +406,11 @@ export function VideoGrid() {
                 </div>
               )}
             </div>
-          ) : (
-            // Layout without screen share: Just camera and peers in grid
-            <div className="h-full">
-              <div
-                className="grid gap-4 h-full"
-                style={{
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                  gridAutoRows: 'minmax(200px, 1fr)'
-                }}
-              >
-                {isVideoEnabled && (
-                  <VideoContainer
-                    videoRef={cameraVideoRef}
-                    label="You"
-                    mirrored
-                  />
-                )}
-                {voiceUsers
-                  .filter(
-                    (user) =>
-                      user.userId !== useVoiceStore.getState().currentSessionId
-                  )
-                  .map((user) => (
-                    <PeerVideo key={user.userId} userId={user.userId} />
-                  ))}
-              </div>
-            </div>
-          )}
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }
 
 // Reusable video container component
-interface VideoContainerProps {
-  videoRef: React.RefObject<HTMLVideoElement>;
-  label: string;
-  mirrored?: boolean;
-  isScreenShare?: boolean;
-}
-
-function VideoContainer({
-  videoRef,
-  label,
-  mirrored = false,
-  isScreenShare = false
-}: VideoContainerProps) {
-  return (
-    <div className="relative bg-gray-800 rounded-lg overflow-hidden w-full h-full">
-      <video
-        ref={videoRef}
-        autoPlay
-        muted
-        playsInline
-        className="absolute inset-0 w-full h-full"
-        style={{
-          objectFit: isScreenShare ? 'contain' : 'cover',
-          ...(mirrored && { transform: 'scaleX(-1)' })
-        }}
-      />
-      <div
-        className={`absolute ${isScreenShare ? 'top-3 left-3 bg-green-600' : 'bottom-2 left-2 bg-black/80'} px-2 py-1 rounded text-xs font-medium text-white z-10 ${isScreenShare ? 'flex items-center gap-2' : ''}`}
-      >
-        {isScreenShare && (
-          <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-        )}
-        {label}
-      </div>
-    </div>
-  );
-}
-
-interface PeerVideoProps {
-  userId: string;
-}
-
-function PeerVideo({ userId }: PeerVideoProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const peer = useVoiceStore((s) => s.peers.get(userId));
-
-  useEffect(() => {
-    if (videoRef.current && peer) {
-      // @ts-expect-error - SimplePeer has _pc (RTCPeerConnection)
-      const pc = peer._pc as RTCPeerConnection;
-      if (pc) {
-        const receivers = pc.getReceivers();
-        const videoReceiver = receivers.find((r) => r.track.kind === 'video');
-
-        if (videoReceiver) {
-          const stream = new MediaStream([videoReceiver.track]);
-          videoRef.current.srcObject = stream;
-        }
-      }
-    }
-  }, [peer, userId]);
-
-  return (
-    <div className="relative bg-gray-800 rounded-lg overflow-hidden w-full h-full">
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        className="absolute inset-0 w-full h-full object-cover"
-      />
-      <div className="absolute bottom-2 left-2 bg-black/80 px-2 py-1 rounded text-xs font-medium text-white z-10">
-        User {userId.slice(0, 8)}
-      </div>
-    </div>
-  );
-}

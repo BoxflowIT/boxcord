@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import type SimplePeer from 'simple-peer';
+import { logger } from '../utils/logger';
 
 // ============================================================================
 // TYPES
@@ -18,6 +19,8 @@ export type VideoWindowMode = 'fullscreen' | 'minimized' | 'pip' | 'floating';
 
 export interface VideoWindowState {
   mode: VideoWindowMode;
+  previousMode: VideoWindowMode | null; // Track previous mode for PiP exit
+  modeChangedAt: number; // Timestamp when mode last changed (to prevent immediate clicks)
   position: { x: number; y: number };
   size: { width: number; height: number };
 }
@@ -86,6 +89,8 @@ const createInitialState = (): VoiceStateData => ({
   localStream: null,
   videoWindow: {
     mode: 'fullscreen',
+    previousMode: null,
+    modeChangedAt: 0,
     position: { x: 0, y: 0 },
     size: { width: 800, height: 600 }
   }
@@ -166,9 +171,25 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
 
   // Video window controls
   setVideoWindowMode: (mode) => {
-    set((state) => ({
-      videoWindow: { ...state.videoWindow, mode }
-    }));
+    const currentMode = get().videoWindow.mode;
+    logger.debug('[voiceStore] setVideoWindowMode:', currentMode, '->', mode);
+
+    set((state) => {
+      // Save previous mode when entering PiP (so we can restore on exit)
+      const previousMode =
+        mode === 'pip'
+          ? state.videoWindow.mode
+          : state.videoWindow.previousMode;
+
+      return {
+        videoWindow: {
+          ...state.videoWindow,
+          mode,
+          previousMode,
+          modeChangedAt: Date.now()
+        }
+      };
+    });
 
     // Save to localStorage for persistence
     localStorage.setItem('boxcord_video_window_mode', mode);

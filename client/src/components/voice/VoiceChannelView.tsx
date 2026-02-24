@@ -6,8 +6,8 @@ import { logger } from '../../utils/logger';
 import { VoiceUserList } from './VoiceUserList';
 import { VoiceControls } from './EnhancedVoiceControls';
 import { VideoGrid } from './VideoGrid';
-import { MinimizedVideoIndicator } from './MinimizedVideoIndicator';
-import { FloatingVideoWindow } from './FloatingVideoWindow';
+import { MinimizedVideoIndicatorNew } from './MinimizedVideoIndicatorNew';
+import { FloatingVideoWindowNew } from './FloatingVideoWindowNew';
 import {
   VoiceChannelIcon,
   VoiceConnectIcon,
@@ -183,10 +183,10 @@ export function VoiceChannelView({
               <VideoGrid />
 
               {/* Minimized video indicator (floating) */}
-              <MinimizedVideoIndicator />
+              <MinimizedVideoIndicatorNew />
 
               {/* Floating video window (draggable + resizable) */}
-              <FloatingVideoWindow />
+              <FloatingVideoWindowNew />
 
               {/* Voice users list */}
               <VoiceUserList />
