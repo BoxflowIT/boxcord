@@ -3,7 +3,8 @@ import {
   CognitoUserPool,
   CognitoUser,
   CognitoUserSession,
-  AuthenticationDetails
+  AuthenticationDetails,
+  CognitoUserAttribute
 } from 'amazon-cognito-identity-js';
 import { logger } from '../utils/logger';
 
@@ -64,18 +65,18 @@ export const signUp = (
 ): Promise<SignUpResult> => {
   return new Promise((resolve) => {
     const attributeList = [
-      {
+      new CognitoUserAttribute({
         Name: 'email',
         Value: email
-      },
-      {
+      }),
+      new CognitoUserAttribute({
         Name: 'given_name',
         Value: firstName
-      },
-      {
+      }),
+      new CognitoUserAttribute({
         Name: 'family_name',
         Value: lastName
-      }
+      })
     ];
 
     userPool.signUp(email, password, attributeList, [], (err, result) => {
