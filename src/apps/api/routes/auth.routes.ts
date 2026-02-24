@@ -22,14 +22,20 @@ export async function authRoutes(app: FastifyInstance) {
   app.post(
     '/register',
     {
-      onRequest: [app.authenticate],
-      schema: {
-        body: registerBody
-      }
+      onRequest: [app.authenticate]
     },
     async (request, reply) => {
-      const body = request.body as z.infer<typeof registerBody>;
-      const { id, email, firstName, lastName } = body;
+      // Validate request body with Zod
+      const validation = registerBody.safeParse(request.body);
+      if (!validation.success) {
+        return reply.code(400).send({
+          error: 'Bad Request',
+          message: 'Invalid request body',
+          details: validation.error.errors
+        });
+      }
+
+      const { id, email, firstName, lastName } = validation.data;
 
       // Validate that the authenticated user matches the registration data
       if (request.user.id !== id) {
