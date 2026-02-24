@@ -64,7 +64,9 @@ class SocketService {
 
     // Currently connecting
     if (this.connecting) {
-      logger.log('Socket: Connection already in progress...');
+      logger.debug(
+        'Socket: Connection already in progress, skipping duplicate connect'
+      );
       return;
     }
 

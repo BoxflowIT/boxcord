@@ -1,5 +1,5 @@
 // Emoji & GIF Picker Component - Unified picker with tabs
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import EmojiPickerReact, { EmojiClickData, Theme } from 'emoji-picker-react';
 import { GiphyFetch } from '@giphy/js-fetch-api';
@@ -7,6 +7,8 @@ import { Grid } from '@giphy/react-components';
 import type { IGif } from '@giphy/js-types';
 import { GIPHY_CONFIG } from '../../config/giphy';
 import { EmojiIcon } from './Icons';
+import { logger } from '../../utils/logger';
+import { retryGiphy } from '../../utils/retry';
 
 const gf = new GiphyFetch(GIPHY_CONFIG.apiKey);
 
@@ -26,6 +28,12 @@ export default function EmojiPicker({
   const [activeTab, setActiveTab] = useState<TabType>('emojis');
   const [searchTerm, setSearchTerm] = useState('');
   const pickerRef = useRef<HTMLDivElement>(null);
+
+  // Simple cache for GIF results (search term -> results)
+  const gifCache = useRef<Map<string, { data: IGif[]; timestamp: number }>>(
+    new Map()
+  );
+  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -68,13 +76,60 @@ export default function EmojiPicker({
     setActiveTab('emojis');
   };
 
-  // Fetch GIFs based on search term
-  const fetchGifs = (offset: number) => {
-    if (searchTerm) {
-      return gf.search(searchTerm, { offset, limit: 10 });
-    }
-    return gf.trending({ offset, limit: 10 });
-  };
+  // Fetch GIFs based on search term with retry logic and caching
+  const fetchGifs = useCallback(
+    async (offset: number) => {
+      const cacheKey = `${searchTerm || 'trending'}-${offset}`;
+
+      // Check cache first
+      const cached = gifCache.current.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        logger.debug('Using cached Giphy results', { cacheKey });
+        return {
+          data: cached.data,
+          pagination: {
+            total_count: cached.data.length,
+            count: cached.data.length,
+            offset
+          },
+          meta: { status: 200, msg: 'OK', response_id: 'cached' }
+        };
+      }
+
+      try {
+        // Retry with exponential backoff for rate limiting
+        const result = await retryGiphy(async () => {
+          if (searchTerm) {
+            return await gf.search(searchTerm, { offset, limit: 10 });
+          }
+          return await gf.trending({ offset, limit: 10 });
+        });
+
+        // Cache successful results
+        if (result.data.length > 0) {
+          gifCache.current.set(cacheKey, {
+            data: result.data,
+            timestamp: Date.now()
+          });
+        }
+
+        return result;
+      } catch (error) {
+        // After all retries failed, use fallback
+        logger.warn(
+          'Giphy API error after retries, using empty fallback',
+          error
+        );
+        // Return empty result matching GifsResult type
+        return {
+          data: [],
+          pagination: { total_count: 0, count: 0, offset },
+          meta: { status: 200, msg: 'OK', response_id: '' }
+        };
+      }
+    },
+    [searchTerm]
+  );
 
   const handleGifClick = (
     gif: IGif,
