@@ -9,6 +9,7 @@ import Spinner from './components/ui/Spinner';
 import { ErrorBoundary } from './components/utility';
 import ToastContainer from './components/notification/ToastContainer';
 import CustomLogin from './pages/CustomLogin';
+import DevLogin from './pages/DevLogin';
 import ForgotPassword from './pages/ForgotPassword';
 import JoinPage from './pages/JoinPage';
 import Chat from './pages/Chat';
@@ -106,13 +107,16 @@ function App() {
   // Get toasts from notification store
   const { toasts, removeToast } = useNotificationStore();
 
+  // Use DevLogin in development mode for easier testing
+  const LoginComponent = import.meta.env.DEV ? DevLogin : CustomLogin;
+
   return (
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
         {isLoading && <Spinner />}
         <ToastContainer toasts={toasts} onRemove={removeToast} />
         <Routes>
-          <Route path="/login" element={<CustomLogin />} />
+          <Route path="/login" element={<LoginComponent />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route
             path="/join/:code"
