@@ -3,6 +3,8 @@ import { useVoiceStore } from '../../store/voiceStore';
 import { useAudioSettingsStore } from '../../store/audioSettingsStore';
 import { VAD_CONFIG, VAD_SENSITIVITY } from './constants';
 import type { AudioPipelineState, VADState } from './types';
+import type { AudioPipelineNodes } from '../../utils/audioPipeline';
+import { logger } from '../../utils/logger';
 
 /**
  * Start voice activity detection
@@ -20,7 +22,9 @@ export function startVoiceActivityDetection(
     audioState.analyser.smoothingTimeConstant = VAD_CONFIG.SMOOTHING;
 
     // Connect analyser to pipeline output (before outputGain)
-    audioState.audioPipeline.limiter.connect(audioState.analyser);
+    (audioState.audioPipeline as AudioPipelineNodes).limiter.connect(
+      audioState.analyser
+    );
 
     const dataArray = new Uint8Array(audioState.analyser.frequencyBinCount);
 
@@ -56,7 +60,9 @@ export function startVoiceActivityDetection(
           !vadState.vadActive
         ) {
           vadState.vadActive = true;
-          audioState.audioPipeline.vadGate.gain.setTargetAtTime(1.0, 0, 0.01);
+          (
+            audioState.audioPipeline as AudioPipelineNodes
+          ).vadGate.gain.setTargetAtTime(1.0, 0, 0.01);
         }
       } else {
         // Silence - decrement counter
@@ -65,7 +71,9 @@ export function startVoiceActivityDetection(
           // Start silence counter
           if (vadState.frameCounter <= -VAD_CONFIG.DEACTIVATE_THRESHOLD) {
             vadState.vadActive = false;
-            audioState.audioPipeline.vadGate.gain.setTargetAtTime(0.0, 0, 0.05);
+            (
+              audioState.audioPipeline as AudioPipelineNodes
+            ).vadGate.gain.setTargetAtTime(0.0, 0, 0.05);
           }
         }
       }
@@ -91,7 +99,7 @@ export function startVoiceActivityDetection(
 
     detectSpeaking();
   } catch (error) {
-    console.error('Failed to start VAD:', error);
+    logger.error('Failed to start VAD:', error);
   }
 }
 

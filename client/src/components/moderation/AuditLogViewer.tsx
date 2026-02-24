@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CloseIcon } from '../ui/Icons';
+import { logger } from '../../utils/logger';
 
 interface AuditLogEntry {
   id: string;
@@ -41,7 +42,7 @@ export function AuditLogViewer({ workspaceId, onClose }: AuditLogViewerProps) {
         const data = await response.json();
         setLogs(data.data || []);
       } catch (error) {
-        console.error('Failed to fetch audit logs:', error);
+        logger.error('Failed to fetch audit logs:', error);
       } finally {
         setLoading(false);
       }

@@ -1,5 +1,6 @@
 // Hook for localStorage with type safety and reactivity
 import { useState, useEffect, useCallback } from 'react';
+import { logger } from '../utils/logger';
 
 export function useLocalStorage<T>(
   key: string,
@@ -24,7 +25,7 @@ export function useLocalStorage<T>(
         // Notify other components/tabs
         window.dispatchEvent(new Event('settingsChanged'));
       } catch (error) {
-        console.error(`Error setting localStorage key "${key}":`, error);
+        logger.error(`Error setting localStorage key "${key}":`, error);
       }
     },
     [key]

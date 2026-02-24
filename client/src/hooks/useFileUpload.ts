@@ -1,11 +1,5 @@
 // Hook for handling file drag & drop and paste operations
-import {
-  useState,
-  useCallback,
-  useEffect,
-  DragEvent,
-  ClipboardEvent
-} from 'react';
+import { useState, useCallback, useEffect, DragEvent } from 'react';
 
 interface UseFileUploadOptions {
   onFilesSelected: (files: File[]) => void;
@@ -111,8 +105,11 @@ export function useFileUpload({
 
   // Paste handler
   const handlePaste = useCallback(
-    (e: ClipboardEvent) => {
-      const { items } = e.clipboardData;
+    (e: React.ClipboardEvent | globalThis.ClipboardEvent) => {
+      const clipboardData = e.clipboardData;
+      if (!clipboardData) return;
+
+      const { items } = clipboardData;
       const files: File[] = [];
 
       for (let i = 0; i < items.length; i++) {
@@ -139,7 +136,7 @@ export function useFileUpload({
   // Global paste listener
   useEffect(() => {
     const handleGlobalPaste = (e: Event) => {
-      handlePaste(e as unknown as ClipboardEvent);
+      handlePaste(e as globalThis.ClipboardEvent);
     };
 
     document.addEventListener('paste', handleGlobalPaste);

@@ -1,9 +1,11 @@
 // WebRTC Peer Connection Management
 import SimplePeer from 'simple-peer';
+import type { Socket } from 'socket.io-client';
 import { useVoiceStore } from '../../store/voiceStore';
 import { SOCKET_EVENTS } from '../../../../src/00-core/constants';
 import { ICE_SERVERS } from './constants';
 import { playRemoteStream } from './audioManager';
+import { logger } from '../../utils/logger';
 
 /**
  * Create a new peer connection
@@ -26,7 +28,7 @@ export function createPeerConnection(
 export function setupPeerListeners(
   peer: SimplePeer.Instance,
   userId: string,
-  socket: { emit: (event: string, data: unknown) => void } | null
+  socket: Socket | null
 ): void {
   peer.on('signal', (signal) => {
     const event = (peer as SimplePeer.Instance & { initiator: boolean })
@@ -45,7 +47,7 @@ export function setupPeerListeners(
   });
 
   peer.on('error', (error) => {
-    console.error(`Peer error [${userId}]:`, error);
+    logger.error(`Peer error [${userId}]:`, error);
     useVoiceStore.getState().removePeer(userId);
   });
 
@@ -60,7 +62,7 @@ export function setupPeerListeners(
 export function createPeer(
   targetUserId: string,
   localStream: MediaStream | null,
-  socket: { emit: (event: string, data: unknown) => void } | null
+  socket: Socket | null
 ): SimplePeer.Instance {
   const store = useVoiceStore.getState();
   const peer = createPeerConnection(true, localStream);
@@ -78,7 +80,7 @@ export function addPeer(
   targetUserId: string,
   offer: SimplePeer.SignalData,
   localStream: MediaStream | null,
-  socket: { emit: (event: string, data: unknown) => void } | null
+  socket: Socket | null
 ): SimplePeer.Instance {
   const store = useVoiceStore.getState();
   const peer = createPeerConnection(false, localStream);

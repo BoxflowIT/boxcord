@@ -1,5 +1,4 @@
 // Voice Service Types
-import type { AudioPipelineNodes } from '../../utils/audioPipeline';
 
 export interface VoiceStateUpdate {
   isMuted?: boolean;
@@ -23,7 +22,7 @@ export interface AudioPipelineState {
   originalLocalStream: MediaStream | null;
   audioContext: AudioContext | null;
   analyser: AnalyserNode | null;
-  audioPipeline: AudioPipelineNodes | null;
+  audioPipeline: unknown | null; // AudioPipelineNodes from audioPipeline utils
 }
 
 export interface VADState {

@@ -130,7 +130,7 @@ export function useMicTest(rnnoiseReady: boolean): UseMicTestReturn {
       // Start level monitoring
       updateMicLevel();
     } catch (error) {
-      console.error('Failed to start mic test:', error);
+      logger.error('Failed to start mic test:', error);
       setIsTesting(false);
       throw error;
     }

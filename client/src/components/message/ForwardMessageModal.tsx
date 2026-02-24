@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { CloseIcon, SendIcon } from '../ui/Icons';
 import { api } from '../../services/api';
 import { useAuthStore } from '../../store/auth';
+import { logger } from '../../utils/logger';
 
 interface Channel {
   id: string;
@@ -74,7 +75,7 @@ export function ForwardMessageModal({
           })
         );
       } catch (error) {
-        console.error('Failed to fetch targets:', error);
+        logger.error('Failed to fetch targets:', error);
       } finally {
         setLoading(false);
       }
