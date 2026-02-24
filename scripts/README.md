@@ -4,6 +4,34 @@ This folder contains utility scripts for testing Boxcord functionality during de
 
 ## Available Scripts
 
+### generate-dev-tokens.cjs ⭐
+
+**NEW!** Generates mock JWT tokens for all seeded users for local development.
+
+**Usage:**
+
+```bash
+node scripts/generate-dev-tokens.cjs
+```
+
+**What it does:**
+
+- Generates mock tokens for all 10 seeded users
+- Outputs tokens you can use in browser localStorage
+- Provides instructions for authentication
+- Shows user roles and emails
+
+**Output includes:**
+- SUPER_ADMIN token (admin@boxflow.se)
+- ADMIN token (erik.johansson@boxflow.se)
+- 8 STAFF tokens with different names and roles
+
+**Use cases:**
+- Quick authentication for frontend testing
+- Testing different user roles and permissions
+- API testing with different users
+- No need for real Cognito login in development
+
 ### send-dm.cjs
 
 Sends a test DM from Anna (user-2) to Jens.

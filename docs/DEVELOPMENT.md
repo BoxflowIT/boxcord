@@ -53,11 +53,35 @@ docker ps
 # Run migrations
 yarn db:migrate
 
-# Seed with test data (optional)
+# Seed with comprehensive test data
 yarn seed
 ```
 
-### 5. Start Development Server
+This creates:
+- **11 users** (1 super admin, 1 admin, 8 staff, 1 bot)
+- **2 workspaces** with channels
+- **20+ messages** with realistic conversations
+- **Reactions, bookmarks, DMs, and pinned messages**
+
+### 5. Get Authentication Token
+
+For local development, we use **mock JWT tokens** (no Cognito login needed):
+
+```bash
+# Generate tokens for all seeded users
+node scripts/generate-dev-tokens.cjs
+```
+
+**Quick Login (SUPER_ADMIN):**
+1. Open http://localhost:5173 in browser
+2. Open DevTools (F12) → Application → Local Storage
+3. Add key: `auth-token`
+4. Value: Token from script output (admin@boxflow.se)
+5. Refresh page → You're logged in! 🎉
+
+See [Authentication section](#-authentication-local-development) for details.
+
+### 6. Start Development Server
 
 ```bash
 # Terminal 1: Backend
@@ -74,12 +98,131 @@ yarn dev
 yarn dev:full  # Starts Docker + Backend (add frontend separately)
 ```
 
-### 6. Access Application
+### 7. Access Application
 
 - **Frontend:** http://localhost:5173
 - **Backend API:** http://localhost:3001
 - **API Docs:** http://localhost:3001/docs
 - **Prisma Studio:** `yarn db:studio` → http://localhost:5555
+
+---
+
+## 🔐 Authentication (Local Development)
+
+### Mock JWT Tokens
+
+For local development, **authentication is simplified** using mock tokens. No Cognito login required!
+
+### Generate Tokens
+
+```bash
+node scripts/generate-dev-tokens.cjs
+```
+
+This generates tokens for all 10 seeded users.
+
+### Login Method 1: Browser localStorage
+
+**Easiest method for frontend development:**
+
+1. Start frontend: `cd client && yarn dev`
+2. Open http://localhost:5173
+3. Open DevTools (F12)
+4. Navigate to: **Application** → **Local Storage** → `http://localhost:5173`
+5. Click **+** to add new key
+6. Key: `auth-token`
+7. Value: Copy token from script output
+8. Refresh page (F5)
+
+**Recommended starter user:**
+- Email: `admin@boxflow.se`
+- Role: `SUPER_ADMIN`
+- Full access to all features
+
+### Login Method 2: API Requests
+
+For backend testing or scripts:
+
+```bash
+# Test API with mock token
+TOKEN="mock.eyJzdWIiOiJ1c2VyLWFkbWluIi..."
+
+curl -H "Authorization: Bearer $TOKEN" \
+     http://localhost:3001/api/v1/users/me
+```
+
+### Available Test Users
+
+After running `yarn seed`, these users are available:
+
+| Email | Role | Description |
+|-------|------|-------------|
+| admin@boxflow.se | SUPER_ADMIN | Full system access |
+| erik.johansson@boxflow.se | ADMIN | Workspace management |
+| anna.andersson@boxflow.se | STAFF | Backend Developer |
+| maria.svensson@boxflow.se | STAFF | Frontend Developer |
+| jonas.berg@boxflow.se | STAFF | DevOps Engineer |
+| lisa.karlsson@boxflow.se | STAFF | UX Designer |
+| david.nilsson@boxflow.se | STAFF | Product Manager |
+| sofia.larsson@boxflow.se | STAFF | QA Engineer |
+| peter.olsson@boxflow.se | STAFF | Staff member |
+| emma.gustafsson@boxflow.se | STAFF | Customer Success |
+
+### Production Authentication
+
+In production, Boxcord uses **AWS Cognito** for authentication:
+- Users log in with email/password through Cognito
+- Real JWT tokens are issued
+- Mock tokens are **disabled** in production
+
+---
+
+## 🌱 Database Seeding
+
+### Comprehensive Test Data
+
+The seed script (`prisma/seed.ts`) creates realistic development data:
+
+```bash
+yarn seed
+```
+
+**What gets created:**
+- ✅ 11 users with realistic Swedish names
+- ✅ 2 workspaces (Boxflow HQ, Development)
+- ✅ 7 channels with descriptions
+- ✅ 20+ messages with conversations
+- ✅ 9 reactions on messages
+- ✅ 2 pinned messages
+- ✅ 3 bookmarks
+- ✅ 2 DM channels with messages
+
+### Reset and Re-seed
+
+```bash
+# Complete reset (deletes all data!)
+yarn docker:reset
+
+# Re-run migrations
+yarn db:migrate
+
+# Seed fresh data
+yarn seed
+```
+
+### Why Seed Data?
+
+**GDPR-Safe Development:**
+- ❌ Never use production data locally (GDPR violation!)
+- ✅ Use generated test data instead
+- ✅ Realistic conversations without privacy concerns
+- ✅ Consistent data across all developers
+
+**Testing Features:**
+- Test reactions, bookmarks, DMs
+- See pinned messages in action
+- Test with different user roles
+- Realistic message threads
 
 ---
 

@@ -14,12 +14,17 @@ cd client && yarn install && cd ..
 # 2. Setup local environment (Docker required)
 ./scripts/dev-setup.sh
 
-# 3. Start development
+# 3. Generate authentication tokens
+node scripts/generate-dev-tokens.cjs
+
+# 4. Start development
 yarn dev              # Backend (Terminal 1)
 cd client && yarn dev # Frontend (Terminal 2)
 ```
 
 **Open:** http://localhost:5173
+
+**🔐 Login:** Use mock token from step 3 in browser localStorage (see [DEVELOPMENT.md](docs/DEVELOPMENT.md#-authentication-local-development))
 
 **📚 Full guide:** [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 
