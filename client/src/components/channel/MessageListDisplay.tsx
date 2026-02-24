@@ -9,7 +9,6 @@ import { renderEnhancedMessage } from '../../utils/messageRendering';
 import { api } from '../../services/api';
 import { toast } from '../../store/notification';
 import { getUserDisplayName, getUserInitials } from '../../utils/user';
-import { logger } from '../../utils/logger';
 
 interface Message {
   id: string;
@@ -100,7 +99,7 @@ export default function MessageListDisplay({
       setForwardingMessage(null);
       toast.success(t('messages.forwardSuccess'));
     } catch (error) {
-      logger.error('Failed to forward message:', error);
+      console.error('Failed to forward message:', error);
       toast.error(t('messages.forwardError'));
     }
   };

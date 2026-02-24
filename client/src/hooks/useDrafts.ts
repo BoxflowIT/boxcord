@@ -1,7 +1,6 @@
 // Hook for managing message drafts per channel/DM
 // Auto-saves drafts to localStorage and restores when switching channels
 import { useEffect, useCallback } from 'react';
-import { logger } from '../utils/logger';
 
 const DRAFT_PREFIX = 'boxcord_draft_';
 const MAX_DRAFT_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -39,7 +38,7 @@ export function useDrafts(channelId: string | undefined) {
 
       return draft.content;
     } catch (error) {
-      logger.error('Failed to load draft:', error);
+      console.error('Failed to load draft:', error);
       return '';
     }
   }, [getDraftKey]);
@@ -64,7 +63,7 @@ export function useDrafts(channelId: string | undefined) {
 
         localStorage.setItem(key, JSON.stringify(draft));
       } catch (error) {
-        logger.error('Failed to save draft:', error);
+        console.error('Failed to save draft:', error);
       }
     },
     [getDraftKey]
@@ -78,7 +77,7 @@ export function useDrafts(channelId: string | undefined) {
     try {
       localStorage.removeItem(key);
     } catch (error) {
-      logger.error('Failed to clear draft:', error);
+      console.error('Failed to clear draft:', error);
     }
   }, [getDraftKey]);
 
@@ -110,7 +109,7 @@ export function useDrafts(channelId: string | undefined) {
       // Remove expired drafts
       keysToRemove.forEach((key) => localStorage.removeItem(key));
     } catch (error) {
-      logger.error('Failed to cleanup old drafts:', error);
+      console.error('Failed to cleanup old drafts:', error);
     }
   }, []);
 

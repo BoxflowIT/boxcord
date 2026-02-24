@@ -27,6 +27,9 @@ export function useVideoWindowMode() {
     (newMode: VideoWindowMode) => {
       const timeSince = Date.now() - modeChangedAt;
       if (timeSince < CLICK_DEBOUNCE_MS) {
+        console.log(
+          `🚫 Ignoring mode change to ${newMode} - only ${timeSince}ms since last change`
+        );
         return false;
       }
       setMode(newMode);

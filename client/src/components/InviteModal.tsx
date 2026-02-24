@@ -50,7 +50,7 @@ export default function InviteModal({
       const invite = await api.createInvite(workspaceId);
       setInvites([invite, ...invites]);
     } catch (err) {
-      logger.error('Failed to create invite:', err);
+      console.error('Failed to create invite:', err);
     } finally {
       setCreating(false);
     }
@@ -61,7 +61,7 @@ export default function InviteModal({
       await api.deleteInvite(workspaceId, inviteId);
       setInvites(invites.filter((i) => i.id !== inviteId));
     } catch (err) {
-      logger.error('Failed to delete invite:', err);
+      console.error('Failed to delete invite:', err);
     }
   };
 

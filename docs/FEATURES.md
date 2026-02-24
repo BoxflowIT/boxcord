@@ -339,11 +339,10 @@ Complete list of all implemented features in Boxcord.
 | Push notifications | ✅ Stable | [PRODUCTION.md](PRODUCTION.md) |
 | Moderation tools | ✅ Stable | - |
 | Bookmarks | ✅ Stable | - |
-| Video calls | ✅ Stable | [VOICE_ARCHITECTURE.md](VOICE_ARCHITECTURE.md) |
-| Screen sharing | ✅ Stable | [VOICE_ARCHITECTURE.md](VOICE_ARCHITECTURE.md) |
-| Video window controls | ✅ Stable | [VOICE_ARCHITECTURE.md](VOICE_ARCHITECTURE.md) |
+| Video calls | ⏳ Planned | - |
+| Screen sharing | ⏳ Planned | - |
 | Thread support | ⏳ Planned | - |
 
 ---
 
-**Last Updated:** February 24, 2026
+**Last Updated:** February 23, 2026

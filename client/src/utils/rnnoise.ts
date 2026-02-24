@@ -3,7 +3,6 @@ import {
   RnnoiseWorkletNode,
   loadRnnoise
 } from '@sapphi-red/web-noise-suppressor';
-import { logger } from './logger';
 
 // These files are copied to public folder and served as static assets
 const rnnoiseWasmPath = '/@sapphi-red/web-noise-suppressor/rnnoise.wasm';
@@ -31,7 +30,7 @@ export async function initializeRNNoise(): Promise<void> {
     });
     isInitialized = true;
   } catch (error) {
-    logger.error('❌ Failed to load RNNoise:', error);
+    console.error('❌ Failed to load RNNoise:', error);
     isInitialized = false;
     throw error;
   }
@@ -47,7 +46,7 @@ export async function applyRNNoise(
   audioContext: AudioContext
 ): Promise<MediaStream> {
   if (!isInitialized || !rnnoiseWasmBinary) {
-    logger.warn('⚠️ RNNoise not initialized, using original stream');
+    console.warn('⚠️ RNNoise not initialized, using original stream');
     return inputStream;
   }
 
@@ -78,7 +77,7 @@ export async function applyRNNoise(
 
     return destination.stream;
   } catch (error) {
-    logger.error('❌ Failed to apply RNNoise:', error);
+    console.error('❌ Failed to apply RNNoise:', error);
     // Return original stream if RNNoise fails
     return inputStream;
   }

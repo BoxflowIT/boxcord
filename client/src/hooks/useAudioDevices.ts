@@ -4,7 +4,6 @@
  */
 
 import { useState, useEffect } from 'react';
-import { logger } from '../utils/logger';
 
 export interface AudioDevice {
   deviceId: string;
@@ -55,7 +54,7 @@ export function useAudioDevices(): UseAudioDevicesReturn {
       setInputDevices(inputs);
       setOutputDevices(outputs);
     } catch (err) {
-      logger.error('Failed to load audio devices:', err);
+      console.error('Failed to load audio devices:', err);
       setError(err instanceof Error ? err : new Error('Unknown error'));
     } finally {
       setIsLoading(false);

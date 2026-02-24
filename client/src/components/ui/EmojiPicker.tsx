@@ -11,6 +11,7 @@ import { logger } from '../../utils/logger';
 import { retryGiphy } from '../../utils/retry';
 
 const gf = new GiphyFetch(GIPHY_CONFIG.apiKey);
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 interface EmojiPickerProps {
   onEmojiSelect: (emoji: string) => void;
@@ -33,7 +34,6 @@ export default function EmojiPicker({
   const gifCache = useRef<Map<string, { data: IGif[]; timestamp: number }>>(
     new Map()
   );
-  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

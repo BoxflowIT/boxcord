@@ -89,13 +89,11 @@ export async function setupAudioForCall(
       outputGain: audioSettings.inputVolume * 2.0
       // Note: inputSensitivity controls VAD threshold dynamically, not pipeline config
     }
-  ) as unknown;
+  );
 
   // Replace localStream with processed stream from pipeline
   // This ensures voice calls use the processed audio (with VAD gate, compression, etc.)
-  state.localStream = (
-    state.audioPipeline as AudioPipelineNodes
-  ).destination.stream;
+  state.localStream = state.audioPipeline.destination.stream;
 
   logger.debug('🎙️ Discord-quality voice processing active');
 

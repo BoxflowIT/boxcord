@@ -72,13 +72,23 @@ export function FloatingVideoWindowNew() {
   const [screenVideoElement, setScreenVideoElement] =
     useState<HTMLVideoElement | null>(null);
 
-  // Callback refs that update state - memoized to prevent infinite loops
+  // Create refs for compatibility with hooks
+  const cameraVideoRef = useRef<HTMLVideoElement | null>(
+    null
+  ) as React.MutableRefObject<HTMLVideoElement | null>;
+  const screenVideoRef = useRef<HTMLVideoElement | null>(
+    null
+  ) as React.MutableRefObject<HTMLVideoElement | null>;
+
+  // Callback refs that update both state and ref - memoized to prevent infinite loops
   const cameraRefCallback = useCallback((element: HTMLVideoElement | null) => {
     setCameraVideoElement(element);
+    cameraVideoRef.current = element;
   }, []);
 
   const screenRefCallback = useCallback((element: HTMLVideoElement | null) => {
     setScreenVideoElement(element);
+    screenVideoRef.current = element;
   }, []);
 
   const nodeRef = useRef<HTMLDivElement>(null);
