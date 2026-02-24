@@ -2,6 +2,7 @@
 // Used by FloatingVideoWindow
 
 import { CloseIcon, MinimizeIcon, MaximizeIcon, PipIcon } from '../ui/Icons';
+import VideoQualitySelector from './VideoQualitySelector';
 
 interface VideoWindowControlsProps {
   onMinimize: () => void;
@@ -11,6 +12,8 @@ interface VideoWindowControlsProps {
   isPipSupported?: boolean;
   isPipActive?: boolean;
   isVideoReady?: boolean;
+  isVideoEnabled?: boolean;
+  onQualityChange?: () => void;
 }
 
 export function VideoWindowControls({
@@ -20,7 +23,9 @@ export function VideoWindowControls({
   onClose,
   isPipSupported = false,
   isPipActive = false,
-  isVideoReady = true
+  isVideoReady = true,
+  isVideoEnabled = false,
+  onQualityChange
 }: VideoWindowControlsProps) {
   return (
     <div className="flex items-center gap-1 ml-2">
@@ -56,6 +61,11 @@ export function VideoWindowControls({
         >
           <PipIcon size="sm" />
         </button>
+      )}
+
+      {/* Video Quality Selector */}
+      {isVideoEnabled && onQualityChange && (
+        <VideoQualitySelector compact onQualityChange={onQualityChange} />
       )}
 
       {/* Close Button */}

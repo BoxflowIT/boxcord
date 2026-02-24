@@ -1,6 +1,7 @@
 // Video & Screen Share Manager for Voice Calls
 import { useVoiceStore } from '../../store/voiceStore';
 import { logger } from '../../utils/logger';
+import { getVideoConstraints } from '../../utils/videoQuality';
 import type { AudioPipelineState } from './types';
 
 /**
@@ -13,13 +14,12 @@ export async function enableVideo(
   try {
     const store = useVoiceStore.getState();
 
+    // Get video constraints based on user's quality preference
+    const videoConstraints = getVideoConstraints();
+
     // Get video stream
     const videoStream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-        frameRate: { ideal: 30 }
-      }
+      video: videoConstraints
     });
 
     // Add video tracks to local stream
@@ -170,5 +170,44 @@ export async function toggleScreenShare(
     stopScreenShare(audioState);
   } else {
     await startScreenShare(audioState);
+  }
+}
+
+/**
+ * Change video quality during a call
+ * Restarts video with new quality settings
+ */
+export async function changeVideoQuality(
+  audioState: AudioPipelineState
+): Promise<void> {
+  const store = useVoiceStore.getState();
+
+  // Only change quality if video is currently enabled
+  if (!store.isVideoEnabled) {
+    logger.info('Video not enabled, skipping quality change');
+    return;
+  }
+
+  try {
+    logger.info('Changing video quality...');
+
+    // Disable current video
+    disableVideo(audioState);
+
+    // Wait a bit for tracks to stop
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Re-enable with new quality
+    await enableVideo(audioState);
+
+    logger.info('✅ Video quality changed successfully');
+  } catch (error) {
+    logger.error('❌ Failed to change video quality:', error);
+    // Try to restore video with any quality
+    try {
+      await enableVideo(audioState);
+    } catch (restoreError) {
+      logger.error('❌ Failed to restore video:', restoreError);
+    }
   }
 }

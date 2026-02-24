@@ -10,6 +10,7 @@ import Avatar from '../ui/Avatar';
 import { VideoGrid } from '../voice/VideoGrid';
 import { MinimizedVideoIndicatorNew } from '../voice/MinimizedVideoIndicatorNew';
 import { FloatingVideoWindowNew } from '../voice/FloatingVideoWindowNew';
+import VideoQualitySelector from '../voice/VideoQualitySelector';
 import {
   PhoneHangUpIcon,
   MicIcon,
@@ -53,6 +54,14 @@ export function DMCallOverlay({
 
   const handleToggleScreenShare = async () => {
     await voiceService.toggleScreenShare();
+  };
+
+  const handleQualityChange = async () => {
+    try {
+      await voiceService.changeVideoQuality();
+    } catch (error) {
+      console.error('[DMCallOverlay] Failed to change quality:', error);
+    }
   };
 
   // Incoming call (ringing state)
@@ -144,7 +153,7 @@ export function DMCallOverlay({
           </div>
 
           {/* Voice/Video controls */}
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-6 gap-2">
             <button
               onClick={handleToggleMute}
               className={`p-2 rounded-lg transition-colors ${
@@ -192,6 +201,19 @@ export function DMCallOverlay({
                 <VideoOffIcon size="sm" />
               )}
             </button>
+
+            {/* Video Quality Selector - only show when video is enabled */}
+            {isVideoEnabled ? (
+              <div className="flex items-center justify-center">
+                <VideoQualitySelector
+                  compact
+                  onQualityChange={handleQualityChange}
+                />
+              </div>
+            ) : (
+              // Empty placeholder to maintain grid layout
+              <div />
+            )}
 
             <button
               onClick={handleToggleScreenShare}

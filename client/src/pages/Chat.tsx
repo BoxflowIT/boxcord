@@ -13,6 +13,7 @@ import { useVoiceStore } from '../store/voiceStore';
 import { useAuthStore } from '../store/auth';
 import { useChatStore } from '../store/chat';
 import { useWorkspaces, useChannels } from '../hooks/useQuery';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import Sidebar from '../components/Sidebar';
 import ChannelView from '../components/ChannelView';
 import DMView from '../components/DMView';
@@ -36,6 +37,11 @@ export default function Chat() {
   // React Query hooks - single source of truth for server data
   const { data: workspaces = [] } = useWorkspaces();
   const { data: channels = [] } = useChannels(currentWorkspace?.id);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    onToggleSettings: () => setShowSettings((prev) => !prev)
+  });
 
   useEffect(() => {
     if (initializedRef.current) return;
