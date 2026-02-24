@@ -44,9 +44,9 @@ export function VideoGrid() {
   const [pipScreenElement, setPipScreenElement] =
     useState<HTMLVideoElement | null>(null);
 
-  // Create refs for compatibility with hooks
-  const cameraVideoRef = useRef<HTMLVideoElement>(null);
-  const screenVideoRef = useRef<HTMLVideoElement>(null);
+  // Create mutable refs for PiP hook compatibility
+  const cameraVideoRef = useRef<HTMLVideoElement | null>(null);
+  const screenVideoRef = useRef<HTMLVideoElement | null>(null);
 
   // Callback refs for UI VideoContainers - only update their own state
   const cameraRefCallback = useCallback((element: HTMLVideoElement | null) => {
@@ -63,7 +63,7 @@ export function VideoGrid() {
       setPipCameraElement(element);
       // Update main ref for PiP hook to use
       if (element) {
-        (cameraVideoRef as any).current = element;
+        cameraVideoRef.current = element;
       }
     },
     []
@@ -74,7 +74,7 @@ export function VideoGrid() {
       setPipScreenElement(element);
       // Update main ref for PiP hook to use
       if (element) {
-        (screenVideoRef as any).current = element;
+        screenVideoRef.current = element;
       }
     },
     []

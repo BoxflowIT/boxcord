@@ -34,7 +34,7 @@ export default function JoinPage() {
     };
 
     fetchPreview();
-  }, [code]);
+  }, [code, t]);
 
   const handleJoin = async () => {
     if (!code) return;

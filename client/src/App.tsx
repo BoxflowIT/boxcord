@@ -12,6 +12,7 @@ import CustomLogin from './pages/CustomLogin';
 import ForgotPassword from './pages/ForgotPassword';
 import JoinPage from './pages/JoinPage';
 import Chat from './pages/Chat';
+import { logger } from './utils/logger';
 
 // Create QueryClient with optimized settings
 const queryClient = new QueryClient({
@@ -71,7 +72,9 @@ function App() {
     const initAudioContext = async () => {
       // Create a temporary AudioContext to initialize it with user gesture
       const AudioContextClass =
-        window.AudioContext || (window as any).webkitAudioContext;
+        window.AudioContext ||
+        (window as typeof window & { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext;
       if (AudioContextClass) {
         try {
           const ctx = new AudioContextClass();
@@ -82,7 +85,7 @@ function App() {
           document.removeEventListener('click', initAudioContext);
           document.removeEventListener('keydown', initAudioContext);
         } catch (err) {
-          console.error('Failed to initialize AudioContext:', err);
+          logger.error('Failed to initialize AudioContext:', err);
         }
       }
     };

@@ -6,13 +6,14 @@ import './i18n/config'; // Initialize i18n
 import { initSentry } from './config/sentry';
 import { initializeRNNoise } from './utils/rnnoise';
 import * as Sentry from '@sentry/react';
+import { logger } from './utils/logger';
 
 // Initialize Sentry before React renders
 initSentry();
 
 // Global error handlers
 window.addEventListener('error', (event) => {
-  console.error('Global error:', event.error);
+  logger.error('Global error:', event.error);
   if (import.meta.env.PROD) {
     Sentry.captureException(event.error, {
       tags: { errorType: 'unhandled_error' }
@@ -21,7 +22,7 @@ window.addEventListener('error', (event) => {
 });
 
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('Unhandled promise rejection:', event.reason);
+  logger.error('Unhandled promise rejection:', event.reason);
   if (import.meta.env.PROD) {
     Sentry.captureException(event.reason, {
       tags: { errorType: 'unhandled_rejection' }
@@ -34,7 +35,7 @@ initializeRNNoise()
   .then(() => {
     // RNNoise AI ready
   })
-  .catch((err) => console.error('⚠️ RNNoise initialization failed:', err));
+  .catch((err) => logger.error('⚠️ RNNoise initialization failed:', err));
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <BrowserRouter

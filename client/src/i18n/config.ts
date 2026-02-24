@@ -28,7 +28,6 @@ i18n
 
 // Save language to localStorage when it changes
 i18n.on('languageChanged', (lng) => {
-  console.log('🌍 Language changed to:', lng);
   localStorage.setItem('language', lng);
   // Dispatch event for cross-tab sync
   window.dispatchEvent(

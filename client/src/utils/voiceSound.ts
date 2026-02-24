@@ -1,8 +1,13 @@
 // Voice channel sound effects using Web Audio API
 import { useAudioSettingsStore } from '../store/audioSettingsStore';
+import { logger } from './logger';
 
-// Create audio context
-const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+// Create audio context type
+type AudioContextType = typeof AudioContext;
+const AudioContextClass: AudioContextType =
+  window.AudioContext ||
+  (window as typeof window & { webkitAudioContext?: typeof AudioContext })
+    .webkitAudioContext!;
 let audioContext: AudioContext | null = null;
 let ringingInterval: number | null = null;
 
@@ -14,7 +19,7 @@ function getSoundEffectsVolume(): number {
 // Initialize audio context on first use
 function getAudioContext(): AudioContext {
   if (!audioContext) {
-    audioContext = new AudioContext();
+    audioContext = new AudioContextClass();
   }
   return audioContext;
 }
@@ -60,7 +65,7 @@ async function generateJoinSound() {
     oscillator.start(ctx.currentTime);
     oscillator.stop(ctx.currentTime + 0.15);
   } catch (err) {
-    console.error('Failed to generate voice join sound:', err);
+    logger.error('Failed to generate voice join sound:', err);
   }
 }
 
@@ -105,7 +110,7 @@ async function generateLeaveSound() {
     oscillator.start(ctx.currentTime);
     oscillator.stop(ctx.currentTime + 0.15);
   } catch (err) {
-    console.error('Failed to generate voice leave sound:', err);
+    logger.error('Failed to generate voice leave sound:', err);
   }
 }
 
@@ -166,7 +171,7 @@ async function generateRingTone() {
     oscillator2.start(ctx.currentTime);
     oscillator2.stop(ctx.currentTime + duration + 0.05);
   } catch (err) {
-    console.error('Failed to generate ring tone:', err);
+    logger.error('Failed to generate ring tone:', err);
   }
 }
 

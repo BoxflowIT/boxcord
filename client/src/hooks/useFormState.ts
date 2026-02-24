@@ -11,7 +11,7 @@ export interface UseFormStateOptions<T> {
   onSubmit?: (values: T) => void | Promise<void>;
 }
 
-export function useFormState<T extends Record<string, any>>({
+export function useFormState<T extends Record<string, unknown>>({
   initialValues,
   validate,
   onSubmit

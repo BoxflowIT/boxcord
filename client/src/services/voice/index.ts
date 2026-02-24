@@ -145,7 +145,7 @@ class VoiceService {
       // Play join sound
       playVoiceJoinSound();
     } catch (error) {
-      console.error('Failed to join voice channel:', error);
+      logger.error('Failed to join voice channel:', error);
       this.cleanup();
       store.setConnecting(false);
       throw error;
@@ -157,7 +157,7 @@ class VoiceService {
     const { currentChannelId, currentSessionId } = store;
 
     if (!currentChannelId || !currentSessionId) {
-      console.warn('⚠️ Already disconnected from voice channel');
+      logger.warn('⚠️ Already disconnected from voice channel');
       return;
     }
 
@@ -217,7 +217,7 @@ class VoiceService {
 
       logger.debug('✅ Joined DM voice call:', channelId);
     } catch (error) {
-      console.error('Failed to join DM call:', error);
+      logger.error('Failed to join DM call:', error);
       this.cleanup();
       throw error;
     }
@@ -282,7 +282,7 @@ class VoiceService {
     try {
       await toggleVideo(this.audioState);
     } catch (error) {
-      console.error('Failed to toggle video:', error);
+      logger.error('Failed to toggle video:', error);
       throw error;
     }
   }
@@ -291,7 +291,7 @@ class VoiceService {
     try {
       await toggleScreenShare(this.audioState);
     } catch (error) {
-      console.error('Failed to toggle screen share:', error);
+      logger.error('Failed to toggle screen share:', error);
       throw error;
     }
   }
@@ -347,7 +347,7 @@ class VoiceService {
         body: JSON.stringify(state)
       });
     } catch (error) {
-      console.error('Failed to update voice state:', error);
+      logger.error('Failed to update voice state:', error);
     }
   }
 

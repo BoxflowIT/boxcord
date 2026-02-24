@@ -1,9 +1,10 @@
 // Invite Modal - Create and manage workspace invites
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { api } from '../services/api';
+import { logger } from '../utils/logger';
 import type { WorkspaceInvite } from '../types';
 
 interface InviteModalProps {
@@ -25,23 +26,23 @@ export default function InviteModal({
   const [creating, setCreating] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      loadInvites();
-    }
-  }, [isOpen, workspaceId]);
-
-  const loadInvites = async () => {
+  const loadInvites = useCallback(async () => {
     setLoading(true);
     try {
       const data = await api.getWorkspaceInvites(workspaceId);
       setInvites(data);
     } catch (err) {
-      console.error('Failed to load invites:', err);
+      logger.error('Failed to load invites:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [workspaceId]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadInvites();
+    }
+  }, [isOpen, loadInvites]);
 
   const createInvite = async () => {
     setCreating(true);
@@ -49,7 +50,7 @@ export default function InviteModal({
       const invite = await api.createInvite(workspaceId);
       setInvites([invite, ...invites]);
     } catch (err) {
-      console.error('Failed to create invite:', err);
+      logger.error('Failed to create invite:', err);
     } finally {
       setCreating(false);
     }
@@ -60,7 +61,7 @@ export default function InviteModal({
       await api.deleteInvite(workspaceId, inviteId);
       setInvites(invites.filter((i) => i.id !== inviteId));
     } catch (err) {
-      console.error('Failed to delete invite:', err);
+      logger.error('Failed to delete invite:', err);
     }
   };
 

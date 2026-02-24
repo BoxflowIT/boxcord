@@ -22,7 +22,7 @@ export interface AudioPipelineState {
   originalLocalStream: MediaStream | null;
   audioContext: AudioContext | null;
   analyser: AnalyserNode | null;
-  audioPipeline: any | null; // AudioPipelineNodes from audioPipeline utils
+  audioPipeline: unknown | null; // AudioPipelineNodes from audioPipeline utils
 }
 
 export interface VADState {

@@ -84,7 +84,7 @@ export function MinimizedVideoIndicatorNew() {
     return null;
   }
 
-  const handleRestore = (e: React.MouseEvent) => {
+  const handleRestore = (e: React.MouseEvent | React.KeyboardEvent) => {
     const now = Date.now();
     const blockedUntil = blockClicksUntilRef.current;
 
@@ -123,7 +123,7 @@ export function MinimizedVideoIndicatorNew() {
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          handleRestore(e as any);
+          handleRestore(e);
         }
       }}
     >

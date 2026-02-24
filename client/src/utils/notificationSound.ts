@@ -1,4 +1,6 @@
 // Notification Sound Service - Discord-style notification
+import { logger } from './logger';
+
 let audioContext: AudioContext | null = null;
 let soundEnabled = true;
 
@@ -6,7 +8,9 @@ let soundEnabled = true;
 function getAudioContext(): AudioContext {
   if (!audioContext) {
     audioContext = new (
-      window.AudioContext || (window as any).webkitAudioContext
+      window.AudioContext ||
+      (window as typeof window & { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext
     )();
   }
   return audioContext;
@@ -47,7 +51,7 @@ async function playNotificationSound() {
     oscillator.start(startTime);
     oscillator.stop(startTime + 0.15); // 150ms duration
   } catch (error) {
-    console.error('Failed to play notification sound:', error);
+    logger.error('Failed to play notification sound:', error);
   }
 }
 
