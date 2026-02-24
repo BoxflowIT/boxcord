@@ -1,4 +1,5 @@
-version: '3.8'
+# Local Development Environment
+# Run: docker compose up -d
 
 services:
   postgres:
@@ -17,15 +18,22 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
-  # Optional: Redis for Socket.io scaling (multi-instance)
   redis:
     image: redis:7-alpine
     container_name: boxcord-redis
     ports:
-      - "6380:6379"
+      - "6379:6379"  # Standard Redis port
     volumes:
       - boxcord-redis:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
 
 volumes:
   boxcord-data:

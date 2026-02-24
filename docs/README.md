@@ -8,10 +8,11 @@ Welcome to the Boxcord documentation! This directory contains comprehensive guid
 
 Start here if you're new to Boxcord:
 
-1. [**Contributing Guide**](CONTRIBUTING.md) - Git workflow, commit guidelines, code quality standards
-2. [**Features Overview**](FEATURES.md) - Complete list of all features and capabilities
-3. [Architecture Overview](ARCHITECTURE.md) - Understand the WebSocket-first design
-4. [Testing Guide](TESTING.md) - Run tests and verify your setup
+1. [**Development Setup**](DEVELOPMENT.md) - Local environment setup with Docker
+2. [**Contributing Guide**](CONTRIBUTING.md) - Git workflow, commit guidelines, code quality standards
+3. [**Features Overview**](FEATURES.md) - Complete list of all features and capabilities
+4. [Architecture Overview](ARCHITECTURE.md) - Understand the WebSocket-first design
+5. [Testing Guide](TESTING.md) - Run tests and verify your setup
 
 ### 🏗️ Architecture & Design
 
@@ -52,12 +53,13 @@ Deploy and scale Boxcord:
 ### By Role
 
 **For Developers:**
-1. [Contributing Guide](CONTRIBUTING.md)
-2. [API Documentation](API.md)
-3. [Architecture Overview](ARCHITECTURE.md)
-4. [Features Overview](FEATURES.md)
-5. [Testing Guide](TESTING.md)
-6. [Caching Strategy](CACHING.md)
+1. [Development Setup](DEVELOPMENT.md)
+2. [Contributing Guide](CONTRIBUTING.md)
+3. [API Documentation](API.md)
+4. [Architecture Overview](ARCHITECTURE.md)
+5. [Features Overview](FEATURES.md)
+6. [Testing Guide](TESTING.md)
+7. [Caching Strategy](CACHING.md)
 
 **For DevOps/Operations:**
 1. [Infrastructure Setup](INFRASTRUCTURE_SETUP.md)
@@ -72,7 +74,10 @@ Deploy and scale Boxcord:
 3. [Testing Guide](TESTING.md)
 
 ### By Task
+setup development environment"**
+→ [Development Setup](DEVELOPMENT.md)
 
+**"I want to 
 **"I want to contribute code"**
 → [Contributing Guide](CONTRIBUTING.md)
 

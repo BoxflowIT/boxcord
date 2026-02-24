@@ -2,6 +2,29 @@
 
 Discord-like real-time chat application for Boxflow, soon integrated with Boxtime.
 
+## 🚀 Quick Start
+
+```bash
+# 1. Clone and install
+git clone https://github.com/BoxflowIT/boxcord.git
+cd boxcord
+yarn install
+cd client && yarn install && cd ..
+
+# 2. Setup local environment (Docker required)
+./scripts/dev-setup.sh
+
+# 3. Start development
+yarn dev              # Backend (Terminal 1)
+cd client && yarn dev # Frontend (Terminal 2)
+```
+
+**Open:** http://localhost:5173
+
+**📚 Full guide:** [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
+
+---
+
 ## ✨ Features
 
 ### 💬 Messaging & Communication
