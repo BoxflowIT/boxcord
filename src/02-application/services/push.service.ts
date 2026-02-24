@@ -1,5 +1,6 @@
 // Push Notification Service - Application Layer
 import type { ExtendedPrismaClient } from '../../03-infrastructure/database/client.js';
+import { logger } from '../../00-core/logger.js';
 import webPush from 'web-push';
 
 // Configure VAPID keys
@@ -91,7 +92,7 @@ export class PushService {
 
     // Check if VAPID keys are configured
     if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
-      console.warn(
+      logger.warn(
         '[PUSH] VAPID keys not configured. Skipping push notifications.'
       );
       return { success: 0, failed: subscriptions.length };
@@ -119,7 +120,10 @@ export class PushService {
           );
           return { success: true };
         } catch (error) {
-          console.error(`[PUSH] Failed to send to ${sub.endpoint}:`, error);
+          logger.error(
+            { error, endpoint: sub.endpoint },
+            `[PUSH] Failed to send notification`
+          );
 
           // If subscription is invalid (410 Gone), we should remove it
           if (

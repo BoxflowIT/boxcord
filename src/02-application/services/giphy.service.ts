@@ -4,6 +4,7 @@
  */
 
 import { GiphyFetch } from '@giphy/js-fetch-api';
+import { logger } from '../../00-core/logger.js';
 
 const GIPHY_API_KEY =
   process.env.GIPHY_API_KEY || 'E2USScP1hkaRhjQzx6MRjbGYuoO4p38N';
@@ -50,7 +51,7 @@ export async function searchGifs(query: string, limit = 25, offset = 0) {
       pagination: result.pagination
     };
   } catch (error) {
-    console.error('Giphy search error:', error);
+    logger.error({ error, query }, 'Giphy search error');
     throw new Error('Failed to search GIFs');
   }
 }
@@ -66,7 +67,7 @@ export async function getTrendingGifs(limit = 25, offset = 0) {
       pagination: result.pagination
     };
   } catch (error) {
-    console.error('Giphy trending error:', error);
+    logger.error({ error, limit, offset }, 'Giphy trending error');
     throw new Error('Failed to get trending GIFs');
   }
 }
@@ -79,7 +80,7 @@ export async function getGifById(id: string) {
     const result = await giphy.gif(id);
     return result.data;
   } catch (error) {
-    console.error('Giphy get by ID error:', error);
+    logger.error({ error, id }, 'Giphy get by ID error');
     throw new Error('Failed to get GIF');
   }
 }
@@ -99,7 +100,7 @@ export async function searchStickers(query: string, limit = 25, offset = 0) {
       pagination: result.pagination
     };
   } catch (error) {
-    console.error('Giphy sticker search error:', error);
+    logger.error({ error, query }, 'Giphy sticker search error');
     throw new Error('Failed to search stickers');
   }
 }
@@ -115,7 +116,7 @@ export async function getTrendingStickers(limit = 25, offset = 0) {
       pagination: result.pagination
     };
   } catch (error) {
-    console.error('Giphy trending stickers error:', error);
+    logger.error({ error, limit, offset }, 'Giphy trending stickers error');
     throw new Error('Failed to get trending stickers');
   }
 }
@@ -128,7 +129,7 @@ export async function getRandomGif(tag?: string) {
     const result = await giphy.random({ tag });
     return result.data;
   } catch (error) {
-    console.error('Giphy random error:', error);
+    logger.error({ error, tag }, 'Giphy random error');
     throw new Error('Failed to get random GIF');
   }
 }
@@ -141,7 +142,7 @@ export async function autocompleteSearch(query: string) {
     const result = await giphy.search(query, { limit: 10 });
     return result.data;
   } catch (error) {
-    console.error('Giphy autocomplete error:', error);
+    logger.error({ error, query }, 'Giphy autocomplete error');
     throw new Error('Failed to autocomplete search');
   }
 }

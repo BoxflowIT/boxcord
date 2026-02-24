@@ -112,9 +112,14 @@ export async function addBookmark(input: CreateBookmarkInput) {
     return await prisma.bookmarkedMessage.create({
       data: bookmarkData
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Foreign key constraint violation
-    if (error.code === 'P2003') {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      error.code === 'P2003'
+    ) {
       throw new NotFoundError(
         messageId ? 'Message' : 'DM Message',
         messageId || dmMessageId || ''

@@ -57,7 +57,7 @@ class RedisCacheService implements CacheService {
 
       this.client.on('error', (error: Error) => {
         this.connected = false;
-        console.warn('⚠️  Redis error:', error.message);
+        logger.warn({ error }, '⚠️  Redis error');
       });
 
       this.client.on('close', () => {
@@ -66,11 +66,11 @@ class RedisCacheService implements CacheService {
 
       // Attempt connection
       this.client.connect().catch((error: Error) => {
-        console.warn('⚠️  Redis connection failed:', error.message);
+        logger.warn({ error }, '⚠️  Redis connection failed');
         this.connected = false;
       });
     } catch (error) {
-      console.error('Failed to initialize Redis:', error);
+      logger.error({ error }, 'Failed to initialize Redis');
       this.client = null;
       this.connected = false;
     }
@@ -88,7 +88,7 @@ class RedisCacheService implements CacheService {
       if (!data) return null;
       return JSON.parse(data);
     } catch (error) {
-      console.warn('Redis get error:', error);
+      logger.warn({ error }, 'Redis get error');
       return null;
     }
   }
@@ -101,7 +101,7 @@ class RedisCacheService implements CacheService {
       const serialized = JSON.stringify(value);
       await this.client!.setex(key, ttl, serialized);
     } catch (error) {
-      console.warn('Redis set error:', error);
+      logger.warn({ error }, 'Redis set error');
     }
   }
 
@@ -111,7 +111,7 @@ class RedisCacheService implements CacheService {
     try {
       await this.client!.del(key);
     } catch (error) {
-      console.warn('Redis del error:', error);
+      logger.warn({ error }, 'Redis del error');
     }
   }
 
@@ -124,7 +124,7 @@ class RedisCacheService implements CacheService {
         await this.client!.del(...keys);
       }
     } catch (error) {
-      console.warn('Redis deletePattern error:', error);
+      logger.warn({ error }, 'Redis deletePattern error');
     }
   }
 
@@ -134,7 +134,7 @@ class RedisCacheService implements CacheService {
     try {
       await this.client!.flushdb();
     } catch (error) {
-      console.warn('Redis clear error:', error);
+      logger.warn({ error }, 'Redis clear error');
     }
   }
 
@@ -143,7 +143,7 @@ class RedisCacheService implements CacheService {
       try {
         await this.client.quit();
       } catch (error) {
-        console.warn('Redis disconnect error:', error);
+        logger.warn({ error }, 'Redis disconnect error');
       }
       this.connected = false;
     }

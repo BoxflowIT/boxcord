@@ -235,7 +235,7 @@ export function setupSocketHandlers(
         create: { userId, status: 'ONLINE' },
         update: { status: 'ONLINE', lastSeen: new Date() }
       })
-      .catch(console.error);
+      .catch((err) => app.log.error({ err }, 'Failed to update user presence'));
 
     // Auto-join workspace rooms for channel events
     try {
@@ -1027,7 +1027,9 @@ export function setupSocketHandlers(
           create: { userId, status: 'ONLINE', lastSeen: new Date() },
           update: { lastSeen: new Date() } // Keep current status, just update lastSeen
         })
-        .catch(console.error);
+        .catch((err) =>
+          app.log.error({ err }, 'Failed to update user lastSeen')
+        );
 
       // DON'T broadcast offline status on temporary disconnects
       // Status should be managed by explicit user actions or timeout-based cleanup

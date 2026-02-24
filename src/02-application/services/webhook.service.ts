@@ -1,6 +1,7 @@
 // Boxtime Webhook Service - Handles incoming events from Boxtime
 import type { ExtendedPrismaClient } from '../../03-infrastructure/database/client.js';
 import type { Server as SocketServer } from 'socket.io';
+import { logger } from '../../00-core/logger.js';
 
 // Webhook event types from Boxtime
 export type WebhookEventType =
@@ -86,7 +87,10 @@ export class WebhookService {
         await this.handleShiftEnded(payload.data as unknown as StaffEventData);
         break;
       default:
-        console.warn(`[WEBHOOK] Unhandled event type: ${payload.event}`);
+        logger.warn(
+          { event: payload.event },
+          `[WEBHOOK] Unhandled event type: ${payload.event}`
+        );
     }
   }
 
@@ -111,7 +115,10 @@ export class WebhookService {
         : await this.prisma.workspace.findFirst();
 
       if (!workspace) {
-        console.warn(`[WEBHOOK] No workspace found for bot message`);
+        logger.warn(
+          { channelName, workspaceId },
+          `[WEBHOOK] No workspace found for bot message`
+        );
         return;
       }
 

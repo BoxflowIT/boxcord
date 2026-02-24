@@ -1,6 +1,7 @@
 // Push Notification Routes
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
+import { logger } from '../../../00-core/logger.js';
 import { prisma } from '../../../03-infrastructure/database/client.js';
 import { PushService } from '../../../02-application/services/push.service.js';
 
@@ -10,7 +11,7 @@ const pushService = new PushService(prisma);
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
 
 if (!VAPID_PUBLIC_KEY) {
-  console.warn(
+  logger.warn(
     '[PUSH] VAPID_PUBLIC_KEY not set. Push notifications will not work. Generate keys with: npx web-push generate-vapid-keys'
   );
 }
@@ -40,23 +41,27 @@ export async function pushRoutes(app: FastifyInstance) {
   // Subscribe to push notifications
   app.post<{
     Body: z.infer<typeof subscriptionSchema>;
-  }>('/subscribe', {
-    config: {
-      rateLimit: {
-        max: 10,
-        timeWindow: '1 minute'
+  }>(
+    '/subscribe',
+    {
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: '1 minute'
+        }
       }
+    },
+    async (request) => {
+      const subscription = subscriptionSchema.parse(request.body);
+
+      await pushService.subscribe(request.user.id, subscription);
+
+      return {
+        success: true,
+        message: 'Successfully subscribed to push notifications'
+      };
     }
-  }, async (request) => {
-    const subscription = subscriptionSchema.parse(request.body);
-
-    await pushService.subscribe(request.user.id, subscription);
-
-    return {
-      success: true,
-      message: 'Successfully subscribed to push notifications'
-    };
-  });
+  );
 
   // Unsubscribe from push notifications
   app.post<{

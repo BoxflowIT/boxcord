@@ -1,5 +1,6 @@
 // Database client - Prisma instance
 import { PrismaClient } from '@prisma/client';
+import { logger } from '../../00-core/logger.js';
 import { cacheService } from '../cache/redis.cache.js';
 
 function getCacheKey(model: string, operation: string, args: unknown): string {
@@ -65,14 +66,18 @@ const prismaClientSingleton = () => {
               await cacheService.set(cacheKey, data);
 
               if (duration > 1000) {
-                console.warn(
-                  `⚠️  Slow query: ${model}.${operation} took ${duration}ms`
+                logger.warn(
+                  { model, operation, duration },
+                  `Slow query: ${model}.${operation} took ${duration}ms`
                 );
               }
 
               return data;
             } catch (error) {
-              console.error(`❌ Query error in ${model}.${operation}:`, error);
+              logger.error(
+                { model, operation, error },
+                `Query error in ${model}.${operation}`
+              );
               throw error;
             }
           })();
@@ -86,13 +91,17 @@ const prismaClientSingleton = () => {
           .then(() => {
             const duration = Date.now() - start;
             if (duration > 1000) {
-              console.warn(
-                `⚠️  Slow query: ${model}.${operation} took ${duration}ms`
+              logger.warn(
+                { model, operation, duration },
+                `Slow query: ${model}.${operation} took ${duration}ms`
               );
             }
           })
           .catch((error) => {
-            console.error(`❌ Query error in ${model}.${operation}:`, error);
+            logger.error(
+              { model, operation, error },
+              `Query error in ${model}.${operation}`
+            );
           });
 
         return result;
@@ -153,16 +162,14 @@ if (process.env.NODE_ENV !== 'production') {
 
 export async function connectDatabase(): Promise<void> {
   await prisma.$connect();
-  // eslint-disable-next-line no-console
-  console.log('✅ Database connected');
+  logger.info('✅ Database connected');
 }
 
 export async function disconnectDatabase(): Promise<void> {
   await prisma.$disconnect();
   // Clear cache on disconnect
   await cacheService.clear();
-  // eslint-disable-next-line no-console
-  console.log('Database disconnected');
+  logger.info('Database disconnected');
 }
 
 // Export cache utilities for testing/debugging

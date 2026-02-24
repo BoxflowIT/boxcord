@@ -1,6 +1,7 @@
 // Audit Logging Service
 // Logs security-sensitive operations for compliance and forensics
 import type { PrismaClient } from '@prisma/client';
+import { logger } from '../../00-core/logger.js';
 
 export type AuditAction =
   | 'USER_LOGIN'
@@ -54,8 +55,7 @@ export class AuditService {
     } catch (error) {
       // Don't fail the main operation if logging fails
       // But log to console for debugging
-      console.error('[AUDIT] Failed to log audit event:', error);
-      console.error('[AUDIT] Entry was:', JSON.stringify(entry));
+      logger.error({ error, entry }, '[AUDIT] Failed to log audit event');
     }
   }
 

@@ -179,11 +179,15 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error('❌ Failed to start server');
-  console.error('Error name:', err.name);
-  console.error('Error message:', err.message);
-  console.error('Error stack:', err.stack);
-  if (err.code) console.error('Error code:', err.code);
-  logger.error({ error: err }, 'Failed to start server');
+  logger.error(
+    {
+      error: err,
+      name: err.name,
+      message: err.message,
+      stack: err.stack,
+      code: err.code
+    },
+    'Failed to start server'
+  );
   process.exit(1);
 });
