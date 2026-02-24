@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 
 // Mock environment variables
 process.env.NODE_ENV = 'test';
-process.env.JWT_SECRET = 'test-secret';
+process.env.JWT_SECRET = 'test-secret-key-minimum-20-chars';
 process.env.DATABASE_URL = 'postgresql://localhost:5432/test';
 process.env.VAPID_PUBLIC_KEY = 'test-public-key';
 process.env.VAPID_PRIVATE_KEY = 'test-private-key';
