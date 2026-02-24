@@ -1,6 +1,6 @@
 # Boxcord
 
-Discord-like real-time chat application for Boxflow, integrated with Boxtime.
+Discord-like real-time chat application for Boxflow, soon integrated with Boxtime.
 
 ## ✨ Features
 
@@ -30,6 +30,8 @@ Discord-like real-time chat application for Boxflow, integrated with Boxtime.
 - **Professional audio pipeline** - Compression, limiting, gain control
 - **Device selection** - Choose input/output devices
 - **Mic testing** - Test audio with real-time level monitoring
+- **Video calls** - 1-on-1 and group video with screen sharing
+- **Flexible video windows** - Minimize, float, resize, drag, Picture-in-Picture
 
 **📖 See:** [docs/VOICE_ARCHITECTURE.md](docs/VOICE_ARCHITECTURE.md)
 
