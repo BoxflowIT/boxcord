@@ -88,7 +88,14 @@ export default function CustomLogin() {
     <AuthLayout
       title="Boxcord"
       description={t('auth.welcomeBack')}
-      footer={t('auth.sameAsBoxtime')}
+      footer={
+        <span>
+          {t('auth.noAccount') || 'Inget konto?'}{' '}
+          <Link to="/signup" className="text-link hover:underline">
+            {t('auth.createAccount') || 'Skapa konto'}
+          </Link>
+        </span>
+      }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <FormField

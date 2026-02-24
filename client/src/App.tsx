@@ -10,6 +10,7 @@ import { ErrorBoundary } from './components/utility';
 import ToastContainer from './components/notification/ToastContainer';
 import CustomLogin from './pages/CustomLogin';
 import DevLogin from './pages/DevLogin';
+import SignUp from './pages/SignUp';
 import ForgotPassword from './pages/ForgotPassword';
 import JoinPage from './pages/JoinPage';
 import Chat from './pages/Chat';
@@ -117,6 +118,7 @@ function App() {
         <ToastContainer toasts={toasts} onRemove={removeToast} />
         <Routes>
           <Route path="/login" element={<LoginComponent />} />
+          <Route path="/signup" element={<SignUp />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route
             path="/join/:code"

@@ -41,6 +41,129 @@ export interface ResetPasswordResult {
   error?: string;
 }
 
+export interface SignUpResult {
+  success: boolean;
+  userSub?: string;
+  error?: string;
+  requiresVerification?: boolean;
+}
+
+export interface ConfirmSignUpResult {
+  success: boolean;
+  error?: string;
+}
+
+/**
+ * Sign up a new user with email and password
+ */
+export const signUp = (
+  email: string,
+  password: string,
+  firstName: string,
+  lastName: string
+): Promise<SignUpResult> => {
+  return new Promise((resolve) => {
+    const attributeList = [
+      {
+        Name: 'email',
+        Value: email
+      },
+      {
+        Name: 'given_name',
+        Value: firstName
+      },
+      {
+        Name: 'family_name',
+        Value: lastName
+      }
+    ];
+
+    userPool.signUp(email, password, attributeList, [], (err, result) => {
+      if (err) {
+        logger.error('Sign up failed:', err);
+        resolve({
+          success: false,
+          error: err.message || 'Registrering misslyckades'
+        });
+        return;
+      }
+
+      if (!result) {
+        resolve({
+          success: false,
+          error: 'Inget svar från servern'
+        });
+        return;
+      }
+
+      resolve({
+        success: true,
+        userSub: result.userSub,
+        requiresVerification: !result.userConfirmed
+      });
+    });
+  });
+};
+
+/**
+ * Confirm sign up with verification code
+ */
+export const confirmSignUp = (
+  email: string,
+  verificationCode: string
+): Promise<ConfirmSignUpResult> => {
+  return new Promise((resolve) => {
+    const userData = {
+      Username: email,
+      Pool: userPool
+    };
+
+    const cognitoUser = new CognitoUser(userData);
+
+    cognitoUser.confirmRegistration(verificationCode, true, (err) => {
+      if (err) {
+        logger.error('Verification failed:', err);
+        resolve({
+          success: false,
+          error: err.message || 'Verifieringen misslyckades'
+        });
+        return;
+      }
+
+      resolve({ success: true });
+    });
+  });
+};
+
+/**
+ * Resend verification code
+ */
+export const resendConfirmationCode = (
+  email: string
+): Promise<{ success: boolean; error?: string }> => {
+  return new Promise((resolve) => {
+    const userData = {
+      Username: email,
+      Pool: userPool
+    };
+
+    const cognitoUser = new CognitoUser(userData);
+
+    cognitoUser.resendConfirmationCode((err) => {
+      if (err) {
+        logger.error('Resend code failed:', err);
+        resolve({
+          success: false,
+          error: err.message || 'Kunde inte skicka om koden'
+        });
+        return;
+      }
+
+      resolve({ success: true });
+    });
+  });
+};
+
 /**
  * Sign in with email and password
  */

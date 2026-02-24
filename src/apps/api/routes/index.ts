@@ -24,6 +24,7 @@ import embedRoutes from './embed.routes.js';
 import bookmarkRoutes from './bookmark.routes.js';
 import giphyRoutes from './giphy.routes.js';
 import { permissionRoutes } from './permission.routes.js';
+import { authRoutes } from './auth.routes.js';
 
 export async function registerRoutes(app: FastifyInstance) {
   // Health checks (no prefix, no auth required)
@@ -45,6 +46,7 @@ export async function registerRoutes(app: FastifyInstance) {
   // All API routes under /api/v1
   await app.register(
     async (api) => {
+      await api.register(authRoutes, { prefix: '/auth' });
       await api.register(initialDataRoutes); // No prefix, handles /initial
       await api.register(workspaceRoutes, { prefix: '/workspaces' });
       await api.register(channelRoutes, { prefix: '/channels' });
