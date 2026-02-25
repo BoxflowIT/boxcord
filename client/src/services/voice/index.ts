@@ -32,7 +32,8 @@ import {
   enableVideo,
   disableVideo,
   startScreenShare,
-  stopScreenShare
+  stopScreenShare,
+  changeVideoQuality
 } from './videoManager';
 
 // ============================================================================
@@ -310,6 +311,15 @@ class VoiceService {
 
   async stopScreenShare(): Promise<void> {
     stopScreenShare(this.audioState);
+  }
+
+  async changeVideoQuality(): Promise<void> {
+    try {
+      await changeVideoQuality(this.audioState);
+    } catch (error) {
+      logger.error('Failed to change video quality:', error);
+      throw error;
+    }
   }
 
   // ============================================================================

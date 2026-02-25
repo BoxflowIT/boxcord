@@ -1,7 +1,9 @@
 // Reusable Message Actions Bar - Quick reactions + edit/delete/pin/forward/bookmark
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EditIcon, TrashIcon, PinIcon, SendIcon } from '../ui/Icons';
 import { BookmarkButton } from '../action/BookmarkButton';
+import ReactionEmojiPicker from '../reactions/ReactionEmojiPicker';
 
 interface MessageActionsProps {
   messageId?: string;
@@ -33,6 +35,40 @@ export function MessageActions({
   quickReactions = DEFAULT_QUICK_REACTIONS
 }: MessageActionsProps) {
   const { t } = useTranslation();
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const pickerContainerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [buttonRect, setButtonRect] = useState<DOMRect | undefined>();
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        pickerContainerRef.current &&
+        !pickerContainerRef.current.contains(event.target as Node)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    if (showEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () =>
+        document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showEmojiPicker]);
+
+  const handleEmojiSelect = (emoji: string) => {
+    onQuickReaction(emoji);
+    setShowEmojiPicker(false);
+  };
+
+  const handleOpenPicker = () => {
+    if (buttonRef.current) {
+      setButtonRect(buttonRef.current.getBoundingClientRect());
+    }
+    setShowEmojiPicker(true);
+  };
 
   return (
     <>
@@ -47,6 +83,29 @@ export function MessageActions({
           {emoji}
         </button>
       ))}
+
+      {/* More reactions button */}
+      <div ref={pickerContainerRef} className="relative">
+        <button
+          ref={buttonRef}
+          onClick={handleOpenPicker}
+          className={`p-1.5 rounded border-2 transition-all ${
+            showEmojiPicker
+              ? 'bg-boxflow-primary border-boxflow-primary text-white opacity-100'
+              : 'bg-gray-700 border-gray-600 hover:bg-gray-600 hover:border-gray-500 opacity-50 hover:opacity-70'
+          }`}
+          title={t('messages.moreReactions')}
+        >
+          <span className="text-sm">😀</span>
+        </button>
+        {showEmojiPicker && (
+          <ReactionEmojiPicker
+            onEmojiSelect={handleEmojiSelect}
+            onClose={() => setShowEmojiPicker(false)}
+            buttonRect={buttonRect}
+          />
+        )}
+      </div>
 
       {/* Divider */}
       <div className="w-px h-4 bg-boxflow-hover mx-1" />

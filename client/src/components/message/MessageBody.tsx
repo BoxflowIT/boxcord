@@ -13,7 +13,6 @@ interface MessageBodyProps {
   reactions: MessageReaction[];
   compact: boolean;
   renderContent?: (content: string) => React.ReactNode;
-  onToggleReaction: (emoji: string) => void;
   // Action bar props
   showActions: boolean;
   onQuickReaction: (emoji: string) => void;
@@ -34,7 +33,6 @@ export function MessageBody({
   reactions,
   compact,
   renderContent,
-  onToggleReaction,
   showActions,
   onQuickReaction,
   onEdit,
@@ -73,7 +71,7 @@ export function MessageBody({
       />
       <MessageReactionBubbles
         reactions={reactions}
-        onToggle={onToggleReaction}
+        onToggle={onQuickReaction}
       />
     </div>
   );

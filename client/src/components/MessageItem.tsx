@@ -122,7 +122,6 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
           isPinned={isPinned}
           canPin={canPin}
           onQuickReaction={handleToggleReaction}
-          onToggleReaction={handleToggleReaction}
           renderContent={renderContent}
         />
       ) : (
@@ -150,7 +149,6 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
           isPinned={isPinned}
           canPin={canPin}
           onQuickReaction={handleToggleReaction}
-          onToggleReaction={handleToggleReaction}
           renderContent={renderContent}
         />
       )}
