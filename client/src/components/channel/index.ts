@@ -12,3 +12,4 @@ export { default as ChannelName } from './ChannelName';
 export { default as MessageComposer } from './MessageComposer';
 export { default as BotResponseBanner } from './BotResponseBanner';
 export { default as ChannelEmptyState } from './ChannelEmptyState';
+export { default as ChannelContextMenu } from './ChannelContextMenu';

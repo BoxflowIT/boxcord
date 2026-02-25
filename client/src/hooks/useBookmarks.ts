@@ -206,7 +206,7 @@ export function useAddBookmark() {
         await queryClient.invalidateQueries({ queryKey: context.queryKey });
       }
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: async (_data, variables) => {
       // Ensure the specific bookmark-check query shows true
       const queryKey = [
         'bookmark-check',
@@ -216,8 +216,8 @@ export function useAddBookmark() {
       queryClient.setQueryData<boolean>(queryKey, true);
 
       // Invalidate list-level queries only (not individual checks)
-      queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
-      queryClient.invalidateQueries({ queryKey: ['bookmark-count'] });
+      await queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+      await queryClient.invalidateQueries({ queryKey: ['bookmark-count'] });
     }
   });
 }
@@ -242,10 +242,10 @@ export function useRemoveBookmark() {
 
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
-      queryClient.invalidateQueries({ queryKey: ['bookmark-check'] });
-      queryClient.invalidateQueries({ queryKey: ['bookmark-count'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+      await queryClient.invalidateQueries({ queryKey: ['bookmark-check'] });
+      await queryClient.invalidateQueries({ queryKey: ['bookmark-count'] });
     }
   });
 }
@@ -332,7 +332,7 @@ export function useRemoveBookmarkByMessage() {
         await queryClient.invalidateQueries({ queryKey: context.queryKey });
       }
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: async (_data, variables) => {
       // Ensure the specific bookmark-check query shows false
       const queryKey = [
         'bookmark-check',
@@ -342,8 +342,8 @@ export function useRemoveBookmarkByMessage() {
       queryClient.setQueryData<boolean>(queryKey, false);
 
       // Invalidate list-level queries only (not individual checks)
-      queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
-      queryClient.invalidateQueries({ queryKey: ['bookmark-count'] });
+      await queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+      await queryClient.invalidateQueries({ queryKey: ['bookmark-count'] });
     }
   });
 }

@@ -14,7 +14,11 @@ import { api } from '../services/api';
 import { logger } from '../utils/logger';
 import { socketService } from '../services/socket';
 import { voiceService } from '../services/voice.service';
-import { startRingingSound, stopRingingSound } from '../utils/voiceSound';
+import {
+  startRingingSound,
+  stopRingingSound,
+  playVoiceLeaveSound
+} from '../utils/voiceSound';
 import { useAuthStore } from '../store/auth';
 import { useDMCallStore } from '../store/dmCallStore';
 import {
@@ -32,10 +36,11 @@ import { useMessageScroll } from '../hooks/useMessageScroll';
 import { useMarkAsRead } from '../hooks/useMarkAsRead';
 import { useSocketRoom } from '../hooks/useSocketRoom';
 import { useDrafts } from '../hooks/useDrafts';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import type { FileUploadHandle } from './FileUpload';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import { LoadingState } from './ui/LoadingSpinner';
 import { DMHeader } from './dm/DMHeader';
-import { DMCallOverlay } from './dm/DMCallOverlay';
 import MessageListDisplay from './channel/MessageListDisplay';
 import DMInputSection from './dm/DMInputSection';
 import { PinnedMessagesPanel } from './message/PinnedMessagesPanel';
@@ -45,8 +50,7 @@ export default function DMView() {
   const { channelId } = useParams<{ channelId: string }>();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
-  const { callState, startCall, acceptCall, rejectCall, endCall, reset } =
-    useDMCallStore();
+  const { callState, startCall, reset } = useDMCallStore();
 
   // Read appearance settings (reactive state with auto-sync)
   const [compactMode] = useLocalStorage('compactMode', false);
@@ -91,12 +95,44 @@ export default function DMView() {
   const [inputValue, setInputValue] = useState('');
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileUploadRef = useRef<FileUploadHandle>(null);
 
   // Shared hooks for common message view patterns
   const messagesEndRef = useMessageScroll(messages);
   useMarkAsRead({ channelId, isDM: true });
   useSocketRoom(channelId, 'dm');
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    onUploadFile: () => {
+      fileUploadRef.current?.triggerFileSelect();
+    },
+    onEmojiPicker: () => {
+      setShowEmojiPicker((prev) => !prev);
+    },
+    onMarkRead: () => {
+      // DM messages are already marked as read via useMarkAsRead hook
+      logger.info('Mark DM as read shortcut pressed (already handled by hook)');
+    },
+    onQuickReaction: async (emoji: string) => {
+      // React to the last hovered message or the most recent message
+      const targetMessageId =
+        hoveredMessageId || messages[messages.length - 1]?.id;
+      if (targetMessageId) {
+        try {
+          await api.toggleDMReaction(targetMessageId, emoji);
+          logger.info(
+            `Quick reaction ${emoji} added to DM message ${targetMessageId}`
+          );
+        } catch (err) {
+          logger.error('Failed to add quick reaction to DM:', err);
+        }
+      }
+    }
+  });
 
   // Draft management for DMs
   const { loadDraft, saveDraft, clearDraft } = useDrafts(channelId);
@@ -119,6 +155,9 @@ export default function DMView() {
       const timeout = setTimeout(() => {
         if (callState === 'calling' || callState === 'ringing') {
           logger.log('[DM_CALL] Call timeout - auto canceling');
+
+          // Play hangup sound
+          playVoiceLeaveSound();
           stopRingingSound();
 
           // Cancel/reject call
@@ -148,17 +187,25 @@ export default function DMView() {
   // DM Voice Call handlers (in order of dependencies)
   const handleEndCall = useCallback(async () => {
     if (!channelId) return;
-    endCall();
+
+    // Play hangup sound
+    playVoiceLeaveSound();
+
+    // Stop any ringing sound
+    stopRingingSound();
+
+    // Immediately reset call state (don't use 'ending' state)
+    reset();
 
     try {
+      // Cleanup voice connection
       await voiceService.leaveDMCall();
+      // Notify other user
       socketService.getSocket()?.emit('dm:call:end', { channelId });
     } catch (err) {
       logger.error('Failed to end DM call:', err);
-    } finally {
-      reset();
     }
-  }, [channelId, endCall, reset]);
+  }, [channelId, reset]);
 
   const handleStartCall = useCallback(() => {
     if (!channelId || !otherUser) return;
@@ -181,27 +228,6 @@ export default function DMView() {
       handleEndCall();
     }
   }, [channelId, otherUser, callState, startCall, handleEndCall]);
-
-  const handleAcceptCall = useCallback(async () => {
-    if (!channelId || !otherUser) return;
-    acceptCall();
-
-    // Join WebRTC call (reuse voice service logic)
-    try {
-      await voiceService.joinDMCall(channelId);
-      // Join dm-voice room for WebRTC signaling
-      socketService.getSocket()?.emit('dm:call:accept', { channelId });
-    } catch (err) {
-      logger.error('Failed to join DM call:', err);
-      reset();
-    }
-  }, [channelId, otherUser, acceptCall, reset]);
-
-  const handleRejectCall = useCallback(() => {
-    if (!channelId) return;
-    rejectCall();
-    socketService.getSocket()?.emit('dm:call:reject', { channelId });
-  }, [channelId, rejectCall]);
 
   // Stable callbacks for message actions - optimistic cache update + WebSocket
   const handleEditDM = useCallback(
@@ -434,13 +460,6 @@ export default function DMView() {
         canUnpin={true}
       />
 
-      {/* DM Call Overlay */}
-      <DMCallOverlay
-        onAccept={handleAcceptCall}
-        onReject={handleRejectCall}
-        onEndCall={handleEndCall}
-      />
-
       {/* Messages */}
       <MessageListDisplay
         messages={displayMessages}
@@ -510,12 +529,18 @@ export default function DMView() {
                 };
               }
             );
+
+            // Also invalidate to ensure consistency
+            await queryClient.invalidateQueries({
+              queryKey: ['pinnedDMs', channelId]
+            });
           } catch (error) {
             logger.error('Failed to pin/unpin message:', error);
           }
         }}
         canPin={true}
         messagesEndRef={messagesEndRef}
+        onMessageHover={setHoveredMessageId}
       />
 
       {/* Input */}
@@ -524,7 +549,9 @@ export default function DMView() {
         inputValue={inputValue}
         uploading={uploading}
         sending={sending}
+        showEmojiPicker={showEmojiPicker}
         textareaRef={textareaRef}
+        fileUploadRef={fileUploadRef}
         onInputChange={(e) => {
           setInputValue(e.target.value);
           saveDraft(e.target.value);
@@ -533,6 +560,7 @@ export default function DMView() {
         onFileSelect={handleFileSelect}
         onEmojiSelect={handleEmojiSelect}
         onGifSelect={handleGifSelect}
+        onToggleEmojiPicker={setShowEmojiPicker}
       />
 
       {/* Delete Confirmation Modal */}

@@ -4,6 +4,10 @@ import { useDMCallStore } from '../../../store/dmCallStore';
 import { useVoiceStore } from '../../../store/voiceStore';
 import { voiceService } from '../../voice.service';
 import { playMessageNotification } from '../../../utils/notificationSound';
+import {
+  playVoiceLeaveSound,
+  stopRingingSound
+} from '../../../utils/voiceSound';
 import { logger } from '../../../utils/logger';
 import type { PaginatedMessages, DMChannel, Message } from '../../../types';
 import type SimplePeer from 'simple-peer';
@@ -250,6 +254,9 @@ export function registerDMHandlers(
     logger.log('[DM_CALL] Call rejected by:', data.userId);
     const callState = useDMCallStore.getState();
     if (callState.channelId === data.channelId) {
+      // Play hangup sound and stop ringing
+      playVoiceLeaveSound();
+      stopRingingSound();
       callState.reset();
     }
   });
@@ -259,6 +266,9 @@ export function registerDMHandlers(
     logger.log('[DM_CALL] Call ended by:', data.userId);
     const callState = useDMCallStore.getState();
     if (callState.channelId === data.channelId) {
+      // Play hangup sound
+      playVoiceLeaveSound();
+      stopRingingSound();
       await voiceService.leaveDMCall();
       callState.reset();
     }

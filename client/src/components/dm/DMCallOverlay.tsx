@@ -38,7 +38,7 @@ export function DMCallOverlay({
   const { isMuted, isDeafened, isVideoEnabled, isScreenSharing } =
     useVoiceControls();
 
-  if (callState === 'idle' || callState === 'ending') return null;
+  if (callState === 'idle') return null;
 
   const handleToggleMute = async () => {
     await voiceService.toggleMute();

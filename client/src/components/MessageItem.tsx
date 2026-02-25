@@ -24,9 +24,13 @@ export interface MessageItemProps {
   isOwnMessage: boolean;
 
   // Display options
+  authorId: string;
   authorName: string;
   authorInitial: string;
   authorAvatarUrl?: string | null;
+
+  // Hover tracking for quick reactions
+  onHover?: (messageId: string | null) => void;
 
   // Edit state
   editContent: string;
@@ -61,6 +65,7 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
   showHeader,
   isEditing,
   isOwnMessage,
+  authorId,
   authorName,
   authorInitial,
   authorAvatarUrl,
@@ -77,7 +82,8 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
   canPin = false,
   renderContent,
   compact = false,
-  isDM = false
+  isDM = false,
+  onHover
 }) => {
   const { reactions, handleToggleReaction } = useMessageReactions({
     messageId,
@@ -88,10 +94,12 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
   return (
     <div
       className={cn(
-        'group relative hover:bg-[var(--color-bg-hover)]/40',
+        'group relative hover:bg-[var(--color-bg-hover)]/70 hover:border-l-2 hover:border-boxflow-primary',
         '-mx-4 px-4 rounded transition-all duration-100',
         compact ? 'py-0.5' : 'py-1'
       )}
+      onMouseEnter={() => onHover?.(messageId)}
+      onMouseLeave={() => onHover?.(null)}
     >
       {showHeader ? (
         <MessageWithHeader
@@ -103,6 +111,7 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
           attachments={attachments}
           reactions={reactions}
           compact={compact}
+          authorId={authorId}
           authorName={authorName}
           authorInitial={authorInitial}
           authorAvatarUrl={authorAvatarUrl}
@@ -176,6 +185,7 @@ const areEqual = (
   if (prevProps.edited !== nextProps.edited) return false;
   if (prevProps.showHeader !== nextProps.showHeader) return false;
   if (prevProps.isOwnMessage !== nextProps.isOwnMessage) return false;
+  if (prevProps.authorId !== nextProps.authorId) return false;
   if (prevProps.authorName !== nextProps.authorName) return false;
   if (prevProps.authorInitial !== nextProps.authorInitial) return false;
   if (prevProps.authorAvatarUrl !== nextProps.authorAvatarUrl) return false;
