@@ -1,12 +1,15 @@
 // Font size selector component
-import { cn } from '../../utils/classNames';
 
 interface FontSizeSelectorProps {
   fontSize: string;
   onFontSizeChange: (size: string) => void;
 }
 
-const FONT_SIZES = ['small', 'medium', 'large'] as const;
+const FONT_SIZES = [
+  { value: 'small', label: 'Small', emoji: '🔹' },
+  { value: 'medium', label: 'Medium', emoji: '🔸' },
+  { value: 'large', label: 'Large', emoji: '🔶' }
+];
 
 export default function FontSizeSelector({
   fontSize,
@@ -16,16 +19,14 @@ export default function FontSizeSelector({
     <div className="flex gap-2">
       {FONT_SIZES.map((size) => (
         <button
-          key={size}
-          onClick={() => onFontSizeChange(size)}
-          className={cn(
-            'px-4 py-2 rounded-lg capitalize transition-colors',
-            fontSize === size
-              ? 'gradient-primary text-white shadow-primary'
-              : 'bg-boxflow-hover text-boxflow-muted hover:brightness-110'
-          )}
+          key={size.value}
+          onClick={() => onFontSizeChange(size.value)}
+          className={
+            fontSize === size.value ? 'settings-btn-active' : 'settings-btn'
+          }
         >
-          {size}
+          <span className="mr-1.5">{size.emoji}</span>
+          {size.label}
         </button>
       ))}
     </div>

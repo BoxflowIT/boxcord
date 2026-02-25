@@ -2,10 +2,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+export type AudioQualityPreset = 'low' | 'balanced' | 'high' | 'studio';
+
 interface AudioSettings {
   // Device IDs
   inputDeviceId: string | null;
   outputDeviceId: string | null;
+
+  // Audio Quality Preset
+  audioQualityPreset: AudioQualityPreset;
 
   // Audio Quality
   echoCancellation: boolean;
@@ -33,6 +38,7 @@ interface AudioSettings {
 interface AudioSettingsStore extends AudioSettings {
   setInputDevice: (deviceId: string | null) => void;
   setOutputDevice: (deviceId: string | null) => void;
+  setAudioQualityPreset: (preset: AudioQualityPreset) => void;
   setEchoCancellation: (enabled: boolean) => void;
   setNoiseSuppression: (enabled: boolean) => void;
   setAutoGainControl: (enabled: boolean) => void;
@@ -50,9 +56,10 @@ interface AudioSettingsStore extends AudioSettings {
 const DEFAULT_SETTINGS: AudioSettings = {
   inputDeviceId: null, // null = default device
   outputDeviceId: null,
+  audioQualityPreset: 'balanced', // Default to balanced for best experience
   echoCancellation: true,
   noiseSuppression: true,
-  useRNNoise: true, // Enable AI noise suppression by default
+  useRNNoise: false, // Disabled by default, enabled in 'high' and 'studio' presets
   autoGainControl: true,
   inputVolume: 1.0, // 100% - user can adjust if too loud
   outputVolume: 1.0, // 100%
@@ -62,6 +69,38 @@ const DEFAULT_SETTINGS: AudioSettings = {
   isTesting: false
 };
 
+// Audio quality preset configurations
+const PRESET_CONFIGS: Record<AudioQualityPreset, Partial<AudioSettings>> = {
+  low: {
+    echoCancellation: false,
+    noiseSuppression: false,
+    autoGainControl: false,
+    useRNNoise: false,
+    inputSensitivity: 0.1 // More lenient
+  },
+  balanced: {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true,
+    useRNNoise: false, // Browser-based only
+    inputSensitivity: 0.21 // Optimal
+  },
+  high: {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true,
+    useRNNoise: true, // Enable AI
+    inputSensitivity: 0.21 // Optimal
+  },
+  studio: {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true,
+    useRNNoise: true, // Full AI processing
+    inputSensitivity: 0.3 // Stricter noise gate
+  }
+};
+
 export const useAudioSettingsStore = create<AudioSettingsStore>()(
   persist(
     (set, get) => ({
@@ -69,6 +108,10 @@ export const useAudioSettingsStore = create<AudioSettingsStore>()(
 
       setInputDevice: (deviceId) => set({ inputDeviceId: deviceId }),
       setOutputDevice: (deviceId) => set({ outputDeviceId: deviceId }),
+      setAudioQualityPreset: (preset) => {
+        const config = PRESET_CONFIGS[preset];
+        set({ audioQualityPreset: preset, ...config });
+      },
       setEchoCancellation: (enabled) => set({ echoCancellation: enabled }),
       setNoiseSuppression: (enabled) => set({ noiseSuppression: enabled }),
       setUseRNNoise: (enabled) => set({ useRNNoise: enabled }),

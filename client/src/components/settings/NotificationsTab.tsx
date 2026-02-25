@@ -2,10 +2,16 @@
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../utils/classNames';
 import NotificationSettings from '../NotificationSettings';
+import NotificationSoundSelector, {
+  type NotificationSoundType
+} from '../ui/NotificationSoundSelector';
 
 interface NotificationsTabProps {
   soundEnabled: boolean;
+  notificationSoundType: NotificationSoundType;
   onSoundToggle: (enabled: boolean) => void;
+  onNotificationSoundTypeChange: (sound: NotificationSoundType) => void;
+  onPreviewNotificationSound: (sound: NotificationSoundType) => void;
 }
 
 interface SettingItemProps {
@@ -49,7 +55,10 @@ function Toggle({ enabled, onChange }: ToggleProps) {
 
 export default function NotificationsTab({
   soundEnabled,
-  onSoundToggle
+  notificationSoundType,
+  onSoundToggle,
+  onNotificationSoundTypeChange,
+  onPreviewNotificationSound
 }: NotificationsTabProps) {
   const { t } = useTranslation();
 
@@ -69,6 +78,21 @@ export default function NotificationsTab({
         description={t('notifications.notificationSoundDescription')}
         control={<Toggle enabled={soundEnabled} onChange={onSoundToggle} />}
       />
+
+      {/* Notification Sound Type Selector */}
+      {soundEnabled && (
+        <div className="mt-4">
+          <h3 className="text-white font-semibold mb-2">Notification Sound</h3>
+          <p className="text-sm text-gray-400 mb-3">
+            Choose your preferred notification sound style
+          </p>
+          <NotificationSoundSelector
+            value={notificationSoundType}
+            onChange={onNotificationSoundTypeChange}
+            onPreview={onPreviewNotificationSound}
+          />
+        </div>
+      )}
 
       <div className="border-t border-discord-darkest pt-6">
         <p className="text-sm text-gray-400">

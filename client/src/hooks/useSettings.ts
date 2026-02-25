@@ -6,7 +6,10 @@ import { useState, useEffect } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import {
   toggleNotificationSound,
-  isNotificationSoundEnabled
+  isNotificationSoundEnabled,
+  setNotificationSoundType,
+  previewNotificationSound,
+  type NotificationSoundType
 } from '../utils/notificationSound';
 
 export type MessageDensity = 'compact' | 'cozy' | 'spacious';
@@ -20,12 +23,15 @@ export interface Settings {
   soundEnabled: boolean;
   highContrast: boolean;
   reducedMotion: boolean;
+  notificationSoundType: NotificationSoundType;
 }
 
 export function useSettings() {
   const [soundEnabled, setSoundEnabled] = useState(
     isNotificationSoundEnabled()
   );
+  const [notificationSoundType, setNotificationSoundTypeState] =
+    useLocalStorage<NotificationSoundType>('notificationSoundType', 'default');
   const [theme, setTheme] = useLocalStorage<'dark' | 'medium' | 'light'>(
     'theme',
     'dark'
@@ -91,6 +97,11 @@ export function useSettings() {
     root.style.setProperty('--message-padding', current.padding);
   }, [messageDensity]);
 
+  // Apply notification sound type
+  useEffect(() => {
+    setNotificationSoundType(notificationSoundType);
+  }, [notificationSoundType]);
+
   const handleSoundToggle = (enabled: boolean) => {
     setSoundEnabled(enabled);
     toggleNotificationSound(enabled);
@@ -124,6 +135,14 @@ export function useSettings() {
     setReducedMotion(enabled);
   };
 
+  const handleNotificationSoundTypeChange = (type: NotificationSoundType) => {
+    setNotificationSoundTypeState(type);
+  };
+
+  const handlePreviewNotificationSound = (type: NotificationSoundType) => {
+    previewNotificationSound(type);
+  };
+
   return {
     // Current values
     settings: {
@@ -134,7 +153,8 @@ export function useSettings() {
       messageGrouping,
       soundEnabled,
       highContrast,
-      reducedMotion
+      reducedMotion,
+      notificationSoundType
     },
     // Handlers
     handlers: {
@@ -145,7 +165,9 @@ export function useSettings() {
       onMessageGroupingToggle: handleMessageGroupingToggle,
       onFontSizeChange: handleFontSizeChange,
       onHighContrastToggle: handleHighContrastToggle,
-      onReducedMotionToggle: handleReducedMotionToggle
+      onReducedMotionToggle: handleReducedMotionToggle,
+      onNotificationSoundTypeChange: handleNotificationSoundTypeChange,
+      onPreviewNotificationSound: handlePreviewNotificationSound
     }
   };
 }
