@@ -2,6 +2,8 @@
 
 This guide explains our development workflow, git strategy, and code quality standards.
 
+> 📚 **For comprehensive Git workflow documentation including branch protection, security guidelines, and troubleshooting, see [GIT_WORKFLOW.md](./GIT_WORKFLOW.md)**
+
 ## 📋 Table of Contents
 
 1. [Git Workflow](#git-workflow)

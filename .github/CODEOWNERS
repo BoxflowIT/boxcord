@@ -1,0 +1,26 @@
+# Default owners for everything in the repo
+* @BoxflowIT/boxcord-team
+
+# Backend code
+/src/** @BoxflowIT/backend-team
+/prisma/** @BoxflowIT/backend-team
+/tests/** @BoxflowIT/backend-team
+
+# Frontend code
+/client/** @BoxflowIT/frontend-team
+
+# Infrastructure & DevOps
+/.github/** @BoxflowIT/devops-team
+/.husky/** @BoxflowIT/devops-team
+/docker-compose.yml @BoxflowIT/devops-team
+/railway.json @BoxflowIT/devops-team
+/nixpacks.toml @BoxflowIT/devops-team
+
+# Documentation
+/docs/** @BoxflowIT/boxcord-team
+*.md @BoxflowIT/boxcord-team
+
+# Configuration files
+/package.json @BoxflowIT/boxcord-team
+/tsconfig.json @BoxflowIT/boxcord-team
+/.editorconfig @BoxflowIT/boxcord-team
