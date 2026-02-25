@@ -20,12 +20,35 @@ export function useMessageReactions({
   initialReactions = [],
   isDM = false
 }: UseMessageReactionsProps) {
-  const [reactions, setReactions] = useState<Reaction[]>(initialReactions);
+  // Deduplicate initial reactions
+  const deduplicatedInitial = initialReactions.reduce((acc, reaction) => {
+    const existing = acc.find((r) => r.emoji === reaction.emoji);
+    if (existing) {
+      existing.count += reaction.count;
+      existing.hasReacted = existing.hasReacted || reaction.hasReacted;
+    } else {
+      acc.push({ ...reaction });
+    }
+    return acc;
+  }, [] as Reaction[]);
+
+  const [reactions, setReactions] = useState<Reaction[]>(deduplicatedInitial);
   const [showPicker, setShowPicker] = useState(false);
 
   // Update reactions when initialReactions changes (from WebSocket)
   useEffect(() => {
-    setReactions(initialReactions);
+    // Deduplicate before setting
+    const deduplicated = initialReactions.reduce((acc, reaction) => {
+      const existing = acc.find((r) => r.emoji === reaction.emoji);
+      if (existing) {
+        existing.count += reaction.count;
+        existing.hasReacted = existing.hasReacted || reaction.hasReacted;
+      } else {
+        acc.push({ ...reaction });
+      }
+      return acc;
+    }, [] as Reaction[]);
+    setReactions(deduplicated);
   }, [initialReactions]);
 
   const handleToggleReaction = async (emoji: string) => {

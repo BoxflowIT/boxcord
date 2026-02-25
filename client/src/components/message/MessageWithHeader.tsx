@@ -40,7 +40,6 @@ interface MessageWithHeaderProps {
   onForward?: () => void;
   onPin?: () => void;
   onQuickReaction: (emoji: string) => void;
-  onToggleReaction: (emoji: string) => void;
 
   // Pin state
   isPinned?: boolean;
@@ -76,7 +75,6 @@ export function MessageWithHeader({
   isPinned,
   canPin,
   onQuickReaction,
-  onToggleReaction,
   renderContent
 }: MessageWithHeaderProps) {
   return (
@@ -113,7 +111,6 @@ export function MessageWithHeader({
             reactions={reactions}
             compact={compact}
             renderContent={renderContent}
-            onToggleReaction={onToggleReaction}
             showActions={!isEditing}
             onQuickReaction={onQuickReaction}
             onEdit={onEdit}

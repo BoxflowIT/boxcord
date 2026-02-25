@@ -104,9 +104,10 @@ export async function startScreenShare(
     }
   } catch (error) {
     logger.error('❌ Failed to start screen share:', error);
-    // User probably cancelled
+    // User cancelled - this is normal, don't throw error
     if ((error as Error).name === 'NotAllowedError') {
-      throw new Error('Screen share permission denied');
+      logger.log('Screen share permission denied by user');
+      return;
     }
     throw new Error('Could not start screen sharing');
   }

@@ -191,6 +191,7 @@
     "deleteConfirm": "Är du säker på att du vill ta bort det här meddelandet? Detta kan inte ångras.",
     "react": "Lägg till reaktion",
     "reactWith": "Reagera med {{emoji}}",
+    "moreReactions": "Fler reaktioner",
     "thread": "Tråd",
     "pin": "Nåla fast meddelande",
     "unpin": "Ta bort nål",

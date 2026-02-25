@@ -46,7 +46,7 @@ export function VoiceControls({
     <div className="bg-gray-900 border-t border-gray-800 p-4">
       <div className="flex items-center justify-between max-w-4xl mx-auto">
         {/* Audio Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={onToggleMute}
             className={`p-3 rounded-full transition-colors ${
@@ -81,7 +81,7 @@ export function VoiceControls({
         </div>
 
         {/* Video Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={onToggleVideo}
             className={`p-3 rounded-full transition-colors ${
@@ -118,7 +118,7 @@ export function VoiceControls({
         </div>
 
         {/* Settings & Leave */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => setShowSettings(!showSettings)}
             className="p-3 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors"
