@@ -2,7 +2,7 @@
 
 ## Overview
 
-Refactored voice and audio system following clean architecture principles with proper separation of concerns.
+Refactored voice and audio system following clean architecture principles with proper separation of concerns. Voice channels now include integrated text chat with split-panel layout for simultaneous voice communication and messaging.
 
 ## Structure
 
@@ -108,6 +108,7 @@ Refactored voice and audio system following clean architecture principles with p
 - Video window state (mode, position, size, timestamps)
 - Mute/deafen state
 - Speaking indicators
+- Video quality settings (360p/480p/720p/1080p)
 
 ## Video Communication System
 
@@ -296,6 +297,67 @@ WebRTC
 - AudioContext closed
 - Pipeline nodes disconnected
 - RNNoise resources released
+
+## Voice Channel Text Chat
+
+### Overview
+
+Voice channels now include integrated text chat, allowing users to communicate via text while in voice calls. This enables sharing links, coordinating without interrupting voice, and providing context for late joiners.
+
+### Architecture
+
+**VoiceChannelView.tsx** - Split-panel layout
+
+- Left panel (320px): Voice users, video grid, voice controls
+- Right panel (flex-1): Full text chat functionality
+- React Query integration for message fetching
+- useChannelInput hook for message composition
+- Supports mentions, slash commands, file uploads
+
+**Components Used:**
+
+- `MessageListDisplay` - Displays messages with infinite scroll
+- `ChannelInputSection` - Message input with file upload
+- `useMessages` - React Query hook for message fetching
+- `useProcessedMessages` - Message processing (mentions, formatting)
+- `useMessageScroll` - Auto-scroll on new messages
+- `useMarkAsRead` - Updates read receipts
+
+### Features
+
+- ✅ **Full message support** - Text, mentions, slash commands, files
+- ✅ **Real-time updates** - WebSocket integration for live messages
+- ✅ **File uploads** - Drag & drop or click to attach files
+- ✅ **Keyboard shortcuts** - Enter to send, Shift+Enter for new line
+- ✅ **Message history** - Infinite scroll pagination
+- ✅ **Read receipts** - Tracks last read message
+- ✅ **Typing indicators** - Shows when users are typing
+
+### Technical Implementation
+
+```typescript
+// Split-panel layout
+<div className="flex">
+  {/* Voice panel */}
+  <div className="w-80">
+    <VideoGrid />
+    <VoiceUserList />
+    <VoiceControls />
+  </div>
+  
+  {/* Text chat panel */}
+  <div className="flex-1 flex flex-col">
+    <MessageListDisplay />
+    <ChannelInputSection />
+  </div>
+</div>
+```
+
+**Event Handling:**
+- Enter key sends message
+- File selection opens file picker
+- TypeScript strict types (RefObject<HTMLTextAreaElement>)
+- Proper cleanup on unmount
 
 ## Future Enhancements
 

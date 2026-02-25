@@ -27,6 +27,7 @@ Deep dive into how Boxcord is built:
 Learn about specific features:
 
 - [**Features Overview**](FEATURES.md) - Complete feature matrix with status
+- [**Settings & Shortcuts**](SETTINGS_AND_SHORTCUTS.md) - Advanced settings tabs, keyboard shortcuts, video quality
 - [**API Documentation**](API.md) - Complete REST API reference with examples
 - [**GIF Support**](GIF_SUPPORT.md) - Giphy integration setup and configuration
 - [**Internationalization (i18n)**](I18N.md) - Multi-language support (English, Swedish)
@@ -98,6 +99,12 @@ setup development environment"**
 
 **"How do I add a new language?"**
 → [Internationalization](I18N.md)
+
+**"How do keyboard shortcuts work?"**
+→ [Settings & Shortcuts](SETTINGS_AND_SHORTCUTS.md)
+
+**"How do I configure video quality?"**
+→ [Settings & Shortcuts](SETTINGS_AND_SHORTCUTS.md) → [Voice Architecture](VOICE_ARCHITECTURE.md)
 
 **"How does caching work?"**
 → [Caching Strategy](CACHING.md)
@@ -206,4 +213,4 @@ If you can't find what you're looking for:
 
 ---
 
-**Last Updated:** February 23, 2026
+**Last Updated:** February 25, 2026

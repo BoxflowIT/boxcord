@@ -23,8 +23,10 @@ Complete list of all implemented features in Boxcord.
 - ✅ **File attachments** - Upload images, documents, videos (25MB limit)
 - ✅ **GIF support** - Search and send GIFs via Giphy integration
 - ✅ **Rich media embeds** - OpenGraph/oEmbed for link previews
-- ✅ **Emoji reactions** - React to messages with emojis
-- ✅ **Custom emojis** - Support for custom emoji uploads
+- ✅ **Emoji reactions** - Full emoji picker with 1000+ emojis
+- ✅ **Quick reactions** - 5 common reactions (👍 ❤️ 😂 🎉 🔥)
+- ✅ **Custom emoji picker** - React Portal-based picker with smart positioning
+- ✅ **Reaction deduplication** - Prevents duplicate reaction bubbles
 
 ### Mentions & Commands
 - ✅ **@Mentions** - Tag users with autocomplete
@@ -35,10 +37,12 @@ Complete list of all implemented features in Boxcord.
 
 ### Voice Communication
 - ✅ **Voice channels** - Real-time voice communication rooms
+- ✅ **Voice channel text chat** - Integrated messaging in voice channels
 - ✅ **WebRTC peer-to-peer** - Direct audio streaming between users
 - ✅ **Voice activity detection (VAD)** - Automatic noise gating
 - ✅ **Speaking indicators** - Visual feedback when users speak
 - ✅ **Join/leave sounds** - Audio cues for voice channel events
+- ✅ **Split-panel layout** - Voice users and text chat side-by-side
 
 ### Audio Quality
 - ✅ **AI noise suppression** - RNNoise AI for crystal-clear audio
@@ -56,11 +60,14 @@ Complete list of all implemented features in Boxcord.
 - ✅ **Monitor mode** - "Hear yourself" for mic testing
 
 ### Video Communication
-- ✅ **Video calls** - 1-on-1 and group video calls
-- ✅ **Screen sharing** - Share screen in voice channels
+- ✅ **Video calls** - DM and group video calls
+- ✅ **DM video calling** - 1-on-1 video in direct messages
+- ✅ **Screen sharing** - Share screen in voice channels and DMs
 - ✅ **Camera + Screen combo** - Show camera and screen simultaneously
 - ✅ **Video grid layout** - Automatic layout for multiple participants
 - ✅ **Mirrored local video** - See yourself as others see you
+- ✅ **Video quality switching** - Dynamic quality control (360p/480p/720p/1080p)
+- ✅ **Live quality adjustment** - Change quality during active calls
 
 ### Video Window Controls
 - ✅ **Fullscreen mode** - Immersive video experience
@@ -238,10 +245,17 @@ Complete list of all implemented features in Boxcord.
 - ✅ **Smooth animations** - Polished interactions
 
 ### User Experience
-- ✅ **Keyboard shortcuts** - Power user features
+- ✅ **Keyboard shortcuts** - 10+ global shortcuts for power users
+  - Ctrl+Shift+M - Toggle mute
+  - Ctrl+Shift+D - Toggle deafen
+  - Ctrl+Shift+V - Toggle video
+  - Ctrl+Shift+S - Toggle screen share
+  - Ctrl+, - Open settings
+- ✅ **Advanced settings tabs** - Video, Privacy, Keybinds, Account
+- ✅ **Video quality controls** - Test camera and adjust quality in settings
 - ✅ **Context menus** - Right-click actions
 - ✅ **Drag & drop** - File upload via drag & drop
-- ✅ **Emoji picker** - Built-in emoji selector
+- ✅ **Emoji picker** - Full emoji picker with smart positioning
 - ✅ **GIF picker** - Integrated Giphy search
 - ✅ **Loading states** - Skeletons and spinners
 - ✅ **Error handling** - Toast notifications

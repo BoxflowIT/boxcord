@@ -36,7 +36,8 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Real-time messaging** via WebSocket (Socket.io)
 - **Direct Messages (DMs)** - Private 1-on-1 conversations
 - **@Mentions** - Tag users with autocomplete
-- **Emoji reactions** - React to messages with emojis
+- **Emoji reactions** - React with 1000+ emojis via full emoji picker
+- **Quick reactions** - 5 common reactions (👍 ❤️ 😂 🎉 🔥) plus custom picker
 - **Message formatting** - Markdown support with code blocks
 - **File attachments** - Upload images, documents, videos
 - **GIF support** - Search and send GIFs via Giphy integration
@@ -49,17 +50,19 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Read receipts** - Track message read status
 - **Slash commands** - Quick actions with `/` commands
 
-### 🎤 Voice & Audio
-- **Voice channels** - Real-time voice communication
-- **WebRTC peer-to-peer** - Direct audio streaming
+### 🎤 Voice & Video
+- **Voice channels** - Real-time voice communication with text chat
+- **WebRTC peer-to-peer** - Direct audio/video streaming
 - **AI noise suppression** - RNNoise AI for crystal-clear audio
 - **Echo cancellation** - Automatic echo removal
 - **Voice activity detection (VAD)** - Automatic noise gating
 - **Professional audio pipeline** - Compression, limiting, gain control
 - **Device selection** - Choose input/output devices
 - **Mic testing** - Test audio with real-time level monitoring
-- **Video calls** - 1-on-1 and group video with screen sharing
+- **Video calls** - DM and group video with screen sharing
+- **Video quality switching** - Dynamic 360p/480p/720p/1080p selection
 - **Flexible video windows** - Minimize, float, resize, drag, Picture-in-Picture
+- **Voice channel text chat** - Integrated messaging in voice channels
 
 **📖 See:** [docs/VOICE_ARCHITECTURE.md](docs/VOICE_ARCHITECTURE.md)
 
@@ -121,7 +124,8 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Discord-inspired design** - Familiar and intuitive
 - **Dark mode** - Easy on the eyes
 - **Responsive layout** - Mobile, tablet, desktop
-- **Keyboard shortcuts** - Power user features
+- **Keyboard shortcuts** - 10+ global shortcuts (Ctrl+Shift+M/D/V/S, Ctrl+,)
+- **Advanced settings** - Video, Privacy, Keybinds, Account tabs
 - **Smooth animations** - Polished interactions
 - **TailwindCSS** - Modern utility-first styling
 
