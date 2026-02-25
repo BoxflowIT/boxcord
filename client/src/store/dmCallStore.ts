@@ -73,8 +73,14 @@ export const useDMCallStore = create<DMCallStore>((set) => ({
       otherUserName: null
     }),
 
-  // End call
-  endCall: () => set({ callState: 'ending' }),
+  // End call (same as reset - no intermediate 'ending' state needed)
+  endCall: () =>
+    set({
+      callState: 'idle',
+      channelId: null,
+      otherUserId: null,
+      otherUserName: null
+    }),
 
   // Reset state
   reset: () =>

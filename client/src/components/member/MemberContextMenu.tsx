@@ -1,6 +1,13 @@
 // Member Context Menu - Right-click menu for member list items
 import { useTranslation } from 'react-i18next';
-import { MessageSquare, User, UserMinus, Ban, Shield } from 'lucide-react';
+import {
+  MessageSquare,
+  User,
+  UserMinus,
+  Ban,
+  Shield,
+  Phone
+} from 'lucide-react';
 import MenuItem from '../menu/MenuItem';
 
 interface MemberContextMenuProps {
@@ -10,6 +17,7 @@ interface MemberContextMenuProps {
   canModerate?: boolean;
   onViewProfile?: () => void;
   onSendMessage?: () => void;
+  onStartCall?: () => void;
   onKick?: () => void;
   onBan?: () => void;
   onChangeRole?: () => void;
@@ -20,6 +28,7 @@ export default function MemberContextMenu({
   canModerate = false,
   onViewProfile,
   onSendMessage,
+  onStartCall,
   onKick,
   onBan,
   onChangeRole
@@ -37,11 +46,22 @@ export default function MemberContextMenu({
 
       {/* Send Message - only for other users */}
       {!isCurrentUser && (
-        <MenuItem
-          icon={<MessageSquare size={16} />}
-          label={t('dm.sendDirectMessage')}
-          onClick={onSendMessage}
-        />
+        <>
+          <MenuItem
+            icon={<MessageSquare size={16} />}
+            label={t('dm.sendDirectMessage')}
+            onClick={onSendMessage}
+          />
+
+          {/* Start Call */}
+          {onStartCall && (
+            <MenuItem
+              icon={<Phone size={16} />}
+              label={t('dm.startVoiceCall')}
+              onClick={onStartCall}
+            />
+          )}
+        </>
       )}
 
       {/* Moderation section - divider */}

@@ -5,7 +5,7 @@
 // NO duplicate storage in Zustand
 // ============================================================================
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -25,6 +25,8 @@ import { useProcessedMessages } from '../hooks/useProcessedMessages';
 import { useMessageScroll } from '../hooks/useMessageScroll';
 import { useMarkAsRead } from '../hooks/useMarkAsRead';
 import { useSocketRoom } from '../hooks/useSocketRoom';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import type { FileUploadHandle } from './FileUpload';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import { ChannelHeader } from './channel/ChannelHeader';
 import { BotResponseBanner } from './channel';
@@ -96,10 +98,15 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
   const [uploading, setUploading] = useState(false);
   const [showMentions, setShowMentions] = useState(false);
   const [showSlashCommands, setShowSlashCommands] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const [botResponse, setBotResponse] = useState<{
     content: string;
     isPrivate: boolean;
   } | null>(null);
+
+  // Ref for file upload component
+  const fileUploadRef = useRef<FileUploadHandle>(null);
 
   // Shared hooks for common message view patterns
   const messagesEndRef = useMessageScroll(channelMessages);
@@ -123,6 +130,35 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     channelId: channelExists ? channelId : undefined,
     onShowMentions: setShowMentions,
     onShowSlashCommands: setShowSlashCommands
+  });
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    onUploadFile: () => {
+      fileUploadRef.current?.triggerFileSelect();
+    },
+    onEmojiPicker: () => {
+      setShowEmojiPicker((prev) => !prev);
+    },
+    onMarkRead: () => {
+      // TODO: Implement mark channel as read API endpoint
+      logger.info('Mark channel as read shortcut pressed');
+    },
+    onQuickReaction: async (emoji: string) => {
+      // React to the last hovered message or the most recent message
+      const targetMessageId =
+        hoveredMessageId || channelMessages[channelMessages.length - 1]?.id;
+      if (targetMessageId) {
+        try {
+          await api.toggleReaction(targetMessageId, emoji);
+          logger.info(
+            `Quick reaction ${emoji} added to message ${targetMessageId}`
+          );
+        } catch (err) {
+          logger.error('Failed to add quick reaction:', err);
+        }
+      }
+    }
   });
 
   // Stable callbacks for message actions - optimistic cache update + WebSocket
@@ -441,12 +477,18 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
                 };
               }
             );
+
+            // Also invalidate to ensure consistency
+            await queryClient.invalidateQueries({
+              queryKey: ['pinnedMessages', channelId]
+            });
           } catch (error) {
             logger.error('Failed to pin/unpin message:', error);
           }
         }}
         canPin={true}
         messagesEndRef={messagesEndRef}
+        onMessageHover={setHoveredMessageId}
       />
 
       {/* Ephemeral bot response */}
@@ -468,6 +510,8 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
         uploading={uploading}
         showMentions={showMentions}
         showSlashCommands={showSlashCommands}
+        showEmojiPicker={showEmojiPicker}
+        fileUploadRef={fileUploadRef}
         textareaRef={textareaRef}
         onInputChange={handleInputChange}
         onKeyDown={handleKeyDown}
@@ -478,6 +522,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
         onSlashCommandSelect={handleSlashCommandSelect}
         onCloseMentions={() => setShowMentions(false)}
         onCloseSlashCommands={() => setShowSlashCommands(false)}
+        onToggleEmojiPicker={setShowEmojiPicker}
       />
 
       {/* Delete Message Confirmation Modal */}

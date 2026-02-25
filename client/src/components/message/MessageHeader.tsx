@@ -17,6 +17,7 @@ export function MessageHeader({
   compact = false
 }: MessageHeaderProps) {
   const { t } = useTranslation();
+
   return (
     <div className="flex items-baseline gap-2">
       <span

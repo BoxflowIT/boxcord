@@ -202,7 +202,10 @@
     "generalChannel": "General",
     "errorCreating": "An error occurred during creation",
     "deleteConfirmMessage": "Are you sure you want to delete {{name}}? This cannot be undone.",
-    "deleteServerConfirmMessage": "Are you sure you want to delete {{name}}? All channels and messages will be deleted."
+    "deleteServerConfirmMessage": "Are you sure you want to delete {{name}}? All channels and messages will be deleted.",
+    "markAsRead": "Mark as read",
+    "muteNotifications": "Mute notifications",
+    "unmuteNotifications": "Unmute notifications"
   },
   "messages": {
     "typeMessage": "Type a message...",
@@ -248,6 +251,8 @@
     "noConversations": "No conversations",
     "startConversation": "Start a new conversation",
     "startVoiceCall": "Start voice call",
+    "startingCall": "Starting call...",
+    "openingConversation": "Opening conversation...",
     "markAsRead": "Mark as read",
     "inviteToServer": "Invite to server",
     "muteNotifications": "Mute notifications",

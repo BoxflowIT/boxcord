@@ -206,7 +206,10 @@
     "deleteServerConfirmMessage": "Är du säker på att du vill ta bort {{name}}? Alla kanaler och meddelanden kommer att raderas.",
     "categoryName": "Kategorinamn",
     "moveToCategory": "Flytta till kategori",
-    "uncategorized": "Okategoriserad"
+    "uncategorized": "Okategoriserad",
+    "markAsRead": "Markera som läst",
+    "muteNotifications": "Tysta aviseringar",
+    "unmuteNotifications": "Aktivera aviseringar"
   },
   "messages": {
     "typeMessage": "Skriv ett meddelande...",
@@ -252,6 +255,8 @@
     "noConversations": "Inga konversationer",
     "startConversation": "Starta en ny konversation",
     "startVoiceCall": "Starta röstsamtal",
+    "startingCall": "Startar samtal...",
+    "openingConversation": "Öppnar konversation...",
     "markAsRead": "Markera som läst",
     "inviteToServer": "Bjud in till server",
     "muteNotifications": "Stäng av notiser",

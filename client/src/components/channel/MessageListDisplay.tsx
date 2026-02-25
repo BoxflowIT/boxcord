@@ -54,6 +54,7 @@ interface MessageListDisplayProps {
   onPin?: (messageId: string) => void;
   canPin?: boolean;
   messagesEndRef: React.RefObject<HTMLDivElement>;
+  onMessageHover?: (messageId: string | null) => void;
 }
 
 export default function MessageListDisplay({
@@ -74,7 +75,8 @@ export default function MessageListDisplay({
   onDelete,
   onPin,
   canPin = false,
-  messagesEndRef
+  messagesEndRef,
+  onMessageHover
 }: MessageListDisplayProps) {
   const { t } = useTranslation();
 
@@ -136,6 +138,7 @@ export default function MessageListDisplay({
             showHeader={message.showHeader}
             isEditing={editingMessageId === message.id}
             isOwnMessage={message.authorId === currentUserId}
+            authorId={message.authorId}
             authorName={
               message.authorId === currentUserId
                 ? 'Du'
@@ -167,6 +170,7 @@ export default function MessageListDisplay({
             renderContent={renderEnhancedMessage}
             compact={compactMode}
             isDM={isDM}
+            onHover={onMessageHover}
           />
         ))}
         <div ref={messagesEndRef} />
