@@ -691,18 +691,57 @@ body {
     background: linear-gradient(to right, var(--color-primary), var(--color-primary-dark));
   }
   
-  /* Theme selector button styles */
-  .theme-btn {
-    @apply px-4 py-2 rounded-lg transition-colors bg-boxflow-hover text-boxflow-muted;
+  /* Unified settings button styles */
+  .settings-btn {
+    @apply px-4 py-2 rounded-lg transition-all bg-boxflow-hover text-boxflow-muted border border-transparent;
   }
   
-  .theme-btn:hover {
+  .settings-btn:hover {
     background-color: var(--color-border-hover);
+    border-color: var(--color-border);
   }
   
-  .theme-btn-active {
-    @apply px-4 py-2 rounded-lg transition-colors text-white shadow-md;
+  .settings-btn-active {
+    @apply px-4 py-2 rounded-lg transition-all text-white shadow-lg border;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    border-color: var(--color-primary);
+    transform: translateY(-1px);
+  }
+  
+  /* Audio quality preset button styles */
+  .preset-btn {
+    @apply relative px-4 py-3 rounded-lg transition-all bg-boxflow-hover text-boxflow-muted text-center border border-transparent;
+  }
+  
+  .preset-btn:hover {
     background-color: var(--color-border-hover);
+    border-color: var(--color-border);
+    transform: translateY(-1px);
+  }
+  
+  .preset-btn-active {
+    @apply px-4 py-3 rounded-lg transition-all text-white text-center shadow-lg border;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+  }
+  
+  /* Notification sound button styles */
+  .sound-btn {
+    @apply px-3 py-2 rounded-lg transition-all bg-boxflow-hover text-boxflow-muted flex flex-col items-center border border-transparent;
+  }
+  
+  .sound-btn:hover {
+    background-color: var(--color-border-hover);
+    border-color: var(--color-border);
+    transform: scale(1.05);
+  }
+  
+  .sound-btn-active {
+    @apply px-3 py-2 rounded-lg transition-all text-white flex flex-col items-center shadow-lg border;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    border-color: var(--color-primary);
+    transform: scale(1.1);
   }
 }
 

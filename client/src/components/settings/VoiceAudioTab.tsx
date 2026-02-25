@@ -12,6 +12,7 @@ import DeviceSelector from './voice/DeviceSelector';
 import VolumeSlider from './voice/VolumeSlider';
 import MicTest from './voice/MicTest';
 import AudioQualityToggles from './voice/AudioQualityToggles';
+import AudioQualityPresetSelector from '../ui/AudioQualityPresetSelector';
 
 export default function VoiceAudioTab() {
   const [rnnoiseReady, setRnnoiseReady] = useState(false);
@@ -20,6 +21,7 @@ export default function VoiceAudioTab() {
   const {
     inputDeviceId,
     outputDeviceId,
+    audioQualityPreset,
     echoCancellation,
     noiseSuppression,
     autoGainControl,
@@ -31,6 +33,7 @@ export default function VoiceAudioTab() {
     isTesting,
     setInputDevice,
     setOutputDevice,
+    setAudioQualityPreset,
     setEchoCancellation,
     setNoiseSuppression,
     setAutoGainControl,
@@ -38,7 +41,8 @@ export default function VoiceAudioTab() {
     setInputVolume,
     setOutputVolume,
     setSoundEffectsVolume,
-    setInputSensitivity
+    setInputSensitivity,
+    reset
   } = useAudioSettingsStore();
 
   // Custom hooks for device management and mic testing
@@ -136,6 +140,20 @@ export default function VoiceAudioTab() {
         </p>
       </div>
 
+      {/* Audio Quality Preset Selector */}
+      <div>
+        <h3 className="text-sm font-medium text-gray-300 mb-3">
+          Audio Quality Preset
+        </h3>
+        <p className="text-xs text-gray-400 mb-3">
+          Choose a preset for quick configuration, or customize settings below
+        </p>
+        <AudioQualityPresetSelector
+          value={audioQualityPreset}
+          onChange={setAudioQualityPreset}
+        />
+      </div>
+
       {/* Audio Quality Settings & Toggles */}
       <AudioQualityToggles
         echoCancellation={echoCancellation}
@@ -149,6 +167,28 @@ export default function VoiceAudioTab() {
         onAutoGainControlChange={setAutoGainControl}
         onUseRNNoiseChange={setUseRNNoise}
       />
+
+      {/* Reset to Defaults Button */}
+      <div className="border-t border-gray-700 pt-6">
+        <button
+          onClick={() => {
+            if (
+              confirm(
+                'Reset all audio settings to defaults?\n\nThis will restore:\n• Device selections\n• All volumes\n• Audio quality preset\n• Processing toggles\n• Input sensitivity'
+              )
+            ) {
+              reset();
+            }
+          }}
+          className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+        >
+          <span>🔄</span>
+          <span>Reset to Default Settings</span>
+        </button>
+        <p className="text-xs text-gray-400 mt-2 text-center">
+          Restore all audio settings to their default values
+        </p>
+      </div>
     </div>
   );
 }

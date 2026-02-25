@@ -6,7 +6,10 @@ import { useState, useEffect } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import {
   toggleNotificationSound,
-  isNotificationSoundEnabled
+  isNotificationSoundEnabled,
+  setNotificationSoundType,
+  previewNotificationSound,
+  type NotificationSoundType
 } from '../utils/notificationSound';
 
 export interface Settings {
@@ -15,12 +18,15 @@ export interface Settings {
   compactMode: boolean;
   messageGrouping: boolean;
   soundEnabled: boolean;
+  notificationSoundType: NotificationSoundType;
 }
 
 export function useSettings() {
   const [soundEnabled, setSoundEnabled] = useState(
     isNotificationSoundEnabled()
   );
+  const [notificationSoundType, setNotificationSoundTypeState] =
+    useLocalStorage<NotificationSoundType>('notificationSoundType', 'default');
   const [theme, setTheme] = useLocalStorage<'dark' | 'light'>('theme', 'dark');
   const [compactMode, setCompactMode] = useLocalStorage('compactMode', false);
   const [messageGrouping, setMessageGrouping] = useLocalStorage(
@@ -41,6 +47,11 @@ export function useSettings() {
       fontSize === 'small' ? '14px' : fontSize === 'large' ? '18px' : '16px';
     root.style.setProperty('--base-font-size', size);
   }, [fontSize]);
+
+  // Apply notification sound type
+  useEffect(() => {
+    setNotificationSoundType(notificationSoundType);
+  }, [notificationSoundType]);
 
   const handleSoundToggle = (enabled: boolean) => {
     setSoundEnabled(enabled);
@@ -63,6 +74,14 @@ export function useSettings() {
     setFontSize(size);
   };
 
+  const handleNotificationSoundTypeChange = (type: NotificationSoundType) => {
+    setNotificationSoundTypeState(type);
+  };
+
+  const handlePreviewNotificationSound = (type: NotificationSoundType) => {
+    previewNotificationSound(type);
+  };
+
   return {
     // Current values
     settings: {
@@ -70,7 +89,8 @@ export function useSettings() {
       fontSize,
       compactMode,
       messageGrouping,
-      soundEnabled
+      soundEnabled,
+      notificationSoundType
     },
     // Handlers
     handlers: {
@@ -78,7 +98,9 @@ export function useSettings() {
       onThemeChange: handleThemeChange,
       onCompactModeToggle: handleCompactModeToggle,
       onMessageGroupingToggle: handleMessageGroupingToggle,
-      onFontSizeChange: handleFontSizeChange
+      onFontSizeChange: handleFontSizeChange,
+      onNotificationSoundTypeChange: handleNotificationSoundTypeChange,
+      onPreviewNotificationSound: handlePreviewNotificationSound
     }
   };
 }

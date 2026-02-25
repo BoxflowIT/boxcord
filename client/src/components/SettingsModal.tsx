@@ -52,7 +52,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             {activeTab === 'notifications' && (
               <NotificationsTab
                 soundEnabled={settings.soundEnabled}
+                notificationSoundType={settings.notificationSoundType}
                 onSoundToggle={handlers.onSoundToggle}
+                onNotificationSoundTypeChange={
+                  handlers.onNotificationSoundTypeChange
+                }
+                onPreviewNotificationSound={handlers.onPreviewNotificationSound}
               />
             )}
 
