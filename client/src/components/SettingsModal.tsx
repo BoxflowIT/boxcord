@@ -65,11 +65,17 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 theme={settings.theme}
                 fontSize={settings.fontSize}
                 compactMode={settings.compactMode}
+                messageDensity={settings.messageDensity}
                 messageGrouping={settings.messageGrouping}
+                highContrast={settings.highContrast}
+                reducedMotion={settings.reducedMotion}
                 onThemeChange={handlers.onThemeChange}
                 onFontSizeChange={handlers.onFontSizeChange}
                 onCompactModeToggle={handlers.onCompactModeToggle}
+                onMessageDensityChange={handlers.onMessageDensityChange}
                 onMessageGroupingToggle={handlers.onMessageGroupingToggle}
+                onHighContrastToggle={handlers.onHighContrastToggle}
+                onReducedMotionToggle={handlers.onReducedMotionToggle}
               />
             )}
 

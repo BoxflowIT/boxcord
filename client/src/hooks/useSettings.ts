@@ -9,30 +9,65 @@ import {
   isNotificationSoundEnabled
 } from '../utils/notificationSound';
 
+export type MessageDensity = 'compact' | 'cozy' | 'spacious';
+
 export interface Settings {
-  theme: 'dark' | 'light';
+  theme: 'dark' | 'medium' | 'light';
   fontSize: string;
   compactMode: boolean;
+  messageDensity: MessageDensity;
   messageGrouping: boolean;
   soundEnabled: boolean;
+  highContrast: boolean;
+  reducedMotion: boolean;
 }
 
 export function useSettings() {
   const [soundEnabled, setSoundEnabled] = useState(
     isNotificationSoundEnabled()
   );
-  const [theme, setTheme] = useLocalStorage<'dark' | 'light'>('theme', 'dark');
+  const [theme, setTheme] = useLocalStorage<'dark' | 'medium' | 'light'>(
+    'theme',
+    'dark'
+  );
   const [compactMode, setCompactMode] = useLocalStorage('compactMode', false);
+  const [messageDensity, setMessageDensity] = useLocalStorage<MessageDensity>(
+    'messageDensity',
+    'cozy'
+  );
   const [messageGrouping, setMessageGrouping] = useLocalStorage(
     'messageGrouping',
     true
   );
   const [fontSize, setFontSize] = useLocalStorage('fontSize', 'medium');
+  const [highContrast, setHighContrast] = useLocalStorage(
+    'highContrast',
+    false
+  );
+  const [reducedMotion, setReducedMotion] = useLocalStorage(
+    'reducedMotion',
+    false
+  );
 
   // Apply theme on mount and when changed
   useEffect(() => {
-    document.documentElement.classList.toggle('light-theme', theme === 'light');
+    document.documentElement.classList.remove('light-theme', 'medium-theme');
+    if (theme === 'light') {
+      document.documentElement.classList.add('light-theme');
+    } else if (theme === 'medium') {
+      document.documentElement.classList.add('medium-theme');
+    }
   }, [theme]);
+
+  // Apply high contrast mode
+  useEffect(() => {
+    document.documentElement.classList.toggle('high-contrast', highContrast);
+  }, [highContrast]);
+
+  // Apply reduced motion
+  useEffect(() => {
+    document.documentElement.classList.toggle('reduced-motion', reducedMotion);
+  }, [reducedMotion]);
 
   // Apply font size on mount and when changed
   useEffect(() => {
@@ -42,17 +77,35 @@ export function useSettings() {
     root.style.setProperty('--base-font-size', size);
   }, [fontSize]);
 
+  // Apply message density
+  useEffect(() => {
+    const root = document.documentElement;
+    // Define spacing values for each density
+    const spacing = {
+      compact: { messageGap: '4px', padding: '8px' },
+      cozy: { messageGap: '8px', padding: '12px' },
+      spacious: { messageGap: '16px', padding: '16px' }
+    };
+    const current = spacing[messageDensity];
+    root.style.setProperty('--message-gap', current.messageGap);
+    root.style.setProperty('--message-padding', current.padding);
+  }, [messageDensity]);
+
   const handleSoundToggle = (enabled: boolean) => {
     setSoundEnabled(enabled);
     toggleNotificationSound(enabled);
   };
 
-  const handleThemeChange = (newTheme: 'dark' | 'light') => {
+  const handleThemeChange = (newTheme: 'dark' | 'medium' | 'light') => {
     setTheme(newTheme);
   };
 
   const handleCompactModeToggle = (enabled: boolean) => {
     setCompactMode(enabled);
+  };
+
+  const handleMessageDensityChange = (density: MessageDensity) => {
+    setMessageDensity(density);
   };
 
   const handleMessageGroupingToggle = (enabled: boolean) => {
@@ -63,22 +116,36 @@ export function useSettings() {
     setFontSize(size);
   };
 
+  const handleHighContrastToggle = (enabled: boolean) => {
+    setHighContrast(enabled);
+  };
+
+  const handleReducedMotionToggle = (enabled: boolean) => {
+    setReducedMotion(enabled);
+  };
+
   return {
     // Current values
     settings: {
       theme,
       fontSize,
       compactMode,
+      messageDensity,
       messageGrouping,
-      soundEnabled
+      soundEnabled,
+      highContrast,
+      reducedMotion
     },
     // Handlers
     handlers: {
       onSoundToggle: handleSoundToggle,
       onThemeChange: handleThemeChange,
       onCompactModeToggle: handleCompactModeToggle,
+      onMessageDensityChange: handleMessageDensityChange,
       onMessageGroupingToggle: handleMessageGroupingToggle,
-      onFontSizeChange: handleFontSizeChange
+      onFontSizeChange: handleFontSizeChange,
+      onHighContrastToggle: handleHighContrastToggle,
+      onReducedMotionToggle: handleReducedMotionToggle
     }
   };
 }

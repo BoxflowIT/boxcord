@@ -1,8 +1,8 @@
 // Theme selector component
 
 interface ThemeSelectorProps {
-  theme: 'dark' | 'light';
-  onThemeChange: (theme: 'dark' | 'light') => void;
+  theme: 'dark' | 'medium' | 'light';
+  onThemeChange: (theme: 'dark' | 'medium' | 'light') => void;
 }
 
 export default function ThemeSelector({
@@ -16,6 +16,12 @@ export default function ThemeSelector({
         className={theme === 'dark' ? 'theme-btn-active' : 'theme-btn'}
       >
         Dark
+      </button>
+      <button
+        onClick={() => onThemeChange('medium')}
+        className={theme === 'medium' ? 'theme-btn-active' : 'theme-btn'}
+      >
+        Medium
       </button>
       <button
         onClick={() => onThemeChange('light')}

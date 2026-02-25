@@ -1,6 +1,5 @@
 // Message With Header - Full message display with avatar
 import React from 'react';
-import { cn } from '../../utils/classNames';
 import { MessageAvatar } from './MessageAvatar';
 import { MessageHeader } from './MessageHeader';
 import { MessageBody } from './MessageBody';
@@ -78,7 +77,7 @@ export function MessageWithHeader({
   renderContent
 }: MessageWithHeaderProps) {
   return (
-    <div className={cn('flex items-start gap-4', compact ? 'mt-2' : 'mt-4')}>
+    <div className="message-wrapper flex items-start gap-4">
       <MessageAvatar
         avatarUrl={authorAvatarUrl}
         initial={authorInitial}
