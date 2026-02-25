@@ -1,6 +1,5 @@
 // Message Compact - Compact message without header/avatar
 import React from 'react';
-import { cn } from '../../utils/classNames';
 import { formatTime } from '../../lib/formatters';
 import { MessageBody } from './MessageBody';
 import { MessageEditForm } from './MessageEditForm';
@@ -67,12 +66,7 @@ export function MessageCompact({
   renderContent
 }: MessageCompactProps) {
   return (
-    <div
-      className={cn(
-        'flex items-start gap-4 pl-14',
-        compact ? 'py-0' : 'py-0.5'
-      )}
-    >
+    <div className="message-compact-wrapper flex items-start gap-4 pl-14">
       <span className="text-xs text-boxflow-muted opacity-0 group-hover:opacity-100 -ml-10 w-10 text-right">
         {formatTime(createdAt)}
       </span>

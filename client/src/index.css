@@ -10,24 +10,26 @@
 
 :root {
   --base-font-size: 16px;
+  --message-gap: 8px;
+  --message-padding: 12px;
   
-  /* Color system - Dark theme (default) */
-  --color-bg-darkest: #1e1f22;
-  --color-bg-darker: #2b2d31;
-  --color-bg-dark: #313338;
-  --color-bg-hover: #404249;
+  /* Color system - Modern Dark theme (default) */
+  --color-bg-darkest: #111214;     /* Deeper, richer black for sidebars */
+  --color-bg-darker: #1a1c1f;      /* Main panels - subtle blue tint */
+  --color-bg-dark: #23252a;        /* Content areas - better separation */
+  --color-bg-hover: #2e3036;       /* Hover state - more visible */
   
-  --color-text-light: #f2f3f5;
-  --color-text-normal: #dbdee1;
-  --color-text-muted: #949ba4;
-  --color-text-subtle: #80848e;
+  --color-text-light: #ffffff;     /* Pure white for primary text */
+  --color-text-normal: #e8eaed;    /* Bright for readability */
+  --color-text-muted: #a8adb5;     /* Muted but still clear */
+  --color-text-subtle: #7a7f86;    /* Subtle for secondary info */
   
-  --color-border: #3f4147;
-  --color-border-hover: #4e5058;
-  --color-border-50: rgba(63, 65, 71, 0.5);
+  --color-border: #2e3036;         /* Borders match hover for consistency */
+  --color-border-hover: #3d4047;   /* More visible on hover */
+  --color-border-50: rgba(46, 48, 54, 0.5);
   
-  --color-bg-hover: #404249;
-  --color-bg-hover-50: rgba(64, 66, 73, 0.5);
+  --color-bg-hover: #2e3036;
+  --color-bg-hover-50: rgba(46, 48, 54, 0.5);
   
   /* Primary colors and gradients */
   --color-primary: #5865f2;
@@ -50,37 +52,100 @@
   --color-danger-50: rgba(240, 71, 71, 0.5);
   --color-warning: #faa61a;
   
-  /* Scrollbar colors */
-  --scrollbar-track: #2b2d31;
-  --scrollbar-thumb: #1e1f22;
-  --scrollbar-thumb-hover: #404249;
+  /* Scrollbar colors - Modern dark */
+  --scrollbar-track: #1a1c1f;
+  --scrollbar-thumb: #2e3036;
+  --scrollbar-thumb-hover: #3d4047;
   --scrollbar-thumb-active: #5865f2;
 }
 
-/* Light theme overrides - Teams inspired */
+/* Medium theme - Perfect balance between dark and light */
+.medium-theme {
+  --color-bg-darkest: #2b2d31;    /* Neutral dark gray */
+  --color-bg-darker: #36383f;     /* Medium gray panels */
+  --color-bg-dark: #42454d;       /* Content areas */
+  --color-bg-hover: #4e5159;      /* Hover state */
+  --color-bg-hover-50: rgba(78, 81, 89, 0.5);
+  
+  --color-text-light: #f0f1f3;    /* Bright for readability */
+  --color-text-normal: #d8dadd;   /* Good contrast */
+  --color-text-muted: #a0a4ab;    /* Muted but clear */
+  --color-text-subtle: #878a91;   /* Subtle secondary */
+  
+  --color-border: #4e5159;        /* Visible borders */
+  --color-border-hover: #5d6068;  /* Hover borders */
+  --color-border-50: rgba(78, 81, 89, 0.5);
+  
+  /* Scrollbar colors for medium theme */
+  --scrollbar-track: #36383f;
+  --scrollbar-thumb: #4e5159;
+  --scrollbar-thumb-hover: #5d6068;
+  --scrollbar-thumb-active: #5865f2;
+}
+
+/* Light theme overrides - Discord/Slack inspired with better contrast */
 .light-theme {
-  --color-bg-darkest: #edebe9;
-  --color-bg-darker: #f3f2f1;
-  --color-bg-dark: #ffffff;
-  --color-bg-hover: #f3f2f1;
-  --color-bg-hover-50: rgba(243, 242, 241, 0.5);
+  --color-bg-darkest: #e3e5e8;    /* Sidebar/panels - darker for separation */
+  --color-bg-darker: #f2f3f5;     /* Main area background */
+  --color-bg-dark: #ffffff;       /* Messages, cards - clean white */
+  --color-bg-hover: #e8eaed;      /* Hover state - noticeable */
+  --color-bg-hover-50: rgba(232, 234, 237, 0.5);
   
-  --color-text-light: #242424;
-  --color-text-normal: #242424;
-  --color-text-muted: #605e5c;
-  --color-text-subtle: #8a8886;
+  --color-text-light: #060607;    /* Primary text - darker for readability */
+  --color-text-normal: #2e3338;   /* Normal text - good contrast */
+  --color-text-muted: #4e5058;    /* Muted text - still readable */
+  --color-text-subtle: #6a6d75;   /* Subtle text - timestamps etc */
   
-  --color-border: #e1dfdd;
-  --color-border-hover: #c8c6c4;
-  --color-border-50: rgba(225, 223, 221, 0.5);
+  --color-border: #d4d6d9;        /* Borders - visible separation */
+  --color-border-hover: #b8babf;  /* Hover borders - more prominent */
+  --color-border-50: rgba(212, 214, 217, 0.5);
   
   /* Primary/danger hover colors stay the same for light theme */
   
   /* Scrollbar colors for light theme */
-  --scrollbar-track: #f3f2f1;
-  --scrollbar-thumb: #c8c6c4;
-  --scrollbar-thumb-hover: #a19f9d;
+  --scrollbar-track: #f2f3f5;
+  --scrollbar-thumb: #b8babf;
+  --scrollbar-thumb-hover: #9a9ca1;
   --scrollbar-thumb-active: #5865f2;
+}
+
+/* High Contrast Mode - Enhanced visibility for accessibility */
+.high-contrast {
+  --color-bg-darkest: #000000;
+  --color-bg-darker: #0a0a0a;
+  --color-bg-dark: #1a1a1a;
+  --color-bg-hover: #2a2a2a;
+  --color-bg-hover-50: rgba(42, 42, 42, 0.5);
+  
+  --color-text-light: #ffffff;
+  --color-text-normal: #ffffff;
+  --color-text-muted: #d0d0d0;
+  --color-text-subtle: #b0b0b0;
+  
+  --color-border: #ffffff;
+  --color-border-hover: #ffffff;
+  --color-border-50: rgba(255, 255, 255, 0.5);
+  
+  /* Enhance primary colors for better contrast */
+  --color-primary: #7289ff;
+  --color-success: #57d89f;
+  --color-danger: #ff6b6b;
+  --color-warning: #ffc658;
+}
+
+.high-contrast * {
+  /* Stronger borders in high contrast */
+  border-color: var(--color-border) !important;
+}
+
+/* Reduced Motion Mode - Respects user preference for reduced animations */
+.reduced-motion *,
+.reduced-motion *::before,
+.reduced-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
 
 html {
@@ -703,6 +768,21 @@ body {
   .theme-btn-active {
     @apply px-4 py-2 rounded-lg transition-colors text-white shadow-md;
     background-color: var(--color-border-hover);
+  }
+
+  /* ========== Message Density Utilities ========== */
+  .message-wrapper {
+    margin-top: var(--message-gap);
+    padding: var(--message-padding);
+  }
+
+  .message-compact-wrapper {
+    margin-top: calc(var(--message-gap) * 0.5);
+    padding: calc(var(--message-padding) * 0.5);
+  }
+
+  .message-content-spacing {
+    gap: var(--message-gap);
   }
 }
 
