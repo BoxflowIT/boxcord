@@ -10,6 +10,7 @@ import Avatar from '../ui/Avatar';
 import { VideoGrid } from '../voice/VideoGrid';
 import { MinimizedVideoIndicatorNew } from '../voice/MinimizedVideoIndicatorNew';
 import { FloatingVideoWindowNew } from '../voice/FloatingVideoWindowNew';
+import VideoQualitySelector from '../voice/VideoQualitySelector';
 import {
   PhoneHangUpIcon,
   MicIcon,
@@ -53,6 +54,14 @@ export function DMCallOverlay({
 
   const handleToggleScreenShare = async () => {
     await voiceService.toggleScreenShare();
+  };
+
+  const handleQualityChange = async () => {
+    try {
+      await voiceService.changeVideoQuality();
+    } catch (error) {
+      console.error('[DMCallOverlay] Failed to change quality:', error);
+    }
   };
 
   // Incoming call (ringing state)
@@ -144,10 +153,10 @@ export function DMCallOverlay({
           </div>
 
           {/* Voice/Video controls */}
-          <div className="grid grid-cols-5 gap-2">
+          <div className="flex items-center justify-center gap-1.5">
             <button
               onClick={handleToggleMute}
-              className={`p-2 rounded-lg transition-colors ${
+              className={`p-2.5 rounded-lg transition-colors ${
                 isMuted
                   ? 'bg-red-500 hover:bg-red-600 text-white'
                   : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white'
@@ -159,7 +168,7 @@ export function DMCallOverlay({
 
             <button
               onClick={handleToggleDeafen}
-              className={`p-2 rounded-lg transition-colors ${
+              className={`p-2.5 rounded-lg transition-colors ${
                 isDeafened
                   ? 'bg-red-500 hover:bg-red-600 text-white'
                   : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white'
@@ -175,7 +184,7 @@ export function DMCallOverlay({
 
             <button
               onClick={handleToggleVideo}
-              className={`p-2 rounded-lg transition-colors ${
+              className={`p-2.5 rounded-lg transition-colors ${
                 isVideoEnabled
                   ? 'bg-green-500 hover:bg-green-600 text-white'
                   : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white'
@@ -193,9 +202,17 @@ export function DMCallOverlay({
               )}
             </button>
 
+            {/* Video Quality Selector - only show when video is enabled */}
+            {isVideoEnabled && (
+              <VideoQualitySelector
+                compact
+                onQualityChange={handleQualityChange}
+              />
+            )}
+
             <button
               onClick={handleToggleScreenShare}
-              className={`p-2 rounded-lg transition-colors ${
+              className={`p-2.5 rounded-lg transition-colors ${
                 isScreenSharing
                   ? 'bg-blue-500 hover:bg-blue-600 text-white'
                   : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white'
@@ -211,7 +228,7 @@ export function DMCallOverlay({
 
             <button
               onClick={onEndCall}
-              className="p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors"
+              className="p-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors"
               title={t('voice.hangUp')}
             >
               <PhoneHangUpIcon size="sm" />

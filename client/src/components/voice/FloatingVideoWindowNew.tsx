@@ -260,6 +260,15 @@ export function FloatingVideoWindowNew() {
     }
   };
 
+  const handleQualityChange = async () => {
+    try {
+      logger.info('[FloatingVideoWindow] Changing video quality');
+      await voiceService.changeVideoQuality();
+    } catch (error) {
+      logger.error('[FloatingVideoWindow] Failed to change quality:', error);
+    }
+  };
+
   const handleDragStop = (_e: unknown, data: { x: number; y: number }) => {
     setVideoWindowPosition(data.x, data.y);
   };
@@ -298,6 +307,8 @@ export function FloatingVideoWindowNew() {
             isPipSupported={isPipSupported}
             isPipActive={isPipActive}
             isVideoReady={isVideoReady}
+            isVideoEnabled={isVideoEnabled}
+            onQualityChange={handleQualityChange}
           />
         </div>
 

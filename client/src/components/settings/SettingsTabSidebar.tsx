@@ -5,8 +5,12 @@ import { cn } from '../../utils/classNames';
 type SettingsTab =
   | 'notifications'
   | 'voice'
+  | 'video'
   | 'appearance'
+  | 'privacy'
+  | 'keybinds'
   | 'language'
+  | 'account'
   | 'about';
 
 interface SettingsTabSidebarProps {
@@ -17,8 +21,12 @@ interface SettingsTabSidebarProps {
 const tabs: { id: SettingsTab; labelKey: string }[] = [
   { id: 'notifications', labelKey: 'settings.notifications' },
   { id: 'voice', labelKey: 'settings.voice' },
+  { id: 'video', labelKey: 'settings.video' },
   { id: 'appearance', labelKey: 'settings.appearance' },
+  { id: 'privacy', labelKey: 'settings.privacy' },
+  { id: 'keybinds', labelKey: 'settings.keybinds' },
   { id: 'language', labelKey: 'settings.language' },
+  { id: 'account', labelKey: 'settings.account' },
   { id: 'about', labelKey: 'settings.about' }
 ];
 

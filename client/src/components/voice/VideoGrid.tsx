@@ -12,6 +12,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { VideoContainer } from './VideoContainer';
 import { PeerVideo } from './PeerVideo';
 import { usePictureInPicture } from '../../hooks/usePictureInPicture';
+import VideoQualitySelector from './VideoQualitySelector';
 
 export function VideoGrid() {
   const localStream = useVoiceStore((s) => s.localStream);
@@ -233,6 +234,15 @@ export function VideoGrid() {
     setVideoWindowMode('floating');
   };
 
+  const handleQualityChange = async () => {
+    try {
+      logger.info('[VideoGrid] Changing video quality');
+      await voiceService.changeVideoQuality();
+    } catch (error) {
+      logger.error('[VideoGrid] Failed to change quality:', error);
+    }
+  };
+
   return (
     <>
       {/* Hidden video elements - kept mounted for PiP even when UI is hidden */}
@@ -323,6 +333,14 @@ export function VideoGrid() {
                   >
                     <PipIcon size="md" />
                   </button>
+                )}
+
+                {/* Video Quality Selector */}
+                {isVideoEnabled && (
+                  <VideoQualitySelector
+                    compact
+                    onQualityChange={handleQualityChange}
+                  />
                 )}
 
                 {/* Close Button */}

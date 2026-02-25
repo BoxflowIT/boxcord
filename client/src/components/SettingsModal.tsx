@@ -9,8 +9,12 @@ import SettingsTabSidebar, {
 import SettingsHeader from './settings/SettingsHeader';
 import NotificationsTab from './settings/NotificationsTab';
 import VoiceAudioTab from './settings/VoiceAudioTab';
+import VideoTab from './settings/VideoTab';
 import AppearanceTab from './settings/AppearanceTab';
+import PrivacyTab from './settings/PrivacyTab';
+import KeybindsTab from './settings/KeybindsTab';
 import { LanguageTab } from './settings/LanguageTab';
+import AccountTab from './settings/AccountTab';
 import AboutTab from './settings/AboutTab';
 
 interface SettingsModalProps {
@@ -54,6 +58,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
             {activeTab === 'voice' && <VoiceAudioTab />}
 
+            {activeTab === 'video' && <VideoTab />}
+
             {activeTab === 'appearance' && (
               <AppearanceTab
                 theme={settings.theme}
@@ -67,7 +73,13 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               />
             )}
 
+            {activeTab === 'privacy' && <PrivacyTab />}
+
+            {activeTab === 'keybinds' && <KeybindsTab />}
+
             {activeTab === 'language' && <LanguageTab />}
+
+            {activeTab === 'account' && <AccountTab />}
 
             {activeTab === 'about' && <AboutTab />}
           </div>

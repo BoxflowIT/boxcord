@@ -33,7 +33,6 @@ interface MessageCompactProps {
   onForward?: () => void;
   onPin?: () => void;
   onQuickReaction: (emoji: string) => void;
-  onToggleReaction: (emoji: string) => void;
 
   // Pin state
   isPinned?: boolean;
@@ -65,7 +64,6 @@ export function MessageCompact({
   isPinned,
   canPin,
   onQuickReaction,
-  onToggleReaction,
   renderContent
 }: MessageCompactProps) {
   return (
@@ -97,7 +95,6 @@ export function MessageCompact({
             reactions={reactions}
             compact={compact}
             renderContent={renderContent}
-            onToggleReaction={onToggleReaction}
             showActions={!isEditing}
             onQuickReaction={onQuickReaction}
             onEdit={onEdit}
