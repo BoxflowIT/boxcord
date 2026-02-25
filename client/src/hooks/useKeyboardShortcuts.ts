@@ -1,16 +1,52 @@
 /**
  * Global keyboard shortcuts handler
- * Implements keyboard shortcuts across the application
+ * Implements customizable keyboard shortcuts across the application
  */
 
 import { useEffect } from 'react';
 import { useVoiceStore } from '../store/voiceStore';
-import { useDMCallStore } from '../store/dmCallStore';
-import { logger } from '../utils/logger';
+import {
+  useKeyboardShortcutsStore,
+  QUICK_REACTION_EMOJIS,
+  type ShortcutAction
+} from '../store/keyboardShortcutsStore';
+import { voiceService } from '../services/voice';
 
-export function useKeyboardShortcuts(options?: {
+export interface KeyboardShortcutHandlers {
   onToggleSettings?: () => void;
-}) {
+  onSearch?: () => void;
+  onNextChannel?: () => void;
+  onPrevChannel?: () => void;
+  onUploadFile?: () => void;
+  onEmojiPicker?: () => void;
+  onMarkRead?: () => void;
+  onPinMessage?: () => void;
+  onQuickReaction?: (emoji: string) => void;
+}
+
+// Convert key event to shortcut string
+function eventToShortcut(e: KeyboardEvent): string {
+  const keys: string[] = [];
+
+  if (e.ctrlKey || e.metaKey) keys.push('Ctrl');
+  if (e.shiftKey) keys.push('Shift');
+  if (e.altKey) keys.push('Alt');
+
+  const keyMap: Record<string, string> = {
+    ArrowUp: '↑',
+    ArrowDown: '↓',
+    ArrowLeft: '←',
+    ArrowRight: '→',
+    ' ': 'Space'
+  };
+
+  const mainKey = keyMap[e.key] || e.key.toUpperCase();
+  keys.push(mainKey);
+
+  return keys.join('+');
+}
+
+export function useKeyboardShortcuts(handlers?: KeyboardShortcutHandlers) {
   const {
     isMuted,
     isDeafened,
@@ -21,59 +57,111 @@ export function useKeyboardShortcuts(options?: {
     setVideoEnabled,
     setScreenSharing
   } = useVoiceStore();
-  const { callState } = useDMCallStore();
+
+  const { shortcuts, enabled } = useKeyboardShortcutsStore();
 
   useEffect(() => {
+    if (!enabled) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl+Shift+M - Toggle Mute (both voice and DM calls)
-      if (e.ctrlKey && e.shiftKey && e.key === 'M') {
-        e.preventDefault();
-        setMuted(!isMuted);
-        logger.info('[Shortcut] Toggled mute:', !isMuted);
-        return;
-      }
+      // Ignore shortcuts when typing in input/textarea
+      const target = e.target as HTMLElement;
+      const isTyping =
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable;
 
-      // Ctrl+Shift+D - Toggle Deafen
-      if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-        e.preventDefault();
-        setDeafened(!isDeafened);
-        logger.info('[Shortcut] Toggled deafen:', !isDeafened);
-        return;
-      }
+      // Don't trigger shortcuts while typing
+      if (!isTyping) {
+        const pressedKey = eventToShortcut(e);
 
-      // Ctrl+Shift+V - Toggle Video
-      if (e.ctrlKey && e.shiftKey && e.key === 'V') {
-        e.preventDefault();
-        setVideoEnabled(!isVideoEnabled);
-        logger.info('[Shortcut] Toggled video:', !isVideoEnabled);
-        return;
-      }
+        // Match against custom shortcuts
+        for (const [action, shortcut] of Object.entries(shortcuts)) {
+          if (shortcut.keys === pressedKey) {
+            e.preventDefault();
 
-      // Ctrl+Shift+S - Toggle Screen Share
-      if (e.ctrlKey && e.shiftKey && e.key === 'S') {
-        e.preventDefault();
-        if (isVideoEnabled) {
-          setScreenSharing(!isScreenSharing);
-          logger.info('[Shortcut] Toggled screen share:', !isScreenSharing);
+            // Type assertion needed since Object.entries returns string keys
+            const shortcutAction = action as ShortcutAction;
+
+            switch (shortcutAction) {
+              case 'toggle-mute':
+                setMuted(!isMuted);
+                break;
+
+              case 'toggle-deafen':
+                setDeafened(!isDeafened);
+                break;
+
+              case 'toggle-video':
+                setVideoEnabled(!isVideoEnabled);
+                break;
+
+              case 'toggle-screenshare':
+                if (isVideoEnabled) {
+                  setScreenSharing(!isScreenSharing);
+                }
+                break;
+
+              case 'leave-voice':
+                voiceService.leaveChannel();
+                break;
+
+              case 'search':
+                handlers?.onSearch?.();
+                break;
+
+              case 'next-channel':
+                handlers?.onNextChannel?.();
+                break;
+
+              case 'prev-channel':
+                handlers?.onPrevChannel?.();
+                break;
+
+              case 'upload-file':
+                handlers?.onUploadFile?.();
+                break;
+
+              case 'emoji-picker':
+                handlers?.onEmojiPicker?.();
+                break;
+
+              case 'mark-read':
+                handlers?.onMarkRead?.();
+                break;
+
+              case 'pin-message':
+                handlers?.onPinMessage?.();
+                break;
+
+              case 'emoji-react-1':
+              case 'emoji-react-2':
+              case 'emoji-react-3':
+              case 'emoji-react-4':
+              case 'emoji-react-5': {
+                // Use action as key to get emoji from mapping
+                const emoji = QUICK_REACTION_EMOJIS[shortcutAction];
+                if (emoji) {
+                  handlers?.onQuickReaction?.(emoji);
+                }
+                break;
+              }
+
+              default:
+                // Silently ignore unhandled actions
+                break;
+            }
+
+            return; // Shortcut handled
+          }
         }
-        return;
-      }
 
-      // Ctrl+, - Toggle Settings
-      if (e.ctrlKey && e.key === ',') {
-        e.preventDefault();
-        if (options?.onToggleSettings) {
-          options.onToggleSettings();
-          logger.info('[Shortcut] Toggled settings');
+        // Ctrl+, - Toggle Settings (hardcoded)
+        if ((e.ctrlKey || e.metaKey) && e.key === ',') {
+          e.preventDefault();
+          handlers?.onToggleSettings?.();
+          return;
         }
-        return;
-      }
-
-      // Ctrl+F - Search (let browser handle or custom search)
-      if (e.ctrlKey && e.key === 'f') {
-        // Could prevent default and open custom search
-        // For now, let browser handle it
-        return;
       }
     };
 
@@ -82,7 +170,11 @@ export function useKeyboardShortcuts(options?: {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
+    // NOTE: handlers object may change on each render causing re-registration.
+    // Consider wrapping handlers in useCallback if performance issues arise.
   }, [
+    enabled,
+    shortcuts,
     isMuted,
     isDeafened,
     isVideoEnabled,
@@ -91,7 +183,6 @@ export function useKeyboardShortcuts(options?: {
     setDeafened,
     setVideoEnabled,
     setScreenSharing,
-    callState,
-    options
+    handlers
   ]);
 }
