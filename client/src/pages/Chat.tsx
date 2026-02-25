@@ -38,9 +38,45 @@ export default function Chat() {
   const { data: workspaces = [] } = useWorkspaces();
   const { data: channels = [] } = useChannels(currentWorkspace?.id);
 
-  // Keyboard shortcuts
+  // Navigate to next/previous channel
+  const navigateChannel = (direction: 'next' | 'prev') => {
+    if (!currentWorkspace || channels.length === 0) return;
+
+    const currentPath = location.pathname;
+    const channelMatch = currentPath.match(/\/chat\/channels\/([^/]+)/);
+
+    if (channelMatch) {
+      const currentChannelId = channelMatch[1];
+      const currentIndex = channels.findIndex((c) => c.id === currentChannelId);
+
+      if (currentIndex !== -1) {
+        let nextIndex;
+        if (direction === 'next') {
+          nextIndex = (currentIndex + 1) % channels.length;
+        } else {
+          nextIndex =
+            currentIndex === 0 ? channels.length - 1 : currentIndex - 1;
+        }
+
+        const nextChannel = channels[nextIndex];
+        setCurrentChannel(nextChannel);
+        navigate(`/chat/channels/${nextChannel.id}`);
+      }
+    } else if (channels.length > 0) {
+      // Not currently in a channel, go to first channel
+      const firstChannel =
+        direction === 'next' ? channels[0] : channels[channels.length - 1];
+      setCurrentChannel(firstChannel);
+      navigate(`/chat/channels/${firstChannel.id}`);
+    }
+  };
+
+  // Keyboard shortcuts with expanded handlers
   useKeyboardShortcuts({
-    onToggleSettings: () => setShowSettings((prev) => !prev)
+    onToggleSettings: () => setShowSettings((prev) => !prev),
+    onSearch: () => setShowGlobalSearch(true),
+    onNextChannel: () => navigateChannel('next'),
+    onPrevChannel: () => navigateChannel('prev')
   });
 
   useEffect(() => {
@@ -78,18 +114,8 @@ export default function Chat() {
 
     window.addEventListener('beforeunload', handleBeforeUnload);
 
-    // Global search keyboard shortcut (Cmd+K or Ctrl+K)
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setShowGlobalSearch(true);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('keydown', handleKeyDown);
       socketService.disconnect();
     };
   }, []);
