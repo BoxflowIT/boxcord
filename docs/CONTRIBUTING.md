@@ -298,12 +298,31 @@ git commit -m "feat: descriptive commit message"
 git merge --no-ff feature/your-feature
 ```
 
-**For develop → main:**
+**For develop → main (Release):**
 ```bash
-# Always use merge commit to preserve history
+# Merge develop to main (triggers automated version bump)
 git checkout main
-git merge --no-ff develop -m "chore: Release vX.X.X"
+git merge --no-ff develop -m "🔀 merge: release into main"
+git push origin main
+
+# 🤖 GitHub Actions will automatically:
+# - Analyze commits and bump version (feat=minor, fix=patch)
+# - Update package.json files
+# - Create git tag (v1.7.0)
+# - Commit and push to main
+
+# Then sync main back to develop
+git checkout develop
+git merge main
+git push origin develop
 ```
+
+**Automated Version Bumping:**
+- `feat:` commits → Minor (1.6.0 → 1.7.0)
+- `fix:` commits → Patch (1.6.0 → 1.6.1)
+- `BREAKING CHANGE:` → Major (1.6.0 → 2.0.0)
+
+See [GIT_WORKFLOW.md](./GIT_WORKFLOW.md#release-process) for details.
 
 ---
 

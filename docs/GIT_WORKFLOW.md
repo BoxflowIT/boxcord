@@ -117,12 +117,36 @@ git config --global rerere.enabled true
 6. Delete feature branch (automatic if using GitHub merge button)
 
 ### Release Process
+
+**Automated Version Bumping** 🤖
+
+When you merge `develop` to `main`, version is **automatically bumped** based on commit types:
+
+- `feat:` commits → **Minor** bump (1.6.0 → 1.7.0)
+- `fix:` commits → **Patch** bump (1.6.0 → 1.6.1)
+- `BREAKING CHANGE:` or `!` → **Major** bump (1.6.0 → 2.0.0)
+- Other commits → **Patch** bump
+
+**Release Steps:**
+
 1. Create release PR from `develop` to `main`
-2. Update version in `package.json` and `client/package.json`
-3. Update `CHANGELOG.md` with release notes
-4. Get approval and merge to `main`
-5. Tag release: `git tag v1.x.0` (done automatically or manually)
-6. Merge `main` back to `develop` to sync versions
+2. Update `CHANGELOG.md` with release notes (optional but recommended)
+3. Get approval and merge to `main`
+4. 🤖 **GitHub Actions automatically:**
+   - Analyzes commits since last tag
+   - Bumps version in `package.json` and `client/package.json`
+   - Creates git tag (e.g., `v1.7.0`)
+   - Commits and pushes to `main`
+5. Merge `main` back to `develop` to sync versions
+
+**Manual Release (if needed):**
+```bash
+# Bump version manually
+npm version minor -w client && npm version minor
+git commit -m "🔖 chore: bump version to 1.7.0"
+git tag v1.7.0
+git push origin main --follow-tags
+```
 
 ### Hotfix Process
 1. Create hotfix branch from `main`: `git checkout -b hotfix/critical-bug main`
@@ -148,16 +172,28 @@ Examples:
 ```
 
 ### Valid Types
-- `feat` ✨ - New feature
-- `fix` 🐛 - Bug fix
-- `refactor` ♻️ - Code refactoring
-- `docs` 📝 - Documentation
-- `test` 🧪 - Testing
-- `chore` 🔧 - Maintenance
-- `perf` ⚡ - Performance
-- `style` 💄 - Styling/formatting
-- `ci` 👷 - CI/CD
-- `merge` 🔀 - Branch merges
+
+| Type | Emoji | Description | Version Bump |
+|------|-------|-------------|--------------|
+| `feat` | ✨ | New feature | **Minor** (1.6.0 → 1.7.0) |
+| `fix` | 🐛 | Bug fix | **Patch** (1.6.0 → 1.6.1) |
+| `refactor` | ♻️ | Code refactoring | Patch |
+| `docs` | 📝 | Documentation | Patch |
+| `test` | 🧪 | Testing | Patch |
+| `chore` | 🔧 | Maintenance | Patch |
+| `perf` | ⚡ | Performance | Patch |
+| `style` | 💄 | Styling/formatting | Patch |
+| `ci` | 👷 | CI/CD | Patch |
+| `merge` | 🔀 | Branch merges | **Minor** |
+| `BREAKING` | 💥 | Breaking change | **Major** (1.6.0 → 2.0.0) |
+
+**Breaking Changes:**
+To trigger a major version bump, use `!` or add `BREAKING CHANGE:` in commit body:
+```
+feat!: redesign authentication system (#240)
+
+BREAKING CHANGE: Old auth tokens are no longer valid
+```
 
 ---
 
