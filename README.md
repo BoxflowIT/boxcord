@@ -2,6 +2,8 @@
 
 Discord-like real-time chat application for Boxflow, soon integrated with Boxtime.
 
+**Latest version:** 1.5.0 | [View Changelog](CHANGELOG.md)
+
 ## 🚀 Quick Start
 
 ```bash
@@ -43,8 +45,8 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **GIF support** - Search and send GIFs via Giphy integration
 - **Message editing & deletion** - Full message history tracking
 - **Message forwarding** - Forward messages to other channels/DMs
-- **Message pinning** - Pin important messages
-- **Bookmarks/Saved messages** - Save messages for later
+- **Message pinning** - Pin important messages with real-time updates (#6)
+- **Bookmarks/Saved messages** - Save messages for later with optimized cache (#6)
 - **Rich media embeds** - OpenGraph/oEmbed for links
 - **Typing indicators** - See when users are typing
 - **Read receipts** - Track message read status
@@ -61,6 +63,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Device selection** - Choose input/output devices
 - **Mic testing** - Test audio with real-time level monitoring
 - **Video calls** - DM and group video with screen sharing
+- **Call sounds** - Hangup sounds for all call end scenarios (reject, hangup, timeout) (#6)
 - **Video quality switching** - Dynamic 360p/480p/720p/1080p selection
 - **Flexible video windows** - Minimize, float, resize, drag, Picture-in-Picture
 - **Voice channel text chat** - Integrated messaging in voice channels
@@ -125,7 +128,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 
 ### 🎨 UI/UX
 - **Discord-inspired design** - Familiar and intuitive
-- **Theme customization** - Dark/Medium/Light themes (#225)
+- **Theme customization** - Dark/Medium/Light themes with persistent settings (#225, #6)
 - **Message density** - Compact/Cozy/Spacious spacing (#225)
 - **Responsive layout** - Mobile, tablet, desktop
 - **Keyboard shortcuts** - 17+ customizable shortcuts (#227)

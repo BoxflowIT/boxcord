@@ -1,0 +1,48 @@
+#!/bin/bash
+# commit-msg hook
+# Validates that commit messages follow CONTRIBUTING.md format
+
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# Get first line (subject)
+SUBJECT=$(echo "$COMMIT_MSG" | head -1)
+
+# Check for valid conventional commit format
+VALID_TYPES="feat|fix|refactor|docs|test|chore|perf|style|ci|merge"
+
+# Pattern: [emoji] type[(scope)]: subject (#number)
+# The emoji is optional, PR number is mandatory at the end
+if ! echo "$SUBJECT" | grep -qE "^[[:space:]]*(✨|🐛|♻️|📝|🧪|🔧|⚡|💄|👷|🔀)?[[:space:]]*($VALID_TYPES)(\([a-z0-9\-]+\))?:[[:space:]].+[[:space:]]\(#[0-9]+\)$"; then
+  echo ""
+  echo "❌ ERROR: Commit message does not follow CONTRIBUTING.md format!"
+  echo ""
+  echo "Current message:"
+  echo "  $SUBJECT"
+  echo ""
+  echo "Required format:"
+  echo "  [emoji] type(scope): subject (#PR_NUMBER)"
+  echo ""
+  echo "Examples:"
+  echo "  ✅ ✨ feat(frontend): add dark mode (#230)"
+  echo "  ✅ 🐛 fix: resolve memory leak (#231)"
+  echo "  ✅ 📝 docs: update README (#232)"
+  echo "  ✅ feat(backend): add caching (#233)"
+  echo ""
+  echo "Valid types: $VALID_TYPES"
+  echo "Emoji and scope are optional, but PR number is MANDATORY"
+  echo ""
+  exit 1
+fi
+
+# Check that subject is not too long (max 72 chars without emoji)
+SUBJECT_NO_EMOJI=$(echo "$SUBJECT" | sed -E 's/^[[:space:]]*(✨|🐛|♻️|📝|🧪|🔧|⚡|💄|👷|🔀)[[:space:]]*//')
+SUBJECT_LENGTH=${#SUBJECT_NO_EMOJI}
+
+if [ "$SUBJECT_LENGTH" -gt 72 ]; then
+  echo ""
+  echo "⚠️  WARNING: Subject line is $SUBJECT_LENGTH characters (max 72 recommended)"
+  echo ""
+fi
+
+exit 0

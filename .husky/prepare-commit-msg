@@ -1,0 +1,86 @@
+#!/bin/bash
+# prepare-commit-msg hook
+# Automatically adds PR number and emoji to commit messages
+
+COMMIT_MSG_FILE=$1
+COMMIT_SOURCE=$2
+
+# Skip if this is a merge commit or amend
+if [ "$COMMIT_SOURCE" = "merge" ] || [ "$COMMIT_SOURCE" = "squash" ]; then
+  exit 0
+fi
+
+# Read the commit message
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# Skip if message already has a PR number
+if echo "$COMMIT_MSG" | grep -qE '\(#[0-9]+\)'; then
+  exit 0
+fi
+
+# Skip if empty message
+if [ -z "$COMMIT_MSG" ]; then
+  exit 0
+fi
+
+# Get next PR number
+if [ -f "./scripts/get-next-pr-number.sh" ]; then
+  PR_NUMBER=$(./scripts/get-next-pr-number.sh)
+else
+  PR_NUMBER="230"
+fi
+
+# Extract commit type from message (remove any existing emoji first)
+TYPE=$(echo "$COMMIT_MSG" | sed -E 's/^[[:space:]]*(✨|🐛|♻️|📝|🧪|🔧|⚡|💄|👷|🔀)[[:space:]]*//' | grep -oE '^(feat|fix|refactor|docs|test|chore|perf|style|ci|merge)' | head -1)
+
+# Map type to emoji
+EMOJI=""
+case "$TYPE" in
+  "feat") EMOJI="✨" ;;
+  "fix") EMOJI="🐛" ;;
+  "refactor") EMOJI="♻️" ;;
+  "docs") EMOJI="📝" ;;
+  "test") EMOJI="🧪" ;;
+  "chore") EMOJI="🔧" ;;
+  "perf") EMOJI="⚡" ;;
+  "style") EMOJI="💄" ;;
+  "ci") EMOJI="👷" ;;
+  "merge") EMOJI="🔀" ;;
+esac
+
+# Get first line (subject) and rest of message
+SUBJECT=$(echo "$COMMIT_MSG" | head -1)
+REST=$(echo "$COMMIT_MSG" | tail -n +2)
+
+# Check if subject already has emoji
+HAS_EMOJI=$(echo "$SUBJECT" | grep -E '^[[:space:]]*(✨|🐛|♻️|📝|🧪|🔧|⚡|💄|👷|🔀)')
+
+# Remove existing emoji if present
+if [ -n "$HAS_EMOJI" ]; then
+  SUBJECT=$(echo "$SUBJECT" | sed -E 's/^[[:space:]]*(✨|🐛|♻️|📝|🧪|🔧|⚡|💄|👷|🔀)[[:space:]]*//')
+fi
+
+# Add emoji at the start if we have one
+if [ -n "$EMOJI" ]; then
+  SUBJECT="$EMOJI $SUBJECT"
+fi
+
+# Add PR number at the end of subject line
+# Remove any existing PR number first
+SUBJECT_NO_PR=$(echo "$SUBJECT" | sed -E 's/[[:space:]]*\(#[0-9]+\)[[:space:]]*$//')
+
+# Append PR number to the end
+NEW_SUBJECT="$SUBJECT_NO_PR (#$PR_NUMBER)"
+
+# Write back to file
+if [ -z "$REST" ]; then
+  echo "$NEW_SUBJECT" > "$COMMIT_MSG_FILE"
+else
+  {
+    echo "$NEW_SUBJECT"
+    echo "$REST"
+  } > "$COMMIT_MSG_FILE"
+fi
+
+echo "✅ Added emoji and PR number #$PR_NUMBER"
+exit 0
