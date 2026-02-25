@@ -18,6 +18,7 @@ interface MessageWithHeaderProps {
   compact: boolean;
 
   // Author info
+  authorId: string;
   authorName: string;
   authorInitial: string;
   authorAvatarUrl?: string | null;
@@ -57,6 +58,7 @@ export function MessageWithHeader({
   attachments,
   reactions,
   compact,
+  authorId,
   authorName,
   authorInitial,
   authorAvatarUrl,
@@ -82,6 +84,7 @@ export function MessageWithHeader({
         avatarUrl={authorAvatarUrl}
         initial={authorInitial}
         userName={authorName}
+        userId={authorId}
         size="md"
       />
       <div className="flex-1 min-w-0">

@@ -16,16 +16,29 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 interface EmojiPickerProps {
   onEmojiSelect: (emoji: string) => void;
   onGifSelect?: (gifUrl: string) => void;
+  showPicker?: boolean;
+  onTogglePicker?: (show: boolean) => void;
 }
 
 type TabType = 'emojis' | 'gifs';
 
 export default function EmojiPicker({
   onEmojiSelect,
-  onGifSelect
+  onGifSelect,
+  showPicker: externalShowPicker,
+  onTogglePicker
 }: EmojiPickerProps) {
   const { t } = useTranslation();
-  const [showPicker, setShowPicker] = useState(false);
+  // Use external state if provided, otherwise internal
+  const [internalShowPicker, setInternalShowPicker] = useState(false);
+  const showPicker = externalShowPicker ?? internalShowPicker;
+  const setShowPicker = (show: boolean) => {
+    if (onTogglePicker) {
+      onTogglePicker(show);
+    } else {
+      setInternalShowPicker(show);
+    }
+  };
   const [activeTab, setActiveTab] = useState<TabType>('emojis');
   const [searchTerm, setSearchTerm] = useState('');
   const pickerRef = useRef<HTMLDivElement>(null);

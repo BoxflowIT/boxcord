@@ -54,19 +54,32 @@ function App() {
 
   // Apply saved appearance settings on mount
   useEffect(() => {
-    // Apply theme
-    const theme = localStorage.getItem('theme');
-    if (theme === 'light') {
-      document.documentElement.classList.add('light-theme');
+    // Apply theme (useLocalStorage stores as JSON, so we need to parse)
+    try {
+      const themeRaw = localStorage.getItem('theme');
+      const theme = themeRaw ? JSON.parse(themeRaw) : 'dark';
+      document.documentElement.classList.remove('light-theme', 'medium-theme');
+      if (theme === 'light') {
+        document.documentElement.classList.add('light-theme');
+      } else if (theme === 'medium') {
+        document.documentElement.classList.add('medium-theme');
+      }
+    } catch {
+      // Ignore parse errors, use default dark theme
     }
 
-    // Apply font size
-    const fontSize = localStorage.getItem('fontSize') || 'medium';
-    const root = document.documentElement;
-    root.style.setProperty(
-      '--base-font-size',
-      fontSize === 'small' ? '14px' : fontSize === 'large' ? '18px' : '16px'
-    );
+    // Apply font size (useLocalStorage stores as JSON, so we need to parse)
+    try {
+      const fontSizeRaw = localStorage.getItem('fontSize');
+      const fontSize = fontSizeRaw ? JSON.parse(fontSizeRaw) : 'medium';
+      const root = document.documentElement;
+      root.style.setProperty(
+        '--base-font-size',
+        fontSize === 'small' ? '14px' : fontSize === 'large' ? '18px' : '16px'
+      );
+    } catch {
+      // Ignore parse errors, use default medium font
+    }
   }, []);
 
   // Initialize AudioContext on first user interaction (fix browser autoplay policy)

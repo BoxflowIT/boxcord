@@ -1,6 +1,6 @@
 // DM Input Section Component (simpler than channel input - no mentions/commands)
 import { useTranslation } from 'react-i18next';
-import FileUpload from '../FileUpload';
+import FileUpload, { type FileUploadHandle } from '../FileUpload';
 import EmojiPicker from '../ui/EmojiPicker';
 
 interface DMInputSectionProps {
@@ -8,12 +8,15 @@ interface DMInputSectionProps {
   inputValue: string;
   uploading: boolean;
   sending: boolean;
+  showEmojiPicker?: boolean;
   textareaRef: React.RefObject<HTMLTextAreaElement>;
+  fileUploadRef?: React.RefObject<FileUploadHandle>;
   onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onFileSelect: (file: File) => void;
   onEmojiSelect: (emoji: string) => void;
   onGifSelect: (gifUrl: string) => void;
+  onToggleEmojiPicker?: (show: boolean) => void;
 }
 
 export default function DMInputSection({
@@ -21,12 +24,15 @@ export default function DMInputSection({
   inputValue,
   uploading,
   sending,
+  showEmojiPicker,
   textareaRef,
+  fileUploadRef,
   onInputChange,
   onKeyDown,
   onFileSelect,
   onEmojiSelect,
-  onGifSelect
+  onGifSelect,
+  onToggleEmojiPicker
 }: DMInputSectionProps) {
   const { t } = useTranslation();
 
@@ -34,6 +40,7 @@ export default function DMInputSection({
     <div className="px-4 pb-6">
       <div className="message-input-container">
         <FileUpload
+          ref={fileUploadRef}
           onFileSelect={onFileSelect}
           disabled={uploading || sending}
         />
@@ -47,7 +54,12 @@ export default function DMInputSection({
           rows={1}
           disabled={uploading || sending}
         />
-        <EmojiPicker onEmojiSelect={onEmojiSelect} onGifSelect={onGifSelect} />
+        <EmojiPicker
+          onEmojiSelect={onEmojiSelect}
+          onGifSelect={onGifSelect}
+          showPicker={showEmojiPicker}
+          onTogglePicker={onToggleEmojiPicker}
+        />
         {sending && (
           <div className="px-3 text-boxflow-muted text-sm">
             {t('common.sending')}

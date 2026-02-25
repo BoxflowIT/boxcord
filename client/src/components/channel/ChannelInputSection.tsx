@@ -1,6 +1,6 @@
 // Channel Input Section Component
 import { useTranslation } from 'react-i18next';
-import FileUpload from '../FileUpload';
+import FileUpload, { type FileUploadHandle } from '../FileUpload';
 import EmojiPicker from '../ui/EmojiPicker';
 import MentionAutocomplete from '../MentionAutocomplete';
 import SlashCommandAutocomplete from '../SlashCommandAutocomplete';
@@ -12,6 +12,8 @@ interface ChannelInputSectionProps {
   uploading: boolean;
   showMentions: boolean;
   showSlashCommands: boolean;
+  showEmojiPicker?: boolean;
+  fileUploadRef?: React.RefObject<FileUploadHandle>;
   textareaRef: React.RefObject<HTMLTextAreaElement>;
   onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
@@ -26,6 +28,7 @@ interface ChannelInputSectionProps {
   onSlashCommandSelect: (command: { name: string; usage: string }) => void;
   onCloseMentions: () => void;
   onCloseSlashCommands: () => void;
+  onToggleEmojiPicker?: (show: boolean) => void;
 }
 
 export default function ChannelInputSection({
@@ -35,6 +38,8 @@ export default function ChannelInputSection({
   uploading,
   showMentions,
   showSlashCommands,
+  showEmojiPicker,
+  fileUploadRef,
   textareaRef,
   onInputChange,
   onKeyDown,
@@ -44,14 +49,19 @@ export default function ChannelInputSection({
   onMentionSelect,
   onSlashCommandSelect,
   onCloseMentions,
-  onCloseSlashCommands
+  onCloseSlashCommands,
+  onToggleEmojiPicker
 }: ChannelInputSectionProps) {
   const { t } = useTranslation();
 
   return (
     <div className="px-4 pb-6">
       <div className="message-input-container">
-        <FileUpload onFileSelect={onFileSelect} disabled={uploading} />
+        <FileUpload
+          ref={fileUploadRef}
+          onFileSelect={onFileSelect}
+          disabled={uploading}
+        />
         <textarea
           ref={textareaRef}
           value={inputValue}
@@ -64,7 +74,12 @@ export default function ChannelInputSection({
           rows={1}
           disabled={uploading}
         />
-        <EmojiPicker onEmojiSelect={onEmojiSelect} onGifSelect={onGifSelect} />
+        <EmojiPicker
+          onEmojiSelect={onEmojiSelect}
+          onGifSelect={onGifSelect}
+          showPicker={showEmojiPicker}
+          onTogglePicker={onToggleEmojiPicker}
+        />
         {showMentions && (
           <MentionAutocomplete
             inputValue={inputValue}

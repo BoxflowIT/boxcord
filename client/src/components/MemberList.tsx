@@ -1,10 +1,13 @@
 // Member List Component - Shows online/offline users grouped by role
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../store/auth';
 import { useChatStore } from '../store/chat';
-import { useWorkspaceMembers } from '../hooks/useQuery';
+import { useDMCallStore } from '../store/dmCallStore';
+import { useWorkspaceMembers, queryKeys } from '../hooks/useQuery';
 import {
   useMemberListData,
   ROLE_LABELS,
@@ -27,10 +30,13 @@ import type { UserStatus } from './member/StatusIndicator';
 
 export default function MemberList() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user: currentUser } = useAuthStore();
   const { currentWorkspace } = useChatStore();
   const { data: workspaceMembers } = useWorkspaceMembers(currentWorkspace?.id);
   const { startDM } = useDMOperations();
+  const { startCall } = useDMCallStore();
 
   const [users, setUsers] = useState<MemberUser[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -342,6 +348,42 @@ export default function MemberList() {
                 onSendMessage={async () => {
                   await startDM(contextMenu.user.id);
                   closeContextMenu();
+                }}
+                onStartCall={async () => {
+                  try {
+                    closeContextMenu();
+
+                    // Create or get existing DM channel
+                    const channel = await api.getOrCreateDM(
+                      contextMenu.user.id
+                    );
+
+                    // Invalidate DM channels cache to include new/updated channel
+                    await queryClient.invalidateQueries({
+                      queryKey: queryKeys.dmChannels
+                    });
+
+                    // Start the call immediately (before navigation)
+                    startCall(
+                      channel.id,
+                      contextMenu.user.id,
+                      getUserDisplayName(contextMenu.user)
+                    );
+
+                    // Notify other user via socket
+                    socketService.getSocket()?.emit('dm:call:start', {
+                      channelId: channel.id,
+                      targetUserId: contextMenu.user.id
+                    });
+
+                    // Navigate to DM (call overlay already showing)
+                    navigate(`/chat/dm/${channel.id}`);
+                  } catch (err) {
+                    logger.error('Failed to start call from member list:', err);
+                    toast.error(
+                      t('errors.failedToStartCall') || 'Failed to start call'
+                    );
+                  }
                 }}
                 onChangeRole={() => {
                   handleUserClick(contextMenu.user.id);

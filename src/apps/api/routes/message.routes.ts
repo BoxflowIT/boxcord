@@ -111,6 +111,13 @@ export async function messageRoutes(app: FastifyInstance) {
         request.user.id,
         request.body.channelId
       );
+
+      // Emit via socket to channel participants
+      if (app.io) {
+        const room = `channel:${request.body.channelId}`;
+        app.io.to(room).emit('message:pinned', message);
+      }
+
       return { success: true, data: message };
     }
   );
@@ -129,6 +136,13 @@ export async function messageRoutes(app: FastifyInstance) {
         request.params.id,
         request.body.channelId
       );
+
+      // Emit via socket to channel participants
+      if (app.io) {
+        const room = `channel:${request.body.channelId}`;
+        app.io.to(room).emit('message:unpinned', message);
+      }
+
       return { success: true, data: message };
     }
   );

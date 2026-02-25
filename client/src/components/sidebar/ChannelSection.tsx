@@ -15,6 +15,10 @@ import {
 import { api } from '../../services/api';
 import type { Channel } from '../../types';
 import { cn } from '../../utils/classNames';
+import ContextMenu from '../menu/ContextMenu';
+import ChannelContextMenu from '../channel/ChannelContextMenu';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { useAuthStore } from '../../store/auth';
 
 // ============================================================================
 // TYPES
@@ -117,19 +121,30 @@ function VoiceUserItem({
 function VoiceChannelWithUsers({
   channel,
   isSelected,
+  isMuted,
+  isAdmin,
   onSelect,
   onEdit,
   onDelete,
+  onMuteToggle,
+  onCopyLink,
+  onMarkAsRead,
   voiceUsers = []
 }: {
   channel: Channel;
   isSelected: boolean;
+  isMuted: boolean;
+  isAdmin: boolean;
   onSelect: () => void;
   onEdit: (e: React.MouseEvent) => void;
   onDelete: (e: React.MouseEvent) => void;
+  onMuteToggle: () => void;
+  onCopyLink: () => void;
+  onMarkAsRead: () => void;
   voiceUsers?: VoiceUser[];
 }) {
   const { t } = useTranslation();
+  const hasUnread = (channel.unreadCount ?? 0) > 0;
 
   // Fetch user info for all users
   const { data: onlineUsers = [] } = useQuery<UserInfo[]>({
@@ -141,35 +156,53 @@ function VoiceChannelWithUsers({
   return (
     <div>
       {/* Channel row */}
-      <div
-        className={cn(
-          'group w-full flex items-center gap-1.5 px-2 py-1 rounded-lg text-sm transition-colors cursor-pointer',
-          isSelected ? 'nav-item-active' : 'nav-item-default'
-        )}
-        onClick={onSelect}
+      <ContextMenu
+        menu={
+          <ChannelContextMenu
+            channelName={channel.name}
+            channelType={channel.type}
+            isAdmin={isAdmin}
+            isMuted={isMuted}
+            onEdit={isAdmin ? () => onEdit({} as React.MouseEvent) : undefined}
+            onDelete={
+              isAdmin ? () => onDelete({} as React.MouseEvent) : undefined
+            }
+            onMuteNotifications={onMuteToggle}
+            onCopyLink={onCopyLink}
+            onMarkAsRead={hasUnread ? onMarkAsRead : undefined}
+          />
+        }
       >
-        <ChannelIcon type={channel.type} />
-        <span className="truncate flex-1">{channel.name}</span>
-        {voiceUsers.length > 0 && (
-          <span className="text-xs text-green-400 font-medium px-1">
-            {voiceUsers.length}
-          </span>
-        )}
-        <button
-          onClick={onEdit}
-          className="btn-icon hover-group-visible"
-          title={t('channels.edit')}
+        <div
+          className={cn(
+            'group w-full flex items-center gap-1.5 px-2 py-1 rounded-lg text-sm transition-colors cursor-pointer',
+            isSelected ? 'nav-item-active' : 'nav-item-default'
+          )}
+          onClick={onSelect}
         >
-          <EditIcon size="sm" />
-        </button>
-        <button
-          onClick={onDelete}
-          className="btn-icon-danger hover-group-visible"
-          title={t('channels.delete')}
-        >
-          <CloseIcon size="sm" />
-        </button>
-      </div>
+          <ChannelIcon type={channel.type} />
+          <span className="truncate flex-1">{channel.name}</span>
+          {voiceUsers.length > 0 && (
+            <span className="text-xs text-green-400 font-medium px-1">
+              {voiceUsers.length}
+            </span>
+          )}
+          <button
+            onClick={onEdit}
+            className="btn-icon hover-group-visible"
+            title={t('channels.edit')}
+          >
+            <EditIcon size="sm" />
+          </button>
+          <button
+            onClick={onDelete}
+            className="btn-icon-danger hover-group-visible"
+            title={t('channels.delete')}
+          >
+            <CloseIcon size="sm" />
+          </button>
+        </div>
+      </ContextMenu>
 
       {/* Voice users list */}
       {voiceUsers.length > 0 && (
@@ -194,56 +227,84 @@ function VoiceChannelWithUsers({
 function TextChannelItem({
   channel,
   isSelected,
+  isMuted,
+  isAdmin,
   onSelect,
   onEdit,
-  onDelete
+  onDelete,
+  onMuteToggle,
+  onCopyLink,
+  onMarkAsRead
 }: {
   channel: Channel;
   isSelected: boolean;
+  isMuted: boolean;
+  isAdmin: boolean;
   onSelect: () => void;
   onEdit: (e: React.MouseEvent) => void;
   onDelete: (e: React.MouseEvent) => void;
+  onMuteToggle: () => void;
+  onCopyLink: () => void;
+  onMarkAsRead: () => void;
 }) {
   const { t } = useTranslation();
   const hasUnread = (channel.unreadCount ?? 0) > 0;
 
   return (
-    <div
-      className={cn(
-        'group w-full flex items-center gap-1.5 px-2 py-1 rounded-lg text-sm transition-colors cursor-pointer',
-        isSelected ? 'nav-item-active' : 'nav-item-default'
-      )}
-      onClick={onSelect}
+    <ContextMenu
+      menu={
+        <ChannelContextMenu
+          channelName={channel.name}
+          channelType={channel.type}
+          isAdmin={isAdmin}
+          isMuted={isMuted}
+          onEdit={isAdmin ? () => onEdit({} as React.MouseEvent) : undefined}
+          onDelete={
+            isAdmin ? () => onDelete({} as React.MouseEvent) : undefined
+          }
+          onMuteNotifications={onMuteToggle}
+          onCopyLink={onCopyLink}
+          onMarkAsRead={hasUnread ? onMarkAsRead : undefined}
+        />
+      }
     >
-      <ChannelIcon type={channel.type} />
-      <span
+      <div
         className={cn(
-          'truncate flex-1',
-          hasUnread && 'text-white font-semibold'
+          'group w-full flex items-center gap-1.5 px-2 py-1 rounded-lg text-sm transition-colors cursor-pointer',
+          isSelected ? 'nav-item-active' : 'nav-item-default'
         )}
+        onClick={onSelect}
       >
-        {channel.name}
-      </span>
-      {hasUnread && (
-        <span className="px-1.5 py-0.5 text-xs font-bold bg-white text-discord-dark rounded-full">
-          {channel.unreadCount}
+        <ChannelIcon type={channel.type} />
+        <span
+          className={cn(
+            'truncate flex-1',
+            hasUnread && 'text-white font-semibold'
+          )}
+        >
+          {channel.name}
         </span>
-      )}
-      <button
-        onClick={onEdit}
-        className="btn-icon hover-group-visible"
-        title={t('channels.edit')}
-      >
-        <EditIcon size="sm" />
-      </button>
-      <button
-        onClick={onDelete}
-        className="btn-icon-danger hover-group-visible"
-        title={t('channels.delete')}
-      >
-        <CloseIcon size="sm" />
-      </button>
-    </div>
+        {hasUnread && (
+          <span className="px-1.5 py-0.5 text-xs font-bold bg-white text-discord-dark rounded-full">
+            {channel.unreadCount}
+          </span>
+        )}
+        <button
+          onClick={onEdit}
+          className="btn-icon hover-group-visible"
+          title={t('channels.edit')}
+        >
+          <EditIcon size="sm" />
+        </button>
+        <button
+          onClick={onDelete}
+          className="btn-icon-danger hover-group-visible"
+          title={t('channels.delete')}
+        >
+          <CloseIcon size="sm" />
+        </button>
+      </div>
+    </ContextMenu>
   );
 }
 
@@ -296,9 +357,56 @@ export default function ChannelSection({
   onCreateChannel
 }: ChannelSectionProps) {
   const { t } = useTranslation();
+
+  // Get current user and workspace members
+  const { user: currentUser } = useAuthStore();
+
+  // Muted channels (stored in localStorage)
+  const [mutedChannels, setMutedChannels] = useLocalStorage<string[]>(
+    'mutedChannels',
+    []
+  );
+
   // Batch fetch all voice channel users for this workspace (optimization)
   const { data } = useWorkspaceVoiceUsers(workspaceId);
   const workspaceVoiceUsers: Record<string, VoiceUser[]> = data || {};
+
+  // Fetch workspace members to determine admin status
+  const { data: members = [] } = useQuery<Array<{ id: string; role: string }>>({
+    queryKey: ['workspace', workspaceId, 'members'],
+    queryFn: () =>
+      api.getWorkspaceMembers(workspaceId!) as Promise<
+        Array<{ id: string; role: string }>
+      >,
+    enabled: !!workspaceId,
+    staleTime: 30000
+  });
+
+  // Check if current user is admin
+  const currentUserMember = members.find((m) => m.id === currentUser?.id);
+  const isAdmin =
+    currentUserMember?.role === 'ADMIN' ||
+    currentUserMember?.role === 'SUPER_ADMIN';
+
+  // Handler functions
+  const handleMuteToggle = (channelId: string) => {
+    const newMutedChannels = mutedChannels.includes(channelId)
+      ? mutedChannels.filter((id: string) => id !== channelId)
+      : [...mutedChannels, channelId];
+    setMutedChannels(newMutedChannels);
+  };
+
+  const handleCopyLink = (channelId: string) => {
+    const link = `${window.location.origin}/chat/channels/${channelId}`;
+    navigator.clipboard.writeText(link);
+    // TODO: Show toast notification
+  };
+
+  const handleMarkAsRead = (_channelId: string) => {
+    // TODO: Implement mark as read API call
+    // api.markChannelAsRead(channelId);
+  };
+
   // Deduplicate and sort channels
   const uniqueChannels = channels.reduce<Channel[]>((acc, channel) => {
     if (!acc.some((ch) => ch.id === channel.id)) {
@@ -330,9 +438,14 @@ export default function ChannelSection({
             key={channel.id}
             channel={channel}
             isSelected={currentChannelId === channel.id}
+            isMuted={mutedChannels.includes(channel.id)}
+            isAdmin={isAdmin}
             onSelect={() => onChannelSelect(channel)}
             onEdit={(e) => onEditChannel(channel, e)}
             onDelete={(e) => onDeleteChannel(channel, e)}
+            onMuteToggle={() => handleMuteToggle(channel.id)}
+            onCopyLink={() => handleCopyLink(channel.id)}
+            onMarkAsRead={() => handleMarkAsRead(channel.id)}
           />
         ))
       )}
@@ -349,9 +462,14 @@ export default function ChannelSection({
             key={channel.id}
             channel={channel}
             isSelected={currentChannelId === channel.id}
+            isMuted={mutedChannels.includes(channel.id)}
+            isAdmin={isAdmin}
             onSelect={() => onChannelSelect(channel)}
             onEdit={(e) => onEditChannel(channel, e)}
             onDelete={(e) => onDeleteChannel(channel, e)}
+            onMuteToggle={() => handleMuteToggle(channel.id)}
+            onCopyLink={() => handleCopyLink(channel.id)}
+            onMarkAsRead={() => handleMarkAsRead(channel.id)}
             voiceUsers={workspaceVoiceUsers[channel.id] || []}
           />
         ))

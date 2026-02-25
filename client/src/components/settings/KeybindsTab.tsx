@@ -11,6 +11,7 @@ import {
   type ShortcutAction
 } from '../../store/keyboardShortcutsStore';
 import KeybindEditor from '../ui/KeybindEditor';
+import ConfirmDialog from '../ui/ConfirmDialog';
 
 type Category = 'navigation' | 'messaging' | 'voice' | 'reactions' | 'general';
 
@@ -27,7 +28,7 @@ const defaultKeybinds: Array<{ action: ShortcutAction; implemented: boolean }> =
     { action: 'mark-read', implemented: true },
     { action: 'pin-message', implemented: true },
 
-    // Voice & Video
+    // Voice controls
     { action: 'toggle-mute', implemented: true },
     { action: 'toggle-deafen', implemented: true },
     { action: 'toggle-video', implemented: true },
@@ -65,6 +66,7 @@ export default function KeybindsTab() {
   const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>(
     'all'
   );
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // Filter shortcuts by implementation status and category
   const allShortcuts = defaultKeybinds
@@ -198,16 +200,27 @@ export default function KeybindsTab() {
           </p>
         </div>
         <button
-          onClick={() => {
-            if (confirm(t('settings.confirmResetKeybinds'))) {
-              resetAll();
-            }
-          }}
+          onClick={() => setShowResetConfirm(true)}
           className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg border border-red-500/30 hover:bg-red-500/30 transition-colors"
         >
           🔄 {t('settings.resetToDefaults')}
         </button>
       </div>
+
+      {/* Reset Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showResetConfirm}
+        title={t('settings.resetKeybinds')}
+        message={t('settings.confirmResetKeybinds')}
+        confirmText={t('settings.resetToDefaults')}
+        cancelText={t('common.cancel')}
+        variant="danger"
+        onConfirm={() => {
+          resetAll();
+          setShowResetConfirm(false);
+        }}
+        onCancel={() => setShowResetConfirm(false)}
+      />
     </div>
   );
 }

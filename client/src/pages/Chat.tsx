@@ -12,6 +12,7 @@ import { voiceService } from '../services/voice.service';
 import { useVoiceStore } from '../store/voiceStore';
 import { useAuthStore } from '../store/auth';
 import { useChatStore } from '../store/chat';
+import { useDMCallStore } from '../store/dmCallStore';
 import { useWorkspaces, useChannels } from '../hooks/useQuery';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import Sidebar from '../components/Sidebar';
@@ -22,12 +23,20 @@ import MemberList from '../components/MemberList';
 import ProfileModal from '../components/ProfileModal';
 import SettingsModal from '../components/SettingsModal';
 import { GlobalSearch } from '../components/GlobalSearch';
+import { DMCallOverlay } from '../components/dm/DMCallOverlay';
+import { stopRingingSound, playVoiceLeaveSound } from '../utils/voiceSound';
 
 export default function Chat() {
   const navigate = useNavigate();
   const location = useLocation();
   const { setCurrentWorkspace, setCurrentChannel, currentWorkspace } =
     useChatStore();
+  const {
+    acceptCall,
+    rejectCall,
+    endCall,
+    channelId: dmCallChannelId
+  } = useDMCallStore();
   const initializedRef = useRef(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -225,6 +234,30 @@ export default function Chat() {
           </div>
         </div>
       )}
+
+      {/* Global DM Call Overlay - Shows everywhere when a call is active */}
+      <DMCallOverlay
+        onAccept={async () => {
+          acceptCall();
+          // Join WebRTC call via voice service
+          await voiceService.joinChannel(dmCallChannelId || '');
+        }}
+        onReject={() => {
+          // Play hangup sound and stop ringing
+          playVoiceLeaveSound();
+          stopRingingSound();
+          rejectCall();
+          // Clean up voice state
+          voiceService.leaveChannel();
+        }}
+        onEndCall={() => {
+          // Play hangup sound
+          playVoiceLeaveSound();
+          stopRingingSound();
+          endCall();
+          voiceService.leaveChannel();
+        }}
+      />
     </div>
   );
 }

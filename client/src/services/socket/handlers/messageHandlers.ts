@@ -139,6 +139,77 @@ export function registerMessageHandlers(context: SocketHandlerContext): void {
       updateReactionCache(queryClient, data);
     }
   );
+
+  // message:pinned - Message pinned
+  socket.on('message:pinned', (message: Message) => {
+    if (!message || !message.id || !message.channelId) {
+      return;
+    }
+
+    // Update message in messages cache with isPinned: true
+    queryClient.setQueryData<PaginatedMessages>(
+      queryKeys.messages(message.channelId, undefined),
+      (old) => {
+        if (!old?.items) return old;
+        return {
+          ...old,
+          items: old.items.map((m) =>
+            m.id === message.id
+              ? {
+                  ...m,
+                  isPinned: true,
+                  pinnedAt: message.pinnedAt,
+                  pinnedBy: message.pinnedBy
+                }
+              : m
+          )
+        };
+      }
+    );
+
+    // Add to pinnedMessages cache immediately (optimistic update)
+    queryClient.setQueryData<Message[]>(
+      ['pinnedMessages', message.channelId],
+      (old) => {
+        if (!old) return [message];
+        // Add if not already in list
+        if (old.some((m) => m.id === message.id)) return old;
+        return [...old, { ...message, isPinned: true }];
+      }
+    );
+  });
+
+  // message:unpinned - Message unpinned
+  socket.on('message:unpinned', (message: Message) => {
+    if (!message || !message.id || !message.channelId) {
+      return;
+    }
+
+    // Update message in messages cache with isPinned: false
+    queryClient.setQueryData<PaginatedMessages>(
+      queryKeys.messages(message.channelId, undefined),
+      (old) => {
+        if (!old?.items) return old;
+        return {
+          ...old,
+          items: old.items.map((m) =>
+            m.id === message.id
+              ? { ...m, isPinned: false, pinnedAt: null, pinnedBy: null }
+              : m
+          )
+        };
+      }
+    );
+
+    // Remove from pinnedMessages cache immediately (optimistic update)
+    queryClient.setQueryData<Message[]>(
+      ['pinnedMessages', message.channelId],
+      (old) => {
+        if (!old) return old;
+        return old.filter((m) => m.id !== message.id);
+      }
+    );
+  });
 }
 
 // Helper function to update reaction in message cache
