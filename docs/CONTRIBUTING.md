@@ -177,21 +177,31 @@ Co-authored-by: Name <email@example.com>
 
 ### 🚨 PR Numbers (MANDATORY)
 
-**ALL commits MUST include the GitHub PR/issue number at the end of the subject line.**
+**ALL commits MUST include a sequential PR number at the end of the subject line.**
 
 This is required for:
-- **Searchability** - Find all commits related to a PR/issue
+- **Searchability** - Find all commits related to a feature/fix
 - **Traceability** - Link code changes to discussions and reviews
 - **Audit trail** - Understand context of changes months later
+- **Sequential tracking** - Consistent numbering across the project
 
-**Format:** `<type>(<scope>): <subject> (#PR_NUMBER)`
+**Format:** `<type>(<scope>): <subject> (#NUMBER)`
+
+**Getting the next number:**
+```bash
+# Get next PR number automatically
+./scripts/get-next-pr-number.sh  # Returns: 230
+
+# After committing, update the counter
+./scripts/update-pr-number.sh 230
+```
 
 **Examples:**
 ```bash
-✅ feat: add video window controls with PiP support (#224)
-✅ fix: resolve Giphy API rate limiting errors (#223)
-✅ refactor: convert console.log to structured logger (#220)
-✅ 🔀 merge: Phase 1 - Appearance Settings into main (v1.2.0) (#225)
+✅ feat: add video window controls with PiP support (#229)
+✅ fix: resolve Giphy API rate limiting errors (#230)
+✅ refactor: convert console.log to structured logger (#231)
+✅ 🔀 merge: Phase 1 - Appearance Settings into main (v1.2.0) (#232)
 ```
 
 **Invalid commits (will be rejected):**
@@ -202,36 +212,10 @@ This is required for:
 ```
 
 **Why this matters:**
-- When reviewing code months later, you can instantly find the discussion/review
-- GitHub search works: searching "#225" shows all related commits
-- Release notes generation becomes automated
-- Bug tracking connects commits to issues
-
-### 🚨 PR Numbers (MANDATORY)
-
-**ALL commits MUST include the GitHub PR/issue number at the end of the subject line.**
-
-This is required for:
-- **Searchability** - Find all commits related to a PR/issue
-- **Traceability** - Link code changes to discussions and reviews
-- **Audit trail** - Understand context of changes months later
-
-**Format:** `<type>(<scope>): <subject> (#PR_NUMBER)`
-
-**Examples:**
-```bash
-✅ feat: add video window controls with PiP support (#224)
-✅ fix: resolve Giphy API rate limiting errors (#223)
-✅ refactor: convert console.log to structured logger (#220)
-✅ 🔀 merge: Phase 1 - Appearance Settings into main (v1.2.0) (#225)
-```
-
-**Invalid commits (will be rejected):**
-```bash
-❌ feat: add video window controls with PiP support
-❌ fix: resolve Giphy API rate limiting errors
-❌ 🔀 merge: Phase 1 - Appearance Settings into main (v1.2.0)
-```
+- Sequential numbers provide clear chronological ordering
+- Easy to reference in discussions and documentation
+- Automated tracking via `.pr-number` file
+- Consistent across entire project history
 
 **Note:** Even single commits on feature branches need PR numbers, as they will be part of the merge commit history.
 
