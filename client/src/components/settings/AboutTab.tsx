@@ -1,4 +1,5 @@
 // About Tab Component
+import { APP_VERSION } from '../../utils/version';
 
 export default function AboutTab() {
   return (
@@ -8,7 +9,7 @@ export default function AboutTab() {
         <div className="space-y-4">
           <div>
             <p className="text-sm font-semibold text-gray-300">Version</p>
-            <p className="text-sm">1.0.0</p>
+            <p className="text-sm">{APP_VERSION}</p>
           </div>
           <div className="border-t border-discord-darkest pt-4">
             <p className="text-sm font-semibold text-gray-300 mb-2">

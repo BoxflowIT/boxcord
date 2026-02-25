@@ -1,8 +1,57 @@
-# Test Scripts
+# Scripts
 
-This folder contains utility scripts for testing Boxcord functionality during development.
+This folder contains utility scripts for development, testing, and workflow automation.
 
-## Available Scripts
+## 🔢 PR Number Management
+
+### get-next-pr-number.sh
+
+Gets the next sequential PR number for commits.
+
+**Usage:**
+
+```bash
+./scripts/get-next-pr-number.sh
+# Output: 230
+```
+
+**What it does:**
+
+- Reads from `.pr-number` file in project root
+- Returns the next number in sequence
+- Used for maintaining consistent commit numbering
+
+### update-pr-number.sh
+
+Updates the PR number counter after committing.
+
+**Usage:**
+
+```bash
+./scripts/update-pr-number.sh 230
+# Output: ✅ Updated .pr-number to 230
+```
+
+**What it does:**
+
+- Updates `.pr-number` file with the new number
+- Should be run after each commit to keep counter in sync
+
+**Workflow:**
+
+```bash
+# 1. Get next number
+PR_NUM=$(./scripts/get-next-pr-number.sh)
+echo "Next PR number: $PR_NUM"
+
+# 2. Make your commit with the number
+git commit -m "feat: add new feature (#$PR_NUM)"
+
+# 3. Update the counter
+./scripts/update-pr-number.sh $PR_NUM
+```
+
+## 🧪 Test Scripts
 
 ### generate-dev-tokens.cjs ⭐
 

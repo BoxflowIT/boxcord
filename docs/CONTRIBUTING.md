@@ -97,17 +97,20 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/) for stand
 
 ### Types
 
-| Type | Description | Example |
-|------|-------------|---------|
-| `feat` | New feature | `feat: add retry logic for Giphy API` |
-| `fix` | Bug fix | `fix: resolve socket reconnection issue` |
-| `refactor` | Code refactoring | `refactor(backend): convert console to logger` |
-| `docs` | Documentation | `docs: update architecture diagrams` |
-| `test` | Tests | `test: add E2E tests for video calls` |
-| `chore` | Maintenance | `chore: update dependencies` |
-| `perf` | Performance | `perf: optimize database queries` |
-| `style` | Formatting | `style: fix linting errors` |
-| `ci` | CI/CD | `ci: update GitHub Actions workflow` |
+| Type | Emoji | Description | Example |
+|------|-------|-------------|---------|
+| `feat` | ✨ | New feature | `✨ feat: add retry logic for Giphy API (#230)` |
+| `fix` | 🐛 | Bug fix | `🐛 fix: resolve socket reconnection issue (#231)` |
+| `refactor` | ♻️ | Code refactoring | `♻️ refactor(backend): convert console to logger (#232)` |
+| `docs` | 📝 | Documentation | `📝 docs: update architecture diagrams (#233)` |
+| `test` | 🧪 | Tests | `🧪 test: add E2E tests for video calls (#234)` |
+| `chore` | 🔧 | Maintenance | `🔧 chore: update dependencies (#235)` |
+| `perf` | ⚡ | Performance | `⚡ perf: optimize database queries (#236)` |
+| `style` | 💄 | Formatting | `💄 style: fix linting errors (#237)` |
+| `ci` | 👷 | CI/CD | `👷 ci: update GitHub Actions workflow (#238)` |
+| `merge` | 🔀 | Merge commits | `🔀 merge: Phase 1 into main (v1.2.0) (#239)` |
+
+**Note:** Emojis are automatically added by the `prepare-commit-msg` hook.
 
 ### Scope (Optional)
 
@@ -177,21 +180,31 @@ Co-authored-by: Name <email@example.com>
 
 ### 🚨 PR Numbers (MANDATORY)
 
-**ALL commits MUST include the GitHub PR/issue number at the end of the subject line.**
+**ALL commits MUST include a sequential PR number at the end of the subject line.**
 
 This is required for:
-- **Searchability** - Find all commits related to a PR/issue
+- **Searchability** - Find all commits related to a feature/fix
 - **Traceability** - Link code changes to discussions and reviews
 - **Audit trail** - Understand context of changes months later
+- **Sequential tracking** - Consistent numbering across the project
 
-**Format:** `<type>(<scope>): <subject> (#PR_NUMBER)`
+**Format:** `<type>(<scope>): <subject> (#NUMBER)`
+
+**Getting the next number:**
+```bash
+# Get next PR number automatically
+./scripts/get-next-pr-number.sh  # Returns: 230
+
+# After committing, update the counter
+./scripts/update-pr-number.sh 230
+```
 
 **Examples:**
 ```bash
-✅ feat: add video window controls with PiP support (#224)
-✅ fix: resolve Giphy API rate limiting errors (#223)
-✅ refactor: convert console.log to structured logger (#220)
-✅ 🔀 merge: Phase 1 - Appearance Settings into main (v1.2.0) (#225)
+✅ feat: add video window controls with PiP support (#229)
+✅ fix: resolve Giphy API rate limiting errors (#230)
+✅ refactor: convert console.log to structured logger (#231)
+✅ 🔀 merge: Phase 1 - Appearance Settings into main (v1.2.0) (#232)
 ```
 
 **Invalid commits (will be rejected):**
@@ -202,36 +215,10 @@ This is required for:
 ```
 
 **Why this matters:**
-- When reviewing code months later, you can instantly find the discussion/review
-- GitHub search works: searching "#225" shows all related commits
-- Release notes generation becomes automated
-- Bug tracking connects commits to issues
-
-### 🚨 PR Numbers (MANDATORY)
-
-**ALL commits MUST include the GitHub PR/issue number at the end of the subject line.**
-
-This is required for:
-- **Searchability** - Find all commits related to a PR/issue
-- **Traceability** - Link code changes to discussions and reviews
-- **Audit trail** - Understand context of changes months later
-
-**Format:** `<type>(<scope>): <subject> (#PR_NUMBER)`
-
-**Examples:**
-```bash
-✅ feat: add video window controls with PiP support (#224)
-✅ fix: resolve Giphy API rate limiting errors (#223)
-✅ refactor: convert console.log to structured logger (#220)
-✅ 🔀 merge: Phase 1 - Appearance Settings into main (v1.2.0) (#225)
-```
-
-**Invalid commits (will be rejected):**
-```bash
-❌ feat: add video window controls with PiP support
-❌ fix: resolve Giphy API rate limiting errors
-❌ 🔀 merge: Phase 1 - Appearance Settings into main (v1.2.0)
-```
+- Sequential numbers provide clear chronological ordering
+- Easy to reference in discussions and documentation
+- Automated tracking via `.pr-number` file
+- Consistent across entire project history
 
 **Note:** Even single commits on feature branches need PR numbers, as they will be part of the merge commit history.
 
@@ -320,11 +307,74 @@ git merge --no-ff develop -m "chore: Release vX.X.X"
 
 ## ✨ Code Quality
 
+### Automated Git Hooks
+
+Our repository uses automated git hooks to ensure all commits follow CONTRIBUTING.md standards:
+
+#### prepare-commit-msg (Automatic)
+**Runs BEFORE you edit the commit message**
+
+- 🔢 Automatically adds the next PR number from `.pr-number`
+- ✨ Automatically adds emoji based on commit type
+- 📝 Formats message according to conventional commits
+
+**What it does:**
+```bash
+# You write:
+feat(frontend): add dark mode
+
+# Hook transforms to:
+✨ feat(frontend): add dark mode (#230)
+```
+
+#### commit-msg (Validation)
+**Runs AFTER you write the commit message**
+
+- ✅ Validates conventional commit format
+- ✅ Checks for mandatory PR number
+- ✅ Warns if subject line is too long (>72 chars)
+- ❌ Rejects commits that don't follow format
+
+**Validation rules:**
+- Must have valid type: `feat|fix|refactor|docs|test|chore|perf|style|ci|merge`
+- Must have PR number at end: `(#230)`
+- Subject must be lowercase
+- Emoji is optional but recommended
+
+#### post-commit (Auto-update)
+**Runs AFTER successful commit**
+
+- 🔄 Automatically updates `.pr-number` file
+- 📈 Increments counter for next commit
+- ✅ No manual tracking needed
+
+**Example workflow:**
+```bash
+# 1. Make changes
+git add .
+
+# 2. Just write a simple commit message
+git commit -m "feat: add dark mode"
+
+# 3. Hooks automatically:
+#    - Add emoji: ✨
+#    - Add PR number: (#230)
+#    - Validate format
+#    - Update .pr-number to 230
+#    - Next commit will be #231
+
+# Final commit message:
+# ✨ feat: add dark mode (#230)
+```
+
 ### Pre-commit Hooks
 
 Automatically runs on `git commit`:
 - Lint-staged (ESLint + formatting)
+- **All tests** (Backend 61 tests + Frontend 61 tests)
 - Type checking where applicable
+
+**Takes ~10-15 seconds** to ensure code quality before committing.
 
 ### Pre-push Hooks
 
@@ -332,11 +382,15 @@ Automatically runs on `git push`:
 - Backend: TypeScript check, ESLint, tests
 - Frontend: TypeScript check, ESLint, tests
 
+**Takes ~25-30 seconds** for comprehensive validation before pushing.
+
 **Skip hooks (emergency only):**
 ```bash
-git commit --no-verify
-git push --no-verify
+git commit --no-verify  # Skip all commit hooks
+git push --no-verify    # Skip push hooks
 ```
+
+⚠️ **Warning:** Only use `--no-verify` in emergencies. Hooks enforce quality standards.
 
 ### Code Style
 
