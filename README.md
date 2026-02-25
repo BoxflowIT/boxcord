@@ -57,6 +57,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Echo cancellation** - Automatic echo removal
 - **Voice activity detection (VAD)** - Automatic noise gating
 - **Professional audio pipeline** - Compression, limiting, gain control
+- **Audio quality presets** - Low/Balanced/High/Studio quality presets (#226)
 - **Device selection** - Choose input/output devices
 - **Mic testing** - Test audio with real-time level monitoring
 - **Video calls** - DM and group video with screen sharing
@@ -100,6 +101,8 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Email notifications** - Via SendGrid (optional)
 - **Notification settings** - Granular control per channel
 - **Sound effects** - Audio cues for events
+- **Custom notification sounds** - 5 sound types: Default, Chime, Bell, Pop, Ding (#226)
+- **Sound preview** - Test notification sounds before selecting (#226)
 
 ### ⚡ Performance & Optimization
 - **Redis caching** - 70-90% faster cached queries (optional)
@@ -122,12 +125,22 @@ cd client && yarn dev # Frontend (Terminal 2)
 
 ### 🎨 UI/UX
 - **Discord-inspired design** - Familiar and intuitive
-- **Dark mode** - Easy on the eyes
+- **Theme customization** - Dark/Medium/Light themes (#225)
+- **Message density** - Compact/Cozy/Spacious spacing (#225)
 - **Responsive layout** - Mobile, tablet, desktop
-- **Keyboard shortcuts** - 10+ global shortcuts (Ctrl+Shift+M/D/V/S, Ctrl+,)
-- **Advanced settings** - Video, Privacy, Keybinds, Account tabs
+- **Keyboard shortcuts** - 17+ customizable shortcuts (#227)
+  - Navigation: Alt+↑/↓ (channel navigation), Ctrl+K (search)
+  - Voice: Ctrl+Shift+M/D/V/S/L (mute/deafen/video/screen/leave)
+  - Messaging: Ctrl+U/E/P (upload/emoji/pin)
+  - Quick reactions: 1-5 keys (👍❤️😂🎉🔥)
+- **Custom keyboard shortcuts** - Fully customizable with conflict detection (#227)
+- **Advanced settings** - Appearance, Audio, Video, Notifications, Privacy, Keybinds, Account tabs
+- **High contrast mode** - Enhanced contrast for accessibility (#225)
+- **Reduced motion** - Minimize animations for accessibility (#225)
 - **Smooth animations** - Polished interactions
 - **TailwindCSS** - Modern utility-first styling
+
+**📖 See:** [docs/SETTINGS_AND_SHORTCUTS.md](docs/SETTINGS_AND_SHORTCUTS.md)
 
 ## Tech Stack
 

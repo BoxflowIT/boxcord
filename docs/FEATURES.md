@@ -58,6 +58,15 @@ Complete list of all implemented features in Boxcord.
 - ✅ **Input sensitivity** - Adjust voice activation threshold
 - ✅ **Output volume control** - Adjust playback volume
 - ✅ **Monitor mode** - "Hear yourself" for mic testing
+- ✅ **Audio quality presets** - Low/Balanced/High/Studio quality presets (#226)
+  - **Low**: 16kHz sample rate, Mono, optimized for bandwidth
+  - **Balanced**: 24kHz sample rate, Stereo, default setting
+  - **High**: 48kHz sample rate, Stereo, high-quality audio
+  - **Studio**: 48kHz sample rate, Stereo, professional audio
+- ✅ **Notification sounds** - 5 customizable notification sound types (#226)
+  - Default, Chime, Bell, Pop, Ding
+  - Sound preview functionality
+  - Persistent settings across sessions
 
 ### Video Communication
 - ✅ **Video calls** - DM and group video calls
@@ -245,14 +254,20 @@ Complete list of all implemented features in Boxcord.
 - ✅ **Smooth animations** - Polished interactions
 
 ### User Experience
-- ✅ **Keyboard shortcuts** - 10+ global shortcuts for power users
-  - Ctrl+Shift+M - Toggle mute
-  - Ctrl+Shift+D - Toggle deafen
-  - Ctrl+Shift+V - Toggle video
-  - Ctrl+Shift+S - Toggle screen share
-  - Ctrl+, - Open settings
-- ✅ **Advanced settings tabs** - Video, Privacy, Keybinds, Account
-- ✅ **Video quality controls** - Test camera and adjust quality in settings
+- ✅ **Keyboard shortcuts** - 17+ customizable shortcuts for power users (#227)
+  - Navigation: Alt+↑/↓ (prev/next channel), Ctrl+K (search), Ctrl+Shift+A (mark read)
+  - Voice: Ctrl+Shift+M (mute), Ctrl+Shift+D (deafen), Ctrl+Shift+V (video), Ctrl+Shift+S (screen share), Ctrl+Shift+L (leave)
+  - Messaging: Ctrl+U (upload), Ctrl+E (emoji), Ctrl+P (pin)
+  - Quick reactions: 1-5 keys (👍❤️😂🎉🔥)
+  - Settings: Ctrl+, (open settings)
+- ✅ **Custom keyboard shortcuts** - Fully customizable keybinds with conflict detection (#227)
+- ✅ **Shortcut recorder** - Visual key combination recording (#227)
+- ✅ **Advanced settings tabs** - Appearance, Video, Audio, Privacy, Notifications, Keybinds, Account
+- ✅ **Video quality controls** - Test camera and adjust quality in settings (#223)
+- ✅ **Audio quality presets** - Low/Balanced/High/Studio quality presets (#226)
+- ✅ **Notification sounds** - 5 customizable notification sound types (#226)
+- ✅ **Message density** - Compact/Cozy/Spacious message spacing (#225)
+- ✅ **Theme customization** - Dark/Medium/Light themes (#225)
 - ✅ **Context menus** - Right-click actions
 - ✅ **Drag & drop** - File upload via drag & drop
 - ✅ **Emoji picker** - Full emoji picker with smart positioning
@@ -267,6 +282,8 @@ Complete list of all implemented features in Boxcord.
 - ✅ **Keyboard navigation** - Full keyboard support
 - ✅ **Focus management** - Visible focus indicators
 - ✅ **Color contrast** - WCAG AA compliant
+- ✅ **High contrast mode** - Enhanced contrast for accessibility (#225)
+- ✅ **Reduced motion mode** - Minimize animations for accessibility (#225)
 
 ## 🛠️ Developer Experience
 
@@ -360,4 +377,33 @@ Complete list of all implemented features in Boxcord.
 
 ---
 
-**Last Updated:** February 24, 2026
+## Recent Updates (February 2026)
+
+### v1.4.0 - Custom Keyboard Shortcuts (#227)
+- ✅ Fully customizable keyboard shortcuts (17 actions)
+- ✅ Visual shortcut recorder with key combination display
+- ✅ Real-time conflict detection and warnings
+- ✅ Quick emoji reactions (1-5 keys)
+- ✅ Channel navigation shortcuts (Alt+↑/↓)
+- ✅ Category-based shortcut organization
+- ✅ Reset individual or all shortcuts to defaults
+- ✅ Persistent storage with localStorage
+
+### v1.3.0 - Audio & Notification Settings (#226)
+- ✅ Audio quality presets (Low/Balanced/High/Studio)
+- ✅ Notification sound customization (5 sound types)
+- ✅ Sound preview functionality
+- ✅ Unified settings UI with gradient buttons
+- ✅ Persistent audio/notification preferences
+
+### v1.2.0 - Appearance Settings (#225)
+- ✅ Message density selector (Compact/Cozy/Spacious)
+- ✅ Medium theme option (Dark/Medium/Light)
+- ✅ High contrast mode for accessibility
+- ✅ Reduced motion mode for accessibility
+- ✅ Modern theme colors
+- ✅ Dynamic CSS variable system
+
+---
+
+**Last Updated:** February 25, 2026

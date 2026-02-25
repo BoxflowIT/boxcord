@@ -6,7 +6,32 @@ Boxcord includes comprehensive settings organized into dedicated tabs, accessibl
 
 ### Settings Tabs
 
-#### 🎥 Video Tab
+#### � Appearance Tab (#225)
+
+Customize the visual appearance and accessibility of Boxcord.
+
+**Features:**
+- **Theme selection** - Choose between Dark (🌙), Medium (🌗), and Light (☀️) themes
+- **Message density** - Control message spacing:
+  - Compact - Minimal spacing for power users
+  - Cozy - Balanced spacing (default)
+  - Spacious - Maximum spacing for readability
+- **Font size** - Small, Medium, or Large text
+- **High contrast mode** - Enhanced contrast for better visibility
+- **Reduced motion** - Minimize animations for accessibility
+- **Message grouping** - Group consecutive messages from same user
+- **Compact mode toggle** - Legacy compact view
+
+**Settings stored in localStorage:**
+- `theme` - Theme preference (dark/medium/light)
+- `messageDensity` - Spacing preference (compact/cozy/spacious)
+- `fontSize` - Text size (small/medium/large)
+- `highContrast` - High contrast mode toggle
+- `reducedMotion` - Reduced motion toggle
+- `messageGrouping` - Message grouping toggle
+- `compactMode` - Compact mode toggle
+
+#### 🎥 Video Tab (#223)
 
 Configure video and camera settings for optimal call quality.
 
@@ -25,6 +50,47 @@ Configure video and camera settings for optimal call quality.
 - `mirror-video` - Mirror toggle
 - Selected video device ID
 
+#### � Audio Tab (#226)
+
+Configure audio quality and settings for voice communication.
+
+**Features:**
+- **Audio quality presets** - Select quality level:
+  - Low: 16kHz, Mono - Optimized for low bandwidth
+  - Balanced: 24kHz, Stereo - Good quality (default)
+  - High: 48kHz, Stereo - High-quality audio
+  - Studio: 48kHz, Stereo - Professional audio quality
+- **Device selection** - Choose input/output audio devices
+- **Mic testing** - Real-time audio level monitoring
+- **Input sensitivity** - Adjust voice activation threshold
+- **Output volume** - Control playback volume
+- **Monitor mode** - Hear yourself while testing
+
+**Settings stored in localStorage:**
+- `audioQualityPreset` - Quality preset selection
+- `selectedAudioInputDevice` - Input device ID
+- `selectedAudioOutputDevice` - Output device ID
+
+#### 🔔 Notifications Tab (#226)
+
+Customize notification preferences and sounds.
+
+**Features:**
+- **Sound toggle** - Enable/disable notification sounds
+- **Sound type selection** - Choose from 5 sound options:
+  - Default - Standard notification sound
+  - Chime - Soft melodic chime
+  - Bell - Classic bell sound
+  - Pop - Quick pop sound
+  - Ding - Simple ding tone
+- **Sound preview** - Test sounds before selecting
+- **Desktop notifications** - Browser push notifications (if granted)
+- **Notification settings** - Per-channel notification preferences
+
+**Settings stored in localStorage:**
+- `notificationSoundType` - Selected sound type
+- `soundEnabled` - Sound toggle state
+
 #### 🔒 Privacy Tab
 
 Control privacy settings and data preferences.
@@ -37,34 +103,58 @@ Control privacy settings and data preferences.
 - Profile visibility - Control who can see your profile
 - DM permissions - Who can send you direct messages
 
-#### ⌨️ Keybinds Tab
+#### ⌨️ Keybinds Tab (#227) (#227)
 
-View and customize keyboard shortcuts for quick access.
+**Fully customizable keyboard shortcuts** with visual recorder and conflict detection.
 
-**Global Shortcuts:**
-- `Ctrl+Shift+M` - Toggle mute (voice & DM calls)
-- `Ctrl+Shift+D` - Toggle deafen
-- `Ctrl+Shift+V` - Toggle video
-- `Ctrl+Shift+S` - Toggle screen share
-- `Ctrl+,` - Open settings
-- `Ctrl+K` - Quick channel switcher
-- `Ctrl+/` - Show keyboard shortcuts
+**Features:**
+- **Custom keybinds** - Assign any key combination to 17 actions
+- **Visual recorder** - Click to record key combinations
+- **Conflict detection** - Real-time warnings for duplicate shortcuts
+- **Category filtering** - Filter by Navigation, Messaging, Voice, Reactions, General
+- **Reset shortcuts** - Reset individual shortcuts or all to defaults
+- **Enable/disable toggle** - Turn shortcuts on/off globally
+- **Persistent storage** - Shortcuts saved in localStorage
+
+**Navigation Shortcuts (Default):**
+- `Alt+↓` - Next channel (customizable)
+- `Alt+↑` - Previous channel (customizable)
+- `Ctrl+K` - Search (customizable)
+
+**Messaging Shortcuts (Default):**
+- `Ctrl+U` - Upload file (customizable)
+- `Ctrl+E` - Emoji picker (customizable)
+- `Ctrl+Shift+A` - Mark all as read (customizable)
+- `Ctrl+P` - Pin message (customizable)
+
+**Voice Shortcuts (Default):**
+- `Ctrl+Shift+M` - Toggle mute (customizable)
+- `Ctrl+Shift+D` - Toggle deafen (customizable)
+- `Ctrl+Shift+V` - Toggle video (customizable)
+- `Ctrl+Shift+S` - Toggle screen share (customizable)
+- `Ctrl+Shift+L` - Leave voice channel (customizable)
+
+**Quick Reaction Shortcuts (Default):**
+- `1` - React with 👍 (customizable)
+- `2` - React with ❤️ (customizable)
+- `3` - React with 😂 (customizable)
+- `4` - React with 🎉 (customizable)
+- `5` - React with 🔥 (customizable)
+
+**General Shortcuts:**
+- `Ctrl+,` - Open settings (hardcoded, not customizable)
 - `Esc` - Close modal/dialog
-- `@` - Mention autocomplete
-- `/` - Slash command autocomplete
-
-**Message Shortcuts:**
 - `Enter` - Send message
 - `Shift+Enter` - New line in message
 - `↑` (in empty input) - Edit last message
 - `Esc` (while editing) - Cancel edit
 - `Tab` - Accept autocomplete suggestion
+- `@` - Mention autocomplete
+- `/` - Slash command autocomplete
 
-**Navigation:**
-- `Alt+↑` - Previous channel
-- `Alt+↓` - Next channel
-- `Ctrl+Shift+A` - Mark all as read
-- `Ctrl+F` - Search messages
+**Settings stored in localStorage:**
+- `keyboard-shortcuts` - All custom shortcut mappings
+- `keyboard-shortcuts-enabled` - Global enable/disable state
 
 #### 👤 Account Tab
 
@@ -366,24 +456,110 @@ Toast notification shown
 Quality applied instantly
 ```
 
+## Implementation Details
+
+### Custom Keyboard Shortcuts System (#227)
+
+**Architecture:**
+- `keyboardShortcutsStore.ts` - Zustand store with persist middleware
+- `KeyRecorder.tsx` - Visual key combination recorder component
+- `KeybindEditor.tsx` - Individual shortcut editor with conflict detection
+- `useKeyboardShortcuts.ts` - Global keyboard event handler hook
+
+**Key Features:**
+- Records modifier keys (Ctrl, Shift, Alt) and main key
+- Maps special keys (arrows → ↑↓←→, space → Space)
+- Validates shortcuts (requires modifier + key OR special key alone)
+- Checks typing context (ignores shortcuts in input fields)
+- Real-time conflict detection across all shortcuts
+- Category-based organization (5 categories)
+- Individual and bulk reset functionality
+
+**Storage Format:**
+```json
+{
+  "shortcuts": {
+    "toggle-mute": {
+      "keys": "Ctrl+Shift+M",
+      "description": "Toggle microphone mute",
+      "category": "voice",
+      "customizable": true
+    }
+  },
+  "enabled": true
+}
+```
+
+### Audio Quality System (#226)
+
+**Quality Presets:**
+```typescript
+type AudioQuality = 'low' | 'balanced' | 'high' | 'studio';
+
+const presets = {
+  low: { sampleRate: 16000, channelCount: 1, bitrate: 32000 },
+  balanced: { sampleRate: 24000, channelCount: 2, bitrate: 64000 },
+  high: { sampleRate: 48000, channelCount: 2, bitrate: 96000 },
+  studio: { sampleRate: 48000, channelCount: 2, bitrate: 128000 }
+};
+```
+
+**Components:**
+- `AudioQualityPresetSelector.tsx` - Preset selection UI
+- `NotificationSoundSelector.tsx` - Sound type selection with preview
+- `audioSettingsStore.ts` - Audio state management
+- `notificationSound.ts` - Sound playback utilities
+
+### Message Density System (#225)
+
+**CSS Variable System:**
+```typescript
+const spacing = {
+  compact: { messageGap: '4px', padding: '8px' },
+  cozy: { messageGap: '8px', padding: '12px' },
+  spacious: { messageGap: '16px', padding: '16px' }
+};
+```
+
+Applied via CSS custom properties:
+- `--message-gap` - Spacing between messages
+- `--message-padding` - Padding around message content
+
+**Theme System:**
+- `dark` - Dark background (#1e1e2e), light text
+- `medium` - Medium background (#2a2a3a), balanced contrast
+- `light` - Light background (#f5f5f5), dark text
+
+### Accessibility Modes (#225)
+
+**High Contrast:**
+- Adds `.high-contrast` class to document root
+- Increases border visibility
+- Enhances color contrast ratios
+- Improves focus indicator visibility
+
+**Reduced Motion:**
+- Adds `.reduced-motion` class to document root
+- Disables or reduces animations
+- Replaces transitions with instant changes
+- Improves experience for vestibular disorders
+
 ## Future Enhancements
 
 ### Planned Settings
 
-- [ ] Audio quality presets
-- [ ] Custom keyboard shortcuts
-- [ ] Notification sounds customization
-- [ ] Message display density
-- [ ] Font size preferences
-- [ ] Accessibility mode
+- [ ] Per-workspace settings
+- [ ] Import/export settings
+- [ ] Cloud sync for settings
+- [ ] Notification scheduling
+- [ ] Advanced audio filters
 
 ### Planned Shortcuts
 
 - [ ] Channel-specific shortcuts
-- [ ] Quick emoji reactions (1-5 keys)
-- [ ] Voice channel quick join
-- [ ] Workspace switcher
+- [ ] Workspace switcher shortcuts
 - [ ] Search history navigation
+- [ ] Custom macro shortcuts
 
 ### Quality Improvements
 

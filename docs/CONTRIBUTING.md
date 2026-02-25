@@ -122,10 +122,10 @@ Specify what part of the codebase is affected:
 
 **Examples:**
 ```bash
-feat(backend): add Redis pub/sub for horizontal scaling
-fix(frontend): resolve video grid layout issues
-refactor(websocket): improve connection handling
-test(api): add unit tests for bookmark service
+feat(backend): add Redis pub/sub for horizontal scaling (#230)
+fix(frontend): resolve video grid layout issues (#229)
+refactor(websocket): improve connection handling (#228)
+test(api): add unit tests for bookmark service (#231)
 ```
 
 ### Subject
@@ -137,9 +137,9 @@ test(api): add unit tests for bookmark service
 
 ✅ **Good:**
 ```
-feat: add video window controls with PiP support
-fix: resolve Giphy API rate limiting errors
-refactor: convert console.log to structured logger
+feat: add video window controls with PiP support (#224)
+fix: resolve Giphy API rate limiting errors (#223)
+refactor: convert console.log to structured logger (#220)
 ```
 
 ❌ **Bad:**
@@ -174,6 +174,66 @@ Closes #456
 BREAKING CHANGE: API endpoint changed from /v1 to /v2
 Co-authored-by: Name <email@example.com>
 ```
+
+### 🚨 PR Numbers (MANDATORY)
+
+**ALL commits MUST include the GitHub PR/issue number at the end of the subject line.**
+
+This is required for:
+- **Searchability** - Find all commits related to a PR/issue
+- **Traceability** - Link code changes to discussions and reviews
+- **Audit trail** - Understand context of changes months later
+
+**Format:** `<type>(<scope>): <subject> (#PR_NUMBER)`
+
+**Examples:**
+```bash
+✅ feat: add video window controls with PiP support (#224)
+✅ fix: resolve Giphy API rate limiting errors (#223)
+✅ refactor: convert console.log to structured logger (#220)
+✅ 🔀 merge: Phase 1 - Appearance Settings into main (v1.2.0) (#225)
+```
+
+**Invalid commits (will be rejected):**
+```bash
+❌ feat: add video window controls with PiP support
+❌ fix: resolve Giphy API rate limiting errors
+❌ merge: Phase 1 - Appearance Settings into main
+```
+
+**Why this matters:**
+- When reviewing code months later, you can instantly find the discussion/review
+- GitHub search works: searching "#225" shows all related commits
+- Release notes generation becomes automated
+- Bug tracking connects commits to issues
+
+### 🚨 PR Numbers (MANDATORY)
+
+**ALL commits MUST include the GitHub PR/issue number at the end of the subject line.**
+
+This is required for:
+- **Searchability** - Find all commits related to a PR/issue
+- **Traceability** - Link code changes to discussions and reviews
+- **Audit trail** - Understand context of changes months later
+
+**Format:** `<type>(<scope>): <subject> (#PR_NUMBER)`
+
+**Examples:**
+```bash
+✅ feat: add video window controls with PiP support (#224)
+✅ fix: resolve Giphy API rate limiting errors (#223)
+✅ refactor: convert console.log to structured logger (#220)
+✅ 🔀 merge: Phase 1 - Appearance Settings into main (v1.2.0) (#225)
+```
+
+**Invalid commits (will be rejected):**
+```bash
+❌ feat: add video window controls with PiP support
+❌ fix: resolve Giphy API rate limiting errors
+❌ 🔀 merge: Phase 1 - Appearance Settings into main (v1.2.0)
+```
+
+**Note:** Even single commits on feature branches need PR numbers, as they will be part of the merge commit history.
 
 ---
 
@@ -224,9 +284,9 @@ Co-authored-by: Name <email@example.com>
 
 3. **PR Title Examples:**
    ```
-   feat: Add video window controls with minimize, float, resize, and PiP modes
-   fix: Resolve Giphy API rate limiting with retry logic
-   refactor: Systematic backend cleanup with structured logging
+   feat: Add video window controls with minimize, float, resize, and PiP modes (#224)
+   fix: Resolve Giphy API rate limiting with retry logic (#223)
+   refactor: Systematic backend cleanup with structured logging (#220)
    ```
 
 ### PR Review Process
