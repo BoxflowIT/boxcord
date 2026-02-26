@@ -80,9 +80,13 @@ permissions:
 
 ## Secrets & Tokens
 
-All workflows use the default `GITHUB_TOKEN` which is automatically provided by GitHub Actions.
+### Required Secrets
 
-No additional secrets are required.
+| Secret | Purpose | How to Create |
+|--------|---------|---------------|
+| `GH_PAT` | Push version bumps to branch-protected `main` | GitHub → Settings → Developer settings → Fine-grained tokens → Generate with `contents: write` scope for this repo |
+
+The version bump workflow uses `GH_PAT` to checkout and push, bypassing branch protection rules. The CI workflow uses the default `GITHUB_TOKEN` (automatically provided).
 
 ---
 
