@@ -30,8 +30,13 @@ interface MessageCompactProps {
   onEdit: () => void;
   onDelete: () => void;
   onForward?: () => void;
+  onStartThread?: () => void;
   onPin?: () => void;
   onQuickReaction: (emoji: string) => void;
+
+  // Thread state
+  hasThread?: boolean;
+  threadReplyCount?: number;
 
   // Pin state
   isPinned?: boolean;
@@ -59,6 +64,9 @@ export function MessageCompact({
   onEdit,
   onDelete,
   onForward,
+  onStartThread,
+  hasThread,
+  threadReplyCount,
   onPin,
   isPinned,
   canPin,
@@ -94,6 +102,9 @@ export function MessageCompact({
             onEdit={onEdit}
             onDelete={onDelete}
             onForward={onForward}
+            onStartThread={onStartThread}
+            hasThread={hasThread}
+            threadReplyCount={threadReplyCount}
             onPin={onPin}
             isPinned={isPinned}
             canPin={canPin}

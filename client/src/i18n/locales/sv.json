@@ -247,6 +247,25 @@
     "cancelReply": "Avbryt svar",
     "editHint": "Escape för att avbryta • Enter för att spara"
   },
+  "threads": {
+    "thread": "Tråd",
+    "threads": "Trådar",
+    "startThread": "Starta tråd",
+    "viewThread": "Visa tråd",
+    "reply": "svar",
+    "replies": "svar",
+    "participant": "deltagare",
+    "participants": "deltagare",
+    "following": "Följer",
+    "follow": "Följ",
+    "sendReply": "Skicka svar",
+    "replyPlaceholder": "Svara på tråd...",
+    "noRepliesYet": "Inga svar ännu",
+    "startConversation": "Starta konversationen",
+    "locked": "Tråden låst",
+    "lockedMessage": "Den här tråden har låsts",
+    "failedToSend": "Misslyckades att skicka svar"
+  },
   "dm": {
     "title": "Direktmeddelanden",
     "newMessage": "Nytt meddelande",

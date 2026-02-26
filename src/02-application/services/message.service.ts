@@ -51,7 +51,10 @@ export class MessageService {
     );
 
     const messages = await this.prisma.message.findMany({
-      where: { channelId },
+      where: {
+        channelId,
+        parentId: null // Exclude thread replies from channel messages
+      },
       orderBy: { createdAt: 'asc' },
       take: limit + 1,
       ...(params.cursor && {

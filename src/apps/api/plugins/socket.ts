@@ -6,6 +6,7 @@ import { SOCKET_EVENTS } from '../../../00-core/constants.js';
 import { MessageService } from '../../../02-application/services/message.service.js';
 import { PushService } from '../../../02-application/services/push.service.js';
 import { VoiceService } from '../../../02-application/services/voice.service.js';
+import { ThreadService } from '../../../02-application/services/thread.service.js';
 import { JwksClient } from 'jwks-rsa';
 import jsonwebtoken from 'jsonwebtoken';
 
@@ -113,6 +114,7 @@ export function setupSocketHandlers(
   prisma: ExtendedPrismaClient
 ) {
   const messageService = new MessageService(prisma);
+  const threadService = new ThreadService(prisma);
   const pushService = new PushService(prisma);
   const _voiceService = new VoiceService(prisma);
   const onlineUsers = new Map<string, Set<string>>(); // channelId -> Set of userIds
@@ -706,6 +708,319 @@ export function setupSocketHandlers(
               emoji: data.emoji,
               added
             });
+          }
+        } catch (err) {
+          socket.emit('error', { message: (err as Error).message });
+        }
+      }
+    );
+
+    // ============================================
+    // THREADS
+    // ============================================
+
+    // Create thread from message
+    socket.on(
+      SOCKET_EVENTS.THREAD_CREATE,
+      async (data: { messageId: string; title?: string }) => {
+        try {
+          const thread = await threadService.createThread(
+            {
+              messageId: data.messageId,
+              title: data.title
+            },
+            userId
+          );
+
+          // Get channel from message and broadcast to channel
+          const message = await prisma.message.findUnique({
+            where: { id: data.messageId },
+            select: { channelId: true }
+          });
+
+          if (message) {
+            app.log.info(
+              `[THREAD_CREATED] Broadcasting thread ${thread.id} to channel:${message.channelId}`
+            );
+            io.to(`channel:${message.channelId}`).emit(
+              SOCKET_EVENTS.THREAD_CREATED,
+              thread
+            );
+          }
+        } catch (err) {
+          socket.emit('error', { message: (err as Error).message });
+        }
+      }
+    );
+
+    // Add reply to thread
+    socket.on(
+      SOCKET_EVENTS.THREAD_REPLY,
+      async (data: {
+        threadId: string;
+        content: string;
+        attachments?: Array<{ url: string; type: string; name: string }>;
+      }) => {
+        try {
+          // Convert attachment format from socket to service format
+          const formattedAttachments = data.attachments?.map((att) => ({
+            fileUrl: att.url,
+            fileType: att.type,
+            fileName: att.name,
+            fileSize: 0 // Size not available from socket
+          }));
+
+          const reply = await threadService.addReply(
+            data.threadId,
+            data.content,
+            userId,
+            formattedAttachments
+          );
+
+          // Get thread and channel info
+          const thread = await prisma.thread.findUnique({
+            where: { id: data.threadId },
+            select: { channelId: true }
+          });
+
+          if (thread) {
+            app.log.info(
+              `[THREAD_REPLY] Broadcasting reply to channel:${thread.channelId}`
+            );
+
+            // Broadcast to channel room with proper format
+            io.to(`channel:${thread.channelId}`).emit(
+              SOCKET_EVENTS.THREAD_REPLY,
+              {
+                threadId: data.threadId,
+                reply
+              }
+            );
+
+            // Confirm to sender
+            socket.emit(SOCKET_EVENTS.THREAD_REPLY, {
+              threadId: data.threadId,
+              reply
+            });
+
+            // Also broadcast to thread participants for notifications
+            const participants = await prisma.threadParticipant.findMany({
+              where: {
+                threadId: data.threadId,
+                userId: { not: userId }, // Don't notify the sender
+                notifyOnReply: true
+              },
+              select: { userId: true }
+            });
+
+            participants.forEach((participant) => {
+              io.to(`user:${participant.userId}`).emit(
+                SOCKET_EVENTS.THREAD_REPLY,
+                {
+                  threadId: data.threadId,
+                  reply
+                }
+              );
+            });
+          }
+        } catch (err) {
+          socket.emit('error', { message: (err as Error).message });
+        }
+      }
+    );
+
+    // Update thread (title or lock status)
+    socket.on(
+      SOCKET_EVENTS.THREAD_UPDATED,
+      async (data: {
+        threadId: string;
+        title?: string;
+        isLocked?: boolean;
+      }) => {
+        try {
+          const thread = await threadService.updateThread(
+            data.threadId,
+            {
+              title: data.title,
+              isLocked: data.isLocked
+            },
+            userId
+          );
+
+          // Get channel and broadcast
+          const fullThread = await prisma.thread.findUnique({
+            where: { id: data.threadId },
+            select: { channelId: true }
+          });
+
+          if (fullThread) {
+            app.log.info(
+              `[THREAD_UPDATED] Broadcasting thread update to channel:${fullThread.channelId}`
+            );
+            io.to(`channel:${fullThread.channelId}`).emit(
+              SOCKET_EVENTS.THREAD_UPDATED,
+              thread
+            );
+          }
+        } catch (err) {
+          socket.emit('error', { message: (err as Error).message });
+        }
+      }
+    );
+
+    // Delete thread
+    socket.on(
+      SOCKET_EVENTS.THREAD_DELETED,
+      async (data: { threadId: string }) => {
+        try {
+          // Get thread info before deletion
+          const thread = await prisma.thread.findUnique({
+            where: { id: data.threadId },
+            select: { channelId: true }
+          });
+
+          if (thread) {
+            await threadService.deleteThread(data.threadId, userId);
+
+            app.log.info(
+              `[THREAD_DELETED] Broadcasting thread deletion to channel:${thread.channelId}`
+            );
+            io.to(`channel:${thread.channelId}`).emit(
+              SOCKET_EVENTS.THREAD_DELETED,
+              {
+                threadId: data.threadId,
+                channelId: thread.channelId
+              }
+            );
+          }
+        } catch (err) {
+          socket.emit('error', { message: (err as Error).message });
+        }
+      }
+    );
+
+    // Follow/unfollow thread
+    socket.on(
+      SOCKET_EVENTS.THREAD_FOLLOW,
+      async (data: { threadId: string; shouldFollow: boolean }) => {
+        try {
+          await threadService.toggleFollow(
+            data.threadId,
+            userId,
+            data.shouldFollow
+          );
+
+          // Confirm to sender only
+          socket.emit(SOCKET_EVENTS.THREAD_FOLLOW, {
+            threadId: data.threadId,
+            userId,
+            following: data.shouldFollow
+          });
+        } catch (err) {
+          socket.emit('error', { message: (err as Error).message });
+        }
+      }
+    );
+
+    // Mark thread as read
+    socket.on(SOCKET_EVENTS.THREAD_READ, async (data: { threadId: string }) => {
+      try {
+        await threadService.markAsRead(data.threadId, userId);
+
+        // Confirm to sender only
+        socket.emit(SOCKET_EVENTS.THREAD_READ, {
+          threadId: data.threadId,
+          userId
+        });
+      } catch (err) {
+        socket.emit('error', { message: (err as Error).message });
+      }
+    });
+
+    // Edit thread reply
+    socket.on(
+      SOCKET_EVENTS.THREAD_REPLY_EDITED,
+      async (data: { threadId: string; replyId: string; content: string }) => {
+        try {
+          // Get thread and channel info
+          const thread = await prisma.thread.findUnique({
+            where: { id: data.threadId },
+            select: { channelId: true }
+          });
+
+          if (thread) {
+            // Broadcast to channel room
+            io.to(`channel:${thread.channelId}`).emit(
+              SOCKET_EVENTS.THREAD_REPLY_EDITED,
+              {
+                threadId: data.threadId,
+                replyId: data.replyId,
+                content: data.content,
+                userId
+              }
+            );
+          }
+        } catch (err) {
+          socket.emit('error', { message: (err as Error).message });
+        }
+      }
+    );
+
+    // Delete thread reply
+    socket.on(
+      SOCKET_EVENTS.THREAD_REPLY_DELETED,
+      async (data: { threadId: string; replyId: string }) => {
+        try {
+          // Get thread and channel info
+          const thread = await prisma.thread.findUnique({
+            where: { id: data.threadId },
+            select: { channelId: true }
+          });
+
+          if (thread) {
+            // Broadcast to channel room
+            io.to(`channel:${thread.channelId}`).emit(
+              SOCKET_EVENTS.THREAD_REPLY_DELETED,
+              {
+                threadId: data.threadId,
+                replyId: data.replyId
+              }
+            );
+          }
+        } catch (err) {
+          socket.emit('error', { message: (err as Error).message });
+        }
+      }
+    );
+
+    // Thread reply reaction
+    socket.on(
+      SOCKET_EVENTS.THREAD_REPLY_REACTION,
+      async (data: {
+        threadId: string;
+        replyId: string;
+        emoji: string;
+        action: 'add' | 'remove';
+      }) => {
+        try {
+          // Get thread and channel info
+          const thread = await prisma.thread.findUnique({
+            where: { id: data.threadId },
+            select: { channelId: true }
+          });
+
+          if (thread) {
+            // Broadcast to channel room
+            io.to(`channel:${thread.channelId}`).emit(
+              SOCKET_EVENTS.THREAD_REPLY_REACTION,
+              {
+                threadId: data.threadId,
+                replyId: data.replyId,
+                emoji: data.emoji,
+                action: data.action,
+                userId
+              }
+            );
           }
         } catch (err) {
           socket.emit('error', { message: (err as Error).message });

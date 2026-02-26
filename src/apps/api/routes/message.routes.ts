@@ -3,6 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { prisma } from '../../../03-infrastructure/database/client.js';
 import { MessageService } from '../../../02-application/services/message.service.js';
+import { SOCKET_EVENTS } from '../../../00-core/constants.js';
 import { schemas } from '../plugins/validation.js';
 
 const messageService = new MessageService(prisma);
@@ -67,6 +68,28 @@ export async function messageRoutes(app: FastifyInstance) {
         content: request.body.content,
         parentId: request.body.parentId
       });
+
+      // Broadcast via socket so all clients get the message in real-time
+      const io = app.io;
+      if (io) {
+        io.to(`channel:${request.body.channelId}`).emit(
+          SOCKET_EVENTS.MESSAGE_NEW,
+          message
+        );
+
+        // Also broadcast to workspace for unread badge updates
+        const channel = await prisma.channel.findUnique({
+          where: { id: request.body.channelId },
+          select: { workspaceId: true }
+        });
+        if (channel) {
+          io.to(`workspace:${channel.workspaceId}`).emit(
+            SOCKET_EVENTS.MESSAGE_NEW,
+            message
+          );
+        }
+      }
+
       return reply.status(201).send({ success: true, data: message });
     }
   );

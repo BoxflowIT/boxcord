@@ -17,14 +17,17 @@ export function registerMessageHandlers(context: SocketHandlerContext): void {
 
   // message:new - New message in a channel
   socket.on('message:new', (message: Message) => {
+    // Skip thread replies — they are handled by the thread socket handler
+    if (message.parentId) return;
+
     const currentUserId = getCurrentUserId();
     const currentWorkspaceId = getCurrentWorkspaceId();
     const isOwnMessage = message.authorId === currentUserId;
     const isViewing = isViewingChannel(message.channelId);
 
     if (message.channelId) {
-      // ONLY update message cache if user is actively viewing this channel
-      if (isViewing) {
+      // Update message cache if user is viewing OR if it's their own message (e.g., forwarded)
+      if (isViewing || isOwnMessage) {
         const exactKey = queryKeys.messages(message.channelId, undefined);
         queryClient.setQueryData<PaginatedMessages>(exactKey, (old) => {
           if (!old) return { items: [message], hasMore: false };

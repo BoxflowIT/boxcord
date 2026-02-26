@@ -15,19 +15,19 @@ datasource db {
 // ============================================
 
 model User {
-    id        String   @id // Same as Cognito sub / Boxtime user.id
-    email     String   @unique
-    firstName String?  @map("first_name")
-    lastName  String?  @map("last_name")
-    avatarUrl String?  @map("avatar_url")
-    bio       String?
-    role      String   @default("STAFF") // SUPER_ADMIN | ADMIN | STAFF
-    status    String?  // Custom status message
-    statusEmoji String? @map("status_emoji") // Emoji for status
-    dndMode   Boolean  @default(false) @map("dnd_mode") // Do Not Disturb
-    dndUntil  DateTime? @map("dnd_until") // Temporary DND until specific time
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
+    id          String    @id // Same as Cognito sub / Boxtime user.id
+    email       String    @unique
+    firstName   String?   @map("first_name")
+    lastName    String?   @map("last_name")
+    avatarUrl   String?   @map("avatar_url")
+    bio         String?
+    role        String    @default("STAFF") // SUPER_ADMIN | ADMIN | STAFF
+    status      String? // Custom status message
+    statusEmoji String?   @map("status_emoji") // Emoji for status
+    dndMode     Boolean   @default(false) @map("dnd_mode") // Do Not Disturb
+    dndUntil    DateTime? @map("dnd_until") // Temporary DND until specific time
+    createdAt   DateTime  @default(now()) @map("created_at")
+    updatedAt   DateTime  @updatedAt @map("updated_at")
 
     presence             UserPresence?
     messages             Message[]
@@ -97,21 +97,21 @@ model WorkspaceInvite {
 }
 
 model Channel {
-    id          String       @id @default(uuid())
-    workspaceId String       @map("workspace_id")
-    categoryId  String?      @map("category_id") // Optional category grouping
+    id          String      @id @default(uuid())
+    workspaceId String      @map("workspace_id")
+    categoryId  String?     @map("category_id") // Optional category grouping
     name        String
     description String?
-    type        ChannelType  @default(TEXT)
-    isPrivate   Boolean      @default(false) @map("is_private")
-    position    Int          @default(0) // For ordering within category
-    createdAt   DateTime     @default(now()) @map("created_at")
-    updatedAt   DateTime     @updatedAt @map("updated_at")
+    type        ChannelType @default(TEXT)
+    isPrivate   Boolean     @default(false) @map("is_private")
+    position    Int         @default(0) // For ordering within category
+    createdAt   DateTime    @default(now()) @map("created_at")
+    updatedAt   DateTime    @updatedAt @map("updated_at")
 
-    workspace Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-    category  ChannelCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-    messages  Message[]
-    members   ChannelMember[]
+    workspace   Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+    category    ChannelCategory?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+    messages    Message[]
+    members     ChannelMember[]
     permissions ChannelPermission[]
 
     @@unique([workspaceId, name])
@@ -156,22 +156,22 @@ model ChannelPermission {
     id        String     @id @default(uuid())
     channelId String     @map("channel_id")
     role      MemberRole // Permission override for specific role
-    
+
     // View permissions
     canViewChannel Boolean @default(true) @map("can_view_channel")
-    
+
     // Message permissions
-    canSendMessages   Boolean @default(true) @map("can_send_messages")
-    canAddReactions   Boolean @default(true) @map("can_add_reactions")
-    canAttachFiles    Boolean @default(true) @map("can_attach_files")
-    canEmbed          Boolean @default(true) @map("can_embed") // Links with rich embeds
+    canSendMessages    Boolean @default(true) @map("can_send_messages")
+    canAddReactions    Boolean @default(true) @map("can_add_reactions")
+    canAttachFiles     Boolean @default(true) @map("can_attach_files")
+    canEmbed           Boolean @default(true) @map("can_embed") // Links with rich embeds
     canMentionEveryone Boolean @default(false) @map("can_mention_everyone")
-    
+
     // Management permissions
     canManageMessages Boolean @default(false) @map("can_manage_messages") // Delete/pin others' messages
     canManageChannel  Boolean @default(false) @map("can_manage_channel") // Edit channel settings
     canManageMembers  Boolean @default(false) @map("can_manage_members") // Add/remove members
-    
+
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -203,16 +203,57 @@ model Message {
     parent   Message?  @relation("ThreadReplies", fields: [parentId], references: [id])
     replies  Message[] @relation("ThreadReplies")
 
-    channel     Channel      @relation(fields: [channelId], references: [id], onDelete: Cascade)
-    author      User         @relation(fields: [authorId], references: [id])
+    channel     Channel             @relation(fields: [channelId], references: [id], onDelete: Cascade)
+    author      User                @relation(fields: [authorId], references: [id])
     attachments Attachment[]
     reactions   Reaction[]
     bookmarks   BookmarkedMessage[]
+    thread      Thread? // If this message starts a thread
 
     @@index([channelId, createdAt])
     @@index([channelId, isPinned, createdAt]) // Optimize pinned message queries
     @@index([authorId])
+    @@index([parentId]) // Optimize thread replies queries
     @@map("messages")
+}
+
+// Thread metadata for tracking thread state
+model Thread {
+    id               String    @id @default(uuid())
+    messageId        String    @unique @map("message_id") // The root message that started the thread
+    channelId        String    @map("channel_id")
+    title            String? // Optional thread title
+    replyCount       Int       @default(0) @map("reply_count")
+    participantCount Int       @default(0) @map("participant_count")
+    lastReplyAt      DateTime? @map("last_reply_at")
+    lastReplyBy      String?   @map("last_reply_by") // User ID of last replier
+    isLocked         Boolean   @default(false) @map("is_locked") // Prevent new replies
+    createdAt        DateTime  @default(now()) @map("created_at")
+    updatedAt        DateTime  @updatedAt @map("updated_at")
+
+    message      Message             @relation(fields: [messageId], references: [id], onDelete: Cascade)
+    participants ThreadParticipant[]
+
+    @@index([channelId, lastReplyAt])
+    @@index([messageId])
+    @@map("threads")
+}
+
+// Track which users are following/participating in a thread
+model ThreadParticipant {
+    id            String    @id @default(uuid())
+    threadId      String    @map("thread_id")
+    userId        String    @map("user_id")
+    lastReadAt    DateTime? @map("last_read_at") // When user last read this thread
+    notifyOnReply Boolean   @default(true) @map("notify_on_reply") // Notify on new replies
+    joinedAt      DateTime  @default(now()) @map("joined_at")
+
+    thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+    @@unique([threadId, userId])
+    @@index([threadId])
+    @@index([userId])
+    @@map("thread_participants")
 }
 
 model Attachment {
@@ -365,7 +406,7 @@ model AuditLog {
     id          String   @id @default(uuid())
     workspaceId String   @map("workspace_id")
     userId      String   @map("user_id") // Who performed the action
-    action      String   // Action type: USER_KICK, USER_BAN, CHANNEL_CREATE, etc.
+    action      String // Action type: USER_KICK, USER_BAN, CHANNEL_CREATE, etc.
     targetId    String?  @map("target_id") // ID of affected entity
     targetType  String?  @map("target_type") // Type of target: USER, CHANNEL, MESSAGE
     metadata    Json? // Additional action details
@@ -384,18 +425,18 @@ model AuditLog {
 // ============================================
 
 model BookmarkedMessage {
-    id            String   @id @default(uuid())
-    userId        String   @map("user_id")
-    messageId     String?  @map("message_id")
-    dmMessageId   String?  @map("dm_message_id")
-    workspaceId   String?  @map("workspace_id")
-    note          String? // Optional user note
-    createdAt     DateTime @default(now()) @map("created_at")
+    id          String   @id @default(uuid())
+    userId      String   @map("user_id")
+    messageId   String?  @map("message_id")
+    dmMessageId String?  @map("dm_message_id")
+    workspaceId String?  @map("workspace_id")
+    note        String? // Optional user note
+    createdAt   DateTime @default(now()) @map("created_at")
 
-    user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-    message     Message?       @relation(fields: [messageId], references: [id], onDelete: Cascade)
-    dmMessage   DirectMessage? @relation(fields: [dmMessageId], references: [id], onDelete: Cascade)
-    workspace   Workspace?     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+    user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+    message   Message?       @relation(fields: [messageId], references: [id], onDelete: Cascade)
+    dmMessage DirectMessage? @relation(fields: [dmMessageId], references: [id], onDelete: Cascade)
+    workspace Workspace?     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
     @@unique([userId, messageId])
     @@unique([userId, dmMessageId])
