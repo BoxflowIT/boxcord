@@ -52,40 +52,46 @@ export function useMessageReactions({
   }, [initialReactions]);
 
   const handleToggleReaction = async (emoji: string) => {
-    try {
-      const { added } = isDM
-        ? await api.toggleDMReaction(messageId, emoji)
-        : await api.toggleReaction(messageId, emoji);
+    const prevReactions = reactions.map((r) => ({ ...r }));
+    const existing = reactions.find((r) => r.emoji === emoji);
+    const isRemoving = !!existing?.hasReacted;
 
-      setReactions((prev) => {
-        const existing = prev.find((r) => r.emoji === emoji);
-        if (existing) {
-          if (added) {
-            return prev.map((r) =>
-              r.emoji === emoji
-                ? { ...r, count: r.count + 1, hasReacted: true }
-                : r
-            );
-          } else {
-            const newCount = existing.count - 1;
-            if (newCount <= 0) {
-              return prev.filter((r) => r.emoji !== emoji);
-            }
-            return prev.map((r) =>
-              r.emoji === emoji
-                ? { ...r, count: newCount, hasReacted: false }
-                : r
-            );
-          }
-        } else if (added) {
-          return [...prev, { emoji, count: 1, hasReacted: true }];
+    // Optimistic update FIRST — don't update after API response
+    // Socket event will sync React Query cache → useEffect syncs local state
+    setReactions((prev) => {
+      const existingR = prev.find((r) => r.emoji === emoji);
+      if (isRemoving) {
+        if (existingR) {
+          const newCount = existingR.count - 1;
+          if (newCount <= 0) return prev.filter((r) => r.emoji !== emoji);
+          return prev.map((r) =>
+            r.emoji === emoji ? { ...r, count: newCount, hasReacted: false } : r
+          );
         }
         return prev;
-      });
+      } else {
+        if (existingR) {
+          return prev.map((r) =>
+            r.emoji === emoji
+              ? { ...r, count: r.count + 1, hasReacted: true }
+              : r
+          );
+        }
+        return [...prev, { emoji, count: 1, hasReacted: true }];
+      }
+    });
+    setShowPicker(false);
 
-      setShowPicker(false);
+    // API call — rollback on error
+    try {
+      if (isDM) {
+        await api.toggleDMReaction(messageId, emoji);
+      } else {
+        await api.toggleReaction(messageId, emoji);
+      }
     } catch (err) {
       logger.error('Failed to toggle reaction:', err);
+      setReactions(prevReactions);
     }
   };
 

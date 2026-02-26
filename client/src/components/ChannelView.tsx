@@ -5,7 +5,7 @@
 // NO duplicate storage in Zustand
 // ============================================================================
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -34,6 +34,14 @@ import MessageListDisplay from './channel/MessageListDisplay';
 import ChannelInputSection from './channel/ChannelInputSection';
 import { VoiceChannelView } from './voice/VoiceChannelView';
 import { PinnedMessagesPanel } from './message/PinnedMessagesPanel';
+import { ThreadSidebar } from './thread/ThreadSidebar';
+import { useThreadSocket } from '../hooks/useThreadSocket';
+import {
+  useThreads,
+  addThreadReplyReaction,
+  removeThreadReplyReaction
+} from '../hooks/useThreads';
+import { useThreadStore } from '../store/thread';
 
 interface ChannelViewProps {
   onToggleMemberList?: () => void;
@@ -75,25 +83,30 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     messageGrouping
   );
 
-  // Add attachments to processed messages
-  const channelMessages = processedMessages.map((message) => {
-    const rawMsg = messagesData?.items?.find((m) => m.id === message.id) as
-      | (typeof message & {
-          attachments?: Array<{
-            id: string;
-            fileName: string;
-            fileUrl: string;
-            fileType: string;
-            fileSize: number;
-          }>;
-        })
-      | undefined;
+  // Add attachments to processed messages (memoized to prevent unnecessary re-renders
+  // when unrelated state like the thread store changes)
+  const channelMessages = useMemo(
+    () =>
+      processedMessages.map((message) => {
+        const rawMsg = messagesData?.items?.find((m) => m.id === message.id) as
+          | (typeof message & {
+              attachments?: Array<{
+                id: string;
+                fileName: string;
+                fileUrl: string;
+                fileType: string;
+                fileSize: number;
+              }>;
+            })
+          | undefined;
 
-    return {
-      ...message,
-      attachments: rawMsg?.attachments
-    };
-  });
+        return {
+          ...message,
+          attachments: rawMsg?.attachments
+        };
+      }),
+    [processedMessages, messagesData?.items]
+  );
 
   const [uploading, setUploading] = useState(false);
   const [showMentions, setShowMentions] = useState(false);
@@ -116,6 +129,10 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     isDM: false
   });
   useSocketRoom(channelExists ? channelId : undefined, 'channel');
+
+  // Thread support
+  useThreadSocket(socketService.getSocket());
+  useThreads(channelExists ? channelId : undefined);
 
   const {
     inputValue,
@@ -145,6 +162,76 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
       logger.info('Mark channel as read shortcut pressed');
     },
     onQuickReaction: async (emoji: string) => {
+      const threadState = useThreadStore.getState();
+
+      // When thread sidebar is open, route quick reactions to the thread
+      if (threadState.isSidebarOpen && threadState.activeThreadId) {
+        const threadId = threadState.activeThreadId;
+        const currentReplies = threadState.threadReplies[threadId] || [];
+        const lastReply = currentReplies[currentReplies.length - 1];
+        if (lastReply && user?.id) {
+          const isRemoving = lastReply.reactions?.some(
+            (r) => r.emoji === emoji && r.users?.includes(user.id)
+          );
+
+          // Optimistic update
+          const updatedReplies = currentReplies.map((r) => {
+            if (r.id !== lastReply.id) return r;
+            if (isRemoving) {
+              const reactions = (r.reactions || [])
+                .map((reaction) => {
+                  if (reaction.emoji !== emoji) return reaction;
+                  const newUsers = (reaction.users || []).filter(
+                    (id) => id !== user.id
+                  );
+                  return {
+                    ...reaction,
+                    count: newUsers.length,
+                    users: newUsers
+                  };
+                })
+                .filter((reaction) => reaction.count > 0);
+              return { ...r, reactions };
+            } else {
+              const reactions = r.reactions || [];
+              const existingIdx = reactions.findIndex(
+                (reaction) => reaction.emoji === emoji
+              );
+              if (existingIdx >= 0) {
+                const updated = [...reactions];
+                const existing = updated[existingIdx];
+                updated[existingIdx] = {
+                  ...existing,
+                  count: existing.count + 1,
+                  users: [...(existing.users || []), user.id]
+                };
+                return { ...r, reactions: updated };
+              }
+              return {
+                ...r,
+                reactions: [...reactions, { emoji, count: 1, users: [user.id] }]
+              };
+            }
+          });
+          useThreadStore.getState().setThreadReplies(threadId, updatedReplies);
+
+          try {
+            if (isRemoving) {
+              await removeThreadReplyReaction(threadId, lastReply.id, emoji);
+            } else {
+              await addThreadReplyReaction(threadId, lastReply.id, emoji);
+            }
+          } catch (err) {
+            // Rollback
+            useThreadStore
+              .getState()
+              .setThreadReplies(threadId, currentReplies);
+            logger.error('Failed to add quick reaction to thread reply:', err);
+          }
+        }
+        return;
+      }
+
       // React to the last hovered message or the most recent message
       const targetMessageId =
         hoveredMessageId || channelMessages[channelMessages.length - 1]?.id;
@@ -533,6 +620,9 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
         onConfirm={confirmDelete}
         onCancel={handleCancelDelete}
       />
+
+      {/* Thread Sidebar */}
+      <ThreadSidebar />
     </>
   );
 }

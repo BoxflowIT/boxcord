@@ -1,7 +1,13 @@
 // Reusable Message Actions Bar - Quick reactions + edit/delete/pin/forward/bookmark
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { EditIcon, TrashIcon, PinIcon, SendIcon } from '../ui/Icons';
+import {
+  EditIcon,
+  TrashIcon,
+  PinIcon,
+  SendIcon,
+  ThreadIcon
+} from '../ui/Icons';
 import { BookmarkButton } from '../action/BookmarkButton';
 import ReactionEmojiPicker from '../reactions/ReactionEmojiPicker';
 
@@ -13,6 +19,9 @@ interface MessageActionsProps {
   onDelete?: () => void;
   onPin?: () => void;
   onForward?: () => void;
+  onStartThread?: () => void; // New: Start or view thread
+  hasThread?: boolean; // Whether message already has a thread
+  threadReplyCount?: number; // Number of replies in thread
   isOwnMessage: boolean;
   isPinned?: boolean;
   canPin?: boolean; // Permission to pin messages
@@ -29,6 +38,9 @@ export function MessageActions({
   onDelete,
   onPin,
   onForward,
+  onStartThread,
+  hasThread = false,
+  threadReplyCount = 0,
   isOwnMessage,
   isPinned = false,
   canPin = false,
@@ -109,6 +121,22 @@ export function MessageActions({
 
       {/* Divider */}
       <div className="w-px h-4 bg-boxflow-hover mx-1" />
+
+      {/* Thread button (only for channel messages, not DMs) */}
+      {messageId && onStartThread && (
+        <button
+          onClick={onStartThread}
+          className={`p-1 hover:bg-boxflow-hover rounded relative ${hasThread ? 'text-boxflow-primary' : ''}`}
+          title={hasThread ? t('threads.viewThread') : t('threads.startThread')}
+        >
+          <ThreadIcon size="sm" />
+          {threadReplyCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-boxflow-primary text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+              {threadReplyCount > 9 ? '9+' : threadReplyCount}
+            </span>
+          )}
+        </button>
+      )}
 
       {/* Bookmark button */}
       <BookmarkButton messageId={messageId} dmMessageId={dmMessageId} />

@@ -1,0 +1,153 @@
+name: Auto Version Bump
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.github/**'
+      - 'docs/**'
+      - '*.md'
+
+permissions:
+  contents: write
+
+jobs:
+  bump-version:
+    name: Bump Version on Main
+    runs-on: ubuntu-latest
+    # Skip if commit message already contains version bump
+    if: "!contains(github.event.head_commit.message, 'bump version')"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Get current version
+        id: current_version
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Current version: $CURRENT_VERSION"
+
+      - name: Determine version bump type
+        id: bump_type
+        run: |
+          # Get latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Latest tag: $LATEST_TAG"
+
+          # Get commits since last tag
+          COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"%s" 2>/dev/null || git log --pretty=format:"%s")
+          echo "Commits since last tag:"
+          echo "$COMMITS"
+
+          # Determine bump type based on conventional commits
+          BUMP_TYPE="patch"
+
+          # Check for breaking changes (major bump)
+          if echo "$COMMITS" | grep -qiE "^[a-z]+(\(.+\))?!:|BREAKING CHANGE:"; then
+            BUMP_TYPE="major"
+            echo "🔴 Found BREAKING CHANGE - will bump MAJOR version"
+          # Check for new features (minor bump)
+          elif echo "$COMMITS" | grep -qE "^(✨ )?feat(\(.+\))?:"; then
+            BUMP_TYPE="minor"
+            echo "✨ Found feat commits - will bump MINOR version"
+          # Check for fixes (patch bump)
+          elif echo "$COMMITS" | grep -qE "^(🐛 )?fix(\(.+\))?:"; then
+            BUMP_TYPE="patch"
+            echo "🐛 Found fix commits - will bump PATCH version"
+          # Check for other commit types
+          elif echo "$COMMITS" | grep -qE "^(♻️ |📝 |🔧 |⚡ |💄 |🧪 )?(refactor|docs|chore|perf|style|test)(\(.+\))?:"; then
+            BUMP_TYPE="patch"
+            echo "🔧 Found other commits - will bump PATCH version"
+          # Merge commits
+          elif echo "$COMMITS" | grep -qE "^(🔀 )?merge:"; then
+            BUMP_TYPE="minor"
+            echo "🔀 Found merge commits - will bump MINOR version"
+          else
+            BUMP_TYPE="patch"
+            echo "📦 Default - will bump PATCH version"
+          fi
+
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+
+      - name: Bump version
+        id: new_version
+        run: |
+          BUMP_TYPE="${{ steps.bump_type.outputs.bump_type }}"
+
+          # Bump root package.json
+          npm version $BUMP_TYPE --no-git-tag-version
+
+          # Bump client package.json
+          cd client
+          npm version $BUMP_TYPE --no-git-tag-version
+          cd ..
+
+          # Get new version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "✅ Bumped version to: $NEW_VERSION"
+
+      - name: Update PR counter
+        run: |
+          # Get next PR number
+          NEXT_PR=$(./scripts/get-next-pr-number.sh)
+          echo "📝 Next PR number: $NEXT_PR"
+          echo "$NEXT_PR" > .pr-number
+          echo "pr_number=$NEXT_PR" >> $GITHUB_OUTPUT
+        id: pr_number
+
+      - name: Commit version bump
+        env:
+          NEW_VERSION: ${{ steps.new_version.outputs.version }}
+          PR_NUMBER: ${{ steps.pr_number.outputs.pr_number }}
+        run: |
+          git add package.json client/package.json .pr-number
+          git commit -m "🔖 chore: auto bump version to $NEW_VERSION (#$PR_NUMBER) [skip ci]"
+
+          # Create git tag
+          git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
+
+          echo "✅ Created commit and tag v$NEW_VERSION"
+
+      - name: Push changes
+        run: |
+          git push origin main --follow-tags
+          echo "✅ Pushed to main with tags"
+
+      - name: Update PR number file
+        run: |
+          CURRENT_PR=${{ steps.pr_number.outputs.pr_number }}
+          NEXT_PR=$((CURRENT_PR + 1))
+          ./scripts/update-pr-number.sh $NEXT_PR
+          echo "Updated .pr-number to $NEXT_PR for next commit"
+
+      - name: Summary
+        env:
+          OLD_VERSION: ${{ steps.current_version.outputs.version }}
+          NEW_VERSION: ${{ steps.new_version.outputs.version }}
+          BUMP_TYPE: ${{ steps.bump_type.outputs.bump_type }}
+        run: |
+          echo "## 🎉 Version Bump Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Old Version:** $OLD_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- **New Version:** $NEW_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- **Bump Type:** $BUMP_TYPE" >> $GITHUB_STEP_SUMMARY
+          echo "- **Git Tag:** v$NEW_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Version automatically bumped and pushed to main!" >> $GITHUB_STEP_SUMMARY

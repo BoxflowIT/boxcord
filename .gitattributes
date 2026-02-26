@@ -1,0 +1,47 @@
+# Auto detect text files and normalize line endings to LF
+* text=auto eol=lf
+
+# Explicitly declare text files
+*.ts text
+*.tsx text
+*.js text
+*.jsx text
+*.json text
+*.md text
+*.yml text
+*.yaml text
+*.toml text
+*.prisma text
+*.sql text
+*.css text
+*.scss text
+*.html text
+*.sh text eol=lf
+
+# Declare files that will always have CRLF line endings on checkout
+*.bat text eol=crlf
+
+# Denote all files that are truly binary and should not be modified
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.eot binary
+*.ttf binary
+*.otf binary
+
+# Archive files
+*.zip binary
+*.tar binary
+*.gz binary
+
+# Diff output for lockfiles
+package-lock.json -diff
+yarn.lock -diff
+
+# Linguist overrides (for GitHub language stats)
+client/src/components/ui/* linguist-vendored
+*.sql linguist-detectable=true

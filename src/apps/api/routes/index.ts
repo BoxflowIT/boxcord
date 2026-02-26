@@ -20,6 +20,7 @@ import { searchRoutes } from './search.routes.js';
 import { categoryRoutes } from './category.routes.js';
 import { moderationRoutes } from './moderation.routes.js';
 import { healthRoutes } from './health.routes.js';
+import { threadRoutes } from './thread.routes.js';
 import embedRoutes from './embed.routes.js';
 import bookmarkRoutes from './bookmark.routes.js';
 import giphyRoutes from './giphy.routes.js';
@@ -51,6 +52,7 @@ export async function registerRoutes(app: FastifyInstance) {
       await api.register(workspaceRoutes, { prefix: '/workspaces' });
       await api.register(channelRoutes, { prefix: '/channels' });
       await api.register(messageRoutes, { prefix: '/messages' });
+      await api.register(threadRoutes, { prefix: '/threads' });
       await api.register(userRoutes, { prefix: '/users' });
       await api.register(dmRoutes, { prefix: '/dm' });
       await api.register(reactionRoutes, { prefix: '/reactions' });
