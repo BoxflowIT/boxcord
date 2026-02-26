@@ -104,7 +104,6 @@ Complete list of all implemented features in Boxcord.
 - ✅ **Text channels** - Topic-specific conversations
 - ✅ **Voice channels** - Real-time audio rooms
 - ✅ **Announcement channels** - One-way broadcast channels
-- ✅ **Thread channels** - (Coming soon)
 
 ### Channel Management
 - ✅ **Channel creation** - Create new channels
@@ -113,6 +112,36 @@ Complete list of all implemented features in Boxcord.
 - ✅ **Channel permissions** - Granular access control
 - ✅ **Channel categories** - Organize channels into groups
 - ✅ **Channel ordering** - Custom channel sort order
+
+## 🧵 Threads
+
+### Thread Conversations
+- ✅ **Create threads** - Start a thread from any channel message
+- ✅ **Thread replies** - Nested conversations within threads
+- ✅ **Thread sidebar** - Dedicated sidebar UI for viewing/replying to threads
+- ✅ **Real-time updates** - WebSocket-based instant thread reply delivery
+- ✅ **Thread reactions** - Emoji reactions on thread replies with optimistic updates
+- ✅ **Thread reply editing** - Edit your own thread replies
+- ✅ **Thread reply deletion** - Delete your own thread replies
+- ✅ **File attachments in threads** - Upload files in thread replies
+
+### Thread Management
+- ✅ **Follow/unfollow threads** - Control thread notifications
+- ✅ **Auto-follow on reply** - Automatically follow threads when you reply
+- ✅ **Mark threads as read** - Track unread thread replies
+- ✅ **Unread count badges** - Visual indicators for unread thread replies
+- ✅ **Thread locking** - Admins/moderators can lock threads
+- ✅ **Thread deletion** - Delete threads and all replies (with proper cleanup)
+- ✅ **Following threads list** - View all threads you're following
+
+### Thread UI/UX
+- ✅ **Thread indicator** - "X replies" button on messages with threads
+- ✅ **Thread context menu** - Right-click actions for thread management
+- ✅ **Keyboard shortcut reactions** - Quick reactions (1-5) work in threads when sidebar is open
+- ✅ **Notification sounds** - Audio notifications for new thread replies
+- ✅ **Thread info panel** - View thread metadata and participants
+
+**📖 See:** [THREADS.md](THREADS.md)
 
 ## 👥 User Management
 
@@ -347,7 +376,6 @@ Complete list of all implemented features in Boxcord.
 ## 🎯 Coming Soon
 
 ### Planned Features
-- ⏳ **Thread support** - Threaded conversations
 - ⏳ **Polls** - Create polls in channels
 - ⏳ **Advanced search** - Filters, date range, attachments
 - ⏳ **Message templates** - Saved message templates
@@ -373,11 +401,31 @@ Complete list of all implemented features in Boxcord.
 | Video calls | ✅ Stable | [VOICE_ARCHITECTURE.md](VOICE_ARCHITECTURE.md) |
 | Screen sharing | ✅ Stable | [VOICE_ARCHITECTURE.md](VOICE_ARCHITECTURE.md) |
 | Video window controls | ✅ Stable | [VOICE_ARCHITECTURE.md](VOICE_ARCHITECTURE.md) |
-| Thread support | ⏳ Planned | - |
+| Thread support | ✅ Stable | [THREADS.md](THREADS.md) |
 
 ---
 
 ## Recent Updates (February 2026)
+
+### v1.6.0 - Thread Support
+- ✅ Create threads from any channel message
+- ✅ Thread sidebar with replies, reactions, and file attachments
+- ✅ Real-time WebSocket updates for thread events
+- ✅ Follow/unfollow threads with unread count tracking
+- ✅ Thread reply CRUD (create, edit, delete)
+- ✅ Thread reply reactions with optimistic updates
+- ✅ Keyboard shortcut reactions route to threads when sidebar open
+- ✅ Thread locking for admins/moderators
+- ✅ Following threads list panel
+- ✅ Thread context menu
+- ✅ Notification sounds for thread replies
+- ✅ Thread deletion cleans up all replies and reactions
+
+### v1.5.0 - Bug Fixes & Polish
+- ✅ Call hangup sounds for all scenarios
+- ✅ Real-time socket events for channel message pin/unpin
+- ✅ Optimized DM channel cache
+- ✅ Theme and font size persistence fixes
 
 ### v1.4.0 - Custom Keyboard Shortcuts (#227)
 - ✅ Fully customizable keyboard shortcuts (17 actions)
@@ -406,4 +454,4 @@ Complete list of all implemented features in Boxcord.
 
 ---
 
-**Last Updated:** February 25, 2026
+**Last Updated:** February 26, 2026

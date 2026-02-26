@@ -141,6 +141,8 @@ Control privacy settings and data preferences.
 - `4` - React with 🎉 (customizable)
 - `5` - React with 🔥 (customizable)
 
+> **Thread routing:** When the thread sidebar is open, quick reaction shortcuts (1-5) react to the last reply in the active thread instead of the last channel message.
+
 **General Shortcuts:**
 - `Ctrl+,` - Open settings (hardcoded, not customizable)
 - `Esc` - Close modal/dialog

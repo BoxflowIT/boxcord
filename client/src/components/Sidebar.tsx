@@ -21,6 +21,7 @@ import CreateModal from './CreateModal';
 import InviteModal from './InviteModal';
 import JoinServerModal from './JoinServerModal';
 import DMList from './DMList';
+import { FollowingThreadsList } from './thread/FollowingThreadsList';
 import WorkspaceSidebar from './sidebar/WorkspaceSidebar';
 import ChannelSection from './sidebar/ChannelSection';
 import UserBar from './sidebar/UserBar';
@@ -285,6 +286,16 @@ export default function Sidebar({
                 onCreateChannel={() => setShowNewChannel(true)}
               />
             )}
+          </div>
+
+          {/* Following Threads */}
+          <div className="relative z-50">
+            <FollowingThreadsList
+              onSelectThread={(threadId) => {
+                // Thread sidebar will be opened by the component
+                console.log('Selected thread:', threadId);
+              }}
+            />
           </div>
 
           {/* Direct Messages */}

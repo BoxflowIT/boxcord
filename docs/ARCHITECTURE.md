@@ -270,6 +270,7 @@ Only for these scenarios:
 4. **Profile Updates** - User changes avatar/name
 5. **File Uploads** - Sending attachments
 6. **Admin Actions** - Creating workspaces, managing members
+7. **Thread Operations** - Create/delete threads, add/edit/delete replies, toggle reactions, follow/read
 
 **NOT used for:**
 
@@ -277,6 +278,7 @@ Only for these scenarios:
 - ❌ Auto-refresh on interval
 - ❌ Checking for new messages
 - ❌ Syncing channel lists
+- ❌ Syncing thread replies (WebSocket handles real-time updates)
 
 ---
 

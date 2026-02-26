@@ -43,7 +43,12 @@ export interface MessageItemProps {
   onEdit: (messageId: string, content: string) => void;
   onDelete: (messageId: string) => void;
   onForward?: (messageId: string, content: string) => void;
+  onStartThread?: () => void;
   onPin?: (messageId: string) => void;
+
+  // Thread state
+  hasThread?: boolean;
+  threadReplyCount?: number;
 
   // Pin state
   isPinned?: boolean;
@@ -77,6 +82,9 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
   onEdit,
   onDelete,
   onForward,
+  onStartThread,
+  hasThread = false,
+  threadReplyCount = 0,
   onPin,
   isPinned = false,
   canPin = false,
@@ -127,6 +135,9 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
           onForward={
             onForward ? () => onForward(messageId, content) : undefined
           }
+          onStartThread={onStartThread}
+          hasThread={hasThread}
+          threadReplyCount={threadReplyCount}
           onPin={onPin ? () => onPin(messageId) : undefined}
           isPinned={isPinned}
           canPin={canPin}
@@ -154,6 +165,9 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
           onForward={
             onForward ? () => onForward(messageId, content) : undefined
           }
+          onStartThread={onStartThread}
+          hasThread={hasThread}
+          threadReplyCount={threadReplyCount}
           onPin={onPin ? () => onPin(messageId) : undefined}
           isPinned={isPinned}
           canPin={canPin}
@@ -191,6 +205,11 @@ const areEqual = (
   if (prevProps.authorAvatarUrl !== nextProps.authorAvatarUrl) return false;
   if (prevProps.compact !== nextProps.compact) return false;
   if (prevProps.isDM !== nextProps.isDM) return false;
+
+  // Thread state
+  if (prevProps.hasThread !== nextProps.hasThread) return false;
+  if (prevProps.threadReplyCount !== nextProps.threadReplyCount) return false;
+  if (prevProps.isPinned !== nextProps.isPinned) return false;
 
   // Shallow compare arrays by reference (they should be memoized in parent)
   if (prevProps.attachments !== nextProps.attachments) return false;

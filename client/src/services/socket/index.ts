@@ -254,7 +254,7 @@ class SocketService {
   // ============================================
 
   toggleReaction(messageId: string, emoji: string) {
-    this.socket?.emit('reaction:toggle', { messageId, emoji });
+    this.emit('reaction:toggle', { messageId, emoji });
   }
 
   // ============================================

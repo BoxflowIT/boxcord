@@ -243,6 +243,25 @@
     "cancelReply": "Cancel Reply",
     "editHint": "Escape to cancel • Enter to save"
   },
+  "threads": {
+    "thread": "Thread",
+    "threads": "Threads",
+    "startThread": "Start thread",
+    "viewThread": "View thread",
+    "reply": "reply",
+    "replies": "replies",
+    "participant": "participant",
+    "participants": "participants",
+    "following": "Following",
+    "follow": "Follow",
+    "sendReply": "Send Reply",
+    "replyPlaceholder": "Reply to thread...",
+    "noRepliesYet": "No replies yet",
+    "startConversation": "Start the conversation",
+    "locked": "Thread locked",
+    "lockedMessage": "This thread has been locked",
+    "failedToSend": "Failed to send reply"
+  },
   "dm": {
     "title": "Direct Messages",
     "newMessage": "New Message",

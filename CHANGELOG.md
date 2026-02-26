@@ -5,6 +5,33 @@ All notable changes to Boxcord will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-02-26
+
+### Added
+- Thread support - create threads from any channel message
+- Thread sidebar UI with real-time reply list, composer, and thread info
+- Thread reply CRUD (create, edit, delete) with author-only permissions
+- Thread reply reactions with optimistic-first update pattern
+- Follow/unfollow threads with auto-follow on reply
+- Unread thread count badges and mark-as-read
+- Thread locking for admins/moderators
+- Following threads list panel
+- Thread context menu (right-click)
+- Keyboard quick reactions (1-5) route to threads when sidebar is open
+- Notification sounds for new thread replies
+- Thread WebSocket events (created, reply, reply:edited, reply:deleted, reply:reaction, updated, deleted)
+- File attachments in thread replies
+- Thread REST API with 14 endpoints
+- Thread state management via Zustand with Immer
+- Database migration for Thread and ThreadParticipant tables
+
+### Fixed
+- Thread reactions no longer break channel reactions (individual Zustand selectors)
+- Duplicate reaction bubbles eliminated (optimistic-first pattern)
+- Thread reply button ("X replies") shows correctly on refresh (React.memo comparator fix)
+- Thread deletion properly cleans up all reply messages, reactions, and attachments
+- Socket `toggleReaction` uses `queueOrExecute` for reliability during reconnections
+
 ## [1.5.0] - 2026-02-25
 
 ### Added

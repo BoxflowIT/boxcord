@@ -29,6 +29,18 @@ export const SOCKET_EVENTS = {
   REACTION_ADD: 'reaction:add',
   REACTION_REMOVE: 'reaction:remove',
 
+  // Threads
+  THREAD_CREATE: 'thread:create',
+  THREAD_CREATED: 'thread:created',
+  THREAD_REPLY: 'thread:reply',
+  THREAD_REPLY_EDITED: 'thread:reply:edited',
+  THREAD_REPLY_DELETED: 'thread:reply:deleted',
+  THREAD_REPLY_REACTION: 'thread:reply:reaction',
+  THREAD_UPDATED: 'thread:updated',
+  THREAD_DELETED: 'thread:deleted',
+  THREAD_FOLLOW: 'thread:follow',
+  THREAD_READ: 'thread:read',
+
   // Voice Channels
   VOICE_JOIN: 'voice:join',
   VOICE_LEAVE: 'voice:leave',
