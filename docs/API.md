@@ -1523,6 +1523,398 @@ Unsubscribe from push notifications.
 
 ---
 
+## 🧵 Threads
+
+### List Channel Threads
+
+#### GET /threads
+
+List all threads in a channel.
+
+**Query Parameters:**
+- `channelId` (required): Channel ID
+- `cursor` (optional): Thread ID for pagination
+- `limit` (optional): Results per page (1-100)
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "threads": [
+      {
+        "id": "uuid",
+        "messageId": "uuid",
+        "channelId": "uuid",
+        "title": "Discussion about feature X",
+        "replyCount": 5,
+        "participantCount": 3,
+        "lastReplyAt": "2026-02-26T12:00:00.000Z",
+        "lastReplyBy": "uuid",
+        "isLocked": false,
+        "isFollowing": true,
+        "unreadCount": 2,
+        "createdAt": "2026-02-25T10:00:00.000Z",
+        "message": {
+          "id": "uuid",
+          "content": "Original message content",
+          "authorId": "uuid",
+          "author": {
+            "id": "uuid",
+            "firstName": "John",
+            "lastName": "Doe",
+            "email": "john@example.com"
+          }
+        }
+      }
+    ],
+    "nextCursor": "uuid"
+  }
+}
+```
+
+### Create Thread
+
+#### POST /threads
+
+Create a new thread from a channel message.
+
+**Rate Limit:** 20 requests per minute
+
+**Request Body:**
+```json
+{
+  "messageId": "uuid",
+  "title": "Optional thread title"
+}
+```
+
+**Response 201:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "messageId": "uuid",
+    "channelId": "uuid",
+    "title": "Optional thread title",
+    "replyCount": 0,
+    "participantCount": 1,
+    "isLocked": false,
+    "createdAt": "2026-02-26T12:00:00.000Z"
+  }
+}
+```
+
+### Get Thread
+
+#### GET /threads/:id
+
+Get thread details by ID.
+
+**Parameters:**
+- `id` (path, required): Thread ID
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "messageId": "uuid",
+    "channelId": "uuid",
+    "title": "Thread title",
+    "replyCount": 5,
+    "participantCount": 3,
+    "lastReplyAt": "2026-02-26T12:00:00.000Z",
+    "isLocked": false,
+    "isFollowing": true,
+    "unreadCount": 0
+  }
+}
+```
+
+### Get Thread by Message ID
+
+#### GET /threads/by-message/:messageId
+
+Get thread associated with a specific message.
+
+**Parameters:**
+- `messageId` (path, required): Root message ID
+
+**Response 200:** Same as Get Thread
+
+### Update Thread
+
+#### PATCH /threads/:id
+
+Update thread metadata (title, lock status).
+
+**Parameters:**
+- `id` (path, required): Thread ID
+
+**Request Body:**
+```json
+{
+  "title": "Updated title",
+  "isLocked": true
+}
+```
+
+All fields are optional.
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "title": "Updated title",
+    "isLocked": true
+  }
+}
+```
+
+### Delete Thread
+
+#### DELETE /threads/:id
+
+Delete a thread and all its replies (requires ownership or admin role).
+
+**Parameters:**
+- `id` (path, required): Thread ID
+
+**Response 204:** No content
+
+### Get Thread Replies
+
+#### GET /threads/:id/replies
+
+Get paginated replies for a thread.
+
+**Parameters:**
+- `id` (path, required): Thread ID
+
+**Query Parameters:**
+- `cursor` (optional): Reply ID for pagination
+- `limit` (optional): Results per page (1-100)
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "replies": [
+      {
+        "id": "uuid",
+        "content": "Reply content",
+        "authorId": "uuid",
+        "parentId": "uuid",
+        "edited": false,
+        "createdAt": "2026-02-26T12:00:00.000Z",
+        "author": {
+          "id": "uuid",
+          "firstName": "Jane",
+          "lastName": "Doe",
+          "email": "jane@example.com"
+        },
+        "attachments": [],
+        "reactions": [
+          {
+            "emoji": "👍",
+            "count": 2,
+            "users": ["uuid1", "uuid2"]
+          }
+        ]
+      }
+    ],
+    "nextCursor": "uuid"
+  }
+}
+```
+
+### Add Thread Reply
+
+#### POST /threads/:id/replies
+
+Add a reply to a thread.
+
+**Rate Limit:** 30 requests per minute
+
+**Parameters:**
+- `id` (path, required): Thread ID
+
+**Request Body:**
+```json
+{
+  "content": "Reply text (max 4000 chars)",
+  "attachments": [
+    {
+      "fileName": "image.png",
+      "fileUrl": "https://...",
+      "fileType": "image/png",
+      "fileSize": 12345
+    }
+  ]
+}
+```
+
+**Response 201:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "content": "Reply text",
+    "authorId": "uuid",
+    "parentId": "uuid",
+    "createdAt": "2026-02-26T12:00:00.000Z",
+    "author": {
+      "id": "uuid",
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john@example.com"
+    }
+  }
+}
+```
+
+### Edit Thread Reply
+
+#### PATCH /threads/:id/replies/:replyId
+
+Edit a thread reply (author only).
+
+**Parameters:**
+- `id` (path, required): Thread ID
+- `replyId` (path, required): Reply message ID
+
+**Request Body:**
+```json
+{
+  "content": "Updated reply content"
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "content": "Updated reply content",
+    "edited": true
+  }
+}
+```
+
+### Delete Thread Reply
+
+#### DELETE /threads/:id/replies/:replyId
+
+Delete a thread reply (author only).
+
+**Parameters:**
+- `id` (path, required): Thread ID
+- `replyId` (path, required): Reply message ID
+
+**Response 200:**
+```json
+{
+  "success": true
+}
+```
+
+### Add Reaction to Thread Reply
+
+#### POST /threads/:id/replies/:replyId/reactions
+
+Add emoji reaction to a thread reply.
+
+**Parameters:**
+- `id` (path, required): Thread ID
+- `replyId` (path, required): Reply message ID
+
+**Request Body:**
+```json
+{
+  "emoji": "👍"
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "messageId": "uuid",
+    "userId": "uuid",
+    "emoji": "👍"
+  }
+}
+```
+
+### Remove Reaction from Thread Reply
+
+#### DELETE /threads/:id/replies/:replyId/reactions/:emoji
+
+Remove emoji reaction from a thread reply.
+
+**Parameters:**
+- `id` (path, required): Thread ID
+- `replyId` (path, required): Reply message ID
+- `emoji` (path, required): Emoji to remove
+
+**Response 200:**
+```json
+{
+  "success": true
+}
+```
+
+### Follow/Unfollow Thread
+
+#### POST /threads/:id/follow
+
+Toggle thread follow status.
+
+**Parameters:**
+- `id` (path, required): Thread ID
+
+**Request Body:**
+```json
+{
+  "shouldFollow": true
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true
+}
+```
+
+### Mark Thread as Read
+
+#### POST /threads/:id/read
+
+Mark all thread replies as read.
+
+**Parameters:**
+- `id` (path, required): Thread ID
+
+**Response 200:**
+```json
+{
+  "success": true
+}
+```
+
+---
+
 ## 📊 Error Response Format
 
 All errors follow this format:
@@ -1568,6 +1960,18 @@ Authentication via query parameter or headers:
 ?token=<jwt_token>
 ```
 
+### Thread WebSocket Events
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| `thread:created` | Server → Client | New thread created in channel |
+| `thread:reply` | Server → Client | New reply added to thread |
+| `thread:reply:edited` | Server → Client | Thread reply was edited |
+| `thread:reply:deleted` | Server → Client | Thread reply was deleted |
+| `thread:reply:reaction` | Server → Client | Reaction added/removed on thread reply |
+| `thread:updated` | Server → Client | Thread metadata changed (title, lock) |
+| `thread:deleted` | Server → Client | Thread was deleted |
+
 ---
 
 ## 📚 Additional Resources
@@ -1579,6 +1983,6 @@ Authentication via query parameter or headers:
 
 ---
 
-**Last Updated:** 2026-02-23  
+**Last Updated:** 2026-02-26  
 **API Version:** v1  
 **Base URL:** `/api/v1`

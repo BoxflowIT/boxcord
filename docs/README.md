@@ -28,6 +28,7 @@ Learn about specific features:
 
 - [**Features Overview**](FEATURES.md) - Complete feature matrix with status
 - [**Settings & Shortcuts**](SETTINGS_AND_SHORTCUTS.md) - Advanced settings tabs, keyboard shortcuts, video quality
+- [**Thread Support**](THREADS.md) - Threaded conversations, API, WebSocket events, components
 - [**API Documentation**](API.md) - Complete REST API reference with examples
 - [**GIF Support**](GIF_SUPPORT.md) - Giphy integration setup and configuration
 - [**Internationalization (i18n)**](I18N.md) - Multi-language support (English, Swedish)
@@ -116,10 +117,11 @@ setup development environment"**
 
 | Document | Status | Last Updated | Completeness |
 |----------|--------|--------------|--------------|
-| [API.md](API.md) | ✅ Current | Feb 23, 2026 | 100% |
+| [API.md](API.md) | ✅ Current | Feb 26, 2026 | 100% |
 | [INFRASTRUCTURE_SETUP.md](INFRASTRUCTURE_SETUP.md) | ✅ Current | Feb 23, 2026 | 100% |
 | [FEATURES.md](FEATURES.md) | ✅ Current | Feb 2026 | 100% |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | ✅ Current | - | 90% |
+| [THREADS.md](THREADS.md) | ✅ Current | Feb 26, 2026 | 100% |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | ✅ Current | Feb 2026 | 95% |
 | [VOICE_ARCHITECTURE.md](VOICE_ARCHITECTURE.md) | ✅ Current | - | 95% |
 | [CACHING.md](CACHING.md) | ✅ Current | Feb 2026 | 100% |
 | [GIF_SUPPORT.md](GIF_SUPPORT.md) | ✅ Current | Feb 2026 | 100% |
@@ -213,4 +215,4 @@ If you can't find what you're looking for:
 
 ---
 
-**Last Updated:** February 25, 2026
+**Last Updated:** February 26, 2026

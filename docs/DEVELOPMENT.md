@@ -270,17 +270,20 @@ yarn prisma:generate
 ```
 boxcord/
 ├── src/                    # Backend source code
-│   ├── 00-core/           # Core utilities (logger, config, errors)
+│   ├── 00-core/           # Core utilities (logger, config, errors, constants)
 │   ├── 01-domain/         # Domain entities
 │   ├── 02-application/    # Business logic & services
+│   │   └── services/      # thread.service, message.service, etc.
 │   ├── 03-infrastructure/ # Database, cache, external APIs
 │   └── apps/api/          # Fastify API server
+│       └── routes/        # thread.routes, message.routes, etc.
 ├── client/                 # Frontend React app
 │   ├── src/
 │   │   ├── components/    # React components
-│   │   ├── hooks/         # Custom hooks
+│   │   │   └── thread/    # Thread sidebar, replies, composer, etc.
+│   │   ├── hooks/         # Custom hooks (useThreadSocket, useThreads)
 │   │   ├── services/      # API clients, WebSocket
-│   │   ├── store/         # Zustand state management
+│   │   ├── store/         # Zustand state management (thread.ts)
 │   │   └── utils/         # Utilities
 │   └── tests/             # Frontend tests
 ├── prisma/                 # Database schema & migrations

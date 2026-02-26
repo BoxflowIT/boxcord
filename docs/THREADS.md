@@ -1,19 +1,28 @@
-# Thread Support Implementation
+# Thread Support
 
 ## Overview
 
-Thread support has been fully implemented with backend infrastructure, real-time WebSocket events, and frontend React components.
+Thread support is fully implemented with backend REST API, real-time WebSocket events, Zustand state management, and a complete React component library.
 
 ## Features
 
-- ✅ Create threads from any message
+- ✅ Create threads from any channel message
 - ✅ Reply to threads with nested conversations
+- ✅ Edit and delete thread replies (author only)
+- ✅ Emoji reactions on thread replies (with optimistic updates)
 - ✅ Follow/unfollow threads for notifications
+- ✅ Auto-follow when replying to a thread
 - ✅ Mark threads as read
-- ✅ Real-time updates via WebSocket
-- ✅ Thread sidebar UI
 - ✅ Unread thread count badges
+- ✅ Real-time updates via WebSocket (all CRUD operations)
+- ✅ Thread sidebar UI with composer
+- ✅ Thread context menu (right-click)
+- ✅ Following threads list panel
 - ✅ Lock threads (for admins/moderators)
+- ✅ Thread deletion with full cleanup (replies, reactions, attachments)
+- ✅ File attachments in thread replies
+- ✅ Keyboard quick reactions (1-5) route to threads when sidebar is open
+- ✅ Notification sounds for new thread replies
 
 ## Backend API
 
@@ -28,136 +37,99 @@ All endpoints are prefixed with `/api/v1/threads`
 | GET | `/:id` | Get thread details |
 | GET | `/by-message/:messageId` | Get thread by root message |
 | PATCH | `/:id` | Update thread (title, lock status) |
-| DELETE | `/:id` | Delete thread |
+| DELETE | `/:id` | Delete thread and all replies |
 | GET | `/:id/replies` | Get thread replies (paginated) |
 | POST | `/:id/replies` | Add reply to thread |
+| PATCH | `/:id/replies/:replyId` | Edit a thread reply |
+| DELETE | `/:id/replies/:replyId` | Delete a thread reply |
+| POST | `/:id/replies/:replyId/reactions` | Add reaction to reply |
+| DELETE | `/:id/replies/:replyId/reactions/:emoji` | Remove reaction from reply |
 | POST | `/:id/follow` | Follow/unfollow thread |
 | POST | `/:id/read` | Mark thread as read |
 
+**📖 See:** [API.md](API.md#-threads) for complete request/response examples.
+
 ### WebSocket Events
-
-#### Client → Server
-
-- `thread:create` - Create a thread from a message
-- `thread:reply` - Add a reply to a thread
-- `thread:updated` - Update thread metadata
-- `thread:deleted` - Delete a thread
-- `thread:follow` - Follow/unfollow a thread
-- `thread:read` - Mark thread as read
 
 #### Server → Client
 
-- `thread:created` - Broadcast when thread is created
-- `thread:reply` - Broadcast when new reply is added
-- `thread:updated` - Broadcast when thread metadata changes
-- `thread:deleted` - Broadcast when thread is deleted
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `thread:created` | `{ thread }` | Broadcast when thread is created |
+| `thread:reply` | `{ threadId, reply }` | Broadcast when new reply is added |
+| `thread:reply:edited` | `{ threadId, replyId, content, userId }` | Broadcast when reply is edited |
+| `thread:reply:deleted` | `{ threadId, replyId }` | Broadcast when reply is deleted |
+| `thread:reply:reaction` | `{ threadId, replyId, emoji, action, userId }` | Broadcast when reaction is toggled |
+| `thread:updated` | `{ thread }` | Broadcast when thread metadata changes |
+| `thread:deleted` | `{ threadId }` | Broadcast when thread is deleted |
 
-## Frontend Integration
+## Frontend Architecture
 
-### 1. Add ThreadSidebar to App Layout
+### Components
 
-Import and add the ThreadSidebar component to your main App layout:
+All thread components are in `client/src/components/thread/`:
 
-```tsx
-import { ThreadSidebar } from './components/thread/ThreadSidebar';
+| Component | Description |
+|-----------|-------------|
+| `ThreadSidebar` | Main sidebar container, manages open/close state |
+| `ThreadHeader` | Thread title bar with close, follow, and info buttons |
+| `ThreadReplyList` | Scrollable list of thread replies |
+| `ThreadReplyItem` | Individual reply with reactions, edit/delete actions |
+| `ThreadReplyActions` | Hover actions for a thread reply (react, edit, delete) |
+| `ThreadComposer` | Message input for composing thread replies |
+| `ThreadInfo` | Thread metadata panel (participants, creation date) |
+| `ThreadContextMenu` | Right-click context menu for thread operations |
+| `FollowingThreadsList` | Panel showing all threads the user is following |
+| `FollowingThreadItem` | Individual item in the following threads list |
 
-function App() {
-  return (
-    <div className="app">
-      {/* Your existing layout */}
-      <MainContent />
-      
-      {/* Add thread sidebar */}
-      <ThreadSidebar />
-    </div>
-  );
+### State Management
+
+Thread state is managed by Zustand with Immer middleware (`client/src/store/thread.ts`):
+
+```typescript
+interface ThreadState {
+  threads: Record<string, Thread[]>;      // channelId -> threads[]
+  activeThreadId: string | null;
+  threadReplies: Record<string, ThreadReply[]>; // threadId -> replies[]
+  isSidebarOpen: boolean;
+  isLoading: boolean;
+  error: string | null;
 }
 ```
 
-### 2. Initialize WebSocket Listener
+**Key actions:**
+- `setThreads` / `addThread` / `updateThread` / `removeThread` - Thread CRUD
+- `openThreadSidebar` / `closeThreadSidebar` - Sidebar UI
+- `setThreadReplies` / `addThreadReply` - Reply management
+- `markThreadAsRead` / `setFollowing` - Read state and following
 
-In your socket initialization, add the thread socket hook:
+### Hooks
 
-```tsx
-import { useThreadSocket } from './hooks/useThreadSocket';
+| Hook | File | Description |
+|------|------|-------------|
+| `useThreadSocket` | `hooks/useThreadSocket.ts` | WebSocket event listeners for all thread events. Uses individual Zustand selectors to prevent unnecessary re-renders. |
+| `useThreads` | `hooks/useThreads.ts` | API functions for thread CRUD, replies, reactions, follow/unfollow. |
 
-function YourComponent() {
-  const socket = useSocket(); // Your socket instance
-  
-  // Initialize thread WebSocket listeners
-  useThreadSocket(socket);
-  
-  // ... rest of component
-}
-```
+### Integration Points
 
-### 3. Add Thread Button to Messages
+**ChannelView** (`components/ChannelView.tsx`):
+- Initializes thread socket listeners via `useThreadSocket`
+- Renders `ThreadSidebar` alongside the message list
+- Routes keyboard quick reactions (1-5) to thread replies when sidebar is open
 
-Update your message component to include thread actions:
+**MessageItem** (`components/MessageItem.tsx`):
+- Displays "X replies" thread indicator button
+- `React.memo` comparator includes `hasThread`, `threadReplyCount`, `isPinned`
 
-```tsx
-import { useThreadStore } from './store/thread';
-import { createThread } from './hooks/useThreads';
+**MessageListDisplay** (`components/channel/MessageListDisplay.tsx`):
+- Thread start/view handlers for messages
+- Uses individual Zustand selectors for thread state
 
-function MessageComponent({ message }) {
-  const openThreadSidebar = useThreadStore((state) => state.openThreadSidebar);
-  
-  const handleStartThread = async () => {
-    try {
-      // Check if thread already exists
-      const existingThread = await getThreadByMessageId(message.id);
-      
-      if (existingThread) {
-        // Open existing thread
-        openThreadSidebar(existingThread.id);
-      } else {
-        // Create new thread
-        const thread = await createThread(message.id);
-        openThreadSidebar(thread.id);
-      }
-    } catch (err) {
-      console.error('Failed to start thread:', err);
-    }
-  };
-  
-  return (
-    <MessageActions
-      messageId={message.id}
-      onStartThread={handleStartThread}
-      hasThread={message.threadId != null}
-      threadReplyCount={message.thread?.replyCount || 0}
-      // ... other props
-    />
-  );
-}
-```
+**Socket Service** (`services/socket/index.ts`):
+- `toggleReaction` uses `queueOrExecute` for reliability during reconnections
 
-### 4. Load Threads for Channel
-
-In your channel view, fetch and display threads:
-
-```tsx
-import { useThreads } from './hooks/useThreads';
-
-function ChannelView({ channelId }) {
-  const { threads, loading, error } = useThreads(channelId);
-  
-  // Threads are automatically synced via WebSocket
-  // You can display thread count or active threads UI here
-  
-  return (
-    <div>
-      {/* Your channel content */}
-      
-      {threads.length > 0 && (
-        <div className="thread-indicator">
-          {threads.length} active threads
-        </div>
-      )}
-    </div>
-  );
-}
-```
+**Message Handlers** (`services/socket/handlers/messageHandlers.ts`):
+- Filters `message:new` events by `parentId` to separate channel messages from thread replies
 
 ## Database Schema
 
@@ -199,15 +171,23 @@ model ThreadParticipant {
 }
 ```
 
-## State Management
+## Performance Considerations
 
-The thread store (Zustand) manages:
+### Optimistic Updates
+- Thread reply reactions use an optimistic-first pattern: UI updates immediately, API call happens in background, rollback on error
+- This prevents the "double reaction" bug where both optimistic update and socket event would increment
 
-- Thread list per channel
-- Active thread (sidebar state)
-- Thread replies
-- Unread counts
-- Loading/error states
+### Zustand Selectors
+- `useThreadSocket` and `MessageListDisplay` use individual Zustand selectors (e.g., `useThreadStore(s => s.addThread)`) instead of subscribing to the entire store
+- This prevents cascading re-renders when thread state changes
+
+### Socket Reliability
+- `toggleReaction` uses `queueOrExecute` to queue events during socket reconnection windows
+- Thread reply reactions validate `response.ok` before processing
+
+### Memoization
+- `channelMessages` in `ChannelView` is memoized with `useMemo` to prevent recalculation on unrelated re-renders
+- `MessageItem` uses `React.memo` with a custom `areEqual` comparator that includes `hasThread`, `threadReplyCount`, and `isPinned`
 
 ## Testing
 
@@ -255,15 +235,13 @@ curl -X POST http://localhost:3001/api/v1/threads/THREAD_ID/replies \
   -d '{"content": "My reply"}'
 ```
 
-## Next Steps
+## Possible Future Enhancements
 
-- [ ] Add thread indicators in message list UI
-- [ ] Add "Threads" tab/panel to show all active threads
-- [ ] Add thread notifications to notification center
-- [ ] Add thread search functionality
-- [ ] Add thread archiving/resolving
-- [ ] Add thread moderator controls (lock, delete)
-- [ ] Add thread analytics (most active threads, etc.)
+- [ ] Thread search functionality
+- [ ] Thread archiving/resolving status
+- [ ] Thread analytics (most active threads, etc.)
+- [ ] Thread notifications in notification center panel
+- [ ] Thread mentions (@user in thread replies)
 
 ## Migration
 
@@ -277,7 +255,15 @@ The database migration `20260225145838_add_thread_support` has been applied and 
 ## Notes
 
 - Threads are channel-specific (DMs don't support threads)
-- Thread replies use the existing `Message.parentId` field
+- Thread replies use the existing `Message.parentId` field pointing to the root message
 - Thread metadata is tracked separately in the Thread table
 - Following a thread automatically happens when you reply
 - Unread counts are calculated based on `ThreadParticipant.lastReadAt`
+- Deleting a thread cascades: all reply messages, their reactions, and attachments are cleaned up
+- Thread reply reactions are handled via dedicated endpoints (not the regular message reaction endpoints)
+
+## See Also
+
+- [API Documentation](API.md#-threads) - Complete REST API reference
+- [Architecture](ARCHITECTURE.md) - WebSocket-first design
+- [Features](FEATURES.md#-threads) - Feature overview
