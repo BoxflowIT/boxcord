@@ -722,8 +722,13 @@ export function setupSocketHandlers(
     // Create thread from message
     socket.on(
       SOCKET_EVENTS.THREAD_CREATE,
-      async (data: { messageId: string; title?: string }) => {
+      async (data: { messageId: string; title: string }) => {
         try {
+          if (!data.title?.trim()) {
+            app.log.warn('[THREAD_CREATE] Missing required title');
+            return;
+          }
+
           const thread = await threadService.createThread(
             {
               messageId: data.messageId,
@@ -744,7 +749,7 @@ export function setupSocketHandlers(
             );
             io.to(`channel:${message.channelId}`).emit(
               SOCKET_EVENTS.THREAD_CREATED,
-              thread
+              { thread }
             );
           }
         } catch (err) {
@@ -822,6 +827,65 @@ export function setupSocketHandlers(
                 }
               );
             });
+
+            // Check for mentions in thread replies and send push notifications
+            const mentions = extractMentions(data.content);
+            if (mentions.length > 0) {
+              const threadForMention = await prisma.thread.findUnique({
+                where: { id: data.threadId },
+                select: { title: true, channelId: true }
+              });
+
+              const author = await prisma.user.findUnique({
+                where: { id: userId },
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  email: true
+                }
+              });
+
+              if (threadForMention && author) {
+                const authorName =
+                  author.firstName && author.lastName
+                    ? `${author.firstName} ${author.lastName}`
+                    : author.email;
+
+                const mentionedUsers = await prisma.user.findMany({
+                  where: { email: { in: mentions } },
+                  select: { id: true, email: true }
+                });
+
+                for (const mentionedUser of mentionedUsers) {
+                  if (mentionedUser.id !== userId) {
+                    try {
+                      // Send push notification
+                      await pushService.notifyMention(
+                        mentionedUser.id,
+                        authorName,
+                        threadForMention.title || 'Thread',
+                        threadForMention.channelId,
+                        data.content
+                      );
+
+                      // Also emit a thread mention event for the notification panel
+                      io.to(`user:${mentionedUser.id}`).emit(
+                        SOCKET_EVENTS.THREAD_REPLY,
+                        {
+                          threadId: data.threadId,
+                          reply,
+                          mentionedUserId: mentionedUser.id
+                        }
+                      );
+                    } catch (pushErr) {
+                      app.log.error(
+                        `Failed to send thread mention notification: ${pushErr instanceof Error ? pushErr.message : String(pushErr)}`
+                      );
+                    }
+                  }
+                }
+              }
+            }
           }
         } catch (err) {
           socket.emit('error', { message: (err as Error).message });
@@ -829,20 +893,24 @@ export function setupSocketHandlers(
       }
     );
 
-    // Update thread (title or lock status)
+    // Update thread (title, lock, archive, resolve status)
     socket.on(
       SOCKET_EVENTS.THREAD_UPDATED,
       async (data: {
         threadId: string;
         title?: string;
         isLocked?: boolean;
+        isArchived?: boolean;
+        isResolved?: boolean;
       }) => {
         try {
           const thread = await threadService.updateThread(
             data.threadId,
             {
               title: data.title,
-              isLocked: data.isLocked
+              isLocked: data.isLocked,
+              isArchived: data.isArchived,
+              isResolved: data.isResolved
             },
             userId
           );
@@ -859,7 +927,7 @@ export function setupSocketHandlers(
             );
             io.to(`channel:${fullThread.channelId}`).emit(
               SOCKET_EVENTS.THREAD_UPDATED,
-              thread
+              { thread }
             );
           }
         } catch (err) {

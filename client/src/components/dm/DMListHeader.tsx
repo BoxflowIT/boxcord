@@ -1,12 +1,16 @@
 // DM List Header Component
 import { useTranslation } from 'react-i18next';
-import { PlusIcon } from '../ui/Icons';
+import { PlusIcon, CloseIcon } from '../ui/Icons';
 
 interface DMListHeaderProps {
-  onNewDM: () => void;
+  isSearchOpen: boolean;
+  onToggleSearch: () => void;
 }
 
-export default function DMListHeader({ onNewDM }: DMListHeaderProps) {
+export default function DMListHeader({
+  isSearchOpen,
+  onToggleSearch
+}: DMListHeaderProps) {
   const { t } = useTranslation();
   return (
     <div className="px-3 py-2 flex items-center justify-between flex-shrink-0">
@@ -14,11 +18,11 @@ export default function DMListHeader({ onNewDM }: DMListHeaderProps) {
         {t('dm.title')}
       </span>
       <button
-        onClick={onNewDM}
+        onClick={onToggleSearch}
         className="text-gray-400 hover:text-white"
-        title={t('dm.newMessage')}
+        title={isSearchOpen ? t('common.close') : t('dm.newMessage')}
       >
-        <PlusIcon size="sm" />
+        {isSearchOpen ? <CloseIcon size="sm" /> : <PlusIcon size="sm" />}
       </button>
     </div>
   );

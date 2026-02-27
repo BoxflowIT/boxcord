@@ -938,3 +938,60 @@ export function ThreadIcon({ size = 'md', className }: IconProps) {
     </svg>
   );
 }
+
+// Bell icon (for notifications)
+export function BellIcon({ size = 'md', className }: IconProps) {
+  return (
+    <svg
+      className={getClass(size, className)}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+      />
+    </svg>
+  );
+}
+
+// Archive box icon
+export function ArchiveIcon({ size = 'md', className }: IconProps) {
+  return (
+    <svg
+      className={getClass(size, className)}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+      />
+    </svg>
+  );
+}
+
+// Checkmark circle icon (for resolved)
+export function CheckCircleIcon({ size = 'md', className }: IconProps) {
+  return (
+    <svg
+      className={getClass(size, className)}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    </svg>
+  );
+}

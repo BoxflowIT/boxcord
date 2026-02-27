@@ -12,6 +12,7 @@ import { getUserDisplayName, getUserInitials } from '../../utils/user';
 import { logger } from '../../utils/logger';
 import { useThreadStore } from '../../store/thread';
 import { createThread, getThreadByMessageId } from '../../hooks/useThreads';
+import { CreateThreadModal } from '../thread/CreateThreadModal';
 
 interface Message {
   id: string;
@@ -92,6 +93,11 @@ export default function MessageListDisplay({
     content: string;
   } | null>(null);
 
+  // Create thread modal state
+  const [createThreadMessageId, setCreateThreadMessageId] = useState<
+    string | null
+  >(null);
+
   const handleForward = async (
     targetId: string,
     targetType: 'channel' | 'dm'
@@ -124,23 +130,9 @@ export default function MessageListDisplay({
         // Open existing thread
         openThreadSidebar(existingThread.id);
       } else {
-        // Try to create new thread
-        try {
-          const newThread = await createThread(messageId);
-          useThreadStore.getState().addThread(newThread);
-          openThreadSidebar(newThread.id);
-        } catch (createError: any) {
-          // If message already has a thread (not in local store), fetch and open it
-          if (createError?.message?.includes('already has a thread')) {
-            const serverThread = await getThreadByMessageId(messageId);
-            if (serverThread) {
-              useThreadStore.getState().addThread(serverThread);
-              openThreadSidebar(serverThread.id);
-              return;
-            }
-          }
-          throw createError;
-        }
+        // Show create thread modal for title input
+        setCreateThreadMessageId(messageId);
+        return;
       }
     } catch (error) {
       logger.error('Failed to start thread:', error);
@@ -156,6 +148,31 @@ export default function MessageListDisplay({
       hasThread: !!thread,
       threadReplyCount: thread?.replyCount || 0
     };
+  };
+
+  // Handle creating a thread with title from modal
+  const handleCreateThread = async (title: string) => {
+    if (!createThreadMessageId) return;
+    const messageId = createThreadMessageId;
+
+    try {
+      const newThread = await createThread(messageId, title);
+      useThreadStore.getState().addThread(newThread);
+      setCreateThreadMessageId(null);
+      openThreadSidebar(newThread.id);
+    } catch (createError: any) {
+      // If message already has a thread (not in local store), fetch and open it
+      if (createError?.message?.includes('already has a thread')) {
+        const serverThread = await getThreadByMessageId(messageId);
+        if (serverThread) {
+          useThreadStore.getState().addThread(serverThread);
+          setCreateThreadMessageId(null);
+          openThreadSidebar(serverThread.id);
+          return;
+        }
+      }
+      throw createError;
+    }
   };
 
   if (loading) {
@@ -242,6 +259,13 @@ export default function MessageListDisplay({
             onClose={() => setForwardingMessage(null)}
           />
         )}
+
+        {/* Create Thread Modal */}
+        <CreateThreadModal
+          isOpen={!!createThreadMessageId}
+          onClose={() => setCreateThreadMessageId(null)}
+          onCreate={handleCreateThread}
+        />
       </div>
     </div>
   );

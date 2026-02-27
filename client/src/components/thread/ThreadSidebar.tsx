@@ -136,6 +136,46 @@ export function ThreadSidebar() {
     }
   };
 
+  // Handler: Toggle archive
+  const handleToggleArchive = async () => {
+    if (!activeThread) return;
+    const newArchived = !activeThread.isArchived;
+    try {
+      const updated = await updateThread(activeThread.id, {
+        isArchived: newArchived
+      });
+      updateThreadInStore(activeThread.id, updated);
+      toast.success(
+        newArchived
+          ? t('threads.archivedSuccess')
+          : t('threads.unarchivedSuccess')
+      );
+    } catch (err) {
+      console.error('Failed to toggle archive:', err);
+      toast.error(t('threads.archiveFailed'));
+    }
+  };
+
+  // Handler: Toggle resolve
+  const handleToggleResolve = async () => {
+    if (!activeThread) return;
+    const newResolved = !activeThread.isResolved;
+    try {
+      const updated = await updateThread(activeThread.id, {
+        isResolved: newResolved
+      });
+      updateThreadInStore(activeThread.id, updated);
+      toast.success(
+        newResolved
+          ? t('threads.resolvedSuccess')
+          : t('threads.unresolvedSuccess')
+      );
+    } catch (err) {
+      console.error('Failed to toggle resolve:', err);
+      toast.error(t('threads.resolveFailed'));
+    }
+  };
+
   // Handler: Send reply
   const handleSendReply = async (content: string) => {
     if (!activeThreadId) return;
@@ -235,6 +275,12 @@ export function ThreadSidebar() {
         activeThreadId,
         replies.filter((r) => r.id !== replyId)
       );
+      // Decrement reply count
+      if (activeThread) {
+        updateThreadInStore(activeThreadId, {
+          replyCount: Math.max(0, (activeThread.replyCount || 1) - 1)
+        });
+      }
       toast.success('Reply deleted');
     } catch (error) {
       console.error('Failed to delete reply:', error);
@@ -316,7 +362,7 @@ export function ThreadSidebar() {
   if (!isSidebarOpen) return null;
 
   return (
-    <div className="fixed top-0 right-0 h-screen w-96 bg-boxflow-darkest border-l border-boxflow-border shadow-2xl flex flex-col z-50 overflow-hidden">
+    <div className="fixed top-0 right-0 h-screen w-[480px] bg-boxflow-darkest border-l border-boxflow-border shadow-2xl flex flex-col z-50 overflow-hidden">
       {/* Header */}
       <ThreadHeader
         thread={activeThread}
@@ -324,6 +370,8 @@ export function ThreadSidebar() {
         onEditTitle={handleEditTitle}
         onDelete={() => setDeleteModalOpen(true)}
         onClose={closeThreadSidebar}
+        onToggleArchive={handleToggleArchive}
+        onToggleResolve={handleToggleResolve}
       />
 
       {/* Thread info */}
@@ -362,8 +410,12 @@ export function ThreadSidebar() {
       )}
 
       {/* Reply composer */}
-      {activeThread && !activeThread.isLocked ? (
+      {activeThread && !activeThread.isLocked && !activeThread.isArchived ? (
         <ThreadComposer onSend={handleSendReply} />
+      ) : activeThread?.isArchived ? (
+        <div className="p-4 border-t border-boxflow-border bg-boxflow-darker text-center text-boxflow-muted text-sm">
+          📦 {t('threads.archivedMessage')}
+        </div>
       ) : activeThread?.isLocked ? (
         <div className="p-4 border-t border-boxflow-border bg-boxflow-darker text-center text-boxflow-muted text-sm">
           🔒 {t('threads.lockedMessage')}

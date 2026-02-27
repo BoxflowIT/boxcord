@@ -320,12 +320,12 @@ function SectionHeader({
   onAdd?: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between px-2 mb-1 mt-3 first:mt-0">
-      <span className="text-subtle uppercase font-semibold text-xs">
+    <div className="px-3 py-2 flex items-center justify-between flex-shrink-0 mt-3 first:mt-0">
+      <span className="text-xs font-semibold text-gray-400 uppercase">
         {title}
       </span>
       {onAdd && (
-        <button onClick={onAdd} className="btn-icon-primary">
+        <button onClick={onAdd} className="text-gray-400 hover:text-white">
           <PlusIcon size="sm" />
         </button>
       )}

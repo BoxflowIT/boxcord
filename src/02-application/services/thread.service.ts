@@ -18,6 +18,8 @@ export interface Thread {
   lastReplyAt: Date | null;
   lastReplyBy: string | null;
   isLocked: boolean;
+  isArchived: boolean;
+  isResolved: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -59,12 +61,14 @@ export interface ThreadWithDetails extends Thread {
 
 export interface CreateThreadInput {
   messageId: string;
-  title?: string;
+  title: string;
 }
 
 export interface UpdateThreadInput {
   title?: string;
   isLocked?: boolean;
+  isArchived?: boolean;
+  isResolved?: boolean;
 }
 
 export interface ThreadReply {
@@ -674,6 +678,83 @@ export class ThreadService {
   }
 
   /**
+   * Search threads by title or parent message content
+   */
+  async searchThreads(
+    userId: string,
+    query: string,
+    params: PaginationParams & { channelId?: string } = {}
+  ): Promise<PaginatedResult<ThreadWithDetails>> {
+    const limit = Math.min(
+      params.limit ?? PAGINATION.DEFAULT_PAGE_SIZE,
+      PAGINATION.MAX_PAGE_SIZE
+    );
+
+    // Build where clause: search title OR parent message content
+    const searchFilter = {
+      OR: [
+        { title: { contains: query, mode: 'insensitive' as const } },
+        {
+          message: {
+            content: { contains: query, mode: 'insensitive' as const }
+          }
+        }
+      ],
+      ...(params.channelId && { channelId: params.channelId })
+    };
+
+    const threads = await this.prisma.thread.findMany({
+      where: searchFilter,
+      orderBy: { lastReplyAt: 'desc' },
+      take: limit + 1,
+      ...(params.cursor && {
+        cursor: { id: params.cursor },
+        skip: 1
+      }),
+      include: {
+        message: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                avatarUrl: true
+              }
+            }
+          }
+        },
+        participants: {
+          select: {
+            userId: true,
+            lastReadAt: true,
+            notifyOnReply: true
+          }
+        }
+      }
+    });
+
+    const hasMore = threads.length > limit;
+    const items = hasMore ? threads.slice(0, -1) : threads;
+
+    const itemsWithMeta = items.map((thread) => {
+      const participant = thread.participants.find((p) => p.userId === userId);
+      return {
+        ...thread,
+        isFollowing: !!participant,
+        unreadCount: 0 // Search results don't need unread count
+      };
+    });
+
+    return {
+      items: itemsWithMeta,
+      nextCursor: hasMore ? items[items.length - 1]?.id : undefined,
+      hasMore
+    };
+  }
+
+  /**
    * Get all threads in a channel
    */
   async getChannelThreads(
@@ -792,5 +873,150 @@ export class ThreadService {
     await this.prisma.thread.delete({
       where: { id: threadId }
     });
+  }
+
+  /**
+   * Get analytics for a single thread
+   */
+  async getThreadAnalytics(threadId: string) {
+    const thread = await this.prisma.thread.findUnique({
+      where: { id: threadId },
+      include: {
+        participants: { select: { userId: true } }
+      }
+    });
+
+    if (!thread) throw new NotFoundError('Thread not found');
+
+    // Get reply messages for detailed analytics
+    const replies = await this.prisma.message.findMany({
+      where: { parentId: thread.messageId },
+      select: { authorId: true, createdAt: true },
+      orderBy: { createdAt: 'asc' }
+    });
+
+    const now = new Date();
+    const createdAt = new Date(thread.createdAt);
+    const ageMs = now.getTime() - createdAt.getTime();
+    const ageDays = Math.max(1, Math.floor(ageMs / (1000 * 60 * 60 * 24)));
+
+    // Time to first reply
+    const firstReplyAt = replies.length > 0 ? replies[0].createdAt : null;
+    const timeToFirstReplyMs = firstReplyAt
+      ? firstReplyAt.getTime() - createdAt.getTime()
+      : null;
+
+    // Time since last activity
+    const lastActivity = thread.lastReplyAt || createdAt;
+    const timeSinceLastActivityMs = now.getTime() - lastActivity.getTime();
+
+    // Most active participants
+    const participantReplyCounts: Record<string, number> = {};
+    for (const reply of replies) {
+      participantReplyCounts[reply.authorId] =
+        (participantReplyCounts[reply.authorId] || 0) + 1;
+    }
+    const topParticipants = Object.entries(participantReplyCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([userId, count]) => ({ userId, replyCount: count }));
+
+    return {
+      threadId: thread.id,
+      replyCount: thread.replyCount,
+      participantCount: thread.participantCount,
+      ageDays,
+      repliesPerDay: Number((thread.replyCount / ageDays).toFixed(1)),
+      timeToFirstReplyMs,
+      timeSinceLastActivityMs,
+      isStale:
+        timeSinceLastActivityMs > 7 * 24 * 60 * 60 * 1000 &&
+        !thread.isResolved &&
+        !thread.isArchived,
+      topParticipants
+    };
+  }
+
+  /**
+   * Get channel-level thread analytics
+   */
+  async getChannelThreadAnalytics(channelId: string) {
+    const threads = await this.prisma.thread.findMany({
+      where: { channelId },
+      select: {
+        id: true,
+        replyCount: true,
+        participantCount: true,
+        lastReplyAt: true,
+        isLocked: true,
+        isArchived: true,
+        isResolved: true,
+        createdAt: true,
+        title: true
+      }
+    });
+
+    const totalThreads = threads.length;
+    if (totalThreads === 0) {
+      return {
+        totalThreads: 0,
+        activeThreads: 0,
+        resolvedThreads: 0,
+        archivedThreads: 0,
+        lockedThreads: 0,
+        totalReplies: 0,
+        averageRepliesPerThread: 0,
+        averageParticipantsPerThread: 0,
+        mostActiveThreads: [],
+        staleThreads: []
+      };
+    }
+
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const resolvedThreads = threads.filter((t) => t.isResolved).length;
+    const archivedThreads = threads.filter((t) => t.isArchived).length;
+    const lockedThreads = threads.filter((t) => t.isLocked).length;
+    const activeThreads = threads.filter(
+      (t) =>
+        !t.isArchived &&
+        !t.isResolved &&
+        t.lastReplyAt &&
+        new Date(t.lastReplyAt) > sevenDaysAgo
+    ).length;
+
+    const totalReplies = threads.reduce((sum, t) => sum + t.replyCount, 0);
+    const totalParticipants = threads.reduce(
+      (sum, t) => sum + t.participantCount,
+      0
+    );
+
+    const mostActiveThreads = [...threads]
+      .sort((a, b) => b.replyCount - a.replyCount)
+      .slice(0, 5)
+      .map((t) => ({ id: t.id, title: t.title, replyCount: t.replyCount }));
+
+    const staleThreads = threads.filter(
+      (t) =>
+        !t.isArchived &&
+        !t.isResolved &&
+        (!t.lastReplyAt || new Date(t.lastReplyAt) < sevenDaysAgo)
+    ).length;
+
+    return {
+      totalThreads,
+      activeThreads,
+      resolvedThreads,
+      archivedThreads,
+      lockedThreads,
+      totalReplies,
+      averageRepliesPerThread: Number((totalReplies / totalThreads).toFixed(1)),
+      averageParticipantsPerThread: Number(
+        (totalParticipants / totalThreads).toFixed(1)
+      ),
+      mostActiveThreads,
+      staleThreads
+    };
   }
 }

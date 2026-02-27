@@ -3,19 +3,34 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { prisma } from '../../../03-infrastructure/database/client.js';
 import { ThreadService } from '../../../02-application/services/thread.service.js';
+import { PushService } from '../../../02-application/services/push.service.js';
 import { SOCKET_EVENTS } from '../../../00-core/constants.js';
 
 const threadService = new ThreadService(prisma);
+const pushService = new PushService(prisma);
+
+// Extract mentions from content (@user@domain.com)
+function extractMentions(content: string): string[] {
+  const mentionRegex = /@([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+  const mentions: string[] = [];
+  let match;
+  while ((match = mentionRegex.exec(content)) !== null) {
+    mentions.push(match[1]);
+  }
+  return mentions;
+}
 
 // Schemas
 const createThreadSchema = z.object({
   messageId: z.string().uuid(),
-  title: z.string().min(1).max(100).optional()
+  title: z.string().min(1).max(100)
 });
 
 const updateThreadSchema = z.object({
   title: z.string().min(1).max(100).optional(),
-  isLocked: z.boolean().optional()
+  isLocked: z.boolean().optional(),
+  isArchived: z.boolean().optional(),
+  isResolved: z.boolean().optional()
 });
 
 const addReplySchema = z.object({
@@ -47,6 +62,13 @@ const getRepliesQuery = z.object({
   limit: z.coerce.number().int().min(1).max(100).optional()
 });
 
+const searchThreadsQuery = z.object({
+  q: z.string().min(2).max(200),
+  channelId: z.string().min(1).optional(),
+  cursor: z.string().uuid().optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional()
+});
+
 export async function threadRoutes(app: FastifyInstance) {
   // All routes require authentication
   app.addHook('onRequest', async (request) => {
@@ -73,6 +95,59 @@ export async function threadRoutes(app: FastifyInstance) {
 
       reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
       return { success: true, data: result };
+    }
+  );
+
+  // Search threads by title or message content
+  app.get<{
+    Querystring: z.infer<typeof searchThreadsQuery>;
+  }>(
+    '/search',
+    {
+      config: {
+        rateLimit: {
+          max: 30,
+          timeWindow: '1 minute'
+        }
+      },
+      preHandler: app.validateQuery(searchThreadsQuery)
+    },
+    async (request, reply) => {
+      const { q, channelId, cursor, limit } = request.query;
+
+      const result = await threadService.searchThreads(request.user.id, q, {
+        channelId,
+        cursor,
+        limit
+      });
+
+      reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return { success: true, data: result };
+    }
+  );
+
+  // Get analytics for a specific thread
+  app.get<{
+    Params: { id: string };
+  }>('/:id/analytics', async (request) => {
+    const analytics = await threadService.getThreadAnalytics(request.params.id);
+    return { success: true, data: analytics };
+  });
+
+  // Get channel-level thread analytics
+  app.get<{
+    Querystring: { channelId: string };
+  }>(
+    '/analytics',
+    {
+      preHandler: app.validateQuery(z.object({ channelId: z.string().min(1) }))
+    },
+    async (request, reply) => {
+      const analytics = await threadService.getChannelThreadAnalytics(
+        request.query.channelId
+      );
+      reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return { success: true, data: analytics };
     }
   );
 
@@ -273,6 +348,48 @@ export async function threadRoutes(app: FastifyInstance) {
               reply: reply_message
             }
           );
+        }
+      }
+
+      // Handle mentions in thread reply
+      const mentions = extractMentions(request.body.content);
+      if (mentions.length > 0) {
+        const threadForMention = await prisma.thread.findUnique({
+          where: { id: request.params.id },
+          select: { title: true, channelId: true }
+        });
+
+        const author = await prisma.user.findUnique({
+          where: { id: request.user.id },
+          select: { firstName: true, lastName: true, email: true }
+        });
+
+        if (threadForMention && author) {
+          const authorName =
+            author.firstName && author.lastName
+              ? `${author.firstName} ${author.lastName}`
+              : author.email;
+
+          const mentionedUsers = await prisma.user.findMany({
+            where: { email: { in: mentions } },
+            select: { id: true }
+          });
+
+          for (const mentionedUser of mentionedUsers) {
+            if (mentionedUser.id !== request.user.id) {
+              try {
+                await pushService.notifyMention(
+                  mentionedUser.id,
+                  authorName,
+                  threadForMention.title || 'Thread',
+                  threadForMention.channelId,
+                  request.body.content
+                );
+              } catch {
+                // Push notification failure is non-critical
+              }
+            }
+          }
         }
       }
 
