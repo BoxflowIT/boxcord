@@ -133,13 +133,23 @@ Complete list of all implemented features in Boxcord.
 - ✅ **Thread locking** - Admins/moderators can lock threads
 - ✅ **Thread deletion** - Delete threads and all replies (with proper cleanup)
 - ✅ **Following threads list** - View all threads you're following
+- ✅ **Thread archiving** - Archive completed threads (read-only)
+- ✅ **Thread resolving** - Mark threads as resolved with status badge
+- ✅ **Thread search** - Search threads by title and content
+- ✅ **Thread analytics** - Per-thread and channel-level analytics
+- ✅ **Thread notifications** - Real-time notification panel with bell icon
+- ✅ **Thread mentions** - @mention users in thread replies with push notifications
 
 ### Thread UI/UX
 - ✅ **Thread indicator** - "X replies" button on messages with threads
-- ✅ **Thread context menu** - Right-click actions for thread management
+- ✅ **Thread context menu** - Right-click actions for thread management (archive, resolve)
 - ✅ **Keyboard shortcut reactions** - Quick reactions (1-5) work in threads when sidebar is open
 - ✅ **Notification sounds** - Audio notifications for new thread replies
-- ✅ **Thread info panel** - View thread metadata and participants
+- ✅ **Thread info panel** - View thread metadata, participants, and analytics
+- ✅ **Thread title required** - CreateThreadModal dialog requires title on creation
+- ✅ **Thread notification panel** - Bell icon with unread badge and notification list
+- ✅ **Mention autocomplete** - @mention support in thread composer
+- ✅ **Archive/resolve badges** - Visual status indicators in thread list
 
 **📖 See:** [THREADS.md](THREADS.md)
 
@@ -407,6 +417,18 @@ Complete list of all implemented features in Boxcord.
 
 ## Recent Updates (February 2026)
 
+### v1.7.0 - Thread Enhancements
+- ✅ Required thread title on creation with CreateThreadModal dialog
+- ✅ Thread search with server-side API and client-side filtering
+- ✅ Thread archiving/resolving with DB migration and full UI
+- ✅ Thread analytics panel (per-thread and channel-level stats)
+- ✅ Thread notification panel with bell icon and real-time updates
+- ✅ @mention support in thread replies with push notifications
+- ✅ Wider thread sidebar (480px) for better readability
+- ✅ Unified sidebar section headers (Channels/DMs/Threads)
+- ✅ New icons: ArchiveIcon, CheckCircleIcon, BellIcon
+- ✅ Full i18n support for all new features (English + Swedish)
+
 ### v1.6.0 - Thread Support
 - ✅ Create threads from any channel message
 - ✅ Thread sidebar with replies, reactions, and file attachments
@@ -454,4 +476,4 @@ Complete list of all implemented features in Boxcord.
 
 ---
 
-**Last Updated:** February 26, 2026
+**Last Updated:** February 27, 2026

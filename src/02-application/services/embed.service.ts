@@ -1,6 +1,8 @@
 // URL Embed Service - Fetch OpenGraph and oEmbed metadata
 import * as cheerio from 'cheerio';
 import { logger } from '../../00-core/logger.js';
+import dns from 'node:dns/promises';
+import net from 'node:net';
 
 export interface EmbedData {
   url: string;
@@ -35,6 +37,70 @@ const OEMBED_PROVIDERS: Record<string, string> = {
   'reddit.com': 'https://www.reddit.com/oembed'
 };
 
+// Private/reserved IP ranges that should not be accessed (SSRF protection)
+const BLOCKED_IP_RANGES = [
+  /^127\./, // Loopback
+  /^10\./, // Private Class A
+  /^172\.(1[6-9]|2\d|3[01])\./, // Private Class B
+  /^192\.168\./, // Private Class C
+  /^169\.254\./, // Link-local (AWS metadata)
+  /^0\./, // Current network
+  /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./, // Carrier-grade NAT
+  /^::1$/, // IPv6 loopback
+  /^fc00:/, // IPv6 unique local
+  /^fe80:/, // IPv6 link-local
+  /^fd/ // IPv6 private
+];
+
+/**
+ * Check if an IP address is private/reserved (SSRF protection)
+ */
+function isPrivateIP(ip: string): boolean {
+  return BLOCKED_IP_RANGES.some((range) => range.test(ip));
+}
+
+/**
+ * Validate that a URL does not resolve to a private/internal IP address
+ * Prevents SSRF attacks (e.g., accessing AWS metadata at 169.254.169.254)
+ */
+async function validateUrlNotInternal(url: string): Promise<boolean> {
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname;
+
+    // Direct IP check
+    if (net.isIP(hostname)) {
+      if (isPrivateIP(hostname)) {
+        logger.warn(`SSRF blocked: direct private IP ${hostname}`);
+        return false;
+      }
+      return true;
+    }
+
+    // DNS resolution check
+    const addresses = await dns.resolve4(hostname).catch(() => []);
+    const addresses6 = await dns.resolve6(hostname).catch(() => []);
+    const allAddresses = [...addresses, ...addresses6];
+
+    if (allAddresses.length === 0) {
+      logger.warn(`SSRF blocked: could not resolve ${hostname}`);
+      return false;
+    }
+
+    for (const ip of allAddresses) {
+      if (isPrivateIP(ip)) {
+        logger.warn(`SSRF blocked: ${hostname} resolves to private IP ${ip}`);
+        return false;
+      }
+    }
+
+    return true;
+  } catch {
+    logger.warn(`SSRF validation failed for URL: ${url}`);
+    return false;
+  }
+}
+
 /**
  * Check if URL is from a supported oEmbed provider
  */
@@ -62,7 +128,12 @@ async function fetchOEmbed(url: string): Promise<EmbedData | null> {
   if (!endpoint) return null;
 
   try {
+    // SSRF protection: validate oEmbed endpoint doesn't resolve to private IP
     const oembedUrl = `${endpoint}?url=${encodeURIComponent(url)}&format=json`;
+    if (!(await validateUrlNotInternal(oembedUrl))) {
+      return null;
+    }
+
     const response = await fetch(oembedUrl, {
       headers: {
         'User-Agent':
@@ -170,6 +241,11 @@ export async function fetchUrlMetadata(url: string): Promise<EmbedData | null> {
     // Validate URL
     const urlObj = new URL(url);
     if (!['http:', 'https:'].includes(urlObj.protocol)) {
+      return null;
+    }
+
+    // SSRF protection: validate URL doesn't resolve to private/internal IP
+    if (!(await validateUrlNotInternal(url))) {
       return null;
     }
 

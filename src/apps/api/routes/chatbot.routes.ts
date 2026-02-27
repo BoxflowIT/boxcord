@@ -17,7 +17,7 @@ export async function chatbotRoutes(app: FastifyInstance) {
   });
 
   // Get list of available commands
-  app.get('/commands', async () => {
+  app.get('/commands', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async () => {
     const commands = chatbotService.getCommands().map((cmd) => ({
       name: cmd.name,
       description: cmd.description,

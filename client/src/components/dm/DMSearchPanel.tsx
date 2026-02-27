@@ -1,6 +1,5 @@
 // DM Search Panel Component
 import { useTranslation } from 'react-i18next';
-import { CloseIcon } from '../ui/Icons';
 import Avatar from '../ui/Avatar';
 
 interface UserInfo {
@@ -15,15 +14,13 @@ interface DMSearchPanelProps {
   searchResults: UserInfo[];
   onSearchChange: (query: string) => void;
   onSelectUser: (user: UserInfo) => void;
-  onClose: () => void;
 }
 
 export default function DMSearchPanel({
   searchQuery,
   searchResults,
   onSearchChange,
-  onSelectUser,
-  onClose
+  onSelectUser
 }: DMSearchPanelProps) {
   const { t } = useTranslation();
   return (
@@ -37,13 +34,6 @@ export default function DMSearchPanel({
           className="input-base text-sm flex-1"
           autoFocus
         />
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-white p-1"
-          title={t('common.close')}
-        >
-          <CloseIcon size="sm" />
-        </button>
       </div>
       {searchResults.length > 0 && (
         <div className="mt-1 max-h-40 overflow-y-auto">

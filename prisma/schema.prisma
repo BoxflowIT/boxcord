@@ -228,6 +228,8 @@ model Thread {
     lastReplyAt      DateTime? @map("last_reply_at")
     lastReplyBy      String?   @map("last_reply_by") // User ID of last replier
     isLocked         Boolean   @default(false) @map("is_locked") // Prevent new replies
+    isArchived       Boolean   @default(false) @map("is_archived") // Archived threads are read-only and hidden from main view
+    isResolved       Boolean   @default(false) @map("is_resolved") // Resolved threads are marked as completed
     createdAt        DateTime  @default(now()) @map("created_at")
     updatedAt        DateTime  @updatedAt @map("updated_at")
 

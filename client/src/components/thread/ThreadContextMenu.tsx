@@ -1,14 +1,25 @@
 // Thread Context Menu - Right-click menu for thread actions
 import { useRef, useEffect } from 'react';
-import { ThreadIcon, EditIcon, TrashIcon } from '../ui/Icons';
+import { useTranslation } from 'react-i18next';
+import {
+  ThreadIcon,
+  EditIcon,
+  TrashIcon,
+  ArchiveIcon,
+  CheckCircleIcon
+} from '../ui/Icons';
 
 interface ThreadContextMenuProps {
   x: number;
   y: number;
   isOwner: boolean;
+  isArchived?: boolean;
+  isResolved?: boolean;
   onEditTitle: () => void;
   onMarkAsRead: () => void;
   onUnfollow: () => void;
+  onToggleArchive?: () => void;
+  onToggleResolve?: () => void;
   onDelete: () => void;
   onClose: () => void;
 }
@@ -17,12 +28,17 @@ export function ThreadContextMenu({
   x,
   y,
   isOwner,
+  isArchived = false,
+  isResolved = false,
   onEditTitle,
   onMarkAsRead,
   onUnfollow,
+  onToggleArchive,
+  onToggleResolve,
   onDelete,
   onClose
 }: ThreadContextMenuProps) {
+  const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close on outside click
@@ -92,6 +108,37 @@ export function ThreadContextMenu({
       </button>
       {isOwner && (
         <>
+          <div className="h-px bg-gray-700 my-1" />
+          <button
+            onClick={() => {
+              onToggleResolve?.();
+              onClose();
+            }}
+            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+          >
+            <CheckCircleIcon
+              size="sm"
+              className={isResolved ? 'text-green-400' : undefined}
+            />
+            <span>
+              {isResolved ? t('threads.unresolve') : t('threads.resolve')}
+            </span>
+          </button>
+          <button
+            onClick={() => {
+              onToggleArchive?.();
+              onClose();
+            }}
+            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+          >
+            <ArchiveIcon
+              size="sm"
+              className={isArchived ? 'text-yellow-400' : undefined}
+            />
+            <span>
+              {isArchived ? t('threads.unarchive') : t('threads.archive')}
+            </span>
+          </button>
           <div className="h-px bg-gray-700 my-1" />
           <button
             onClick={() => {

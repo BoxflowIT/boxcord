@@ -14,6 +14,7 @@ export function useThreadSocket(socket: Socket | null) {
   const removeThread = useThreadStore((s) => s.removeThread);
   const addThreadReply = useThreadStore((s) => s.addThreadReply);
   const setThreadReplies = useThreadStore((s) => s.setThreadReplies);
+  const addThreadNotification = useThreadStore((s) => s.addThreadNotification);
 
   useEffect(() => {
     if (!socket) return;
@@ -28,12 +29,14 @@ export function useThreadSocket(socket: Socket | null) {
     const handleThreadReply = (data: {
       threadId: string;
       reply: ThreadReply;
+      mentionedUserId?: string;
     }) => {
       console.log('[Thread Socket] Thread reply:', data);
       addThreadReply(data.threadId, data.reply);
 
       // Check if this is from another user and thread is not active
       const currentUserId = useAuthStore.getState().user?.id;
+      const currentUserEmail = useAuthStore.getState().user?.email;
       const activeThreadId = useThreadStore.getState().activeThreadId;
       const isFromOtherUser = data.reply.authorId !== currentUserId;
       const isNotActiveThread = activeThreadId !== data.threadId;
@@ -42,10 +45,65 @@ export function useThreadSocket(socket: Socket | null) {
         // Play notification sound
         playMessageNotification();
 
+        // Create thread notification for replies on followed threads
+        const threads = useThreadStore.getState().threads;
+        let threadTitle: string | null = null;
+        let isFollowing = false;
+        for (const channelId in threads) {
+          const thread = threads[channelId]?.find(
+            (t) => t.id === data.threadId
+          );
+          if (thread) {
+            threadTitle = thread.title;
+            isFollowing = !!thread.isFollowing;
+            break;
+          }
+        }
+
+        // Check if user was mentioned in this reply
+        const isMentioned =
+          data.mentionedUserId === currentUserId ||
+          (currentUserEmail &&
+            data.reply.content.includes(`@${currentUserEmail}`));
+
+        if (isMentioned) {
+          addThreadNotification({
+            id: `mention-${data.reply.id}`,
+            type: 'mention',
+            threadId: data.threadId,
+            threadTitle,
+            actorId: data.reply.authorId,
+            actorName:
+              data.reply.author?.firstName ||
+              data.reply.author?.email ||
+              'Unknown',
+            message:
+              data.reply.content.slice(0, 100) +
+              (data.reply.content.length > 100 ? '...' : ''),
+            createdAt: data.reply.createdAt,
+            read: false
+          });
+        } else if (isFollowing) {
+          addThreadNotification({
+            id: `reply-${data.reply.id}`,
+            type: 'reply',
+            threadId: data.threadId,
+            threadTitle,
+            actorId: data.reply.authorId,
+            actorName:
+              data.reply.author?.firstName ||
+              data.reply.author?.email ||
+              'Unknown',
+            message:
+              data.reply.content.slice(0, 100) +
+              (data.reply.content.length > 100 ? '...' : ''),
+            createdAt: data.reply.createdAt,
+            read: false
+          });
+        }
+
         // Increment unread count if thread is not currently open
         if (isNotActiveThread) {
-          const threads = useThreadStore.getState().threads;
-          // Find the thread in all channels
           for (const channelId in threads) {
             const thread = threads[channelId]?.find(
               (t) => t.id === data.threadId
@@ -91,6 +149,18 @@ export function useThreadSocket(socket: Socket | null) {
         (reply) => reply.id !== data.replyId
       );
       setThreadReplies(data.threadId, updatedReplies);
+
+      // Decrement thread reply count in the thread list
+      const threads = useThreadStore.getState().threads;
+      for (const channelId in threads) {
+        const thread = threads[channelId]?.find((t) => t.id === data.threadId);
+        if (thread) {
+          updateThread(data.threadId, {
+            replyCount: Math.max(0, (thread.replyCount || 1) - 1)
+          });
+          break;
+        }
+      }
     };
 
     // Thread reply reaction
@@ -164,6 +234,45 @@ export function useThreadSocket(socket: Socket | null) {
     // Thread updated
     const handleThreadUpdated = (data: { thread: Thread }) => {
       console.log('[Thread Socket] Thread updated:', data.thread);
+
+      // Generate notification for status changes from other users
+      const currentUserId = useAuthStore.getState().user?.id;
+      const oldThreads = useThreadStore.getState().threads;
+      let oldThread: Thread | undefined;
+      for (const channelId in oldThreads) {
+        oldThread = oldThreads[channelId]?.find((t) => t.id === data.thread.id);
+        if (oldThread) break;
+      }
+
+      if (oldThread && currentUserId) {
+        // Resolved status changed
+        if (data.thread.isResolved && !oldThread.isResolved) {
+          addThreadNotification({
+            id: `resolved-${data.thread.id}-${Date.now()}`,
+            type: 'resolved',
+            threadId: data.thread.id,
+            threadTitle: data.thread.title,
+            actorId: '',
+            actorName: '',
+            createdAt: new Date().toISOString(),
+            read: false
+          });
+        }
+        // Archived status changed
+        if (data.thread.isArchived && !oldThread.isArchived) {
+          addThreadNotification({
+            id: `archived-${data.thread.id}-${Date.now()}`,
+            type: 'archived',
+            threadId: data.thread.id,
+            threadTitle: data.thread.title,
+            actorId: '',
+            actorName: '',
+            createdAt: new Date().toISOString(),
+            read: false
+          });
+        }
+      }
+
       updateThread(data.thread.id, data.thread);
     };
 
@@ -198,6 +307,7 @@ export function useThreadSocket(socket: Socket | null) {
     updateThread,
     removeThread,
     addThreadReply,
-    setThreadReplies
+    setThreadReplies,
+    addThreadNotification
   ]);
 }

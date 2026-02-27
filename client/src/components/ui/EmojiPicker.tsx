@@ -33,13 +33,16 @@ export default function EmojiPicker({
   // Use external state if provided, otherwise internal
   const [internalShowPicker, setInternalShowPicker] = useState(false);
   const showPicker = externalShowPicker ?? internalShowPicker;
-  const setShowPicker = (show: boolean) => {
-    if (onTogglePicker) {
-      onTogglePicker(show);
-    } else {
-      setInternalShowPicker(show);
-    }
-  };
+  const setShowPicker = useCallback(
+    (show: boolean) => {
+      if (onTogglePicker) {
+        onTogglePicker(show);
+      } else {
+        setInternalShowPicker(show);
+      }
+    },
+    [onTogglePicker]
+  );
   const [activeTab, setActiveTab] = useState<TabType>('emojis');
   const [searchTerm, setSearchTerm] = useState('');
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -103,7 +106,7 @@ export default function EmojiPicker({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showPicker]);
+  }, [showPicker, setShowPicker]);
 
   // Close on Escape
   useEffect(() => {
@@ -117,7 +120,7 @@ export default function EmojiPicker({
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [showPicker]);
+  }, [showPicker, setShowPicker]);
 
   const handleEmojiClick = (emojiData: EmojiClickData) => {
     onEmojiSelect(emojiData.emoji);

@@ -12,7 +12,7 @@ export async function inviteRoutes(app: FastifyInstance) {
   });
 
   // Preview invite (get workspace info without joining)
-  app.get<{ Params: { code: string } }>('/:code', async (request, reply) => {
+  app.get<{ Params: { code: string } }>('/:code', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request, reply) => {
     const invite = await workspaceService.getInviteByCode(request.params.code);
 
     if (!invite) {

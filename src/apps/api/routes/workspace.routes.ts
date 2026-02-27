@@ -25,7 +25,7 @@ export async function workspaceRoutes(app: FastifyInstance) {
   });
 
   // Get user's workspaces
-  app.get('/', async (request, reply) => {
+  app.get('/', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request, reply) => {
     const workspaces = await workspaceService.getUserWorkspaces(
       request.user.id
     );
@@ -35,7 +35,7 @@ export async function workspaceRoutes(app: FastifyInstance) {
   });
 
   // Get single workspace
-  app.get<{ Params: { id: string } }>('/:id', async (request, reply) => {
+  app.get<{ Params: { id: string } }>('/:id', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request, reply) => {
     const workspace = await workspaceService.getWorkspace(request.params.id);
     // NO CACHE: Workspace data can change
     reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -67,6 +67,7 @@ export async function workspaceRoutes(app: FastifyInstance) {
   // Get workspace members
   app.get<{ Params: { id: string } }>(
     '/:id/members',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
     async (request, reply) => {
       const members = await workspaceService.getWorkspaceMembers(
         request.params.id
@@ -84,6 +85,9 @@ export async function workspaceRoutes(app: FastifyInstance) {
   }>(
     '/:id/members',
     {
+      config: {
+        rateLimit: { max: 20, timeWindow: '1 minute' }
+      },
       preHandler: app.validateBody(addMemberBody)
     },
     async (request, reply) => {
@@ -99,7 +103,7 @@ export async function workspaceRoutes(app: FastifyInstance) {
   // Remove member from workspace
   app.delete<{
     Params: { id: string; userId: string };
-  }>('/:id/members/:userId', async (request, reply) => {
+  }>('/:id/members/:userId', { config: { rateLimit: { max: 20, timeWindow: '1 minute' } } }, async (request, reply) => {
     await workspaceService.removeMember(
       request.params.id,
       request.params.userId,
@@ -109,13 +113,13 @@ export async function workspaceRoutes(app: FastifyInstance) {
   });
 
   // Leave workspace (current user leaves)
-  app.post<{ Params: { id: string } }>('/:id/leave', async (request, reply) => {
+  app.post<{ Params: { id: string } }>('/:id/leave', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (request, reply) => {
     await workspaceService.leaveWorkspace(request.params.id, request.user.id);
     return reply.status(204).send();
   });
 
   // Delete workspace
-  app.delete<{ Params: { id: string } }>('/:id', async (request, reply) => {
+  app.delete<{ Params: { id: string } }>('/:id', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (request, reply) => {
     await workspaceService.deleteWorkspace(request.params.id, request.user.id);
     return reply.status(204).send();
   });
@@ -127,6 +131,9 @@ export async function workspaceRoutes(app: FastifyInstance) {
   }>(
     '/:id',
     {
+      config: {
+        rateLimit: { max: 20, timeWindow: '1 minute' }
+      },
       preHandler: app.validateBody(schemas.updateWorkspace)
     },
     async (request) => {
@@ -150,6 +157,9 @@ export async function workspaceRoutes(app: FastifyInstance) {
   }>(
     '/:id/invites',
     {
+      config: {
+        rateLimit: { max: 10, timeWindow: '1 minute' }
+      },
       preHandler: app.validateBody(createInviteBody)
     },
     async (request, reply) => {
@@ -164,7 +174,7 @@ export async function workspaceRoutes(app: FastifyInstance) {
   );
 
   // Get workspace invites
-  app.get<{ Params: { id: string } }>('/:id/invites', async (request) => {
+  app.get<{ Params: { id: string } }>('/:id/invites', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request) => {
     const invites = await workspaceService.getWorkspaceInvites(
       request.params.id,
       request.user.id
@@ -175,7 +185,7 @@ export async function workspaceRoutes(app: FastifyInstance) {
   // Delete invite
   app.delete<{
     Params: { id: string; inviteId: string };
-  }>('/:id/invites/:inviteId', async (request, reply) => {
+  }>('/:id/invites/:inviteId', { config: { rateLimit: { max: 20, timeWindow: '1 minute' } } }, async (request, reply) => {
     await workspaceService.deleteInvite(
       request.params.inviteId,
       request.user.id

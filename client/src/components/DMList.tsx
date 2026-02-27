@@ -144,7 +144,17 @@ export default function DMList({
 
   return (
     <div className="flex flex-col min-h-0 border-t border-discord-darkest">
-      <DMListHeader onNewDM={() => setShowNewDM(true)} />
+      <DMListHeader
+        isSearchOpen={showNewDM}
+        onToggleSearch={() => {
+          if (showNewDM) {
+            setShowNewDM(false);
+            clearSearch();
+          } else {
+            setShowNewDM(true);
+          }
+        }}
+      />
 
       {showNewDM && (
         <DMSearchPanel
@@ -152,10 +162,6 @@ export default function DMList({
           searchResults={searchResults}
           onSearchChange={handleSearch}
           onSelectUser={handleStartDM}
-          onClose={() => {
-            setShowNewDM(false);
-            clearSearch();
-          }}
         />
       )}
 
