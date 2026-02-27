@@ -24,7 +24,7 @@ export default async function giphyRoutes(fastify: FastifyInstance) {
    * Search GIFs
    * GET /api/v1/giphy/search?q=...&limit=25&offset=0
    */
-  fastify.get('/giphy/search', async (request) => {
+  fastify.get('/giphy/search', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request) => {
     const {
       q,
       limit = 25,
@@ -47,7 +47,7 @@ export default async function giphyRoutes(fastify: FastifyInstance) {
    * Get trending GIFs
    * GET /api/v1/giphy/trending?limit=25&offset=0
    */
-  fastify.get('/giphy/trending', async (request) => {
+  fastify.get('/giphy/trending', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request) => {
     const { limit = 25, offset = 0 } = request.query as {
       limit?: number;
       offset?: number;
@@ -61,7 +61,7 @@ export default async function giphyRoutes(fastify: FastifyInstance) {
    * Get GIF by ID
    * GET /api/v1/giphy/:id
    */
-  fastify.get('/giphy/:id', async (request) => {
+  fastify.get('/giphy/:id', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request) => {
     const { id } = request.params as { id: string };
 
     const result = await getGifById(id);
@@ -72,7 +72,7 @@ export default async function giphyRoutes(fastify: FastifyInstance) {
    * Search stickers (custom emoji-like)
    * GET /api/v1/giphy/stickers/search?q=...&limit=25&offset=0
    */
-  fastify.get('/giphy/stickers/search', async (request) => {
+  fastify.get('/giphy/stickers/search', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request) => {
     const {
       q,
       limit = 25,
@@ -95,7 +95,7 @@ export default async function giphyRoutes(fastify: FastifyInstance) {
    * Get trending stickers
    * GET /api/v1/giphy/stickers/trending?limit=25&offset=0
    */
-  fastify.get('/giphy/stickers/trending', async (request) => {
+  fastify.get('/giphy/stickers/trending', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request) => {
     const { limit = 25, offset = 0 } = request.query as {
       limit?: number;
       offset?: number;
@@ -109,7 +109,7 @@ export default async function giphyRoutes(fastify: FastifyInstance) {
    * Get random GIF
    * GET /api/v1/giphy/random?tag=...
    */
-  fastify.get('/giphy/random', async (request) => {
+  fastify.get('/giphy/random', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request) => {
     const { tag } = request.query as { tag?: string };
 
     const result = await getRandomGif(tag);
@@ -120,7 +120,7 @@ export default async function giphyRoutes(fastify: FastifyInstance) {
    * Autocomplete search
    * GET /api/v1/giphy/autocomplete?q=...
    */
-  fastify.get('/giphy/autocomplete', async (request) => {
+  fastify.get('/giphy/autocomplete', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request) => {
     const { q } = request.query as { q: string };
 
     if (!q) {

@@ -19,7 +19,7 @@ export default async function bookmarkRoutes(fastify: FastifyInstance) {
    * Add bookmark
    * POST /api/v1/bookmarks
    */
-  fastify.post('/bookmarks', async (request) => {
+  fastify.post('/bookmarks', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request) => {
     await fastify.authenticate(request);
     const { messageId, dmMessageId, workspaceId, note } = request.body as {
       messageId?: string;
@@ -48,7 +48,7 @@ export default async function bookmarkRoutes(fastify: FastifyInstance) {
    * Remove bookmark by ID
    * DELETE /api/v1/bookmarks/:id
    */
-  fastify.delete('/bookmarks/:id', async (request) => {
+  fastify.delete('/bookmarks/:id', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request) => {
     await fastify.authenticate(request);
     const { id } = request.params as { id: string };
     const userId = request.user?.id;
@@ -67,7 +67,7 @@ export default async function bookmarkRoutes(fastify: FastifyInstance) {
    * DELETE /api/v1/bookmarks/message/:messageId
    * DELETE /api/v1/bookmarks/dm/:dmMessageId
    */
-  fastify.delete('/bookmarks/message/:messageId', async (request) => {
+  fastify.delete('/bookmarks/message/:messageId', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request) => {
     await fastify.authenticate(request);
     const { messageId } = request.params as { messageId: string };
     const userId = request.user?.id;
@@ -81,7 +81,7 @@ export default async function bookmarkRoutes(fastify: FastifyInstance) {
     return { success: true };
   });
 
-  fastify.delete('/bookmarks/dm/:dmMessageId', async (request) => {
+  fastify.delete('/bookmarks/dm/:dmMessageId', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request) => {
     await fastify.authenticate(request);
     const { dmMessageId } = request.params as { dmMessageId: string };
     const userId = request.user?.id;
@@ -99,7 +99,7 @@ export default async function bookmarkRoutes(fastify: FastifyInstance) {
    * List user's bookmarks
    * GET /api/v1/bookmarks?workspaceId=...
    */
-  fastify.get('/bookmarks', async (request) => {
+  fastify.get('/bookmarks', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request) => {
     await fastify.authenticate(request);
     const { workspaceId } = request.query as { workspaceId?: string };
     const userId = request.user?.id;
@@ -118,7 +118,7 @@ export default async function bookmarkRoutes(fastify: FastifyInstance) {
    * GET /api/v1/bookmarks/check?messageId=...
    * GET /api/v1/bookmarks/check?dmMessageId=...
    */
-  fastify.get('/bookmarks/check', async (request) => {
+  fastify.get('/bookmarks/check', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request) => {
     await fastify.authenticate(request);
     const { messageId, dmMessageId } = request.query as {
       messageId?: string;
@@ -139,7 +139,7 @@ export default async function bookmarkRoutes(fastify: FastifyInstance) {
    * Update bookmark note
    * PATCH /api/v1/bookmarks/:id/note
    */
-  fastify.patch('/bookmarks/:id/note', async (request) => {
+  fastify.patch('/bookmarks/:id/note', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request) => {
     await fastify.authenticate(request);
     const { id } = request.params as { id: string };
     const { note } = request.body as { note: string };
@@ -158,7 +158,7 @@ export default async function bookmarkRoutes(fastify: FastifyInstance) {
    * Get bookmark count
    * GET /api/v1/bookmarks/count?workspaceId=...
    */
-  fastify.get('/bookmarks/count', async (request) => {
+  fastify.get('/bookmarks/count', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request) => {
     await fastify.authenticate(request);
     const { workspaceId } = request.query as { workspaceId?: string };
     const userId = request.user?.id;

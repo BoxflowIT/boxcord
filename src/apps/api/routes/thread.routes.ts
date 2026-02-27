@@ -81,6 +81,9 @@ export async function threadRoutes(app: FastifyInstance) {
   }>(
     '/',
     {
+      config: {
+        rateLimit: { max: 60, timeWindow: '1 minute' }
+      },
       preHandler: app.validateQuery(getThreadsQuery)
     },
     async (request, reply) => {
@@ -129,7 +132,7 @@ export async function threadRoutes(app: FastifyInstance) {
   // Get analytics for a specific thread
   app.get<{
     Params: { id: string };
-  }>('/:id/analytics', async (request) => {
+  }>('/:id/analytics', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request) => {
     const analytics = await threadService.getThreadAnalytics(request.params.id);
     return { success: true, data: analytics };
   });
@@ -140,6 +143,9 @@ export async function threadRoutes(app: FastifyInstance) {
   }>(
     '/analytics',
     {
+      config: {
+        rateLimit: { max: 30, timeWindow: '1 minute' }
+      },
       preHandler: app.validateQuery(z.object({ channelId: z.string().min(1) }))
     },
     async (request, reply) => {
@@ -196,7 +202,7 @@ export async function threadRoutes(app: FastifyInstance) {
   // Get thread by ID
   app.get<{
     Params: { id: string };
-  }>('/:id', async (request, reply) => {
+  }>('/:id', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request, reply) => {
     const thread = await threadService.getThread(
       request.params.id,
       request.user.id
@@ -216,7 +222,7 @@ export async function threadRoutes(app: FastifyInstance) {
   // Get thread by message ID
   app.get<{
     Params: { messageId: string };
-  }>('/by-message/:messageId', async (request, reply) => {
+  }>('/by-message/:messageId', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request, reply) => {
     const thread = await threadService.getThreadByMessageId(
       request.params.messageId,
       request.user.id
@@ -240,6 +246,9 @@ export async function threadRoutes(app: FastifyInstance) {
   }>(
     '/:id',
     {
+      config: {
+        rateLimit: { max: 20, timeWindow: '1 minute' }
+      },
       preHandler: app.validateBody(updateThreadSchema)
     },
     async (request) => {
@@ -266,7 +275,7 @@ export async function threadRoutes(app: FastifyInstance) {
   // Delete thread
   app.delete<{
     Params: { id: string };
-  }>('/:id', async (request, reply) => {
+  }>('/:id', { config: { rateLimit: { max: 20, timeWindow: '1 minute' } } }, async (request, reply) => {
     // Get thread info before deletion for broadcasting
     const thread = await prisma.thread.findUnique({
       where: { id: request.params.id },
@@ -294,6 +303,9 @@ export async function threadRoutes(app: FastifyInstance) {
   }>(
     '/:id/replies',
     {
+      config: {
+        rateLimit: { max: 60, timeWindow: '1 minute' }
+      },
       preHandler: app.validateQuery(getRepliesQuery)
     },
     async (request, reply) => {
@@ -404,6 +416,9 @@ export async function threadRoutes(app: FastifyInstance) {
   }>(
     '/:id/follow',
     {
+      config: {
+        rateLimit: { max: 30, timeWindow: '1 minute' }
+      },
       preHandler: app.validateBody(toggleFollowSchema)
     },
     async (request, reply) => {
@@ -420,7 +435,7 @@ export async function threadRoutes(app: FastifyInstance) {
   // Mark thread as read
   app.post<{
     Params: { id: string };
-  }>('/:id/read', async (request, reply) => {
+  }>('/:id/read', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request, reply) => {
     await threadService.markAsRead(request.params.id, request.user.id);
     return reply.status(200).send({ success: true });
   });
@@ -436,6 +451,9 @@ export async function threadRoutes(app: FastifyInstance) {
   }>(
     '/:id/replies/:replyId',
     {
+      config: {
+        rateLimit: { max: 30, timeWindow: '1 minute' }
+      },
       preHandler: app.validateBody(editReplySchema)
     },
     async (request, reply) => {
@@ -503,7 +521,7 @@ export async function threadRoutes(app: FastifyInstance) {
   // Delete thread reply
   app.delete<{
     Params: { id: string; replyId: string };
-  }>('/:id/replies/:replyId', async (request, reply) => {
+  }>('/:id/replies/:replyId', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request, reply) => {
     // Get the reply to check ownership
     const replyMessage = await prisma.message.findUnique({
       where: { id: request.params.replyId }
@@ -567,6 +585,9 @@ export async function threadRoutes(app: FastifyInstance) {
   }>(
     '/:id/replies/:replyId/reactions',
     {
+      config: {
+        rateLimit: { max: 60, timeWindow: '1 minute' }
+      },
       preHandler: app.validateBody(addReactionSchema)
     },
     async (request, reply) => {
@@ -635,7 +656,7 @@ export async function threadRoutes(app: FastifyInstance) {
   // Remove reaction from thread reply
   app.delete<{
     Params: { id: string; replyId: string; emoji: string };
-  }>('/:id/replies/:replyId/reactions/:emoji', async (request, reply) => {
+  }>('/:id/replies/:replyId/reactions/:emoji', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request, reply) => {
     // Get thread to validate and for broadcasting
     const thread = await prisma.thread.findUnique({
       where: { id: request.params.id },

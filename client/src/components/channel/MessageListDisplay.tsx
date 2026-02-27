@@ -160,9 +160,9 @@ export default function MessageListDisplay({
       useThreadStore.getState().addThread(newThread);
       setCreateThreadMessageId(null);
       openThreadSidebar(newThread.id);
-    } catch (createError: any) {
+    } catch (createError: unknown) {
       // If message already has a thread (not in local store), fetch and open it
-      if (createError?.message?.includes('already has a thread')) {
+      if (createError instanceof Error && createError.message?.includes('already has a thread')) {
         const serverThread = await getThreadByMessageId(messageId);
         if (serverThread) {
           useThreadStore.getState().addThread(serverThread);

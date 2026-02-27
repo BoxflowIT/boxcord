@@ -51,6 +51,9 @@ export async function permissionRoutes(app: FastifyInstance) {
   app.get<{ Querystring: z.infer<typeof getPermissionsQuery> }>(
     '/',
     {
+      config: {
+        rateLimit: { max: 60, timeWindow: '1 minute' }
+      },
       preHandler: app.validateQuery(getPermissionsQuery)
     },
     async (request, reply) => {
@@ -70,6 +73,9 @@ export async function permissionRoutes(app: FastifyInstance) {
   app.get<{ Querystring: z.infer<typeof getPermissionsQuery> }>(
     '/me',
     {
+      config: {
+        rateLimit: { max: 60, timeWindow: '1 minute' }
+      },
       preHandler: app.validateQuery(getPermissionsQuery)
     },
     async (request, reply) => {
@@ -94,6 +100,9 @@ export async function permissionRoutes(app: FastifyInstance) {
   app.get<{ Querystring: z.infer<typeof checkPermissionQuery> }>(
     '/check',
     {
+      config: {
+        rateLimit: { max: 60, timeWindow: '1 minute' }
+      },
       preHandler: app.validateQuery(checkPermissionQuery)
     },
     async (request, reply) => {
@@ -165,6 +174,9 @@ export async function permissionRoutes(app: FastifyInstance) {
   }>(
     '/',
     {
+      config: {
+        rateLimit: { max: 20, timeWindow: '1 minute' }
+      },
       preHandler: app.validateQuery(
         z.object({
           channelId: z.string().min(1),

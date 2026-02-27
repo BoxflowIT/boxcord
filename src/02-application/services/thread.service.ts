@@ -424,7 +424,7 @@ export class ThreadService {
     });
 
     return {
-      items: itemsWithAggregatedReactions as any,
+      items: itemsWithAggregatedReactions as unknown as ThreadReply[],
       nextCursor: hasMore ? items[items.length - 1]?.id : undefined,
       hasMore
     };
@@ -533,7 +533,7 @@ export class ThreadService {
       data: { participantCount }
     });
 
-    return reply as any;
+    return reply as unknown as ThreadReply;
   }
 
   /**

@@ -15,6 +15,9 @@ export default async function embedRoutes(app: FastifyInstance) {
   app.get(
     '/embeds/preview',
     {
+      config: {
+        rateLimit: { max: 20, timeWindow: '1 minute' }
+      },
       schema: {
         querystring: {
           type: 'object',
@@ -48,6 +51,9 @@ export default async function embedRoutes(app: FastifyInstance) {
   app.post(
     '/embeds/parse',
     {
+      config: {
+        rateLimit: { max: 20, timeWindow: '1 minute' }
+      },
       schema: {
         body: {
           type: 'object',
