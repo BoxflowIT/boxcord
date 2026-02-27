@@ -6,7 +6,9 @@ Thread support is fully implemented with backend REST API, real-time WebSocket e
 
 ## Features
 
+### Core
 - ✅ Create threads from any channel message
+- ✅ Required thread title on creation (CreateThreadModal dialog)
 - ✅ Reply to threads with nested conversations
 - ✅ Edit and delete thread replies (author only)
 - ✅ Emoji reactions on thread replies (with optimistic updates)
@@ -15,7 +17,7 @@ Thread support is fully implemented with backend REST API, real-time WebSocket e
 - ✅ Mark threads as read
 - ✅ Unread thread count badges
 - ✅ Real-time updates via WebSocket (all CRUD operations)
-- ✅ Thread sidebar UI with composer
+- ✅ Thread sidebar UI with composer (480px wide)
 - ✅ Thread context menu (right-click)
 - ✅ Following threads list panel
 - ✅ Lock threads (for admins/moderators)
@@ -23,6 +25,34 @@ Thread support is fully implemented with backend REST API, real-time WebSocket e
 - ✅ File attachments in thread replies
 - ✅ Keyboard quick reactions (1-5) route to threads when sidebar is open
 - ✅ Notification sounds for new thread replies
+
+### Thread Search
+- ✅ Server-side search endpoint (`GET /threads/search?q=`)
+- ✅ Client-side filtering in Following Threads list
+- ✅ Collapsible search panel with +/X toggle (DM-style)
+
+### Thread Archiving & Resolving
+- ✅ Archive threads (mark as archived, read-only composer)
+- ✅ Resolve threads (mark as resolved with status badge)
+- ✅ Toggle buttons in ThreadHeader with status indicators
+- ✅ Context menu items for quick archive/resolve
+- ✅ Visual indicators in Following Threads list (📦 archived, ✓ resolved)
+
+### Thread Analytics
+- ✅ Per-thread analytics (reply count, participant count, active duration)
+- ✅ Channel-level thread analytics
+- ✅ Expandable analytics panel in ThreadInfo
+
+### Thread Notifications
+- ✅ Real-time notification generation via socket events
+- ✅ Notification types: reply, mention, archive, resolve
+- ✅ Bell icon toggle in sidebar with unread count badge
+- ✅ ThreadNotificationPanel component
+
+### Thread Mentions
+- ✅ @mention autocomplete in ThreadComposer
+- ✅ Backend mention extraction from reply content
+- ✅ Push notifications sent to mentioned users
 
 ## Backend API
 
@@ -33,10 +63,11 @@ All endpoints are prefixed with `/api/v1/threads`
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/?channelId=X` | List all threads in a channel |
-| POST | `/` | Create a new thread |
+| POST | `/` | Create a new thread (title required) |
 | GET | `/:id` | Get thread details |
 | GET | `/by-message/:messageId` | Get thread by root message |
-| PATCH | `/:id` | Update thread (title, lock status) |
+| GET | `/search?q=&channelId=` | Search threads by title/content |
+| PATCH | `/:id` | Update thread (title, lock, archive, resolve) |
 | DELETE | `/:id` | Delete thread and all replies |
 | GET | `/:id/replies` | Get thread replies (paginated) |
 | POST | `/:id/replies` | Add reply to thread |
@@ -46,6 +77,8 @@ All endpoints are prefixed with `/api/v1/threads`
 | DELETE | `/:id/replies/:replyId/reactions/:emoji` | Remove reaction from reply |
 | POST | `/:id/follow` | Follow/unfollow thread |
 | POST | `/:id/read` | Mark thread as read |
+| GET | `/:id/analytics` | Get per-thread analytics |
+| GET | `/analytics/channel/:channelId` | Get channel-level thread analytics |
 
 **📖 See:** [API.md](API.md#-threads) for complete request/response examples.
 
@@ -60,7 +93,7 @@ All endpoints are prefixed with `/api/v1/threads`
 | `thread:reply:edited` | `{ threadId, replyId, content, userId }` | Broadcast when reply is edited |
 | `thread:reply:deleted` | `{ threadId, replyId }` | Broadcast when reply is deleted |
 | `thread:reply:reaction` | `{ threadId, replyId, emoji, action, userId }` | Broadcast when reaction is toggled |
-| `thread:updated` | `{ thread }` | Broadcast when thread metadata changes |
+| `thread:updated` | `{ thread }` | Broadcast when thread metadata changes (title, lock, archive, resolve) |
 | `thread:deleted` | `{ threadId }` | Broadcast when thread is deleted |
 
 ## Frontend Architecture
@@ -78,9 +111,11 @@ All thread components are in `client/src/components/thread/`:
 | `ThreadReplyActions` | Hover actions for a thread reply (react, edit, delete) |
 | `ThreadComposer` | Message input for composing thread replies |
 | `ThreadInfo` | Thread metadata panel (participants, creation date) |
-| `ThreadContextMenu` | Right-click context menu for thread operations |
-| `FollowingThreadsList` | Panel showing all threads the user is following |
-| `FollowingThreadItem` | Individual item in the following threads list |
+| `ThreadContextMenu` | Right-click context menu for thread operations (archive, resolve) |
+| `FollowingThreadsList` | Panel showing all threads the user is following (with search) |
+| `FollowingThreadItem` | Individual item with resolved/archived indicators |
+| `CreateThreadModal` | Dialog requiring thread title before creation |
+| `ThreadNotificationPanel` | Notification list with type icons, actor names, read/unread state |
 
 ### State Management
 
@@ -94,6 +129,8 @@ interface ThreadState {
   isSidebarOpen: boolean;
   isLoading: boolean;
   error: string | null;
+  notifications: ThreadNotification[];    // Thread notification list
+  unreadNotificationCount: number;        // Badge count for bell icon
 }
 ```
 
@@ -146,6 +183,8 @@ model Thread {
   lastReplyAt      DateTime?
   lastReplyBy      String?
   isLocked         Boolean  @default(false)
+  isArchived       Boolean  @default(false)
+  isResolved       Boolean  @default(false)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   
@@ -237,20 +276,28 @@ curl -X POST http://localhost:3001/api/v1/threads/THREAD_ID/replies \
 
 ## Possible Future Enhancements
 
-- [ ] Thread search functionality
-- [ ] Thread archiving/resolving status
-- [ ] Thread analytics (most active threads, etc.)
-- [ ] Thread notifications in notification center panel
-- [ ] Thread mentions (@user in thread replies)
+- [x] Thread search functionality _(v1.7.0)_
+- [x] Thread archiving/resolving status _(v1.7.0)_
+- [x] Thread analytics (most active threads, etc.) _(v1.7.0)_
+- [x] Thread notifications in notification center panel _(v1.7.0)_
+- [x] Thread mentions (@user in thread replies) _(v1.7.0)_
+- [ ] Thread pinning (pin important threads to top)
+- [ ] Thread templates (predefined thread structures)
+- [ ] Thread export (export thread conversation as PDF/text)
 
 ## Migration
 
-The database migration `20260225145838_add_thread_support` has been applied and includes:
+### Migrations
 
+**`20260225145838_add_thread_support`** — Initial thread support:
 - Thread table
 - ThreadParticipant table
 - Indexes for performance
 - Foreign key constraints
+
+**`20260226142640_add_thread_archive_resolve`** — Thread enhancements:
+- `is_archived` Boolean column (default: false)
+- `is_resolved` Boolean column (default: false)
 
 ## Notes
 

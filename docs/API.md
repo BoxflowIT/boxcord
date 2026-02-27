@@ -1585,7 +1585,7 @@ Create a new thread from a channel message.
 ```json
 {
   "messageId": "uuid",
-  "title": "Optional thread title"
+  "title": "Thread title (required)"
 }
 ```
 
@@ -1597,7 +1597,7 @@ Create a new thread from a channel message.
     "id": "uuid",
     "messageId": "uuid",
     "channelId": "uuid",
-    "title": "Optional thread title",
+    "title": "Thread title (required)",
     "replyCount": 0,
     "participantCount": 1,
     "isLocked": false,
@@ -1649,7 +1649,7 @@ Get thread associated with a specific message.
 
 #### PATCH /threads/:id
 
-Update thread metadata (title, lock status).
+Update thread metadata (title, lock, archive, resolve status).
 
 **Parameters:**
 - `id` (path, required): Thread ID
@@ -1658,7 +1658,9 @@ Update thread metadata (title, lock status).
 ```json
 {
   "title": "Updated title",
-  "isLocked": true
+  "isLocked": true,
+  "isArchived": false,
+  "isResolved": false
 }
 ```
 
@@ -1671,7 +1673,9 @@ All fields are optional.
   "data": {
     "id": "uuid",
     "title": "Updated title",
-    "isLocked": true
+    "isLocked": true,
+    "isArchived": false,
+    "isResolved": false
   }
 }
 ```
@@ -1913,9 +1917,85 @@ Mark all thread replies as read.
 }
 ```
 
----
+### Search Threads
 
-## 📊 Error Response Format
+#### GET /threads/search
+
+Search threads by title and content.
+
+**Query Parameters:**
+- `q` (required): Search query string
+- `channelId` (optional): Limit search to a specific channel
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "threads": [
+      {
+        "id": "uuid",
+        "title": "Matching thread",
+        "replyCount": 5,
+        "isArchived": false,
+        "isResolved": false,
+        "message": {
+          "content": "Original message",
+          "author": { "firstName": "John", "lastName": "Doe" }
+        }
+      }
+    ]
+  }
+}
+```
+
+### Get Thread Analytics
+
+#### GET /threads/:id/analytics
+
+Get analytics for a specific thread.
+
+**Parameters:**
+- `id` (path, required): Thread ID
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "replyCount": 15,
+    "participantCount": 5,
+    "activeDuration": "3 days",
+    "lastActivity": "2026-02-27T12:00:00.000Z"
+  }
+}
+```
+
+### Get Channel Thread Analytics
+
+#### GET /threads/analytics/channel/:channelId
+
+Get aggregated thread analytics for a channel.
+
+**Parameters:**
+- `channelId` (path, required): Channel ID
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "totalThreads": 25,
+    "activeThreads": 18,
+    "archivedThreads": 5,
+    "resolvedThreads": 7,
+    "totalReplies": 340,
+    "avgRepliesPerThread": 13.6
+  }
+}
+```
+
+---
 
 All errors follow this format:
 
@@ -1969,7 +2049,7 @@ Authentication via query parameter or headers:
 | `thread:reply:edited` | Server → Client | Thread reply was edited |
 | `thread:reply:deleted` | Server → Client | Thread reply was deleted |
 | `thread:reply:reaction` | Server → Client | Reaction added/removed on thread reply |
-| `thread:updated` | Server → Client | Thread metadata changed (title, lock) |
+| `thread:updated` | Server → Client | Thread metadata changed (title, lock, archive, resolve) |
 | `thread:deleted` | Server → Client | Thread was deleted |
 
 ---
@@ -1983,6 +2063,6 @@ Authentication via query parameter or headers:
 
 ---
 
-**Last Updated:** 2026-02-26  
+**Last Updated:** 2026-02-27  
 **API Version:** v1  
 **Base URL:** `/api/v1`
