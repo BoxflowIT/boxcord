@@ -31,6 +31,9 @@ export async function messageRoutes(app: FastifyInstance) {
   }>(
     '/',
     {
+      config: {
+        rateLimit: { max: 60, timeWindow: '1 minute' }
+      },
       preHandler: app.validateQuery(getMessagesQuery)
     },
     async (request, reply) => {
@@ -101,6 +104,9 @@ export async function messageRoutes(app: FastifyInstance) {
   }>(
     '/:id',
     {
+      config: {
+        rateLimit: { max: 30, timeWindow: '1 minute' }
+      },
       preHandler: app.validateBody(schemas.updateMessage)
     },
     async (request) => {
@@ -114,7 +120,7 @@ export async function messageRoutes(app: FastifyInstance) {
   );
 
   // Delete message
-  app.delete<{ Params: { id: string } }>('/:id', async (request, reply) => {
+  app.delete<{ Params: { id: string } }>('/:id', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request, reply) => {
     await messageService.deleteMessage(request.params.id, request.user.id);
     return reply.status(204).send();
   });
@@ -126,6 +132,9 @@ export async function messageRoutes(app: FastifyInstance) {
   }>(
     '/:id/pin',
     {
+      config: {
+        rateLimit: { max: 20, timeWindow: '1 minute' }
+      },
       preHandler: app.validateBody(schemas.pinMessage)
     },
     async (request, _reply) => {
@@ -152,6 +161,9 @@ export async function messageRoutes(app: FastifyInstance) {
   }>(
     '/:id/pin',
     {
+      config: {
+        rateLimit: { max: 20, timeWindow: '1 minute' }
+      },
       preHandler: app.validateBody(schemas.pinMessage)
     },
     async (request, _reply) => {
@@ -176,6 +188,9 @@ export async function messageRoutes(app: FastifyInstance) {
   }>(
     '/pinned',
     {
+      config: {
+        rateLimit: { max: 60, timeWindow: '1 minute' }
+      },
       preHandler: app.validateQuery(pinnedQuery)
     },
     async (request, reply) => {

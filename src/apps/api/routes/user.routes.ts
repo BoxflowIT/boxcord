@@ -46,7 +46,7 @@ export async function userRoutes(app: FastifyInstance) {
   });
 
   // Get current user (creates/updates local profile)
-  app.get('/me', async (request, reply) => {
+  app.get('/me', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request, reply) => {
     // Upsert local user on each request (without role - role is admin-managed)
     const localUser = await userService.upsertUser({
       id: request.user.id,
@@ -79,7 +79,7 @@ export async function userRoutes(app: FastifyInstance) {
   });
 
   // Get user by ID
-  app.get<{ Params: { id: string } }>('/:id', async (request, reply) => {
+  app.get<{ Params: { id: string } }>('/:id', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request, reply) => {
     const user = await userService.getUser(request.params.id);
     reply.cache({ maxAge: 300, staleWhileRevalidate: 600 });
     return { success: true, data: user };
@@ -147,6 +147,9 @@ export async function userRoutes(app: FastifyInstance) {
   }>(
     '/me/presence',
     {
+      config: {
+        rateLimit: { max: 30, timeWindow: '1 minute' }
+      },
       preHandler: app.validateBody(presenceBody)
     },
     async (request) => {
@@ -163,6 +166,9 @@ export async function userRoutes(app: FastifyInstance) {
   app.post<{ Body: z.infer<typeof batchBody> }>(
     '/batch',
     {
+      config: {
+        rateLimit: { max: 30, timeWindow: '1 minute' }
+      },
       preHandler: app.validateBody(batchBody)
     },
     async (request) => {
@@ -172,7 +178,7 @@ export async function userRoutes(app: FastifyInstance) {
   );
 
   // Get all online users
-  app.get('/online', async () => {
+  app.get('/online', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async () => {
     const users = await userService.getAllOnlineUsers();
     return { success: true, data: users };
   });
@@ -184,6 +190,9 @@ export async function userRoutes(app: FastifyInstance) {
   }>(
     '/:id/role',
     {
+      config: {
+        rateLimit: { max: 10, timeWindow: '1 minute' }
+      },
       preHandler: app.validateBody(roleBody)
     },
     async (request, reply) => {
@@ -215,14 +224,14 @@ export async function userRoutes(app: FastifyInstance) {
   );
 
   // Delete current user account
-  app.delete('/me', async (request) => {
+  app.delete('/me', { config: { rateLimit: { max: 5, timeWindow: '1 minute' } } }, async (request) => {
     await userService.deleteUser(request.user.id);
     return { success: true };
   });
 
   // Initialize user (create + add to default workspace)
   // Called after first login to ensure user exists and has access
-  app.post('/me/init', async (request) => {
+  app.post('/me/init', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (request) => {
     // Create/update user
     const user = await userService.upsertUser({
       id: request.user.id,
@@ -280,6 +289,9 @@ export async function userRoutes(app: FastifyInstance) {
   }>(
     '/me/status',
     {
+      config: {
+        rateLimit: { max: 20, timeWindow: '1 minute' }
+      },
       preHandler: app.validateBody(statusBody)
     },
     async (request, _reply) => {
@@ -310,6 +322,9 @@ export async function userRoutes(app: FastifyInstance) {
   }>(
     '/me/dnd',
     {
+      config: {
+        rateLimit: { max: 20, timeWindow: '1 minute' }
+      },
       preHandler: app.validateBody(dndBody)
     },
     async (request, _reply) => {

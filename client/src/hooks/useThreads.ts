@@ -209,7 +209,7 @@ export async function editThreadReply(
   threadId: string,
   replyId: string,
   content: string
-): Promise<any> {
+): Promise<{ id: string; content: string; edited: boolean }> {
   try {
     const token = useAuthStore.getState().token;
     const result = await fetch(
@@ -259,7 +259,7 @@ export async function addThreadReplyReaction(
   threadId: string,
   replyId: string,
   emoji: string
-): Promise<any> {
+): Promise<{ id: string; messageId: string; userId: string; emoji: string }> {
   try {
     const token = useAuthStore.getState().token;
     const response = await fetch(

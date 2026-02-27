@@ -639,7 +639,7 @@ This phase adds read replicas, WebSocket clustering, message queue workers, and 
    
    Add to environment variables:
    ```env
-   DATABASE_READ_REPLICA_URL=postgresql://boxcord_app:<YOUR_PASSWORD>@replica-1.xxxxx.us-east-1.rds.amazonaws.com:5432/boxcord_production
+   DATABASE_READ_REPLICA_URL=postgresql://<DB_USER>:<DB_PASSWORD>@<REPLICA_HOST>:5432/<DB_NAME>
    ```
 
 4. **Implement Read/Write Client Separation:**
