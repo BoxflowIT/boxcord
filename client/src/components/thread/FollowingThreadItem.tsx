@@ -106,6 +106,22 @@ export function FollowingThreadItem({
       >
         {thread.title || t('threads.thread')}
       </span>
+      {thread.isResolved && (
+        <span
+          className="flex-shrink-0 text-green-400 text-xs"
+          title={t('threads.resolved')}
+        >
+          ✓
+        </span>
+      )}
+      {thread.isArchived && (
+        <span
+          className="flex-shrink-0 text-yellow-400 text-xs"
+          title={t('threads.archived')}
+        >
+          📦
+        </span>
+      )}
       {hasUnread && (
         <span className="flex-shrink-0 bg-red-500 text-white text-xs font-bold rounded-full px-2 py-0.5 min-w-[22px] text-center shadow-sm">
           {unreadCount > 99 ? '99+' : unreadCount}

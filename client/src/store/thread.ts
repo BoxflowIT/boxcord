@@ -13,6 +13,8 @@ export interface Thread {
   lastReplyAt: string | null;
   lastReplyBy: string | null;
   isLocked: boolean;
+  isArchived: boolean;
+  isResolved: boolean;
   createdAt: string;
   updatedAt: string;
   isFollowing?: boolean;
@@ -54,11 +56,31 @@ export interface ThreadReply {
   }>;
 }
 
+export type ThreadNotificationType =
+  | 'reply'
+  | 'mention'
+  | 'resolved'
+  | 'archived'
+  | 'created';
+
+export interface ThreadNotification {
+  id: string;
+  type: ThreadNotificationType;
+  threadId: string;
+  threadTitle: string | null;
+  actorId: string;
+  actorName: string;
+  message?: string;
+  createdAt: string;
+  read: boolean;
+}
+
 interface ThreadState {
   // Thread data
   threads: Record<string, Thread[]>; // channelId -> threads[]
   activeThreadId: string | null;
   threadReplies: Record<string, ThreadReply[]>; // threadId -> replies[]
+  threadNotifications: ThreadNotification[];
 
   // UI state
   isSidebarOpen: boolean;
@@ -81,6 +103,11 @@ interface ThreadState {
   markThreadAsRead: (threadId: string) => void;
   setFollowing: (threadId: string, isFollowing: boolean) => void;
 
+  addThreadNotification: (notification: ThreadNotification) => void;
+  markNotificationRead: (notificationId: string) => void;
+  markAllNotificationsRead: () => void;
+  clearNotifications: () => void;
+
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   reset: () => void;
@@ -90,6 +117,7 @@ const initialState = {
   threads: {},
   activeThreadId: null,
   threadReplies: {},
+  threadNotifications: [] as ThreadNotification[],
   isSidebarOpen: false,
   isLoading: false,
   error: null
@@ -224,6 +252,35 @@ export const useThreadStore = create<ThreadState>()(
             state.threads[channelId] = castDraft(threads);
           }
         });
+      }),
+
+    addThreadNotification: (notification: ThreadNotification) =>
+      set((state) => {
+        // Keep max 50 notifications
+        state.threadNotifications = [
+          notification,
+          ...state.threadNotifications.slice(0, 49)
+        ];
+      }),
+
+    markNotificationRead: (notificationId: string) =>
+      set((state) => {
+        const notification = state.threadNotifications.find(
+          (n) => n.id === notificationId
+        );
+        if (notification) notification.read = true;
+      }),
+
+    markAllNotificationsRead: () =>
+      set((state) => {
+        state.threadNotifications.forEach((n) => {
+          n.read = true;
+        });
+      }),
+
+    clearNotifications: () =>
+      set((state) => {
+        state.threadNotifications = [];
       }),
 
     setLoading: (loading: boolean) =>

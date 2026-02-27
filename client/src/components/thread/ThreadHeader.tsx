@@ -1,7 +1,14 @@
 // Thread Header - Title, edit, follow, close controls
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ThreadIcon, EditIcon, TrashIcon, CloseIcon } from '../ui/Icons';
+import {
+  ThreadIcon,
+  EditIcon,
+  TrashIcon,
+  CloseIcon,
+  ArchiveIcon,
+  CheckCircleIcon
+} from '../ui/Icons';
 import type { Thread } from '../../store/thread';
 
 interface ThreadHeaderProps {
@@ -10,6 +17,8 @@ interface ThreadHeaderProps {
   onEditTitle: (title: string) => Promise<void>;
   onDelete: () => void;
   onClose: () => void;
+  onToggleArchive?: () => void;
+  onToggleResolve?: () => void;
 }
 
 export function ThreadHeader({
@@ -17,7 +26,9 @@ export function ThreadHeader({
   isOwner,
   onEditTitle,
   onDelete,
-  onClose
+  onClose,
+  onToggleArchive,
+  onToggleResolve
 }: ThreadHeaderProps) {
   const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
@@ -65,14 +76,58 @@ export function ThreadHeader({
             placeholder="Thread title..."
           />
         ) : (
-          <h2 className="font-semibold text-lg truncate">
-            {thread?.title || t('threads.thread')}
-          </h2>
+          <div className="flex items-center gap-2 min-w-0">
+            <h2 className="font-semibold text-lg truncate">
+              {thread?.title || t('threads.thread')}
+            </h2>
+            {thread?.isResolved && (
+              <span className="flex items-center gap-1 text-xs text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                <CheckCircleIcon size="sm" />
+                {t('threads.resolved')}
+              </span>
+            )}
+            {thread?.isArchived && (
+              <span className="flex items-center gap-1 text-xs text-yellow-400 bg-yellow-500/10 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                <ArchiveIcon size="sm" />
+                {t('threads.archived')}
+              </span>
+            )}
+          </div>
         )}
       </div>
       <div className="flex items-center gap-1 flex-shrink-0">
         {!isEditing && thread && isOwner && (
           <>
+            <button
+              onClick={onToggleResolve}
+              className={`p-1.5 hover:bg-boxflow-hover rounded transition-colors ${
+                thread.isResolved
+                  ? 'text-green-400 hover:text-green-300'
+                  : 'text-boxflow-muted hover:text-boxflow-light'
+              }`}
+              title={
+                thread.isResolved
+                  ? t('threads.unresolve')
+                  : t('threads.resolve')
+              }
+            >
+              <CheckCircleIcon size="sm" />
+            </button>
+            <button
+              onClick={onToggleArchive}
+              className={`p-1.5 hover:bg-boxflow-hover rounded transition-colors ${
+                thread.isArchived
+                  ? 'text-yellow-400 hover:text-yellow-300'
+                  : 'text-boxflow-muted hover:text-boxflow-light'
+              }`}
+              title={
+                thread.isArchived
+                  ? t('threads.unarchive')
+                  : t('threads.archive')
+              }
+            >
+              <ArchiveIcon size="sm" />
+            </button>
             <button
               onClick={handleStartEdit}
               className="p-1.5 hover:bg-boxflow-hover rounded transition-colors text-boxflow-muted hover:text-boxflow-light"

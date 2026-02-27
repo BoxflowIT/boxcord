@@ -69,7 +69,7 @@ export async function getThreadByMessageId(
 
 export async function createThread(
   messageId: string,
-  title?: string
+  title: string
 ): Promise<Thread> {
   const token = useAuthStore.getState().token;
   const response = await fetch(`${API_BASE}/threads`, {
@@ -95,6 +95,26 @@ export async function createThread(
     const errorMessage =
       errorData?.error?.message || errorData?.message || response.statusText;
     throw new Error(`Failed to create thread: ${errorMessage}`);
+  }
+
+  const result = await response.json();
+  return result.data;
+}
+
+export async function searchThreads(
+  query: string,
+  channelId?: string
+): Promise<{ items: Thread[]; hasMore: boolean; nextCursor?: string }> {
+  const token = useAuthStore.getState().token;
+  const params = new URLSearchParams({ q: query });
+  if (channelId) params.set('channelId', channelId);
+
+  const response = await fetch(`${API_BASE}/threads/search?${params}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to search threads: ${response.statusText}`);
   }
 
   const result = await response.json();
@@ -299,7 +319,12 @@ export async function removeThreadReplyReaction(
  */
 export async function updateThread(
   threadId: string,
-  updates: { title?: string; isLocked?: boolean }
+  updates: {
+    title?: string;
+    isLocked?: boolean;
+    isArchived?: boolean;
+    isResolved?: boolean;
+  }
 ): Promise<Thread> {
   try {
     const token = useAuthStore.getState().token;
@@ -344,4 +369,68 @@ export async function deleteThread(threadId: string): Promise<void> {
     console.error('Error deleting thread:', error);
     throw error;
   }
+}
+
+export interface ThreadAnalytics {
+  threadId: string;
+  replyCount: number;
+  participantCount: number;
+  ageDays: number;
+  repliesPerDay: number;
+  timeToFirstReplyMs: number | null;
+  timeSinceLastActivityMs: number;
+  isStale: boolean;
+  topParticipants: Array<{ userId: string; replyCount: number }>;
+}
+
+export interface ChannelThreadAnalytics {
+  totalThreads: number;
+  activeThreads: number;
+  resolvedThreads: number;
+  archivedThreads: number;
+  lockedThreads: number;
+  totalReplies: number;
+  averageRepliesPerThread: number;
+  averageParticipantsPerThread: number;
+  mostActiveThreads: Array<{
+    id: string;
+    title: string | null;
+    replyCount: number;
+  }>;
+  staleThreads: number;
+}
+
+export async function getThreadAnalytics(
+  threadId: string
+): Promise<ThreadAnalytics> {
+  const token = useAuthStore.getState().token;
+  const response = await fetch(`${API_BASE}/threads/${threadId}/analytics`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch thread analytics');
+  }
+
+  const result = await response.json();
+  return result.data;
+}
+
+export async function getChannelThreadAnalytics(
+  channelId: string
+): Promise<ChannelThreadAnalytics> {
+  const token = useAuthStore.getState().token;
+  const response = await fetch(
+    `${API_BASE}/threads/analytics?channelId=${channelId}`,
+    {
+      headers: { Authorization: `Bearer ${token}` }
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch channel thread analytics');
+  }
+
+  const result = await response.json();
+  return result.data;
 }

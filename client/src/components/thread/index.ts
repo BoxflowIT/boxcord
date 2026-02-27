@@ -9,3 +9,5 @@ export { ThreadComposer } from './ThreadComposer';
 export { ThreadContextMenu } from './ThreadContextMenu';
 export { FollowingThreadsList } from './FollowingThreadsList';
 export { FollowingThreadItem } from './FollowingThreadItem';
+export { CreateThreadModal } from './CreateThreadModal';
+export { ThreadNotificationPanel } from './ThreadNotificationPanel';
