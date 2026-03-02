@@ -94,35 +94,21 @@ export function useBookmarks(workspaceId?: string) {
 
 /**
  * Check if a message is bookmarked
+ * Derives status from the bookmarks list instead of a per-message API call
  */
 export function useIsBookmarked(messageId?: string, dmMessageId?: string) {
-  const result = useQuery<boolean>({
-    queryKey: ['bookmark-check', messageId, dmMessageId],
-    queryFn: async () => {
-      if (!messageId && !dmMessageId) {
-        return false;
-      }
+  const { data: bookmarks = [] } = useBookmarks();
 
-      const params = new URLSearchParams();
-      if (messageId) params.set('messageId', messageId);
-      if (dmMessageId) params.set('dmMessageId', dmMessageId);
+  const isBookmarked =
+    messageId || dmMessageId
+      ? bookmarks.some(
+          (b) =>
+            (messageId && b.messageId === messageId) ||
+            (dmMessageId && b.dmMessageId === dmMessageId)
+        )
+      : false;
 
-      const response = await fetch(`${API_BASE}/bookmarks/check?${params}`, {
-        headers: getAuthHeaders()
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to check bookmark status');
-      }
-
-      const data = await response.json();
-      const isBookmarked = data.data.bookmarked;
-      return isBookmarked;
-    },
-    enabled: !!(messageId || dmMessageId)
-  });
-
-  return result;
+  return { data: isBookmarked, isLoading: false };
 }
 
 /**

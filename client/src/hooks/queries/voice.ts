@@ -13,7 +13,7 @@ export function useWorkspaceVoiceUsers(workspaceId: string | undefined) {
     queryFn: () =>
       workspaceId ? api.getWorkspaceVoiceUsers(workspaceId) : {},
     enabled: !!workspaceId,
-    staleTime: 0, // Always refetch when needed
+    staleTime: 10 * 1000, // 10s - socket events keep fresh
     gcTime: 30000,
     refetchOnMount: true,
     refetchOnWindowFocus: false
@@ -31,7 +31,7 @@ export function useVoiceChannelUsers(channelId: string | undefined) {
       : ['voiceChannelUsers-null'],
     queryFn: () => (channelId ? api.getVoiceChannelUsers(channelId) : []),
     enabled: !!channelId,
-    staleTime: 0, // Always refetch when needed
+    staleTime: 10 * 1000, // 10s - socket events keep fresh
     gcTime: 30000,
     refetchOnMount: true,
     refetchOnWindowFocus: false

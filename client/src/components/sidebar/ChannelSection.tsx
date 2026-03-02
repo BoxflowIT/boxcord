@@ -1,7 +1,10 @@
 // Reusable Channel Section Component
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
-import { useWorkspaceVoiceUsers } from '../../hooks/useQuery';
+import {
+  useWorkspaceVoiceUsers,
+  useOnlineUsers,
+  useWorkspaceMembers
+} from '../../hooks/useQuery';
 import {
   PlusIcon,
   EditIcon,
@@ -12,7 +15,6 @@ import {
   MicOffIcon,
   HeadphonesOffIcon
 } from '../ui/Icons';
-import { api } from '../../services/api';
 import type { Channel } from '../../types';
 import { cn } from '../../utils/classNames';
 import ContextMenu from '../menu/ContextMenu';
@@ -146,12 +148,8 @@ function VoiceChannelWithUsers({
   const { t } = useTranslation();
   const hasUnread = (channel.unreadCount ?? 0) > 0;
 
-  // Fetch user info for all users
-  const { data: onlineUsers = [] } = useQuery<UserInfo[]>({
-    queryKey: ['users', 'online'],
-    queryFn: () => api.getOnlineUsers() as Promise<UserInfo[]>,
-    staleTime: 30000
-  });
+  // Fetch user info for all users - use shared hook
+  const { data: onlineUsers = [] } = useOnlineUsers();
 
   return (
     <div>
@@ -371,16 +369,10 @@ export default function ChannelSection({
   const { data } = useWorkspaceVoiceUsers(workspaceId);
   const workspaceVoiceUsers: Record<string, VoiceUser[]> = data || {};
 
-  // Fetch workspace members to determine admin status
-  const { data: members = [] } = useQuery<Array<{ id: string; role: string }>>({
-    queryKey: ['workspace', workspaceId, 'members'],
-    queryFn: () =>
-      api.getWorkspaceMembers(workspaceId!) as Promise<
-        Array<{ id: string; role: string }>
-      >,
-    enabled: !!workspaceId,
-    staleTime: 30000
-  });
+  // Fetch workspace members to determine admin status - use shared hook
+  const { data: members = [] } = useWorkspaceMembers(workspaceId) as {
+    data: Array<{ id: string; role: string }>;
+  };
 
   // Check if current user is admin
   const currentUserMember = members.find((m) => m.id === currentUser?.id);
