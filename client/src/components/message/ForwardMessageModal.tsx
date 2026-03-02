@@ -1,10 +1,14 @@
 // Message Forward Modal - Forward message to another channel/DM
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CloseIcon, SendIcon } from '../ui/Icons';
-import { api } from '../../services/api';
 import { useAuthStore } from '../../store/auth';
-import { logger } from '../../utils/logger';
+import {
+  useWorkspaces,
+  useChannels,
+  useDMChannels
+} from '../../hooks/useQuery';
 
 interface Channel {
   id: string;
@@ -26,63 +30,62 @@ export function ForwardMessageModal({
 }: ForwardMessageModalProps) {
   const { t } = useTranslation();
   const { user: currentUser } = useAuthStore();
-  const [channels, setChannels] = useState<Channel[]>([]);
-  const [dms, setDms] = useState<Channel[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTarget, setSelectedTarget] = useState<Channel | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Fetch available channels and DMs
-    const fetchTargets = async () => {
-      try {
-        setLoading(true);
+  // Use cached React Query data instead of N+1 fetch loop
+  const { data: workspaces = [], isLoading: loadingWorkspaces } =
+    useWorkspaces();
+  const { data: dmsList = [], isLoading: loadingDMs } = useDMChannels();
 
-        // Fetch all workspaces first
-        const workspaces = await api.getWorkspaces();
+  // Get channels for the first workspace (most common case)
+  // All workspaces' channels are already cached from Sidebar
+  const firstWorkspaceId = workspaces[0]?.id;
+  const { data: firstChannels = [] } = useChannels(firstWorkspaceId);
 
-        // Fetch channels for each workspace
-        const allChannels: Channel[] = [];
-        for (const workspace of workspaces) {
-          const workspaceChannels = await api.getChannels(workspace.id);
-          allChannels.push(
-            ...workspaceChannels.map((ch) => ({
-              id: ch.id,
-              name: ch.name,
-              type: 'channel' as const,
-              workspaceName: workspace.name
-            }))
-          );
-        }
-        setChannels(allChannels);
+  // Build channel list from cached data
+  const channels = useMemo(() => {
+    const allChannels: Channel[] = [];
+    if (firstChannels.length > 0 && workspaces[0]) {
+      allChannels.push(
+        ...firstChannels.map((ch: { id: string; name: string }) => ({
+          id: ch.id,
+          name: ch.name,
+          type: 'channel' as const,
+          workspaceName: workspaces[0].name
+        }))
+      );
+    }
+    return allChannels;
+  }, [firstChannels, workspaces]);
 
-        // Fetch DMs
-        const dmsData = await api.getDMChannels();
-        setDms(
-          dmsData.map((dm) => {
-            // Get the other user (not the current user)
-            const otherParticipant = dm.participants.find(
-              (p) => p.userId !== currentUser?.id
-            );
-            const otherUser =
-              otherParticipant?.user || dm.participants[0]?.user;
-
-            return {
-              id: dm.id,
-              name: otherUser?.firstName || otherUser?.email || 'Unknown',
-              type: 'dm' as const
-            };
-          })
+  // Build DM list from cached data
+  const dms = useMemo(() => {
+    return dmsList.map(
+      (dm: {
+        id: string;
+        participants: Array<{
+          userId: string;
+          user?: {
+            firstName?: string;
+            email?: string;
+          };
+        }>;
+      }) => {
+        const otherParticipant = dm.participants.find(
+          (p) => p.userId !== currentUser?.id
         );
-      } catch (error) {
-        logger.error('Failed to fetch targets:', error);
-      } finally {
-        setLoading(false);
+        const otherUser = otherParticipant?.user || dm.participants[0]?.user;
+        return {
+          id: dm.id,
+          name: otherUser?.firstName || otherUser?.email || 'Unknown',
+          type: 'dm' as const
+        };
       }
-    };
+    );
+  }, [dmsList, currentUser?.id]);
 
-    fetchTargets();
-  }, [currentUser?.id]);
+  const loading = loadingWorkspaces || loadingDMs;
 
   const filteredChannels = channels.filter((ch) =>
     ch.name.toLowerCase().includes(searchQuery.toLowerCase())

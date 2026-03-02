@@ -204,7 +204,7 @@ export const api = {
       body: JSON.stringify({ channelId })
     }),
   getPinnedMessages: (channelId: string) =>
-    request<Message[]>(`/messages/pinned?channelId=${channelId}`),  
+    request<Message[]>(`/messages/pinned?channelId=${channelId}`),
 
   // Global Search
   globalSearch: (query: string) =>
@@ -401,11 +401,7 @@ export const api = {
     request<void>(`/threads/${threadId}/replies/${replyId}`, {
       method: 'DELETE'
     }),
-  addThreadReplyReaction: (
-    threadId: string,
-    replyId: string,
-    emoji: string
-  ) =>
+  addThreadReplyReaction: (threadId: string, replyId: string, emoji: string) =>
     request<{ id: string; messageId: string; userId: string; emoji: string }>(
       `/threads/${threadId}/replies/${replyId}/reactions`,
       { method: 'POST', body: JSON.stringify({ emoji }) }
@@ -438,5 +434,85 @@ export const api = {
     request<T>(path, {
       method: 'POST',
       body: body ? JSON.stringify(body) : undefined
-    }).then((data) => ({ data }))
+    }).then((data) => ({ data })),
+
+  // Bookmarks
+  getBookmarks: (workspaceId?: string) =>
+    request<unknown[]>(
+      workspaceId ? `/bookmarks?workspaceId=${workspaceId}` : '/bookmarks'
+    ),
+  getBookmarkCount: (workspaceId?: string) =>
+    request<{ count: number }>(
+      workspaceId
+        ? `/bookmarks/count?workspaceId=${workspaceId}`
+        : '/bookmarks/count'
+    ),
+  addBookmark: (input: {
+    messageId?: string;
+    dmMessageId?: string;
+    workspaceId?: string;
+    note?: string;
+  }) =>
+    request<unknown>('/bookmarks', {
+      method: 'POST',
+      body: JSON.stringify(input)
+    }),
+  removeBookmark: (bookmarkId: string) =>
+    request<unknown>(`/bookmarks/${bookmarkId}`, { method: 'DELETE' }),
+  removeBookmarkByMessage: (messageId: string) =>
+    request<unknown>(`/bookmarks/message/${messageId}`, { method: 'DELETE' }),
+  removeBookmarkByDM: (dmMessageId: string) =>
+    request<unknown>(`/bookmarks/dm/${dmMessageId}`, { method: 'DELETE' }),
+  updateBookmarkNote: (bookmarkId: string, note: string) =>
+    request<unknown>(`/bookmarks/${bookmarkId}/note`, {
+      method: 'PATCH',
+      body: JSON.stringify({ note })
+    }),
+
+  // Permissions
+  getChannelPermissions: (channelId: string) =>
+    request<unknown>(`/permissions?channelId=${channelId}`),
+  getUserPermissions: (channelId: string) =>
+    request<unknown>(`/permissions/me?channelId=${channelId}`),
+  checkPermission: (channelId: string, permission: string) =>
+    request<{ hasPermission: boolean }>(
+      `/permissions/check?channelId=${channelId}&permission=${permission}`
+    ),
+  setPermissions: (
+    channelId: string,
+    role: string,
+    permissions: Record<string, boolean>
+  ) =>
+    request<unknown>('/permissions', {
+      method: 'POST',
+      body: JSON.stringify({ channelId, role, permissions })
+    }),
+  resetPermissions: (channelId: string, role: string) =>
+    request<unknown>(`/permissions?channelId=${channelId}&role=${role}`, {
+      method: 'DELETE'
+    }),
+
+  // Giphy
+  searchGiphy: (query: string, limit = 25, offset = 0) =>
+    request<unknown>(
+      `/giphy/search?q=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`
+    ),
+  getTrendingGiphy: (limit = 25, offset = 0) =>
+    request<unknown>(`/giphy/trending?limit=${limit}&offset=${offset}`),
+  searchGiphyStickers: (query: string, limit = 25, offset = 0) =>
+    request<unknown>(
+      `/giphy/stickers/search?q=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`
+    ),
+  getTrendingGiphyStickers: (limit = 25, offset = 0) =>
+    request<unknown>(
+      `/giphy/stickers/trending?limit=${limit}&offset=${offset}`
+    ),
+  getRandomGiphy: (tag?: string) =>
+    request<unknown>(
+      tag ? `/giphy/random?tag=${encodeURIComponent(tag)}` : '/giphy/random'
+    ),
+
+  // Audit Logs
+  getAuditLogs: (workspaceId: string, filter = 'all') =>
+    request<unknown[]>(`/workspaces/${workspaceId}/audit-logs?filter=${filter}`)
 };

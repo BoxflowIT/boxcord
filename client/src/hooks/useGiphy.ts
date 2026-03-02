@@ -4,18 +4,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { useAuthStore } from '../store/auth';
-
-const API_BASE = '/api/v1';
-
-// Helper to get auth headers
-function getAuthHeaders(): HeadersInit {
-  const token = useAuthStore.getState().token;
-  return {
-    'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` })
-  };
-}
+import { api } from '../services/api';
 
 export interface GiphyGif {
   id: string;
@@ -66,19 +55,8 @@ interface GiphyResponse {
 export function useGiphySearch(query: string, limit = 25, offset = 0) {
   return useQuery<GiphyResponse>({
     queryKey: ['giphy-search', query, limit, offset],
-    queryFn: async () => {
-      const response = await fetch(
-        `${API_BASE}/giphy/search?q=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`,
-        { headers: getAuthHeaders() }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to search GIFs');
-      }
-
-      const result = await response.json();
-      return result.data;
-    },
+    queryFn: () =>
+      api.searchGiphy(query, limit, offset) as Promise<GiphyResponse>,
     enabled: query.length > 0,
     staleTime: 5 * 60 * 1000 // 5 minutes
   });
@@ -90,19 +68,8 @@ export function useGiphySearch(query: string, limit = 25, offset = 0) {
 export function useGiphyTrending(limit = 25, offset = 0) {
   return useQuery<GiphyResponse>({
     queryKey: ['giphy-trending', limit, offset],
-    queryFn: async () => {
-      const response = await fetch(
-        `${API_BASE}/giphy/trending?limit=${limit}&offset=${offset}`,
-        { headers: getAuthHeaders() }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to get trending GIFs');
-      }
-
-      const result = await response.json();
-      return result.data;
-    },
+    queryFn: () =>
+      api.getTrendingGiphy(limit, offset) as Promise<GiphyResponse>,
     staleTime: 5 * 60 * 1000 // 5 minutes
   });
 }
@@ -113,19 +80,8 @@ export function useGiphyTrending(limit = 25, offset = 0) {
 export function useGiphyStickers(query: string, limit = 25, offset = 0) {
   return useQuery<GiphyResponse>({
     queryKey: ['giphy-stickers', query, limit, offset],
-    queryFn: async () => {
-      const response = await fetch(
-        `${API_BASE}/giphy/stickers/search?q=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`,
-        { headers: getAuthHeaders() }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to search stickers');
-      }
-
-      const result = await response.json();
-      return result.data;
-    },
+    queryFn: () =>
+      api.searchGiphyStickers(query, limit, offset) as Promise<GiphyResponse>,
     enabled: query.length > 0,
     staleTime: 5 * 60 * 1000
   });
@@ -137,19 +93,8 @@ export function useGiphyStickers(query: string, limit = 25, offset = 0) {
 export function useGiphyTrendingStickers(limit = 25, offset = 0) {
   return useQuery<GiphyResponse>({
     queryKey: ['giphy-trending-stickers', limit, offset],
-    queryFn: async () => {
-      const response = await fetch(
-        `${API_BASE}/giphy/stickers/trending?limit=${limit}&offset=${offset}`,
-        { headers: getAuthHeaders() }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to get trending stickers');
-      }
-
-      const result = await response.json();
-      return result.data;
-    },
+    queryFn: () =>
+      api.getTrendingGiphyStickers(limit, offset) as Promise<GiphyResponse>,
     staleTime: 5 * 60 * 1000
   });
 }
@@ -160,20 +105,7 @@ export function useGiphyTrendingStickers(limit = 25, offset = 0) {
 export function useGiphyRandom(tag?: string) {
   return useQuery<GiphyGif>({
     queryKey: ['giphy-random', tag],
-    queryFn: async () => {
-      const url = tag
-        ? `${API_BASE}/giphy/random?tag=${encodeURIComponent(tag)}`
-        : `${API_BASE}/giphy/random`;
-
-      const response = await fetch(url, { headers: getAuthHeaders() });
-
-      if (!response.ok) {
-        throw new Error('Failed to get random GIF');
-      }
-
-      const result = await response.json();
-      return result.data;
-    },
+    queryFn: () => api.getRandomGiphy(tag) as Promise<GiphyGif>,
     staleTime: 0 // Always fetch new random GIF
   });
 }
