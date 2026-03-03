@@ -173,7 +173,8 @@ export async function removeBookmarkByMessage(
   });
 
   if (!bookmark) {
-    throw new NotFoundError('Bookmark', messageId || dmMessageId || '');
+    // Already removed — treat as success (idempotent)
+    return null;
   }
 
   return prisma.bookmarkedMessage.delete({

@@ -96,8 +96,15 @@ export class PollService {
         question: result.poll.question,
         isMultiple: result.poll.isMultiple,
         isAnonymous: result.poll.isAnonymous,
-        endsAt: result.poll.endsAt?.toISOString() ?? null,
-        createdAt: result.poll.createdAt.toISOString(),
+        endsAt: result.poll.endsAt
+          ? result.poll.endsAt instanceof Date
+            ? result.poll.endsAt.toISOString()
+            : String(result.poll.endsAt)
+          : null,
+        createdAt:
+          result.poll.createdAt instanceof Date
+            ? result.poll.createdAt.toISOString()
+            : String(result.poll.createdAt),
         totalVotes: 0,
         hasVoted: false,
         options: result.options.map((opt) => ({
@@ -337,8 +344,15 @@ export class PollService {
       question: poll.question,
       isMultiple: poll.isMultiple,
       isAnonymous: poll.isAnonymous,
-      endsAt: poll.endsAt?.toISOString() ?? null,
-      createdAt: poll.createdAt.toISOString(),
+      endsAt: poll.endsAt
+        ? poll.endsAt instanceof Date
+          ? poll.endsAt.toISOString()
+          : String(poll.endsAt)
+        : null,
+      createdAt:
+        poll.createdAt instanceof Date
+          ? poll.createdAt.toISOString()
+          : String(poll.createdAt),
       totalVotes,
       hasVoted,
       options

@@ -167,6 +167,27 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
         logger.info('Channel marked as read via shortcut');
       }
     },
+    onPinMessage: async () => {
+      // Pin/unpin the last hovered message or most recent message
+      const targetMessageId =
+        hoveredMessageId || channelMessages[channelMessages.length - 1]?.id;
+      if (targetMessageId && channelId) {
+        const message = channelMessages.find((m) => m.id === targetMessageId);
+        if (!message) return;
+        try {
+          if (message.isPinned) {
+            await api.unpinMessage(targetMessageId, channelId);
+          } else {
+            await api.pinMessage(targetMessageId, channelId);
+          }
+          logger.info(
+            `Pin toggled for message ${targetMessageId} via shortcut`
+          );
+        } catch (err) {
+          logger.error('Failed to pin/unpin message via shortcut:', err);
+        }
+      }
+    },
     onQuickReaction: async (emoji: string) => {
       const threadState = useThreadStore.getState();
 
@@ -480,9 +501,9 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
             );
 
             // Update message in messages list
-            queryClient.setQueryData(
-              ['messages', channelId],
-              (old: { items: Message[] } | undefined) => {
+            queryClient.setQueryData<PaginatedMessages>(
+              queryKeys.messages(channelId, undefined),
+              (old) => {
                 if (!old?.items) return old;
                 return {
                   ...old,
@@ -551,9 +572,9 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
             }
 
             // Update message in messages list
-            queryClient.setQueryData(
-              ['messages', channelId],
-              (old: { items: Message[] } | undefined) => {
+            queryClient.setQueryData<PaginatedMessages>(
+              queryKeys.messages(channelId, undefined),
+              (old) => {
                 if (!old?.items) return old;
                 return {
                   ...old,
