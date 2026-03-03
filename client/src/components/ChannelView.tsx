@@ -35,6 +35,7 @@ import ChannelInputSection from './channel/ChannelInputSection';
 import { VoiceChannelView } from './voice/VoiceChannelView';
 import { PinnedMessagesPanel } from './message/PinnedMessagesPanel';
 import { ThreadSidebar } from './thread/ThreadSidebar';
+import { CreatePollModal } from './CreatePollModal';
 import { useThreadSocket } from '../hooks/useThreadSocket';
 import {
   useThreads,
@@ -113,6 +114,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
   const [showSlashCommands, setShowSlashCommands] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+  const [showPollModal, setShowPollModal] = useState(false);
   const [botResponse, setBotResponse] = useState<{
     content: string;
     isPrivate: boolean;
@@ -614,6 +616,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
         onCloseMentions={() => setShowMentions(false)}
         onCloseSlashCommands={() => setShowSlashCommands(false)}
         onToggleEmojiPicker={setShowEmojiPicker}
+        onCreatePoll={() => setShowPollModal(true)}
       />
 
       {/* Delete Message Confirmation Modal */}
@@ -627,6 +630,14 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
 
       {/* Thread Sidebar */}
       <ThreadSidebar />
+
+      {/* Create Poll Modal */}
+      {showPollModal && channelId && (
+        <CreatePollModal
+          channelId={channelId}
+          onClose={() => setShowPollModal(false)}
+        />
+      )}
     </>
   );
 }

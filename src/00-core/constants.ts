@@ -54,7 +54,12 @@ export const SOCKET_EVENTS = {
   WEBRTC_OFFER: 'webrtc:offer',
   WEBRTC_ANSWER: 'webrtc:answer',
   WEBRTC_ICE_CANDIDATE: 'webrtc:ice-candidate',
-  WEBRTC_PEER_DISCONNECTED: 'webrtc:peer-disconnected'
+  WEBRTC_PEER_DISCONNECTED: 'webrtc:peer-disconnected',
+
+  // Polls
+  POLL_CREATED: 'poll:created',
+  POLL_VOTED: 'poll:voted',
+  POLL_ENDED: 'poll:ended'
 } as const;
 
 // Rate limiting
@@ -68,3 +73,6 @@ export const PAGINATION = {
   DEFAULT_PAGE_SIZE: 50,
   MAX_PAGE_SIZE: 100
 } as const;
+
+// Poll message prefix - shared between server and client
+export const POLL_MESSAGE_PREFIX = '📊 **Omröstning:**';

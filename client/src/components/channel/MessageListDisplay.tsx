@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { LoadingState } from '../ui/LoadingSpinner';
 import ChannelEmptyState from '../channel/ChannelEmptyState';
 import { MessageItem } from '../MessageItem';
+import { PollMessage } from '../PollMessage';
 import { ForwardMessageModal } from '../message/ForwardMessageModal';
 import { renderEnhancedMessage } from '../../utils/messageRendering';
 import { api } from '../../services/api';
@@ -12,6 +13,7 @@ import { getUserDisplayName, getUserInitials } from '../../utils/user';
 import { logger } from '../../utils/logger';
 import { useThreadStore } from '../../store/thread';
 import { createThread, getThreadByMessageId } from '../../hooks/useThreads';
+import { POLL_MESSAGE_PREFIX } from '../../constants/poll';
 import { CreateThreadModal } from '../thread/CreateThreadModal';
 
 interface Message {
@@ -162,7 +164,10 @@ export default function MessageListDisplay({
       openThreadSidebar(newThread.id);
     } catch (createError: unknown) {
       // If message already has a thread (not in local store), fetch and open it
-      if (createError instanceof Error && createError.message?.includes('already has a thread')) {
+      if (
+        createError instanceof Error &&
+        createError.message?.includes('already has a thread')
+      ) {
         const serverThread = await getThreadByMessageId(messageId);
         if (serverThread) {
           useThreadStore.getState().addThread(serverThread);
@@ -196,57 +201,64 @@ export default function MessageListDisplay({
       <div className="max-w-4xl mx-auto space-y-4">
         {messages.map((message) => {
           const threadInfo = getThreadInfo(message.id);
+          const isPollMessage = message.content.startsWith(POLL_MESSAGE_PREFIX);
           return (
-            <MessageItem
-              key={message.id}
-              messageId={message.id}
-              content={message.content}
-              createdAt={message.createdAt}
-              edited={message.edited}
-              attachments={message.attachments}
-              reactionCounts={message.reactionCounts}
-              showHeader={message.showHeader}
-              isEditing={editingMessageId === message.id}
-              isOwnMessage={message.authorId === currentUserId}
-              authorId={message.authorId}
-              authorName={
-                message.authorId === currentUserId
-                  ? 'Du'
-                  : message.author
-                    ? getUserDisplayName(message.author)
-                    : 'Unknown'
-              }
-              authorInitial={
-                message.author ? getUserInitials(message.author) : '?'
-              }
-              authorAvatarUrl={
-                message.authorId === currentUserId
-                  ? currentUserAvatar
-                  : message.author?.avatarUrl
-              }
-              editContent={editingMessageId === message.id ? editContent : ''}
-              editTextareaRef={editTextareaRef}
-              onEditContentChange={onEditContentChange}
-              onSaveEdit={onSaveEdit}
-              onCancelEdit={onCancelEdit}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onForward={(messageId, content) =>
-                setForwardingMessage({ id: messageId, content })
-              }
-              onStartThread={
-                !isDM ? () => handleStartThread(message.id) : undefined
-              }
-              hasThread={threadInfo.hasThread}
-              threadReplyCount={threadInfo.threadReplyCount}
-              onPin={onPin}
-              isPinned={message.isPinned}
-              canPin={canPin}
-              renderContent={renderEnhancedMessage}
-              compact={compactMode}
-              isDM={isDM}
-              onHover={onMessageHover}
-            />
+            <div key={message.id}>
+              <MessageItem
+                messageId={message.id}
+                content={message.content}
+                createdAt={message.createdAt}
+                edited={message.edited}
+                attachments={message.attachments}
+                reactionCounts={message.reactionCounts}
+                showHeader={message.showHeader}
+                isEditing={editingMessageId === message.id}
+                isOwnMessage={message.authorId === currentUserId}
+                authorId={message.authorId}
+                authorName={
+                  message.authorId === currentUserId
+                    ? 'Du'
+                    : message.author
+                      ? getUserDisplayName(message.author)
+                      : 'Unknown'
+                }
+                authorInitial={
+                  message.author ? getUserInitials(message.author) : '?'
+                }
+                authorAvatarUrl={
+                  message.authorId === currentUserId
+                    ? currentUserAvatar
+                    : message.author?.avatarUrl
+                }
+                editContent={editingMessageId === message.id ? editContent : ''}
+                editTextareaRef={editTextareaRef}
+                onEditContentChange={onEditContentChange}
+                onSaveEdit={onSaveEdit}
+                onCancelEdit={onCancelEdit}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onForward={(messageId, content) =>
+                  setForwardingMessage({ id: messageId, content })
+                }
+                onStartThread={
+                  !isDM ? () => handleStartThread(message.id) : undefined
+                }
+                hasThread={threadInfo.hasThread}
+                threadReplyCount={threadInfo.threadReplyCount}
+                onPin={onPin}
+                isPinned={message.isPinned}
+                canPin={canPin}
+                renderContent={renderEnhancedMessage}
+                compact={compactMode}
+                isDM={isDM}
+                onHover={onMessageHover}
+              />
+              {isPollMessage && (
+                <div className="ml-12 -mt-1">
+                  <PollMessage messageId={message.id} />
+                </div>
+              )}
+            </div>
           );
         })}
         <div ref={messagesEndRef} />

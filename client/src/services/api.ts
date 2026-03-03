@@ -11,7 +11,8 @@ import type {
   PaginatedMessages,
   DMChannel,
   ReactionCount,
-  MessageAttachment
+  MessageAttachment,
+  Poll
 } from '../types';
 
 const API_BASE = '/api/v1';
@@ -514,5 +515,33 @@ export const api = {
 
   // Audit Logs
   getAuditLogs: (workspaceId: string, filter = 'all') =>
-    request<unknown[]>(`/workspaces/${workspaceId}/audit-logs?filter=${filter}`)
+    request<unknown[]>(
+      `/workspaces/${workspaceId}/audit-logs?filter=${filter}`
+    ),
+
+  // Polls
+  createPoll: (data: {
+    channelId: string;
+    question: string;
+    options: string[];
+    isMultiple?: boolean;
+    isAnonymous?: boolean;
+    endsAt?: string;
+  }) =>
+    request<Poll>('/polls', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+  getPoll: (pollId: string) => request<Poll>(`/polls/${pollId}`),
+  getPollByMessage: (messageId: string) =>
+    request<Poll | null>(`/polls/message/${messageId}`),
+  votePoll: (pollId: string, optionId: string) =>
+    request<Poll>(`/polls/${pollId}/vote`, {
+      method: 'POST',
+      body: JSON.stringify({ optionId })
+    }),
+  endPoll: (pollId: string) =>
+    request<Poll>(`/polls/${pollId}/end`, { method: 'POST' }),
+  deletePoll: (pollId: string) =>
+    request<void>(`/polls/${pollId}`, { method: 'DELETE' })
 };
