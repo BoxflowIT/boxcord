@@ -4,19 +4,8 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '../store/auth';
+import { api } from '../services/api';
 import { logger } from '../utils/logger';
-
-const API_BASE = '/api/v1';
-
-// Helper to get auth headers
-function getAuthHeaders(): HeadersInit {
-  const token = useAuthStore.getState().token;
-  return {
-    'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` })
-  };
-}
 
 export type MemberRole = 'OWNER' | 'ADMIN' | 'MEMBER';
 
@@ -55,26 +44,10 @@ export interface AllChannelPermissions {
 export function useChannelPermissions(channelId?: string) {
   return useQuery<AllChannelPermissions>({
     queryKey: ['permissions', 'channel', channelId],
-    queryFn: async () => {
-      if (!channelId) {
-        throw new Error('Channel ID is required');
-      }
-
-      const response = await fetch(
-        `${API_BASE}/permissions?channelId=${channelId}`,
-        {
-          headers: getAuthHeaders()
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch permissions');
-      }
-
-      const data = await response.json();
-      return data.data;
-    },
-    enabled: !!channelId
+    queryFn: () =>
+      api.getChannelPermissions(channelId!) as Promise<AllChannelPermissions>,
+    enabled: !!channelId,
+    staleTime: 30 * 1000 // 30s - mutations invalidate on change
   });
 }
 
@@ -85,27 +58,16 @@ export function useUserPermissions(channelId?: string) {
   return useQuery<ChannelPermissions | null>({
     queryKey: ['permissions', 'user', channelId],
     queryFn: async () => {
-      if (!channelId) {
-        return null;
-      }
-
-      const response = await fetch(
-        `${API_BASE}/permissions/me?channelId=${channelId}`,
-        {
-          headers: getAuthHeaders()
-        }
-      );
-
-      if (!response.ok) {
+      if (!channelId) return null;
+      try {
+        return (await api.getUserPermissions(channelId)) as ChannelPermissions;
+      } catch {
         logger.warn('Failed to fetch user permissions');
         return null;
       }
-
-      const data = await response.json();
-      return data.data;
     },
     enabled: !!channelId,
-    staleTime: 30000 // Cache for 30 seconds
+    staleTime: 30 * 1000 // 30s
   });
 }
 
@@ -119,26 +81,16 @@ export function useHasPermission(
   return useQuery<boolean>({
     queryKey: ['permissions', 'check', channelId, permission],
     queryFn: async () => {
-      if (!channelId || !permission) {
+      if (!channelId || !permission) return false;
+      try {
+        const result = await api.checkPermission(channelId, permission);
+        return result.hasPermission;
+      } catch {
         return false;
       }
-
-      const response = await fetch(
-        `${API_BASE}/permissions/check?channelId=${channelId}&permission=${permission}`,
-        {
-          headers: getAuthHeaders()
-        }
-      );
-
-      if (!response.ok) {
-        return false;
-      }
-
-      const data = await response.json();
-      return data.data.hasPermission;
     },
     enabled: !!channelId && !!permission,
-    staleTime: 30000 // Cache for 30 seconds
+    staleTime: 30 * 1000 // 30s
   });
 }
 
@@ -149,7 +101,7 @@ export function useSetPermissions() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
+    mutationFn: ({
       channelId,
       role,
       permissions
@@ -157,27 +109,13 @@ export function useSetPermissions() {
       channelId: string;
       role: MemberRole;
       permissions: Partial<ChannelPermissions>;
-    }) => {
-      const response = await fetch(`${API_BASE}/permissions`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          channelId,
-          role,
-          permissions
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'Failed to set permissions');
-      }
-
-      const data = await response.json();
-      return data.data;
-    },
+    }) =>
+      api.setPermissions(
+        channelId,
+        role,
+        permissions as Record<string, boolean>
+      ),
     onSuccess: (_, variables) => {
-      // Invalidate all permission queries for this channel
       queryClient.invalidateQueries({
         queryKey: ['permissions', 'channel', variables.channelId]
       });
@@ -198,31 +136,14 @@ export function useResetPermissions() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
+    mutationFn: ({
       channelId,
       role
     }: {
       channelId: string;
       role: MemberRole;
-    }) => {
-      const response = await fetch(
-        `${API_BASE}/permissions?channelId=${channelId}&role=${role}`,
-        {
-          method: 'DELETE',
-          headers: getAuthHeaders()
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'Failed to reset permissions');
-      }
-
-      const data = await response.json();
-      return data.data;
-    },
+    }) => api.resetPermissions(channelId, role),
     onSuccess: (_, variables) => {
-      // Invalidate all permission queries for this channel
       queryClient.invalidateQueries({
         queryKey: ['permissions', 'channel', variables.channelId]
       });
@@ -238,7 +159,6 @@ export function useResetPermissions() {
 
 /**
  * Quick permission check helper (synchronous, using cached data)
- * Use this when you need immediate permission checks in UI components
  */
 export function usePermissionCheck(
   channelId: string | undefined,

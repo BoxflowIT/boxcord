@@ -204,9 +204,7 @@ export const api = {
       body: JSON.stringify({ channelId })
     }),
   getPinnedMessages: (channelId: string) =>
-    request<Message[]>(
-      `/messages/pinned?channelId=${channelId}&_t=${Date.now()}`
-    ),
+    request<Message[]>(`/messages/pinned?channelId=${channelId}`),
 
   // Global Search
   globalSearch: (query: string) =>
@@ -218,6 +216,11 @@ export const api = {
   // Users
   getCurrentUser: () => request<User>('/users/me'),
   getUser: (id: string) => request<User>(`/users/${id}`),
+  getUsersBatch: (userIds: string[]) =>
+    request<User[]>('/users/batch', {
+      method: 'POST',
+      body: JSON.stringify({ userIds })
+    }),
   searchUsers: (query: string) => request<User[]>(`/users/search?q=${query}`),
   getOnlineUsers: () => request<User[]>('/users/online'),
   updateProfile: (data: {
@@ -285,7 +288,7 @@ export const api = {
       body: JSON.stringify({ channelId })
     }),
   getPinnedDMs: (channelId: string) =>
-    request<Message[]>(`/dm/channels/${channelId}/pinned?_t=${Date.now()}`),
+    request<Message[]>(`/dm/channels/${channelId}/pinned`),
 
   // Reactions
   getQuickReactions: () => request<string[]>('/reactions/quick'),
@@ -341,6 +344,89 @@ export const api = {
       body: JSON.stringify({ userId })
     }),
 
+  // Threads
+  getThreads: (channelId: string) =>
+    request<{ items: unknown[]; hasMore: boolean; nextCursor?: string }>(
+      `/threads?channelId=${channelId}`
+    ),
+  getThread: (threadId: string) => request<unknown>(`/threads/${threadId}`),
+  getThreadByMessageId: (messageId: string) =>
+    request<unknown>(`/threads/by-message/${messageId}`),
+  createThread: (messageId: string, title: string) =>
+    request<unknown>('/threads', {
+      method: 'POST',
+      body: JSON.stringify({ messageId, title })
+    }),
+  updateThread: (
+    threadId: string,
+    updates: {
+      title?: string;
+      isLocked?: boolean;
+      isArchived?: boolean;
+      isResolved?: boolean;
+    }
+  ) =>
+    request<unknown>(`/threads/${threadId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates)
+    }),
+  deleteThread: (threadId: string) =>
+    request<void>(`/threads/${threadId}`, { method: 'DELETE' }),
+  searchThreads: (query: string, channelId?: string) => {
+    const params = new URLSearchParams({ q: query });
+    if (channelId) params.set('channelId', channelId);
+    return request<{ items: unknown[]; hasMore: boolean; nextCursor?: string }>(
+      `/threads/search?${params}`
+    );
+  },
+  getThreadReplies: (threadId: string, page = 1, limit = 50) =>
+    request<{ items: Array<Record<string, unknown>>; hasMore: boolean }>(
+      `/threads/${threadId}/replies?page=${page}&limit=${limit}`
+    ),
+  addThreadReply: (
+    threadId: string,
+    content: string,
+    attachments?: Array<{ url: string; type: string; name: string }>
+  ) =>
+    request<Record<string, unknown>>(`/threads/${threadId}/replies`, {
+      method: 'POST',
+      body: JSON.stringify({ content, attachments })
+    }),
+  editThreadReply: (threadId: string, replyId: string, content: string) =>
+    request<{ id: string; content: string; edited: boolean }>(
+      `/threads/${threadId}/replies/${replyId}`,
+      { method: 'PATCH', body: JSON.stringify({ content }) }
+    ),
+  deleteThreadReply: (threadId: string, replyId: string) =>
+    request<void>(`/threads/${threadId}/replies/${replyId}`, {
+      method: 'DELETE'
+    }),
+  addThreadReplyReaction: (threadId: string, replyId: string, emoji: string) =>
+    request<{ id: string; messageId: string; userId: string; emoji: string }>(
+      `/threads/${threadId}/replies/${replyId}/reactions`,
+      { method: 'POST', body: JSON.stringify({ emoji }) }
+    ),
+  removeThreadReplyReaction: (
+    threadId: string,
+    replyId: string,
+    emoji: string
+  ) =>
+    request<void>(
+      `/threads/${threadId}/replies/${replyId}/reactions/${encodeURIComponent(emoji)}`,
+      { method: 'DELETE' }
+    ),
+  toggleThreadFollow: (threadId: string, shouldFollow: boolean) =>
+    request<unknown>(`/threads/${threadId}/follow`, {
+      method: 'POST',
+      body: JSON.stringify({ shouldFollow })
+    }),
+  markThreadAsRead: (threadId: string) =>
+    request<unknown>(`/threads/${threadId}/read`, { method: 'POST' }),
+  getThreadAnalytics: (threadId: string) =>
+    request<unknown>(`/threads/${threadId}/analytics`),
+  getChannelThreadAnalytics: (channelId: string) =>
+    request<unknown>(`/threads/analytics?channelId=${channelId}`),
+
   // Generic methods for services that manage their own endpoints
   get: <T = { data: unknown }>(path: string) =>
     request<T>(path).then((data) => ({ data })),
@@ -348,5 +434,85 @@ export const api = {
     request<T>(path, {
       method: 'POST',
       body: body ? JSON.stringify(body) : undefined
-    }).then((data) => ({ data }))
+    }).then((data) => ({ data })),
+
+  // Bookmarks
+  getBookmarks: (workspaceId?: string) =>
+    request<unknown[]>(
+      workspaceId ? `/bookmarks?workspaceId=${workspaceId}` : '/bookmarks'
+    ),
+  getBookmarkCount: (workspaceId?: string) =>
+    request<{ count: number }>(
+      workspaceId
+        ? `/bookmarks/count?workspaceId=${workspaceId}`
+        : '/bookmarks/count'
+    ),
+  addBookmark: (input: {
+    messageId?: string;
+    dmMessageId?: string;
+    workspaceId?: string;
+    note?: string;
+  }) =>
+    request<unknown>('/bookmarks', {
+      method: 'POST',
+      body: JSON.stringify(input)
+    }),
+  removeBookmark: (bookmarkId: string) =>
+    request<unknown>(`/bookmarks/${bookmarkId}`, { method: 'DELETE' }),
+  removeBookmarkByMessage: (messageId: string) =>
+    request<unknown>(`/bookmarks/message/${messageId}`, { method: 'DELETE' }),
+  removeBookmarkByDM: (dmMessageId: string) =>
+    request<unknown>(`/bookmarks/dm/${dmMessageId}`, { method: 'DELETE' }),
+  updateBookmarkNote: (bookmarkId: string, note: string) =>
+    request<unknown>(`/bookmarks/${bookmarkId}/note`, {
+      method: 'PATCH',
+      body: JSON.stringify({ note })
+    }),
+
+  // Permissions
+  getChannelPermissions: (channelId: string) =>
+    request<unknown>(`/permissions?channelId=${channelId}`),
+  getUserPermissions: (channelId: string) =>
+    request<unknown>(`/permissions/me?channelId=${channelId}`),
+  checkPermission: (channelId: string, permission: string) =>
+    request<{ hasPermission: boolean }>(
+      `/permissions/check?channelId=${channelId}&permission=${permission}`
+    ),
+  setPermissions: (
+    channelId: string,
+    role: string,
+    permissions: Record<string, boolean>
+  ) =>
+    request<unknown>('/permissions', {
+      method: 'POST',
+      body: JSON.stringify({ channelId, role, permissions })
+    }),
+  resetPermissions: (channelId: string, role: string) =>
+    request<unknown>(`/permissions?channelId=${channelId}&role=${role}`, {
+      method: 'DELETE'
+    }),
+
+  // Giphy
+  searchGiphy: (query: string, limit = 25, offset = 0) =>
+    request<unknown>(
+      `/giphy/search?q=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`
+    ),
+  getTrendingGiphy: (limit = 25, offset = 0) =>
+    request<unknown>(`/giphy/trending?limit=${limit}&offset=${offset}`),
+  searchGiphyStickers: (query: string, limit = 25, offset = 0) =>
+    request<unknown>(
+      `/giphy/stickers/search?q=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`
+    ),
+  getTrendingGiphyStickers: (limit = 25, offset = 0) =>
+    request<unknown>(
+      `/giphy/stickers/trending?limit=${limit}&offset=${offset}`
+    ),
+  getRandomGiphy: (tag?: string) =>
+    request<unknown>(
+      tag ? `/giphy/random?tag=${encodeURIComponent(tag)}` : '/giphy/random'
+    ),
+
+  // Audit Logs
+  getAuditLogs: (workspaceId: string, filter = 'all') =>
+    request<unknown[]>(`/workspaces/${workspaceId}/audit-logs?filter=${filter}`)
 };

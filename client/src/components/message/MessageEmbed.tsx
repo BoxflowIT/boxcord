@@ -1,5 +1,5 @@
 // Message Embed Preview Component - Shows rich media previews for links
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '../../services/api';
 import { logger } from '../../utils/logger';
 
@@ -34,6 +34,7 @@ interface MessageEmbedProps {
 export function MessageEmbed({ content }: MessageEmbedProps) {
   const [embeds, setEmbeds] = useState<EmbedData[]>([]);
   const [loading, setLoading] = useState(false);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     // Extract URLs from content
@@ -46,8 +47,9 @@ export function MessageEmbed({ content }: MessageEmbedProps) {
       return;
     }
 
-    // Fetch embeds for all URLs
-    const fetchEmbeds = async () => {
+    // Debounce embed parsing to avoid spamming on rapid content changes
+    clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(async () => {
       setLoading(true);
       try {
         const response = await api.post<EmbedData[]>('/embeds/parse', {
@@ -59,9 +61,9 @@ export function MessageEmbed({ content }: MessageEmbedProps) {
       } finally {
         setLoading(false);
       }
-    };
+    }, 500);
 
-    fetchEmbeds();
+    return () => clearTimeout(debounceTimer.current);
   }, [content]);
 
   if (loading || embeds.length === 0) {

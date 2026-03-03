@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CloseIcon } from '../ui/Icons';
+import { api } from '../../services/api';
 import { logger } from '../../utils/logger';
 
 interface AuditLogEntry {
@@ -32,15 +33,11 @@ export function AuditLogViewer({ workspaceId, onClose }: AuditLogViewerProps) {
   const [filter, setFilter] = useState<string>('all');
 
   useEffect(() => {
-    // Fetch audit logs
     const fetchLogs = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          `/api/v1/workspaces/${workspaceId}/audit-logs?filter=${filter}`
-        );
-        const data = await response.json();
-        setLogs(data.data || []);
+        const data = await api.getAuditLogs(workspaceId, filter);
+        setLogs((data || []) as AuditLogEntry[]);
       } catch (error) {
         logger.error('Failed to fetch audit logs:', error);
       } finally {

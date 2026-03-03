@@ -4,18 +4,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '../store/auth';
-
-const API_BASE = '/api/v1';
-
-// Helper to get auth headers
-function getAuthHeaders(): HeadersInit {
-  const token = useAuthStore.getState().token;
-  return {
-    'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` })
-  };
-}
+import { api } from '../services/api';
 
 export interface Bookmark {
   id: string;
@@ -73,56 +62,28 @@ interface AddBookmarkInput {
 export function useBookmarks(workspaceId?: string) {
   return useQuery<Bookmark[]>({
     queryKey: ['bookmarks', workspaceId],
-    queryFn: async () => {
-      const url = workspaceId
-        ? `${API_BASE}/bookmarks?workspaceId=${workspaceId}`
-        : `${API_BASE}/bookmarks`;
-
-      const response = await fetch(url, {
-        headers: getAuthHeaders()
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch bookmarks');
-      }
-
-      const data = await response.json();
-      return data.data;
-    }
+    queryFn: () => api.getBookmarks(workspaceId) as Promise<Bookmark[]>,
+    staleTime: 30 * 1000 // 30s - mutations invalidate on change
   });
 }
 
 /**
  * Check if a message is bookmarked
+ * Derives status from the bookmarks list instead of a per-message API call
  */
 export function useIsBookmarked(messageId?: string, dmMessageId?: string) {
-  const result = useQuery<boolean>({
-    queryKey: ['bookmark-check', messageId, dmMessageId],
-    queryFn: async () => {
-      if (!messageId && !dmMessageId) {
-        return false;
-      }
+  const { data: bookmarks = [] } = useBookmarks();
 
-      const params = new URLSearchParams();
-      if (messageId) params.set('messageId', messageId);
-      if (dmMessageId) params.set('dmMessageId', dmMessageId);
+  const isBookmarked =
+    messageId || dmMessageId
+      ? bookmarks.some(
+          (b) =>
+            (messageId && b.messageId === messageId) ||
+            (dmMessageId && b.dmMessageId === dmMessageId)
+        )
+      : false;
 
-      const response = await fetch(`${API_BASE}/bookmarks/check?${params}`, {
-        headers: getAuthHeaders()
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to check bookmark status');
-      }
-
-      const data = await response.json();
-      const isBookmarked = data.data.bookmarked;
-      return isBookmarked;
-    },
-    enabled: !!(messageId || dmMessageId)
-  });
-
-  return result;
+  return { data: isBookmarked, isLoading: false };
 }
 
 /**
@@ -132,21 +93,10 @@ export function useBookmarkCount(workspaceId?: string) {
   return useQuery<number>({
     queryKey: ['bookmark-count', workspaceId],
     queryFn: async () => {
-      const url = workspaceId
-        ? `${API_BASE}/bookmarks/count?workspaceId=${workspaceId}`
-        : `${API_BASE}/bookmarks/count`;
-
-      const response = await fetch(url, {
-        headers: getAuthHeaders()
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch bookmark count');
-      }
-
-      const data = await response.json();
-      return data.data.count;
-    }
+      const result = await api.getBookmarkCount(workspaceId);
+      return result.count;
+    },
+    staleTime: 30 * 1000 // 30s - mutations invalidate on change
   });
 }
 
@@ -158,42 +108,29 @@ export function useAddBookmark() {
 
   return useMutation({
     mutationFn: async (input: AddBookmarkInput) => {
-      const response = await fetch(`${API_BASE}/bookmarks`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(input)
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
+      try {
+        return await api.addBookmark(input);
+      } catch (error: unknown) {
         // "Already bookmarked" is not really an error - treat as success
-        if (error.message?.includes('already bookmarked')) {
+        if (
+          error instanceof Error &&
+          error.message?.includes('already bookmarked')
+        ) {
           return { success: true, data: null };
         }
-        throw new Error(error.message || 'Failed to add bookmark');
+        throw error;
       }
-
-      return response.json();
     },
     onMutate: async (variables: AddBookmarkInput) => {
-      // Optimistic update: immediately set bookmark to true
       const queryKey = [
         'bookmark-check',
         variables.messageId,
         variables.dmMessageId
       ];
-
-      // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey });
-
-      // Snapshot previous value (default to false if undefined)
       const previousValue =
         queryClient.getQueryData<boolean>(queryKey) ?? false;
-
-      // Optimistically update to true
       queryClient.setQueryData<boolean>(queryKey, true);
-
-      // Return context with snapshotted value
       return { previousValue, queryKey };
     },
     onError: async (
@@ -201,21 +138,17 @@ export function useAddBookmark() {
       _variables: AddBookmarkInput,
       context?: { previousValue: boolean; queryKey: unknown[] }
     ) => {
-      // Instead of rolling back, invalidate and refetch to get true state from backend
       if (context) {
         await queryClient.invalidateQueries({ queryKey: context.queryKey });
       }
     },
     onSuccess: async (_data, variables) => {
-      // Ensure the specific bookmark-check query shows true
       const queryKey = [
         'bookmark-check',
         variables.messageId,
         variables.dmMessageId
       ];
       queryClient.setQueryData<boolean>(queryKey, true);
-
-      // Invalidate list-level queries only (not individual checks)
       await queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
       await queryClient.invalidateQueries({ queryKey: ['bookmark-count'] });
     }
@@ -229,19 +162,7 @@ export function useRemoveBookmark() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (bookmarkId: string) => {
-      const response = await fetch(`${API_BASE}/bookmarks/${bookmarkId}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders()
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to remove bookmark');
-      }
-
-      return response.json();
-    },
+    mutationFn: (bookmarkId: string) => api.removeBookmark(bookmarkId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
       await queryClient.invalidateQueries({ queryKey: ['bookmark-check'] });
@@ -267,59 +188,21 @@ export function useRemoveBookmarkByMessage() {
       if (!messageId && !dmMessageId) {
         throw new Error('Must provide either messageId or dmMessageId');
       }
-
-      const endpoint = messageId
-        ? `${API_BASE}/bookmarks/message/${messageId}`
-        : `${API_BASE}/bookmarks/dm/${dmMessageId}`;
-
-      const headers = getAuthHeaders();
-      // Remove Content-Type for DELETE requests with no body
-      const { 'Content-Type': _, ...headersWithoutContentType } =
-        headers as Record<string, string>;
-
-      const response = await fetch(endpoint, {
-        method: 'DELETE',
-        headers: headersWithoutContentType
-      });
-
-      if (!response.ok) {
-        let errorMessage = 'Failed to remove bookmark';
-        try {
-          const error = await response.json();
-          errorMessage = error.message || error.error?.message || errorMessage;
-
-          // "Not found" is not really an error - bookmark is already removed
-          if (response.status === 404 || errorMessage.includes('not found')) {
-            return { success: true };
-          }
-        } catch {
-          // Response might not have JSON body
-          errorMessage = `Failed to remove bookmark: ${response.status} ${response.statusText}`;
-        }
-        throw new Error(errorMessage);
+      if (messageId) {
+        return api.removeBookmarkByMessage(messageId);
       }
-
-      return response.json();
+      return api.removeBookmarkByDM(dmMessageId!);
     },
     onMutate: async (variables) => {
-      // Optimistic update: immediately set bookmark to false
       const queryKey = [
         'bookmark-check',
         variables.messageId,
         variables.dmMessageId
       ];
-
-      // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey });
-
-      // Snapshot previous value (default to false if undefined)
       const previousValue =
         queryClient.getQueryData<boolean>(queryKey) ?? false;
-
-      // Optimistically update to false
       queryClient.setQueryData<boolean>(queryKey, false);
-
-      // Return context with snapshotted value
       return { previousValue, queryKey };
     },
     onError: async (
@@ -327,21 +210,17 @@ export function useRemoveBookmarkByMessage() {
       _variables: { messageId?: string; dmMessageId?: string },
       context?: { previousValue: boolean; queryKey: unknown[] }
     ) => {
-      // Instead of rolling back, invalidate and refetch to get true state from backend
       if (context) {
         await queryClient.invalidateQueries({ queryKey: context.queryKey });
       }
     },
     onSuccess: async (_data, variables) => {
-      // Ensure the specific bookmark-check query shows false
       const queryKey = [
         'bookmark-check',
         variables.messageId,
         variables.dmMessageId
       ];
       queryClient.setQueryData<boolean>(queryKey, false);
-
-      // Invalidate list-level queries only (not individual checks)
       await queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
       await queryClient.invalidateQueries({ queryKey: ['bookmark-count'] });
     }
@@ -355,26 +234,8 @@ export function useUpdateBookmarkNote() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      bookmarkId,
-      note
-    }: {
-      bookmarkId: string;
-      note: string;
-    }) => {
-      const response = await fetch(`${API_BASE}/bookmarks/${bookmarkId}/note`, {
-        method: 'PATCH',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ note })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update bookmark note');
-      }
-
-      return response.json();
-    },
+    mutationFn: ({ bookmarkId, note }: { bookmarkId: string; note: string }) =>
+      api.updateBookmarkNote(bookmarkId, note),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
     }
