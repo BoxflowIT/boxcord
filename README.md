@@ -2,7 +2,7 @@
 
 Discord-like real-time chat application for Boxflow, soon integrated with Boxtime.
 
-**Latest version:** 1.5.0 | [View Changelog](CHANGELOG.md)
+**Latest version:** 1.7.1 | [View Changelog](CHANGELOG.md)
 
 ## 🚀 Quick Start
 
@@ -70,6 +70,18 @@ cd client && yarn dev # Frontend (Terminal 2)
 
 **📖 See:** [docs/VOICE_ARCHITECTURE.md](docs/VOICE_ARCHITECTURE.md)
 
+### 🧵 Threads
+- **Thread conversations** - Create threads from any channel message
+- **Thread search** - Server-side and client-side thread search
+- **Thread archiving/resolving** - Mark threads as archived or resolved
+- **Thread analytics** - Per-thread and channel-level statistics
+- **Thread notifications** - Bell icon with real-time notification panel
+- **Thread mentions** - @mention users in thread replies with push notifications
+- **Thread file attachments** - Upload files in thread replies
+- **Thread follow/unfollow** - Auto-follow on reply, unread count badges
+
+**📖 See:** [docs/THREADS.md](docs/THREADS.md)
+
 ### 🌍 Workspaces & Channels
 - **Multiple workspaces** - Organize teams separately
 - **Text channels** - Topic-specific conversations
@@ -112,11 +124,16 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Prisma 6** - 30-50% faster database queries
 - **Connection pooling** - Efficient database connections
 - **WebSocket-first architecture** - Minimal HTTP overhead
+- **React Query caching** - Discord-style Infinity staleTime with WebSocket cache updates
+- **Batch user fetching** - `POST /users/batch` replaces N+1 individual user requests
+- **Derived data** - Bookmark status derived from list, no per-message API calls
+- **Centralized API service** - All HTTP through `api.ts` with auto auth and 401 logout
+- **Targeted cache updates** - Socket events use `setQueryData` instead of refetch
+- **Debounced embeds** - 500ms debounce on embed parsing requests
 - **Optimistic updates** - Instant UI feedback
 - **Infinite scroll** - Efficient message pagination
-- **Image optimization** - Automatic compression and resizing
 
-**📖 See:** [docs/PERFORMANCE_OPTIMIZATIONS.md](docs/PERFORMANCE_OPTIMIZATIONS.md)
+**📖 See:** [docs/PERFORMANCE_OPTIMIZATIONS.md](docs/PERFORMANCE_OPTIMIZATIONS.md) | [docs/CACHING.md](docs/CACHING.md)
 
 ### 🔒 Security
 - **AWS Cognito authentication** - Enterprise-grade auth
@@ -417,9 +434,10 @@ const users = await boxtimeService.searchUsers('john', token);
 ### Reactions
 | Method | Path                                   | Description                  |
 | ------ | -------------------------------------- | ---------------------------- |
-| POST   | /api/v1/messages/:id/reactions        | Add reaction to message      |
-| DELETE | /api/v1/messages/:id/reactions/:emoji | Remove reaction              |
-| GET    | /api/v1/messages/:id/reactions        | Get message reactions        |
+| POST   | /api/v1/reactions/messages/:id        | Add reaction to message      |
+| DELETE | /api/v1/reactions/messages/:id/:emoji | Remove reaction              |
+| GET    | /api/v1/reactions/messages/:id        | Get message reactions        |
+| GET    | /api/v1/reactions/quick               | Get quick reaction emojis    |
 
 ### Bookmarks
 | Method | Path                              | Description                  |
@@ -427,8 +445,8 @@ const users = await boxtimeService.searchUsers('john', token);
 | GET    | /api/v1/bookmarks                | List user's bookmarks        |
 | POST   | /api/v1/bookmarks                | Add bookmark                 |
 | DELETE | /api/v1/bookmarks/:id            | Remove bookmark              |
-| GET    | /api/v1/bookmarks/check          | Check if message bookmarked  |
 | GET    | /api/v1/bookmarks/count          | Get bookmark count           |
+| PATCH  | /api/v1/bookmarks/:id/note       | Update bookmark note         |
 
 ### Invites
 | Method | Path                              | Description                  |
@@ -454,12 +472,50 @@ const users = await boxtimeService.searchUsers('john', token);
 | GET    | /api/v1/giphy/trending           | Get trending GIFs            |
 | GET    | /api/v1/giphy/random             | Get random GIF               |
 | GET    | /api/v1/giphy/:id                | Get GIF by ID                |
+| GET    | /api/v1/giphy/stickers/search    | Search GIF stickers          |
+| GET    | /api/v1/giphy/stickers/trending  | Get trending stickers        |
 
 ### File Uploads
 | Method | Path                              | Description                  |
 | ------ | --------------------------------- | ---------------------------- |
 | POST   | /api/v1/upload                   | Upload file (multipart)      |
+| POST   | /api/v1/files                    | Generic file upload          |
+| POST   | /api/v1/files/messages/:id       | Message file upload          |
+| POST   | /api/v1/files/dm/:id             | DM file upload               |
 | GET    | /uploads/:filename               | Get uploaded file            |
+
+### Users (additional)
+| Method | Path                              | Description                  |
+| ------ | --------------------------------- | ---------------------------- |
+| POST   | /api/v1/users/batch              | Batch fetch users by IDs     |
+| GET    | /api/v1/users/online             | Get online users list        |
+| PATCH  | /api/v1/users/me/status          | Update custom status         |
+| PATCH  | /api/v1/users/me/dnd             | Update DND mode              |
+
+### Voice
+| Method | Path                                        | Description                  |
+| ------ | ------------------------------------------- | ---------------------------- |
+| GET    | /api/v1/voice/channels/:id/users           | Get voice channel users      |
+| GET    | /api/v1/voice/workspaces/:id/voice-users   | Get workspace voice users    |
+
+### Permissions
+| Method | Path                              | Description                  |
+| ------ | --------------------------------- | ---------------------------- |
+| GET    | /api/v1/permissions               | Get channel permissions      |
+| GET    | /api/v1/permissions/me            | Get current user permissions |
+| GET    | /api/v1/permissions/check         | Check specific permission    |
+| POST   | /api/v1/permissions               | Set permissions              |
+| DELETE | /api/v1/permissions               | Reset permissions            |
+
+### Embeds
+| Method | Path                              | Description                  |
+| ------ | --------------------------------- | ---------------------------- |
+| POST   | /api/v1/embeds/parse             | Parse URL embeds from content|
+
+### Search
+| Method | Path                              | Description                  |
+| ------ | --------------------------------- | ---------------------------- |
+| GET    | /api/v1/search                   | Global search                |
 
 ### Push Notifications
 | Method | Path                              | Description                  |
@@ -556,20 +612,27 @@ This runs:
 
 ### Recent Improvements
 
-#### Performance Optimizations (Completed) 🚀
+#### Client-Side Request Optimization (v1.7.1) 🚀
+
+- ✅ **Batch user fetching** — `POST /users/batch` replaces N+1 individual requests
+- ✅ **React Query for threads** — 18 thread functions migrated to `api` service
+- ✅ **Targeted cache updates** — Socket `user:update` uses `setQueryData` (not `invalidateQueries`)
+- ✅ **Derived bookmark status** — No per-message `GET /bookmarks/check` calls
+- ✅ **ForwardMessageModal fix** — Uses cached React Query hooks (no N+1 `getChannels` loop)
+- ✅ **staleTime additions** — Bookmarks (30s), Permissions (30s), Voice (10s), Pinned (30s)
+- ✅ **API service migration** — All hooks use centralized `api.ts` (auth, 401 logout)
+- ✅ **Debounced embeds** — 500ms debounce on `POST /embeds/parse`
+- ✅ **Overall:** 60-75% fewer API calls on navigation
+
+**📖 See:** [docs/CACHING.md](docs/CACHING.md)
+
+#### Server-Side Performance Optimizations 🚀
 
 - ✅ **Prisma 6 Upgrade:** 30-50% faster queries
 - ✅ **Redis Caching:** 70-90% faster for cached queries (optional, falls back to in-memory)
 - ✅ **Connection Pooling:** 30-50% reduction in connection overhead
 - ✅ **Selective Field Fetching:** 30-40% less data transfer
-- ✅ **Overall:** 50-85% performance improvement
-
-**Key Features:**
-
-- Two-tier caching (Redis + in-memory fallback)
-- Automatic cache invalidation on writes
-- Slow query detection and logging
-- Zero breaking changes - fully backward compatible
+- ✅ **Overall:** 50-85% server-side performance improvement
 
 **Quick Start with Redis:**
 

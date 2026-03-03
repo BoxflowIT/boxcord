@@ -125,49 +125,65 @@ Result:
 
 ## 🎨 React Query Cache Strategy
 
-### **Messages:**
+All cache times are defined in `client/src/hooks/queries/constants.ts`.
+
+### **Core Entities (staleTime: Infinity)**
 
 ```typescript
-staleTime: Infinity  // Never considered stale
-gcTime: 10min        // Keep in memory for 10min after unmount
-refetchInterval: NONE // WebSocket keeps it fresh!
+// Messages, Channels, Workspaces, Users — ALL use Infinity
+export const CACHE_TIMES = {
+  WORKSPACES:   { stale: Infinity, gc: 60 * 60 * 1000 },   // 1h gc
+  CHANNELS:     { stale: Infinity, gc: 60 * 60 * 1000 },   // 1h gc
+  MESSAGES:     { stale: Infinity, gc: 10 * 60 * 1000 },   // 10min gc
+  USERS:        { stale: Infinity, gc: 30 * 60 * 1000 },   // 30min gc
+  CURRENT_USER: { stale: Infinity, gc: 60 * 60 * 1000 },   // 1h gc
+};
 ```
 
-**Why Infinity?**
+**Why Infinity for everything?**
 
-- WebSocket events update cache immediately
-- No need to refetch from server
-- Always 100% fresh
-- Discord does exactly this
+- WebSocket events update cache immediately via `setQueryData`
+- No need to refetch from server — data is always 100% fresh
+- Zero background polling — WebSocket handles all real-time updates
+- Discord uses the exact same pattern
 
-### **Channels/Workspaces:**
+### **Non-Core Entities (time-based staleTime)**
+
+| Hook | staleTime | Why? |
+|------|-----------|------|
+| Voice channel users | `10s` | Presence changes frequently |
+| Pinned messages/DMs | `30s` | Pins change infrequently |
+| Bookmarks / count | `30s` | Not updated via WebSocket |
+| Permissions | `30s` | Rarely change |
+| Giphy search/trending | `5min` | External API, changes slowly |
+| Random GIF | `0` | Should always be fresh |
+
+### **Centralized API Service**
+
+All hooks use `client/src/services/api.ts` — a single HTTP layer with auth headers, 401 auto-logout, and typed responses. No raw `fetch()` calls anywhere.
+
+### **WebSocket → Cache Updates**
+
+Socket events use targeted `setQueryData` instead of `invalidateQueries`:
 
 ```typescript
-staleTime: 30min  // Rarely change
-gcTime: 1h        // Keep longer in memory
-refetchInterval: NONE
+// ✅ Direct cache update — zero refetch
+socket.on('user:update', (user) => {
+  queryClient.setQueryData(['user', user.id], user);
+  queryClient.setQueryData(['onlineUsers'], (old) =>
+    old?.map(u => u.id === user.id ? { ...u, ...user } : u)
+  );
+});
 ```
 
-**Why 30min?**
+### **Optimization Techniques**
 
-- Channels created/deleted rarely
-- WebSocket events sync them instantly
-- 30min as fallback for edge cases
-- Reduces load dramatically
+- **Batch user fetching:** `useUsers(ids)` checks cache first, batch-fetches uncached via `POST /users/batch`
+- **Derived bookmark status:** `useIsBookmarked(id)` reads from `useBookmarks()` cache — zero API calls
+- **Shared query hooks:** Components reuse the same hooks → React Query deduplicates requests
+- **Debounced embeds:** `MessageEmbed` uses 500ms debounce on `POST /embeds/parse`
 
-### **Users:**
-
-```typescript
-staleTime: 10min  // Status might change
-gcTime: 30min
-refetchInterval: NONE
-```
-
-**Why 10min?**
-
-- User data (avatar, name) changes occasionally
-- Presence (online/offline) via WebSocket
-- Balance between freshness and requests
+**📖 See:** [CACHING.md](CACHING.md) for complete hook reference and cache timings
 
 ---
 

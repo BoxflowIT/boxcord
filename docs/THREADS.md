@@ -145,7 +145,23 @@ interface ThreadState {
 | Hook | File | Description |
 |------|------|-------------|
 | `useThreadSocket` | `hooks/useThreadSocket.ts` | WebSocket event listeners for all thread events. Uses individual Zustand selectors to prevent unnecessary re-renders. |
-| `useThreads` | `hooks/useThreads.ts` | API functions for thread CRUD, replies, reactions, follow/unfollow. |
+| `useThreads` | `hooks/useThreads.ts` | React Query hook backed by centralized `api` service. Provides 18 functions: thread CRUD, replies, reactions, follow/unfollow, search, analytics, file upload. Thread list cached with `staleTime: Infinity`, `gcTime: 10min`. |
+
+#### useThreads API
+
+```typescript
+const {
+  threads, isLoading,
+  getThread, getThreadByMessageId, createThread,
+  updateThread, deleteThread, getThreadReplies,
+  addThreadReply, editThreadReply, deleteThreadReply,
+  addThreadReplyReaction, removeThreadReplyReaction,
+  followThread, markThreadAsRead, searchThreads,
+  getThreadAnalytics, getChannelThreadAnalytics, uploadFile,
+} = useThreads(channelId);
+```
+
+All functions use the centralized `api` service (`client/src/services/api.ts`) for consistent auth headers, error handling, and 401 auto-logout. File uploads use `api.uploadFile` instead of raw `fetch`.
 
 ### Integration Points
 
@@ -211,6 +227,12 @@ model ThreadParticipant {
 ```
 
 ## Performance Considerations
+
+### React Query Caching
+- Thread list is fetched once per channel and cached with `staleTime: Infinity`, `gcTime: 10 minutes`
+- No background refetches — data stays fresh via WebSocket `setQueryData` updates from `useThreadSocket`
+- Thread mutations (create, update, delete, reply, reaction) invalidate the query cache to trigger a fresh fetch only when needed
+- All API calls go through the centralized `api` service for consistent auth and error handling
 
 ### Optimistic Updates
 - Thread reply reactions use an optimistic-first pattern: UI updates immediately, API call happens in background, rollback on error

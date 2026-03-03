@@ -5,6 +5,45 @@ All notable changes to Boxcord will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 2026-03-02
+
+### Changed
+- **Request optimization round 1** — Batch users, React Query threads, fix caching
+  - Batch user fetching: `useUsers(ids)` checks cache first, batch-fetches uncached via `POST /users/batch`
+  - Migrated `useThreads` from raw fetch to React Query with 18 api service functions
+  - Socket `user:update` handler uses targeted `setQueryData` instead of broad `invalidateQueries`
+  - Bookmark status derived from `useBookmarks()` list — no per-message `GET /bookmarks/check`
+  - Fixed duplicate query keys: shared hooks for online users, workspace members
+  - Pinned messages caching with `staleTime: 30s` (was cache-busting with `Date.now()`)
+  - Voice channel users `staleTime: 10s` (was 0 = refetch every mount)
+  - Thread file upload uses `api.uploadFile` instead of raw `fetch`
+
+- **Request optimization round 2** — Fix N+1, staleTime, auth, api service migration
+  - ForwardMessageModal: uses cached React Query hooks instead of N+1 `getWorkspaces → loop getChannels`
+  - Added `staleTime: 30s` to `useBookmarks`, `useBookmarkCount`, `useChannelPermissions`
+  - Migrated raw `fetch()` to centralized `api` service in `useBookmarks`, `usePermissions`, `useGiphy`
+  - Fixed AuditLogViewer missing `Authorization` header (was guaranteed 401)
+  - Added 500ms debounce to MessageEmbed embed parsing (`POST /embeds/parse`)
+
+### Fixed
+- All CodeQL alerts resolved (security fixes)
+- All ESLint warnings resolved
+
+## [1.7.0] - 2026-02-27
+
+### Added
+- **Thread enhancements:**
+  - Required thread title on creation with CreateThreadModal dialog
+  - Thread search with server-side API (`GET /threads/search?q=`) and client-side filtering
+  - Thread archiving/resolving with DB migration (`is_archived`, `is_resolved` columns)
+  - Thread analytics panel (per-thread and channel-level stats)
+  - Thread notification panel with bell icon and real-time updates
+  - @mention support in thread replies with push notifications
+  - Wider thread sidebar (480px) for better readability
+  - Unified sidebar section headers (Channels/DMs/Threads)
+  - New icons: ArchiveIcon, CheckCircleIcon, BellIcon
+  - Full i18n support for all new thread features (English + Swedish)
+
 ## [1.6.0] - 2026-02-26
 
 ### Added

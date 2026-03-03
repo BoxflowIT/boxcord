@@ -213,6 +213,100 @@ Update user's role (requires ADMIN or SUPER_ADMIN role).
 }
 ```
 
+### Batch Fetch Users
+
+#### POST /users/batch
+
+Fetch multiple users in a single request. Used by `useUsers(ids)` to batch-fetch uncached users.
+
+**Request Body:**
+```json
+{
+  "userIds": ["uuid1", "uuid2", "uuid3"]
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid1",
+      "email": "user1@example.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "avatarUrl": "https://..."
+    }
+  ]
+}
+```
+
+### Get Online Users
+
+#### GET /users/online
+
+Get list of currently online users.
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "firstName": "John",
+      "lastName": "Doe",
+      "avatarUrl": "https://...",
+      "status": "online"
+    }
+  ]
+}
+```
+
+### Update Custom Status
+
+#### PATCH /users/me/status
+
+Update current user's custom status text and emoji.
+
+**Request Body:**
+```json
+{
+  "customStatus": "🚀 Building awesome stuff",
+  "customStatusExpiry": "2026-02-24T15:00:00.000Z"
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": { "customStatus": "🚀 Building awesome stuff" }
+}
+```
+
+### Update DND Mode
+
+#### PATCH /users/me/dnd
+
+Toggle Do Not Disturb mode.
+
+**Request Body:**
+```json
+{
+  "dnd": true
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": { "dnd": true }
+}
+```
+
 ---
 
 ## 🏢 Workspaces
@@ -902,7 +996,7 @@ Mark all DMs in channel as read.
 
 ### Add Reaction
 
-#### POST /messages/:id/reactions
+#### POST /reactions/messages/:id
 
 Add emoji reaction to message.
 
@@ -931,7 +1025,7 @@ Add emoji reaction to message.
 
 ### Remove Reaction
 
-#### DELETE /messages/:id/reactions/:emoji
+#### DELETE /reactions/messages/:id/:emoji
 
 Remove your reaction from message.
 
@@ -943,7 +1037,7 @@ Remove your reaction from message.
 
 ### Get Reactions
 
-#### GET /messages/:id/reactions
+#### GET /reactions/messages/:id
 
 Get all reactions for a message.
 
@@ -1050,7 +1144,9 @@ Remove bookmark.
 
 Check if message is bookmarked.
 
-**Query Parameters:**
+> **Note:** The client no longer calls this endpoint. Bookmark status is derived from the `GET /bookmarks` list via `useIsBookmarked()` hook. The endpoint still exists for backward compatibility.
+
+**Query Parameters:****
 - `messageId` (optional): Channel message ID
 - `dmMessageId` (optional): DM message ID
 
@@ -1077,6 +1173,33 @@ Get total bookmark count for user.
   "success": true,
   "data": {
     "count": 42
+  }
+}
+```
+
+### Update Bookmark Note
+
+#### PATCH /bookmarks/:id/note
+
+Update the note/annotation on a bookmark.
+
+**Parameters:**
+- `id` (path, required): Bookmark ID
+
+**Request Body:**
+```json
+{
+  "note": "Important reference for Q2 planning"
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "note": "Important reference for Q2 planning"
   }
 }
 ```
@@ -1329,6 +1452,37 @@ Get moderation audit logs (requires admin).
 
 ---
 
+## 🔍 Search
+
+### Global Search
+
+#### GET /search
+
+Search messages across all channels and DMs.
+
+**Query Parameters:**
+- `q` (required): Search query
+- `channelId` (optional): Limit to specific channel
+- `workspaceId` (optional): Limit to specific workspace
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "content": "Search result message",
+      "channelId": "uuid",
+      "author": { "id": "uuid", "firstName": "John" },
+      "createdAt": "2026-02-23T15:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
 ## 🎉 GIFs (Giphy)
 
 ### Search GIFs
@@ -1422,6 +1576,31 @@ Get specific GIF details.
 }
 ```
 
+### Search Stickers
+
+#### GET /giphy/stickers/search
+
+Search GIF stickers.
+
+**Query Parameters:**
+- `q` (required): Search query
+- `limit` (optional, default: 25): Number of results
+- `offset` (optional, default: 0): Pagination offset
+
+**Response 200:** Same format as Search GIFs.
+
+### Get Trending Stickers
+
+#### GET /giphy/stickers/trending
+
+Get trending GIF stickers.
+
+**Query Parameters:**
+- `limit` (optional, default: 25): Number of results
+- `offset` (optional, default: 0): Pagination offset
+
+**Response 200:** Same format as Get Trending GIFs.
+
 ---
 
 ## 📤 File Uploads
@@ -1464,6 +1643,227 @@ Retrieve uploaded file.
 - `filename` (path, required): File name
 
 **Response 200:** File binary data with appropriate Content-Type header
+
+### Upload Message File
+
+#### POST /files/messages/:id
+
+Upload file attached to a channel message.
+
+**Parameters:**
+- `id` (path, required): Message ID
+
+**Content-Type:** `multipart/form-data`
+
+**Response 200:** Same format as Upload File.
+
+### Upload DM File
+
+#### POST /files/dm/:id
+
+Upload file attached to a DM message.
+
+**Parameters:**
+- `id` (path, required): DM Message ID
+
+**Content-Type:** `multipart/form-data`
+
+**Response 200:** Same format as Upload File.
+
+### Generic File Upload
+
+#### POST /files
+
+Upload a generic file (used by thread replies).
+
+**Content-Type:** `multipart/form-data`
+
+**Response 200:** Same format as Upload File.
+
+---
+
+## 🎥 Voice
+
+### Get Voice Channel Users
+
+#### GET /voice/channels/:id/users
+
+Get users currently in a voice channel.
+
+**Parameters:**
+- `id` (path, required): Channel ID
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "firstName": "John",
+      "lastName": "Doe",
+      "avatarUrl": "https://...",
+      "isMuted": false,
+      "isDeafened": false
+    }
+  ]
+}
+```
+
+### Get Workspace Voice Users
+
+#### GET /voice/workspaces/:id/voice-users
+
+Get all users in voice channels across a workspace (batch).
+
+**Parameters:**
+- `id` (path, required): Workspace ID
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "channelId1": [{ "id": "uuid", "firstName": "John" }],
+    "channelId2": [{ "id": "uuid2", "firstName": "Jane" }]
+  }
+}
+```
+
+---
+
+## 🔐 Permissions
+
+### Get Channel Permissions
+
+#### GET /permissions
+
+Get all role permissions for a channel.
+
+**Query Parameters:**
+- `channelId` (required): Channel ID
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "ADMIN": { "sendMessages": true, "manageChannel": true },
+    "STAFF": { "sendMessages": true, "manageChannel": false },
+    "USER": { "sendMessages": true, "manageChannel": false }
+  }
+}
+```
+
+### Get Current User Permissions
+
+#### GET /permissions/me
+
+Get current user's effective permissions for a channel.
+
+**Query Parameters:**
+- `channelId` (required): Channel ID
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "sendMessages": true,
+    "manageChannel": false,
+    "manageMessages": true
+  }
+}
+```
+
+### Check Permission
+
+#### GET /permissions/check
+
+Check if current user has a specific permission.
+
+**Query Parameters:**
+- `channelId` (required): Channel ID
+- `permission` (required): Permission name
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": { "allowed": true }
+}
+```
+
+### Set Permissions
+
+#### POST /permissions
+
+Set permissions for a role in a channel (requires ADMIN).
+
+**Request Body:**
+```json
+{
+  "channelId": "uuid",
+  "role": "USER",
+  "permissions": {
+    "sendMessages": true,
+    "manageChannel": false
+  }
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": { "updated": true }
+}
+```
+
+### Reset Permissions
+
+#### DELETE /permissions
+
+Reset permissions for a channel to defaults.
+
+**Query Parameters:**
+- `channelId` (required): Channel ID
+
+**Response 204:** No content
+
+---
+
+## 🔗 Embeds
+
+### Parse Embeds
+
+#### POST /embeds/parse
+
+Extract and parse OpenGraph/oEmbed data from URLs in content. Called by `MessageEmbed` component with 500ms debounce.
+
+**Request Body:**
+```json
+{
+  "content": "Check this out https://example.com"
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "url": "https://example.com",
+      "type": "link",
+      "title": "Example",
+      "description": "An example website",
+      "image": "https://example.com/og-image.png",
+      "siteName": "Example"
+    }
+  ]
+}
+```
 
 ---
 

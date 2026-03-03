@@ -239,7 +239,8 @@ Complete list of all implemented features in Boxcord.
 ### Caching
 - ✅ **Redis caching** - 70-90% faster cached queries (optional)
 - ✅ **In-memory fallback** - Works without Redis
-- ✅ **React Query** - Client-side query caching
+- ✅ **React Query** - Client-side query caching with `staleTime: Infinity` for core data
+- ✅ **WebSocket cache sync** - Targeted `setQueryData` updates instead of refetches
 - ✅ **Automatic invalidation** - Cache updates on data changes
 - ✅ **ETag support** - HTTP caching headers
 
@@ -250,6 +251,13 @@ Complete list of all implemented features in Boxcord.
 - ✅ **Database indexes** - Optimized query performance
 - ✅ **Query optimization** - Reduced N+1 queries
 
+### Client-Side (v1.7.1)
+- ✅ **Batch user fetching** - Single request for all users instead of N+1
+- ✅ **Centralized API service** - All HTTP calls through `api` service with auth
+- ✅ **Derived bookmark status** - Computed from cached list, no extra requests
+- ✅ **Shared query hooks** - `useSharedChannelQueries` for common data
+- ✅ **Debounced embeds** - 500ms debounce on link preview parsing
+
 ### Real-time
 - ✅ **WebSocket-first architecture** - Minimal HTTP overhead
 - ✅ **Optimistic updates** - Instant UI feedback
@@ -257,7 +265,7 @@ Complete list of all implemented features in Boxcord.
 - ✅ **Debounced typing** - Reduced typing indicator spam
 - ✅ **Message batching** - Efficient bulk operations
 
-**📖 See:** [PERFORMANCE_OPTIMIZATIONS.md](PERFORMANCE_OPTIMIZATIONS.md)
+**📖 See:** [PERFORMANCE_OPTIMIZATIONS.md](PERFORMANCE_OPTIMIZATIONS.md) | [CACHING.md](CACHING.md)
 
 ## 🔒 Security
 
@@ -330,7 +338,7 @@ Complete list of all implemented features in Boxcord.
 - ✅ **TypeScript** - Full type safety
 - ✅ **ESLint** - Code linting
 - ✅ **Prettier** - Code formatting
-- ✅ **Vitest** - Unit testing (61/61 tests passing)
+- ✅ **Vitest** - Unit testing (122 tests passing: 61 backend + 61 frontend)
 - ✅ **Playwright** - E2E testing
 - ✅ **K6** - Load testing
 
@@ -415,9 +423,21 @@ Complete list of all implemented features in Boxcord.
 
 ---
 
-## Recent Updates (February 2026)
+## Recent Updates
 
-### v1.7.0 - Thread Enhancements
+### v1.7.1 - Request Optimization (March 2026)
+- ✅ Batch user fetching — single request replaces N+1 individual fetches
+- ✅ React Query migration for threads with `staleTime: Infinity`
+- ✅ Targeted WebSocket cache updates via `setQueryData`
+- ✅ Derived bookmark status from cached list (no extra API call)
+- ✅ Shared query hooks (`useSharedChannelQueries`)
+- ✅ Centralized `api` service migration for all HTTP calls
+- ✅ Debounced embed parsing (500ms)
+- ✅ ForwardMessageModal N+1 fix
+- ✅ AuditLogViewer auth header fix
+- ✅ staleTime additions for voice, bookmarks, permissions, embeds
+
+### v1.7.0 - Thread Enhancements (February 2026)
 - ✅ Required thread title on creation with CreateThreadModal dialog
 - ✅ Thread search with server-side API and client-side filtering
 - ✅ Thread archiving/resolving with DB migration and full UI
@@ -476,4 +496,4 @@ Complete list of all implemented features in Boxcord.
 
 ---
 
-**Last Updated:** February 27, 2026
+**Last Updated:** March 3, 2026
