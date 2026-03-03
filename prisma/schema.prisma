@@ -35,6 +35,8 @@ model User {
     dmParticipants       DirectMessageParticipant[]
     workspaceMemberships WorkspaceMember[]
     bookmarks            BookmarkedMessage[]
+    pushSubscriptions    PushSubscription[]
+    voiceSessions        VoiceSession[]
 
     @@map("users")
 }
@@ -108,11 +110,12 @@ model Channel {
     createdAt   DateTime    @default(now()) @map("created_at")
     updatedAt   DateTime    @updatedAt @map("updated_at")
 
-    workspace   Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-    category    ChannelCategory?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-    messages    Message[]
-    members     ChannelMember[]
-    permissions ChannelPermission[]
+    workspace     Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+    category      ChannelCategory?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+    messages      Message[]
+    members       ChannelMember[]
+    permissions   ChannelPermission[]
+    voiceSessions VoiceSession[]
 
     @@unique([workspaceId, name])
     @@index([workspaceId])
@@ -396,6 +399,8 @@ model PushSubscription {
     auth      String // Auth secret from client
     createdAt DateTime @default(now()) @map("created_at")
 
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
     @@index([userId])
     @@map("push_subscriptions")
 }
@@ -488,6 +493,9 @@ model VoiceSession {
     isMuted    Boolean @default(false) @map("is_muted")
     isDeafened Boolean @default(false) @map("is_deafened")
     isSpeaking Boolean @default(false) @map("is_speaking")
+
+    channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+    user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     @@index([channelId])
     @@index([userId])

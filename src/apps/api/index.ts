@@ -145,9 +145,14 @@ async function main() {
   }
 
   // Setup Socket.io before starting server
+  const corsOrigin =
+    process.env.CORS_ORIGIN ??
+    (process.env.NODE_ENV === 'production'
+      ? 'https://boxcord.boxflow.se'
+      : '*');
   const io = new Server(app.server, {
     cors: {
-      origin: process.env.CORS_ORIGIN ?? '*',
+      origin: corsOrigin,
       credentials: true
     },
     // Explicit transport config to help with WebSocket upgrades

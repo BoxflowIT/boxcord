@@ -158,8 +158,12 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
       setShowEmojiPicker((prev) => !prev);
     },
     onMarkRead: () => {
-      // TODO: Implement mark channel as read API endpoint
-      logger.info('Mark channel as read shortcut pressed');
+      if (channelId) {
+        api.post(`/channels/${channelId}/read`).catch(() => {
+          // Silently ignore
+        });
+        logger.info('Channel marked as read via shortcut');
+      }
     },
     onQuickReaction: async (emoji: string) => {
       const threadState = useThreadStore.getState();

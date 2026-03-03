@@ -13,8 +13,7 @@
  * This key is provided for testing purposes only
  */
 
-export const GIPHY_API_KEY =
-  import.meta.env.VITE_GIPHY_API_KEY || 'E2USScP1hkaRhjQzx6MRjbGYuoO4p38N';
+export const GIPHY_API_KEY = import.meta.env.VITE_GIPHY_API_KEY || '';
 
 // Rate limits for public beta key:
 // - 42 requests per hour

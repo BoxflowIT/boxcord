@@ -55,8 +55,16 @@ interface CognitoJwtPayload {
 }
 
 async function jwtPluginImpl(app: FastifyInstance) {
+  const jwtSecret =
+    process.env.JWT_SECRET ?? (isDev ? 'dev-secret-change-in-production' : '');
+  if (!jwtSecret) {
+    throw new Error(
+      'JWT_SECRET environment variable is required in production'
+    );
+  }
+
   await app.register(jwt, {
-    secret: process.env.JWT_SECRET ?? 'dev-secret-change-in-production',
+    secret: jwtSecret,
     decode: { complete: true }
   });
 

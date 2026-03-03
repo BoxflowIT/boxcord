@@ -21,6 +21,8 @@ import ContextMenu from '../menu/ContextMenu';
 import ChannelContextMenu from '../channel/ChannelContextMenu';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useAuthStore } from '../../store/auth';
+import { useNotificationStore } from '../../store/notification';
+import { api } from '../../services/api';
 
 // ============================================================================
 // TYPES
@@ -391,12 +393,28 @@ export default function ChannelSection({
   const handleCopyLink = (channelId: string) => {
     const link = `${window.location.origin}/chat/channels/${channelId}`;
     navigator.clipboard.writeText(link);
-    // TODO: Show toast notification
+    const { addToast } = useNotificationStore.getState();
+    addToast(
+      t('channel.linkCopied', 'Link copied to clipboard'),
+      'success',
+      2000
+    );
   };
 
-  const handleMarkAsRead = (_channelId: string) => {
-    // TODO: Implement mark as read API call
-    // api.markChannelAsRead(channelId);
+  const handleMarkAsRead = (channelId: string) => {
+    api
+      .post(`/channels/${channelId}/read`)
+      .then(() => {
+        const { addToast } = useNotificationStore.getState();
+        addToast(
+          t('channel.markedAsRead', 'Channel marked as read'),
+          'success',
+          2000
+        );
+      })
+      .catch(() => {
+        // Silently ignore errors for non-existent channels
+      });
   };
 
   // Deduplicate and sort channels

@@ -4,7 +4,6 @@ import { AppError } from '../../../00-core/errors.js';
 import * as Sentry from '@sentry/node';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
-const _isTest = process.env.NODE_ENV === 'test';
 const isProduction = process.env.NODE_ENV === 'production';
 
 export function errorHandler(

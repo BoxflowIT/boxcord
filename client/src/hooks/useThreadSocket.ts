@@ -5,6 +5,7 @@ import { useAuthStore } from '../store/auth';
 import type { Thread, ThreadReply } from '../store/thread';
 import type { Socket } from 'socket.io-client';
 import { playMessageNotification } from '../utils/notificationSound';
+import { logger } from '../utils/logger';
 
 export function useThreadSocket(socket: Socket | null) {
   // Use individual selectors to prevent re-renders of the parent component
@@ -21,7 +22,7 @@ export function useThreadSocket(socket: Socket | null) {
 
     // Thread created
     const handleThreadCreated = (data: { thread: Thread }) => {
-      console.log('[Thread Socket] Thread created:', data.thread);
+      logger.debug('[Thread Socket] Thread created:', data.thread);
       addThread(data.thread);
     };
 
@@ -31,7 +32,7 @@ export function useThreadSocket(socket: Socket | null) {
       reply: ThreadReply;
       mentionedUserId?: string;
     }) => {
-      console.log('[Thread Socket] Thread reply:', data);
+      logger.debug('[Thread Socket] Thread reply:', data);
       addThreadReply(data.threadId, data.reply);
 
       // Check if this is from another user and thread is not active
@@ -126,7 +127,7 @@ export function useThreadSocket(socket: Socket | null) {
       content: string;
       userId: string;
     }) => {
-      console.log('[Thread Socket] Thread reply edited:', data);
+      logger.debug('[Thread Socket] Thread reply edited:', data);
       const replies =
         useThreadStore.getState().threadReplies[data.threadId] || [];
       const updatedReplies = replies.map((reply) =>
@@ -142,7 +143,7 @@ export function useThreadSocket(socket: Socket | null) {
       threadId: string;
       replyId: string;
     }) => {
-      console.log('[Thread Socket] Thread reply deleted:', data);
+      logger.debug('[Thread Socket] Thread reply deleted:', data);
       const replies =
         useThreadStore.getState().threadReplies[data.threadId] || [];
       const updatedReplies = replies.filter(
@@ -171,7 +172,7 @@ export function useThreadSocket(socket: Socket | null) {
       action: 'add' | 'remove';
       userId: string;
     }) => {
-      console.log('[Thread Socket] Thread reply reaction:', data);
+      logger.debug('[Thread Socket] Thread reply reaction:', data);
 
       // Skip if this is from the current user — already handled optimistically
       const currentUserId = useAuthStore.getState().user?.id;
@@ -233,7 +234,7 @@ export function useThreadSocket(socket: Socket | null) {
 
     // Thread updated
     const handleThreadUpdated = (data: { thread: Thread }) => {
-      console.log('[Thread Socket] Thread updated:', data.thread);
+      logger.debug('[Thread Socket] Thread updated:', data.thread);
 
       // Generate notification for status changes from other users
       const currentUserId = useAuthStore.getState().user?.id;
@@ -278,7 +279,7 @@ export function useThreadSocket(socket: Socket | null) {
 
     // Thread deleted
     const handleThreadDeleted = (data: { threadId: string }) => {
-      console.log('[Thread Socket] Thread deleted:', data);
+      logger.debug('[Thread Socket] Thread deleted:', data);
       removeThread(data.threadId);
     };
 
