@@ -107,18 +107,15 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Run yarn audit (high/critical = fail)
-        run: yarn audit --level high
+      - name: Run yarn audit (fail on high/critical only)
+        run: |
+          EXIT_CODE=0
+          yarn audit --level high || EXIT_CODE=$?
+          if [ $EXIT_CODE -ge 8 ]; then exit 1; fi
 
-      - name: Run yarn audit (moderate = warn)
-        run: yarn audit --level moderate
-        continue-on-error: true
-
-      - name: Run client yarn audit (high/critical = fail)
+      - name: Run client yarn audit (fail on high/critical only)
         working-directory: ./client
-        run: yarn audit --level high
-
-      - name: Run client yarn audit (moderate = warn)
-        working-directory: ./client
-        run: yarn audit --level moderate
-        continue-on-error: true
+        run: |
+          EXIT_CODE=0
+          yarn audit --level high || EXIT_CODE=$?
+          if [ $EXIT_CODE -ge 8 ]; then exit 1; fi
