@@ -72,9 +72,47 @@ export function registerPresenceHandlers(context: SocketHandlerContext): void {
         }
       );
 
-      // Also invalidate to ensure consistency
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      queryClient.invalidateQueries({ queryKey: queryKeys.currentUser });
+      // Update individual user cache entry
+      queryClient.setQueryData(
+        queryKeys.user(data.userId),
+        (oldData: User | undefined) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            firstName:
+              data.firstName !== undefined ? data.firstName : oldData.firstName,
+            lastName:
+              data.lastName !== undefined ? data.lastName : oldData.lastName,
+            avatarUrl:
+              data.avatarUrl !== undefined ? data.avatarUrl : oldData.avatarUrl,
+            bio: data.bio !== undefined ? data.bio : oldData.bio
+          };
+        }
+      );
+
+      // Update current user cache if it's the current user
+      if (currentUserId === data.userId) {
+        queryClient.setQueryData(
+          queryKeys.currentUser,
+          (oldData: User | undefined) => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              firstName:
+                data.firstName !== undefined
+                  ? data.firstName
+                  : oldData.firstName,
+              lastName:
+                data.lastName !== undefined ? data.lastName : oldData.lastName,
+              avatarUrl:
+                data.avatarUrl !== undefined
+                  ? data.avatarUrl
+                  : oldData.avatarUrl,
+              bio: data.bio !== undefined ? data.bio : oldData.bio
+            };
+          }
+        );
+      }
     }
   );
 }

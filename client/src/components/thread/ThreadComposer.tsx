@@ -6,6 +6,7 @@ import EmojiPicker from '../ui/EmojiPicker';
 import MentionAutocomplete from '../MentionAutocomplete';
 import type { MentionItem } from '../MentionAutocomplete';
 import { toast } from '../../store/notification';
+import { api } from '../../services/api';
 
 interface ThreadComposerProps {
   disabled?: boolean;
@@ -87,20 +88,8 @@ export function ThreadComposer({
   const handleFileSelect = async (file: File) => {
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await fetch('/api/v1/upload', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
-
-      const { url } = await response.json();
+      const result = await api.uploadFile(file);
+      const url = 'url' in result ? result.url : '';
       setContent((prev) => (prev ? `${prev}\n${url}` : url));
       toast.success('File uploaded');
     } catch (err) {

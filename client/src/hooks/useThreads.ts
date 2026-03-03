@@ -1,322 +1,128 @@
-// Thread Data Hook - Fetch and manage thread data
-import { useEffect, useState } from 'react';
+// Thread Data Hook - Fetch and manage thread data via React Query
+import { useQuery } from '@tanstack/react-query';
 import { useThreadStore } from '../store/thread';
-import { useAuthStore } from '../store/auth';
-import type { Thread } from '../store/thread';
-
-const API_BASE = '/api/v1';
+import { api } from '../services/api';
+import type { Thread, ThreadReply } from '../store/thread';
 
 export function useThreads(channelId: string | undefined) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const setThreads = useThreadStore((state) => state.setThreads);
 
+  const query = useQuery({
+    queryKey: channelId ? ['threads', channelId] : ['threads-null'],
+    queryFn: async () => {
+      if (!channelId) return [];
+      const result = await api.getThreads(channelId);
+      const threadsData = (result?.items || []) as Thread[];
+      setThreads(channelId, threadsData);
+      return threadsData;
+    },
+    enabled: !!channelId,
+    staleTime: Infinity, // Socket keeps it fresh
+    gcTime: 10 * 60 * 1000 // 10 min
+  });
+
+  // Also read from thread store for socket-updated data
   const threads = useThreadStore((state) =>
     channelId ? state.threads[channelId] || [] : []
   );
-  const setThreads = useThreadStore((state) => state.setThreads);
 
-  useEffect(() => {
-    if (!channelId) return;
-
-    const fetchThreads = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const token = useAuthStore.getState().token;
-        const response = await fetch(
-          `${API_BASE}/threads?channelId=${channelId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch threads: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-        // Backend returns { success: true, data: { items: [], hasMore, nextCursor } }
-        const threadsData = result.data?.items || result.items || [];
-        setThreads(channelId, threadsData);
-      } catch (err) {
-        console.error('Error fetching threads:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchThreads();
-  }, [channelId, setThreads]);
-
-  return { threads, loading, error };
+  return {
+    threads: threads.length > 0 ? threads : (query.data ?? []),
+    loading: query.isLoading,
+    error: query.error?.message ?? null
+  };
 }
 
 export async function getThreadByMessageId(
   messageId: string
 ): Promise<Thread | null> {
-  const token = useAuthStore.getState().token;
-  const response = await fetch(`${API_BASE}/threads/by-message/${messageId}`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  if (!response.ok) return null;
-  const result = await response.json();
-  return result.data ?? null;
+  try {
+    const result = await api.getThreadByMessageId(messageId);
+    return (result as Thread) ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function createThread(
   messageId: string,
   title: string
 ): Promise<Thread> {
-  const token = useAuthStore.getState().token;
-  const response = await fetch(`${API_BASE}/threads`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify({ messageId, title })
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    console.error('Create thread error:', {
-      messageId,
-      title,
-      status: response.status,
-      statusText: response.statusText,
-      errorData: JSON.stringify(errorData, null, 2)
-    });
-
-    // Extract meaningful error message
-    const errorMessage =
-      errorData?.error?.message || errorData?.message || response.statusText;
-    throw new Error(`Failed to create thread: ${errorMessage}`);
-  }
-
-  const result = await response.json();
-  return result.data;
+  return api.createThread(messageId, title) as Promise<Thread>;
 }
 
 export async function searchThreads(
   query: string,
   channelId?: string
 ): Promise<{ items: Thread[]; hasMore: boolean; nextCursor?: string }> {
-  const token = useAuthStore.getState().token;
-  const params = new URLSearchParams({ q: query });
-  if (channelId) params.set('channelId', channelId);
-
-  const response = await fetch(`${API_BASE}/threads/search?${params}`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to search threads: ${response.statusText}`);
-  }
-
-  const result = await response.json();
-  return result.data;
+  return api.searchThreads(query, channelId) as Promise<{
+    items: Thread[];
+    hasMore: boolean;
+    nextCursor?: string;
+  }>;
 }
 
 export async function getThreadReplies(threadId: string, page = 1, limit = 50) {
-  const token = useAuthStore.getState().token;
-  const response = await fetch(
-    `${API_BASE}/threads/${threadId}/replies?page=${page}&limit=${limit}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch thread replies: ${response.statusText}`);
-  }
-
-  const result = await response.json();
-  return result.data || result;
+  return api.getThreadReplies(threadId, page, limit) as unknown as Promise<{
+    items: ThreadReply[];
+    hasMore: boolean;
+  }>;
 }
 
 export async function addThreadReply(
   threadId: string,
   content: string,
   attachments?: Array<{ url: string; type: string; name: string }>
-) {
-  const token = useAuthStore.getState().token;
-  const response = await fetch(`${API_BASE}/threads/${threadId}/replies`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify({ content, attachments })
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to add thread reply: ${response.statusText}`);
-  }
-
-  const result = await response.json();
-  return result.data;
+): Promise<ThreadReply> {
+  return api.addThreadReply(
+    threadId,
+    content,
+    attachments
+  ) as unknown as Promise<ThreadReply>;
 }
 
 export async function toggleThreadFollow(
   threadId: string,
   shouldFollow: boolean
 ) {
-  const token = useAuthStore.getState().token;
-  const response = await fetch(`${API_BASE}/threads/${threadId}/follow`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify({ shouldFollow })
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to toggle thread follow: ${response.statusText}`);
-  }
-
-  const result = await response.json();
-  return result.data;
+  return api.toggleThreadFollow(threadId, shouldFollow);
 }
 
 export async function markThreadAsRead(threadId: string) {
-  const token = useAuthStore.getState().token;
-  const response = await fetch(`${API_BASE}/threads/${threadId}/read`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to mark thread as read: ${response.statusText}`);
-  }
-
-  const result = await response.json();
-  return result.data;
+  return api.markThreadAsRead(threadId);
 }
 
-/**
- * Edit a thread reply
- */
 export async function editThreadReply(
   threadId: string,
   replyId: string,
   content: string
 ): Promise<{ id: string; content: string; edited: boolean }> {
-  try {
-    const token = useAuthStore.getState().token;
-    const result = await fetch(
-      `${API_BASE}/threads/${threadId}/replies/${replyId}`,
-      {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ content })
-      }
-    ).then((res) => res.json());
-
-    return result.data;
-  } catch (error) {
-    console.error('Error editing thread reply:', error);
-    throw error;
-  }
+  return api.editThreadReply(threadId, replyId, content);
 }
 
-/**
- * Delete a thread reply
- */
 export async function deleteThreadReply(
   threadId: string,
   replyId: string
 ): Promise<void> {
-  try {
-    const token = useAuthStore.getState().token;
-    await fetch(`${API_BASE}/threads/${threadId}/replies/${replyId}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-  } catch (error) {
-    console.error('Error deleting thread reply:', error);
-    throw error;
-  }
+  return api.deleteThreadReply(threadId, replyId);
 }
 
-/**
- * Add reaction to thread reply
- */
 export async function addThreadReplyReaction(
   threadId: string,
   replyId: string,
   emoji: string
 ): Promise<{ id: string; messageId: string; userId: string; emoji: string }> {
-  try {
-    const token = useAuthStore.getState().token;
-    const response = await fetch(
-      `${API_BASE}/threads/${threadId}/replies/${replyId}/reactions`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ emoji })
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to add reaction: ${response.statusText}`);
-    }
-
-    const result = await response.json();
-    return result.data;
-  } catch (error) {
-    console.error('Error adding reaction to thread reply:', error);
-    throw error;
-  }
+  return api.addThreadReplyReaction(threadId, replyId, emoji);
 }
 
-/**
- * Remove reaction from thread reply
- */
 export async function removeThreadReplyReaction(
   threadId: string,
   replyId: string,
   emoji: string
 ): Promise<void> {
-  try {
-    const token = useAuthStore.getState().token;
-    const response = await fetch(
-      `${API_BASE}/threads/${threadId}/replies/${replyId}/reactions/${encodeURIComponent(emoji)}`,
-      {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    );
-    if (!response.ok) {
-      throw new Error(`Failed to remove reaction: ${response.statusText}`);
-    }
-  } catch (error) {
-    console.error('Error removing reaction from thread reply:', error);
-    throw error;
-  }
+  return api.removeThreadReplyReaction(threadId, replyId, emoji);
 }
 
-/**
- * Update thread (title, lock status)
- */
 export async function updateThread(
   threadId: string,
   updates: {
@@ -326,49 +132,11 @@ export async function updateThread(
     isResolved?: boolean;
   }
 ): Promise<Thread> {
-  try {
-    const token = useAuthStore.getState().token;
-    const response = await fetch(`${API_BASE}/threads/${threadId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify(updates)
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update thread');
-    }
-
-    const result = await response.json();
-    return result.data;
-  } catch (error) {
-    console.error('Error updating thread:', error);
-    throw error;
-  }
+  return api.updateThread(threadId, updates) as Promise<Thread>;
 }
 
-/**
- * Delete thread
- */
 export async function deleteThread(threadId: string): Promise<void> {
-  try {
-    const token = useAuthStore.getState().token;
-    const response = await fetch(`${API_BASE}/threads/${threadId}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to delete thread');
-    }
-  } catch (error) {
-    console.error('Error deleting thread:', error);
-    throw error;
-  }
+  return api.deleteThread(threadId);
 }
 
 export interface ThreadAnalytics {
@@ -403,34 +171,13 @@ export interface ChannelThreadAnalytics {
 export async function getThreadAnalytics(
   threadId: string
 ): Promise<ThreadAnalytics> {
-  const token = useAuthStore.getState().token;
-  const response = await fetch(`${API_BASE}/threads/${threadId}/analytics`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch thread analytics');
-  }
-
-  const result = await response.json();
-  return result.data;
+  return api.getThreadAnalytics(threadId) as Promise<ThreadAnalytics>;
 }
 
 export async function getChannelThreadAnalytics(
   channelId: string
 ): Promise<ChannelThreadAnalytics> {
-  const token = useAuthStore.getState().token;
-  const response = await fetch(
-    `${API_BASE}/threads/analytics?channelId=${channelId}`,
-    {
-      headers: { Authorization: `Bearer ${token}` }
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch channel thread analytics');
-  }
-
-  const result = await response.json();
-  return result.data;
+  return api.getChannelThreadAnalytics(
+    channelId
+  ) as Promise<ChannelThreadAnalytics>;
 }

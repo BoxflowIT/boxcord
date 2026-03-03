@@ -1,12 +1,9 @@
 import { useVoiceStore } from '../../store/voiceStore';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '../../services/api';
-import { useCurrentUser } from '../../hooks/useQuery';
+import { useCurrentUser, useOnlineUsers } from '../../hooks/useQuery';
 import { MicIcon, MicOffIcon, HeadphonesOffIcon } from '../ui/Icons';
 import { UserVolumeMenu } from './UserVolumeMenu';
 import { useState } from 'react';
 import { getUserDisplayName } from '../../utils/user';
-import type { User } from '../../types';
 
 interface VoiceUser {
   userId: string;
@@ -37,12 +34,8 @@ export function VoiceUserList() {
   // Use cached current user to avoid duplicate API calls
   const { data: currentUser } = useCurrentUser();
 
-  // Fetch user details for all voice users
-  const { data: onlineUsers = [] } = useQuery<User[]>({
-    queryKey: ['users', 'online'],
-    queryFn: () => api.getOnlineUsers(),
-    staleTime: 30000
-  });
+  // Fetch user details for all voice users - use shared hook
+  const { data: onlineUsers = [] } = useOnlineUsers();
 
   if (!isConnected || !currentChannelId) return null;
 

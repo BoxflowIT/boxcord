@@ -34,26 +34,38 @@ export function useUser(userId: string | undefined) {
   });
 }
 
-// Batch fetch multiple users
+// Batch fetch multiple users (single API call instead of N+1)
 export function useUsers(userIds: string[]) {
   const queryClient = useQueryClient();
 
   return useQuery({
     queryKey: ['users-batch', ...userIds.sort()],
     queryFn: async () => {
-      const users = await Promise.all(
-        userIds.map((id) =>
-          api
-            .getUser(id)
-            .then((user) => {
-              // Cache each user individually
-              queryClient.setQueryData(queryKeys.user(id), user);
-              return user;
-            })
-            .catch(() => null)
-        )
-      );
-      return users.filter((u) => u !== null);
+      if (userIds.length === 0) return [];
+
+      // Check which users are already cached
+      const uncachedIds: string[] = [];
+      const cachedUsers: Array<{ id: string; [key: string]: unknown }> = [];
+
+      for (const id of userIds) {
+        const cached = queryClient.getQueryData(queryKeys.user(id));
+        if (cached) {
+          cachedUsers.push(cached as { id: string });
+        } else {
+          uncachedIds.push(id);
+        }
+      }
+
+      // Batch fetch only uncached users in a single request
+      if (uncachedIds.length > 0) {
+        const fetchedUsers = await api.getUsersBatch(uncachedIds);
+        for (const user of fetchedUsers) {
+          queryClient.setQueryData(queryKeys.user(user.id), user);
+          cachedUsers.push(user as { id: string });
+        }
+      }
+
+      return cachedUsers;
     },
     enabled: userIds.length > 0,
     staleTime: CACHE_TIMES.USERS.stale,

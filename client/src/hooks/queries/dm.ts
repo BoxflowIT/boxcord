@@ -36,9 +36,8 @@ export function usePinnedDMs(channelId: string | undefined) {
     queryKey: channelId ? ['pinnedDMs', channelId] : ['pinnedDMs-null'],
     queryFn: () => (channelId ? api.getPinnedDMs(channelId) : []),
     enabled: !!channelId,
-    staleTime: 0, // Always refetch on mount to get fresh data
+    staleTime: 30 * 1000, // 30s - socket events invalidate on pin/unpin
     gcTime: 5 * 60 * 1000,
-    refetchOnMount: 'always', // Force fresh data on page load
-    refetchOnWindowFocus: false // Don't refetch when switching windows
+    refetchOnWindowFocus: false
   });
 }
