@@ -4,6 +4,7 @@ import FileUpload, { type FileUploadHandle } from '../FileUpload';
 import EmojiPicker from '../ui/EmojiPicker';
 import MentionAutocomplete from '../MentionAutocomplete';
 import SlashCommandAutocomplete from '../SlashCommandAutocomplete';
+import { PollIcon } from '../ui/Icons';
 
 interface ChannelInputSectionProps {
   channelName?: string;
@@ -29,6 +30,7 @@ interface ChannelInputSectionProps {
   onCloseMentions: () => void;
   onCloseSlashCommands: () => void;
   onToggleEmojiPicker?: (show: boolean) => void;
+  onCreatePoll?: () => void;
 }
 
 export default function ChannelInputSection({
@@ -50,7 +52,8 @@ export default function ChannelInputSection({
   onSlashCommandSelect,
   onCloseMentions,
   onCloseSlashCommands,
-  onToggleEmojiPicker
+  onToggleEmojiPicker,
+  onCreatePoll
 }: ChannelInputSectionProps) {
   const { t } = useTranslation();
 
@@ -62,6 +65,16 @@ export default function ChannelInputSection({
           onFileSelect={onFileSelect}
           disabled={uploading}
         />
+        {onCreatePoll && (
+          <button
+            type="button"
+            onClick={onCreatePoll}
+            title="Skapa omröstning"
+            className="btn-icon"
+          >
+            <PollIcon />
+          </button>
+        )}
         <textarea
           ref={textareaRef}
           value={inputValue}

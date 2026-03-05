@@ -26,6 +26,7 @@ import bookmarkRoutes from './bookmark.routes.js';
 import giphyRoutes from './giphy.routes.js';
 import { permissionRoutes } from './permission.routes.js';
 import { authRoutes } from './auth.routes.js';
+import { pollRoutes } from './poll.routes.js';
 
 export async function registerRoutes(app: FastifyInstance) {
   // Health checks (no prefix, no auth required)
@@ -68,6 +69,7 @@ export async function registerRoutes(app: FastifyInstance) {
       await api.register(bookmarkRoutes);
       await api.register(giphyRoutes);
       await api.register(permissionRoutes, { prefix: '/permissions' });
+      await api.register(pollRoutes, { prefix: '/polls' });
     },
     { prefix: '/api/v1' }
   );

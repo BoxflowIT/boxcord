@@ -126,6 +126,18 @@ These refetch on mount if stale — not updated by WebSocket.
 | `useGiphyTrending()` | `5min` | 10min | External API, changes slowly |
 | `useRandomGiphy(tag?)` | `0` | 0 | Should always be fresh |
 
+### Polls (Cache Bypass — `NEVER_CACHE_MODELS`)
+
+Poll models (`Poll`, `PollOption`, `PollVote`) completely bypass the Prisma query cache via the `NEVER_CACHE_MODELS` set in `src/03-infrastructure/database/client.ts`. Every read hits the database directly.
+
+**Why?** Poll votes change frequently from many users concurrently. Cache invalidation for related models (voting on `PollVote` must also invalidate `Poll` and `PollOption` caches) proved unreliable. The nuclear approach — no cache at all for poll models — guarantees fresh data on every read, including after hard refresh.
+
+On the client side, `usePoll` hook manages poll state locally (not via React Query). It fetches on mount, refreshes on `visibilitychange`, and receives real-time updates via `poll:voted` socket events.
+
+| Hook | Strategy | Refresh Trigger |
+|------|----------|----------------|
+| `usePoll(messageId)` | Local state (no React Query) | Mount, visibilitychange, socket `poll:voted` |
+
 ### Threads (React Query, staleTime: Infinity)
 
 `useThreads` hook exposes 18 functions via the centralized `api` service:

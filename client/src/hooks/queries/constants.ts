@@ -26,5 +26,6 @@ export const queryKeys = {
   onlineUsers: ['onlineUsers'] as const,
   currentUser: ['currentUser'] as const,
   user: (id: string) => ['user', id] as const,
-  reactions: (messageId: string) => ['reactions', messageId] as const
+  reactions: (messageId: string) => ['reactions', messageId] as const,
+  poll: (messageId: string) => ['poll', messageId] as const
 };

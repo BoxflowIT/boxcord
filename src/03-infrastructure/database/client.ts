@@ -7,16 +7,44 @@ function getCacheKey(model: string, operation: string, args: unknown): string {
   return `prisma:${model}:${operation}:${JSON.stringify(args)}`;
 }
 
-function shouldCache(operation: string): boolean {
-  // Only cache read operations
-  return ['findUnique', 'findFirst', 'findMany', 'count', 'aggregate'].includes(
-    operation
-  );
-}
+const READ_OPERATIONS = new Set([
+  'findUnique',
+  'findFirst',
+  'findMany',
+  'count',
+  'aggregate'
+]);
+
+const WRITE_OPERATIONS = new Set([
+  'create',
+  'createMany',
+  'update',
+  'updateMany',
+  'upsert',
+  'delete',
+  'deleteMany'
+]);
+
+// Models that must NEVER be cached — their data changes frequently and
+// stale reads cause user-visible bugs (e.g. votes disappearing on refresh).
+const NEVER_CACHE_MODELS = new Set(['Poll', 'PollOption', 'PollVote']);
+
+// Models whose cache should also be invalidated when a related model changes
+const RELATED_CACHE_INVALIDATION: Record<string, string[]> = {
+  PollVote: ['Poll', 'PollOption'],
+  PollOption: ['Poll']
+};
 
 async function invalidateCacheForModel(model: string): Promise<void> {
   // Remove all cache entries for the given model
   await cacheService.deletePattern(`prisma:${model}:*`);
+  // Also invalidate related model caches
+  const related = RELATED_CACHE_INVALIDATION[model];
+  if (related) {
+    await Promise.all(
+      related.map((m) => cacheService.deletePattern(`prisma:${m}:*`))
+    );
+  }
 }
 
 const prismaClientSingleton = () => {
@@ -45,8 +73,13 @@ const prismaClientSingleton = () => {
           return query(args);
         }
 
-        // Query caching for read operations (async)
-        if (shouldCache(operation)) {
+        // Never cache poll-related models — always hit the database
+        if (NEVER_CACHE_MODELS.has(model)) {
+          return query(args);
+        }
+
+        // Cache read operations
+        if (READ_OPERATIONS.has(operation)) {
           const cacheKey = getCacheKey(model, operation, args);
 
           return (async () => {
@@ -83,66 +116,37 @@ const prismaClientSingleton = () => {
           })();
         }
 
-        // For non-cacheable operations, just monitor performance
-        const start = Date.now();
-        const result = query(args);
+        // Write operations: execute then invalidate cache
+        if (WRITE_OPERATIONS.has(operation)) {
+          return (async () => {
+            const start = Date.now();
+            try {
+              const result = await query(args);
+              const duration = Date.now() - start;
 
-        result
-          .then(() => {
-            const duration = Date.now() - start;
-            if (duration > 1000) {
-              logger.warn(
-                { model, operation, duration },
-                `Slow query: ${model}.${operation} took ${duration}ms`
+              // Invalidate cache for this model and related models
+              await invalidateCacheForModel(model);
+
+              if (duration > 1000) {
+                logger.warn(
+                  { model, operation, duration },
+                  `Slow query: ${model}.${operation} took ${duration}ms`
+                );
+              }
+
+              return result;
+            } catch (error) {
+              logger.error(
+                { model, operation, error },
+                `Query error in ${model}.${operation}`
               );
+              throw error;
             }
-          })
-          .catch((error) => {
-            logger.error(
-              { model, operation, error },
-              `Query error in ${model}.${operation}`
-            );
-          });
-
-        return result;
-      },
-      // Invalidate cache on write operations
-      $allModels: {
-        async create({ model, args, query }) {
-          const result = await query(args);
-          invalidateCacheForModel(model);
-          return result;
-        },
-        async update({ model, args, query }) {
-          const result = await query(args);
-          invalidateCacheForModel(model);
-          return result;
-        },
-        async delete({ model, args, query }) {
-          const result = await query(args);
-          invalidateCacheForModel(model);
-          return result;
-        },
-        async upsert({ model, args, query }) {
-          const result = await query(args);
-          invalidateCacheForModel(model);
-          return result;
-        },
-        async createMany({ model, args, query }) {
-          const result = await query(args);
-          invalidateCacheForModel(model);
-          return result;
-        },
-        async updateMany({ model, args, query }) {
-          const result = await query(args);
-          invalidateCacheForModel(model);
-          return result;
-        },
-        async deleteMany({ model, args, query }) {
-          const result = await query(args);
-          invalidateCacheForModel(model);
-          return result;
+          })();
         }
+
+        // Fallback for any other operations
+        return query(args);
       }
     }
   });

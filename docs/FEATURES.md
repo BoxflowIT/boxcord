@@ -391,10 +391,40 @@ Complete list of all implemented features in Boxcord.
 - ✅ **Cache warming** - Pre-populate cache
 - ✅ **Cleanup tasks** - Remove old data
 
+## 🗳️ Polls
+
+### Poll Creation
+- ✅ **Create polls** - Create polls in any text channel via slash command (`/poll`) or modal
+- ✅ **Multiple options** - 2-10 answer options per poll
+- ✅ **Single/multiple choice** - Configure single or multiple selection mode
+- ✅ **Anonymous voting** - Optional anonymous vote mode
+- ✅ **Timed polls** - Set optional end time for automatic expiry
+- ✅ **Poll messages** - Polls are attached to channel messages for context
+
+### Voting
+- ✅ **Vote toggle** - Click to vote, click again to remove vote
+- ✅ **Vote change** - Switch vote to different option (single-choice)
+- ✅ **Optimistic updates** - Instant UI feedback on vote
+- ✅ **Real-time sync** - WebSocket broadcasts votes to all channel members
+- ✅ **Voter skip** - Socket events include voterId so voters skip their own update
+- ✅ **Persistent votes** - Votes survive hard refresh (cache bypass for poll models)
+
+### Poll Display
+- ✅ **Live results** - Vote counts and percentages update in real-time
+- ✅ **Progress bars** - Visual vote distribution per option
+- ✅ **Auto-end timer** - Live countdown and automatic isEnded state
+- ✅ **End poll early** - Creator can end poll before scheduled time
+- ✅ **Error handling** - Swedish error messages with auto-clear
+
+### Technical
+- ✅ **Cache bypass** - `NEVER_CACHE_MODELS` set bypasses Prisma query cache for Poll, PollOption, PollVote
+- ✅ **Race-safe voting** - Uses `deleteMany` + P2002 no-op for concurrent vote handling
+- ✅ **Domain validation** - Question (1-500 chars), options (1-200 chars each)
+- ✅ **Rate limiting** - 10 req/min for creation, 30 req/min for voting
+
 ## 🎯 Coming Soon
 
 ### Planned Features
-- ⏳ **Polls** - Create polls in channels
 - ⏳ **Advanced search** - Filters, date range, attachments
 - ⏳ **Message templates** - Saved message templates
 - ⏳ **Bot integration** - Webhooks and bot API
@@ -420,10 +450,26 @@ Complete list of all implemented features in Boxcord.
 | Screen sharing | ✅ Stable | [VOICE_ARCHITECTURE.md](VOICE_ARCHITECTURE.md) |
 | Video window controls | ✅ Stable | [VOICE_ARCHITECTURE.md](VOICE_ARCHITECTURE.md) |
 | Thread support | ✅ Stable | [THREADS.md](THREADS.md) |
+| Polls | ✅ Stable | - |
 
 ---
 
 ## Recent Updates
+
+### v1.8.0 - Polls (March 2026)
+- ✅ Create polls in channels via `/poll` slash command or modal
+- ✅ Single/multiple choice with 2-10 options
+- ✅ Anonymous voting and timed poll expiry
+- ✅ Vote toggle (click to vote, click again to remove)
+- ✅ Real-time vote sync via WebSocket (`poll:voted`, `poll:created`, `poll:ended`)
+- ✅ Optimistic updates with server reconciliation
+- ✅ Prisma cache bypass for poll models (`NEVER_CACHE_MODELS`)
+- ✅ Race-safe voting with `deleteMany` + P2002 no-op
+- ✅ Live results with progress bars and percentages
+- ✅ Auto-end timer with live countdown
+- ✅ Swedish error translations for vote errors
+- ✅ Visibility change handler refreshes poll on tab focus
+- ✅ Database migration: Poll, PollOption, PollVote tables
 
 ### v1.7.1 - Request Optimization (March 2026)
 - ✅ Batch user fetching — single request replaces N+1 individual fetches
@@ -496,4 +542,4 @@ Complete list of all implemented features in Boxcord.
 
 ---
 
-**Last Updated:** March 3, 2026
+**Last Updated:** March 5, 2026

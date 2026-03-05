@@ -151,3 +151,32 @@ export interface ReactionCount {
   count: number;
   hasReacted: boolean;
 }
+
+// ============================================================================
+// POLL TYPES
+// ============================================================================
+
+export interface Poll {
+  id: string;
+  messageId: string;
+  channelId: string;
+  creatorId: string;
+  question: string;
+  isMultiple: boolean;
+  isAnonymous: boolean;
+  endsAt: string | null;
+  createdAt: string;
+  totalVotes: number;
+  hasVoted: boolean;
+  options: PollOption[];
+}
+
+export interface PollOption {
+  id: string;
+  text: string;
+  position: number;
+  voteCount: number;
+  percentage: number;
+  hasVoted: boolean;
+  voters: string[];
+}

@@ -141,6 +141,20 @@ export const schemas = {
     workspaceId: id,
     userId: id,
     role: z.enum(['OWNER', 'ADMIN', 'MEMBER'])
+  }),
+
+  // Poll schemas
+  createPoll: z.object({
+    channelId: id,
+    question: z.string().min(1).max(500),
+    options: z.array(z.string().min(1).max(200)).min(2).max(10),
+    isMultiple: z.boolean().optional(),
+    isAnonymous: z.boolean().optional(),
+    endsAt: z.string().datetime().optional()
+  }),
+
+  votePoll: z.object({
+    optionId: id
   })
 } as const;
 

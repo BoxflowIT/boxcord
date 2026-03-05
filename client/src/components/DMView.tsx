@@ -117,6 +117,24 @@ export default function DMView() {
       // DM messages are already marked as read via useMarkAsRead hook
       logger.info('Mark DM as read shortcut pressed (already handled by hook)');
     },
+    onPinMessage: async () => {
+      const targetMessageId =
+        hoveredMessageId || messages[messages.length - 1]?.id;
+      if (targetMessageId && channelId) {
+        const message = messages.find((m) => m.id === targetMessageId);
+        if (!message) return;
+        try {
+          if (message.isPinned) {
+            await api.unpinDM(targetMessageId, channelId);
+          } else {
+            await api.pinDM(targetMessageId, channelId);
+          }
+          logger.info(`DM pin toggled for ${targetMessageId} via shortcut`);
+        } catch (err) {
+          logger.error('Failed to pin/unpin DM via shortcut:', err);
+        }
+      }
+    },
     onQuickReaction: async (emoji: string) => {
       // React to the last hovered message or the most recent message
       const targetMessageId =
@@ -434,9 +452,9 @@ export default function DMView() {
             );
 
             // Update message in messages list
-            queryClient.setQueryData(
-              ['dmMessages', channelId],
-              (old: { items: Message[] } | undefined) => {
+            queryClient.setQueryData<PaginatedMessages>(
+              queryKeys.dmMessages(channelId, undefined),
+              (old) => {
                 if (!old?.items) return old;
                 return {
                   ...old,
@@ -510,9 +528,9 @@ export default function DMView() {
             }
 
             // Update message in messages list
-            queryClient.setQueryData(
-              ['dmMessages', channelId],
-              (old: { items: Message[] } | undefined) => {
+            queryClient.setQueryData<PaginatedMessages>(
+              queryKeys.dmMessages(channelId, undefined),
+              (old) => {
                 if (!old?.items) return old;
                 return {
                   ...old,
