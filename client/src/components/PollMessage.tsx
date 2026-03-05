@@ -67,9 +67,13 @@ const PollMessageComponent: React.FC<PollMessageProps> = ({
       return;
     }
 
-    // Not ended yet — schedule a re-check when the time arrives
+    // Not ended yet — schedule a re-check when the time arrives.
+    // Clamp delay to avoid 32-bit signed int overflow in setTimeout
+    // (values > ~24.8 days would fire immediately).
     setIsEnded(false);
-    const timer = setTimeout(() => setIsEnded(true), remaining + 500);
+    const MAX_TIMEOUT = 2_147_483_647;
+    const delay = Math.min(remaining + 500, MAX_TIMEOUT);
+    const timer = setTimeout(() => setIsEnded(true), delay);
     return () => clearTimeout(timer);
   }, [endsAt]);
 
@@ -114,8 +118,12 @@ const PollMessageComponent: React.FC<PollMessageProps> = ({
             voteCount: serverOpt.voteCount,
             percentage: serverOpt.percentage,
             voters: serverOpt.voters,
-            // Derive hasVoted from voters list for current user
-            hasVoted: userId ? serverOpt.voters.includes(userId) : opt.hasVoted
+            // Derive hasVoted from voters list for current user.
+            // For anonymous polls voters is [] — preserve existing hasVoted.
+            hasVoted:
+              serverOpt.voters.length > 0 && userId
+                ? serverOpt.voters.includes(userId)
+                : opt.hasVoted
           };
         });
         return {

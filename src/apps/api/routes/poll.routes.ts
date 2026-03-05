@@ -78,7 +78,8 @@ export async function pollRoutes(app: FastifyInstance) {
         }
       }
     },
-    async (request) => {
+    async (request, reply) => {
+      reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
       const poll = await pollService.getPoll(
         request.params.pollId,
         request.user.id
@@ -98,7 +99,8 @@ export async function pollRoutes(app: FastifyInstance) {
         }
       }
     },
-    async (request) => {
+    async (request, reply) => {
+      reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
       const poll = await pollService.getPollByMessageId(
         request.params.messageId,
         request.user.id
@@ -129,46 +131,27 @@ export async function pollRoutes(app: FastifyInstance) {
         request.user.id
       );
 
-      // Broadcast lightweight vote event (user-agnostic)
-      // Each client derives its own hasVoted from its userId
-      // NOTE: Always send actual voter IDs so clients can derive hasVoted,
-      // even for anonymous polls (client handles anonymity in display)
+      // Broadcast lightweight vote event so other clients update counts.
+      // Use the formatted result from vote() — it already includes
+      // voteCount, percentage, voters (empty for anonymous polls).
+      // This avoids a redundant DB query.
       if (app.io) {
-        // Get raw poll data with actual voter IDs
-        const rawPoll = await prisma.poll.findUnique({
-          where: { id: request.params.pollId },
-          include: {
-            options: {
-              include: { votes: { select: { userId: true } } },
-              orderBy: { position: 'asc' }
-            }
-          }
+        app.io.to(`channel:${poll.channelId}`).emit(SOCKET_EVENTS.POLL_VOTED, {
+          pollId: poll.id,
+          messageId: poll.messageId,
+          channelId: poll.channelId,
+          // Omit voterId for anonymous polls — including it would
+          // leak who just voted when combined with count changes.
+          voterId: poll.isAnonymous ? undefined : request.user.id,
+          options: poll.options.map((o) => ({
+            id: o.id,
+            voteCount: o.voteCount,
+            percentage: o.percentage,
+            // voters is already [] for anonymous polls (formatPollResults)
+            voters: o.voters
+          })),
+          totalVotes: poll.totalVotes
         });
-
-        if (rawPoll) {
-          const totalVotes = rawPoll.options.reduce(
-            (sum, o) => sum + o.votes.length,
-            0
-          );
-          app.io
-            .to(`channel:${poll.channelId}`)
-            .emit(SOCKET_EVENTS.POLL_VOTED, {
-              pollId: poll.id,
-              messageId: poll.messageId,
-              channelId: poll.channelId,
-              voterId: request.user.id,
-              options: rawPoll.options.map((o) => ({
-                id: o.id,
-                voteCount: o.votes.length,
-                percentage:
-                  totalVotes > 0
-                    ? Math.round((o.votes.length / totalVotes) * 100)
-                    : 0,
-                voters: o.votes.map((v) => v.userId)
-              })),
-              totalVotes
-            });
-        }
       }
 
       return { success: true, data: poll };
@@ -215,7 +198,31 @@ export async function pollRoutes(app: FastifyInstance) {
       }
     },
     async (request) => {
+      // Fetch poll data before deletion so we can broadcast the correct events
+      const poll = await pollService.getPoll(
+        request.params.pollId,
+        request.user.id
+      );
+
       await pollService.deletePoll(request.params.pollId, request.user.id);
+
+      // Broadcast deletion so other clients remove the poll/message
+      if (app.io) {
+        app.io
+          .to(`channel:${poll.channelId}`)
+          .emit(SOCKET_EVENTS.POLL_DELETED, {
+            pollId: poll.id,
+            messageId: poll.messageId,
+            channelId: poll.channelId
+          });
+        app.io
+          .to(`channel:${poll.channelId}`)
+          .emit(SOCKET_EVENTS.MESSAGE_DELETED, {
+            id: poll.messageId,
+            channelId: poll.channelId
+          });
+      }
+
       return { success: true };
     }
   );
