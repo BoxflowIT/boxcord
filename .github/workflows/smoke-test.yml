@@ -1,0 +1,162 @@
+name: Post-Deploy Smoke Test
+
+on:
+  # Triggered after Railway deploys to production (main push)
+  # Can also be triggered manually
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to test'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+  # Auto-trigger after version bump (which runs on main push)
+  workflow_run:
+    workflows: ["Auto Version Bump"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  smoke-test:
+    name: Smoke Test (${{ github.event.inputs.environment || 'production' }})
+    runs-on: ubuntu-latest
+    # Don't run if the triggering workflow failed
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Wait for Railway deploy to finish
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        run: |
+          echo "⏳ Waiting 60s for Railway to finish deploying..."
+          sleep 60
+
+      - name: Determine target URL
+        id: url
+        run: |
+          ENV="${{ github.event.inputs.environment || 'production' }}"
+          if [ "$ENV" = "staging" ]; then
+            echo "target=${{ vars.STAGING_URL }}" >> $GITHUB_OUTPUT
+          else
+            echo "target=${{ vars.PRODUCTION_URL }}" >> $GITHUB_OUTPUT
+          fi
+          echo "env=$ENV" >> $GITHUB_OUTPUT
+
+      - name: Run smoke tests
+        id: smoke
+        run: |
+          TARGET="${{ steps.url.outputs.target }}"
+          echo "🔍 Smoke testing: $TARGET"
+          echo ""
+          FAILURES=0
+
+          # 1. Health endpoint
+          echo "→ [1/5] Health check..."
+          HEALTH=$(curl -sf --max-time 10 "$TARGET/health" 2>&1 || echo "TIMEOUT")
+          if echo "$HEALTH" | grep -q "ok"; then
+            echo "  ✅ Health check passed"
+          else
+            echo "  ❌ Health check failed: $HEALTH"
+            FAILURES=$((FAILURES + 1))
+          fi
+
+          # 2. API root reachable
+          echo "→ [2/5] API endpoint..."
+          API_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" --max-time 10 "$TARGET/api/v1" 2>/dev/null || echo "000")
+          if [ "$API_STATUS" -ge 200 ] && [ "$API_STATUS" -lt 500 ]; then
+            echo "  ✅ API reachable (HTTP $API_STATUS)"
+          else
+            echo "  ❌ API unreachable (HTTP $API_STATUS)"
+            FAILURES=$((FAILURES + 1))
+          fi
+
+          # 3. Frontend loads (check for index.html content)
+          echo "→ [3/5] Frontend loads..."
+          FRONTEND=$(curl -sf --max-time 10 "$TARGET/" 2>&1 || echo "FAILED")
+          if echo "$FRONTEND" | grep -q "<div id=\"root\">\|<script"; then
+            echo "  ✅ Frontend loads correctly"
+          else
+            echo "  ❌ Frontend failed to load"
+            FAILURES=$((FAILURES + 1))
+          fi
+
+          # 4. Static assets accessible
+          echo "→ [4/5] Static assets..."
+          ASSET_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" --max-time 10 "$TARGET/sw.js" 2>/dev/null || echo "000")
+          if [ "$ASSET_STATUS" = "200" ]; then
+            echo "  ✅ Static assets accessible"
+          else
+            echo "  ⚠️  Service worker not found (HTTP $ASSET_STATUS) — non-critical"
+          fi
+
+          # 5. Response time
+          echo "→ [5/5] Response time..."
+          RESPONSE_TIME=$(curl -sf -o /dev/null -w "%{time_total}" --max-time 10 "$TARGET/health" 2>/dev/null || echo "99")
+          RESPONSE_MS=$(echo "$RESPONSE_TIME * 1000" | bc | cut -d. -f1)
+          if [ "$RESPONSE_MS" -lt 2000 ]; then
+            echo "  ✅ Response time: ${RESPONSE_MS}ms"
+          else
+            echo "  ⚠️  Slow response: ${RESPONSE_MS}ms (>2s)"
+          fi
+
+          echo ""
+          if [ "$FAILURES" -gt 0 ]; then
+            echo "❌ $FAILURES smoke test(s) failed!"
+            echo "failed=true" >> $GITHUB_OUTPUT
+            exit 1
+          else
+            echo "✅ All smoke tests passed!"
+            echo "failed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const env = '${{ steps.url.outputs.env }}';
+            const sha = context.sha.substring(0, 7);
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 ${env} smoke test failed after deploy (${sha})`,
+              body: `## Smoke Test Failure\n\n` +
+                    `- **Environment:** ${env}\n` +
+                    `- **Commit:** ${sha}\n` +
+                    `- **Workflow Run:** ${runUrl}\n` +
+                    `- **Time:** ${new Date().toISOString()}\n\n` +
+                    `The post-deploy smoke test detected issues. Please investigate immediately.\n\n` +
+                    `cc @BoxflowIT/developers`,
+              labels: ['bug', 'production', 'urgent']
+            });
+
+      - name: Summary
+        if: always()
+        run: |
+          ENV="${{ steps.url.outputs.env }}"
+          if [ "${{ steps.smoke.outputs.failed }}" = "true" ]; then
+            echo "## 🚨 $ENV Smoke Test FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "A GitHub issue has been automatically created." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ✅ $ENV Smoke Test Passed" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Target:** ${{ steps.url.outputs.target }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
