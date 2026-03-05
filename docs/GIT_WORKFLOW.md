@@ -201,25 +201,68 @@ BREAKING CHANGE: Old auth tokens are no longer valid
 
 Automatically run by `.husky/pre-commit`:
 
-1. **Lint-staged** - ESLint + Prettier on staged files
-2. **Backend tests** - 61 tests (~1s)
-3. **Frontend tests** - 61 tests (~3s)
+1. **Lint-staged** — ESLint + Prettier on staged files only
 
-**Total time:** ~10-15 seconds
+**Total time:** ~1-2 seconds
+
+> **Note:** Tests are NOT run on pre-commit (moved to pre-push for faster commits).
 
 ---
 
 ## Pre-push Checks
 
-Automatically run by `.husky/pre-push`:
+Automatically run by `scripts/pre-push.sh` (via `.husky/pre-push`):
 
-1. TypeScript compilation check
-2. Full ESLint run
-3. All backend tests (61)
-4. All frontend tests (61)
-5. Client build verification
+1. TypeScript compilation check (backend + client)
+2. Full ESLint run (backend + client)
+3. All backend tests (vitest)
+4. All frontend tests (vitest)
+5. Client production build (`yarn build`)
 
 **Total time:** ~25-35 seconds
+
+---
+
+## GitHub Actions Workflows
+
+All workflows are in `.github/workflows/`:
+
+| Workflow | Trigger | Jobs | Duration |
+|----------|---------|------|---------|
+| **CI** (`ci.yml`) | Push to main/develop, PRs | Test & Lint, E2E Tests, Security Audit | ~3 min |
+| **Deploy Staging** (`deploy-staging.yml`) | Push to develop | Deploy to Railway staging | ~30s |
+| **Deploy Preview** (`deploy-preview.yml`) | PR to develop | Create/cleanup preview env | ~1 min |
+| **Smoke Test** (`smoke-test.yml`) | After version bump or manual | 5 production health checks | ~1 min |
+| **Version Bump** | Push to main | Auto-bump version + git tag | ~30s |
+
+### CI Pipeline Architecture
+
+All 3 CI jobs run **in parallel** for fast feedback:
+
+```
+┌────────────────┐
+│  Test & Lint    │  ~2 min (typecheck, lint, 122 tests)
+├────────────────┤
+│  E2E Tests     │  ~3 min (Playwright, chromium cached)
+├────────────────┤
+│  Security Audit│  ~8 sec (yarn audit)
+└────────────────┘
+```
+
+### E2E Test Strategy
+
+- Auth-dependent tests tagged with `{ tag: '@auth' }` — excluded in CI
+- CI runs: `yarn test:e2e --project=chromium --grep-invert @auth`
+- Playwright chromium browser cached between runs (~300MB saved)
+- Non-auth tests: Health Check, API Docs, Swagger UI, Frontend loads
+
+### Branch Protection
+
+Activate via: `./scripts/setup-branch-protection.sh`
+
+This configures:
+- **main**: Require PR + 1 approval + CI green
+- **develop**: Require PR + CI green
 
 ---
 
@@ -314,5 +357,5 @@ cd client && yarn test
 
 ---
 
-**Last Updated:** February 25, 2026  
-**Document Version:** 1.0.0
+**Last Updated:** March 5, 2026  
+**Document Version:** 2.0.0

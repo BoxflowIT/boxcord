@@ -2,7 +2,7 @@
 
 Discord-like real-time chat application for Boxflow, soon integrated with Boxtime.
 
-**Latest version:** 1.8.1 | [View Changelog](CHANGELOG.md)
+**Latest version:** 1.9.0 | [View Changelog](CHANGELOG.md)
 
 ## 🚀 Quick Start
 
@@ -608,26 +608,52 @@ SENDGRID_FROM_EMAIL=noreply@boxflow.com
 
 #### **CI/CD Pipeline**
 
-- GitHub Actions for automated testing
-- TypeScript type checking (backend + frontend)
-- ESLint for both backend and frontend
-- Automated tests (backend + frontend)
-- npm audit security scanning
-- Automatic Railway deployment on main branch
+Full automated pipeline with parallel jobs for fast feedback (~3 min):
 
-**Run all checks before pushing:**
+| Job | Time | What it checks |
+|-----|------|----------------|
+| **Test & Lint** | ~2 min | TypeScript, ESLint, 122 unit/integration tests (backend + frontend) |
+| **E2E Tests** | ~3 min | Playwright browser tests (health, API, Swagger) |
+| **Security Audit** | ~8 sec | `yarn audit` for known vulnerabilities |
+
+**Workflows:**
+- **CI** ([ci.yml](.github/workflows/ci.yml)) — Runs on push to `main`/`develop` and PRs
+- **Deploy Staging** ([deploy-staging.yml](.github/workflows/deploy-staging.yml)) — Auto-deploy to Railway staging on `develop` push
+- **Deploy Preview** ([deploy-preview.yml](.github/workflows/deploy-preview.yml)) — Preview environments for PRs
+- **Smoke Test** ([smoke-test.yml](.github/workflows/smoke-test.yml)) — Post-deploy health checks (5 checks)
+- **Version Bump** — Auto-bump on merge to `main`
+
+**Git Hooks (Husky):**
+- `pre-commit` — lint-staged (fast, <2s)
+- `commit-msg` — conventional commit format enforcement
+- `pre-push` — full validation: typecheck + lint + tests + client build
+
+**Optimizations:**
+- E2E runs in parallel with Test & Lint (not sequential)
+- Playwright browser cache (~300MB saved per run)
+- Yarn dependency cache
+
+**Run all checks locally before pushing:**
 
 ```bash
 yarn validate
 ```
 
-This runs:
-- Backend: typecheck, lint, tests
-- Frontend: typecheck, lint, tests
-
-**See:** [.github/workflows/ci.yml](.github/workflows/ci.yml)
+**See:** [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) | [.github/workflows/](.github/workflows/)
 
 ### Recent Improvements
+
+#### CI/CD Pipeline Overhaul (v1.9.0) 🔧
+
+- ✅ **Parallel CI jobs** — E2E runs alongside Test & Lint (~3 min total vs ~5 min sequential)
+- ✅ **Playwright browser caching** — ~300MB chromium cached between runs
+- ✅ **E2E tests in CI** — Health check, API, Swagger UI tests with auth-test exclusion
+- ✅ **Deploy staging workflow** — Auto-deploy to Railway staging on develop push
+- ✅ **Deploy preview environments** — PR-based preview deployments with auto-cleanup
+- ✅ **Post-deploy smoke tests** — 5-check health verification after production deploys
+- ✅ **Slimmed pre-commit** — Only lint-staged (no tests), faster commits
+- ✅ **Pre-push validation** — Full typecheck + lint + tests + client build
+- ✅ **Branch protection script** — Automated setup for main/develop rules
 
 #### Client-Side Request Optimization (v1.7.1) 🚀
 
