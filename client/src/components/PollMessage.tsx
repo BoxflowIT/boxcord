@@ -1,5 +1,5 @@
 // Poll Message Component - Displays an interactive poll in a message
-import React, { memo, useMemo, useEffect } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { usePoll } from '../hooks/usePoll';
 import { useAuthStore } from '../store/auth';
 import { socketService } from '../services/socket';
@@ -7,10 +7,14 @@ import { cn } from '../utils/classNames';
 import { PollIcon, CheckIcon } from './ui/Icons';
 import type { Poll } from '../types';
 
+/** Show results (progress bars + percentages) when any of these are true */
+function shouldShowResults(poll: Poll, isEnded: boolean): boolean {
+  return poll.hasVoted || isEnded || poll.totalVotes > 0;
+}
+
 interface PollMessageProps {
   messageId: string;
   initialPoll?: Poll | null;
-  onPollUpdate?: (poll: Poll) => void;
 }
 
 const OPTION_COLORS = [
@@ -28,44 +32,116 @@ const OPTION_COLORS = [
 
 const PollMessageComponent: React.FC<PollMessageProps> = ({
   messageId,
-  initialPoll,
-  onPollUpdate
+  initialPoll
 }) => {
-  const { poll, loading, voting, handleVote, handleEndPoll, setPoll } = usePoll(
-    {
-      messageId,
-      initialPoll
-    }
-  );
+  const {
+    poll,
+    loading,
+    voting,
+    voteError,
+    handleVote,
+    handleEndPoll,
+    setPoll
+  } = usePoll({
+    messageId,
+    initialPoll
+  });
   const userId = useAuthStore((s) => s.user?.id);
 
-  const isEnded = useMemo(() => {
-    if (!poll?.endsAt) return false;
-    return new Date(poll.endsAt) < new Date();
-  }, [poll?.endsAt]);
+  // Live ended check — updates via state so the UI re-renders when time passes endsAt
+  const endsAt = poll?.endsAt ?? null;
+  const [isEnded, setIsEnded] = useState(() => {
+    if (!endsAt) return false;
+    return new Date(endsAt) < new Date();
+  });
+
+  useEffect(() => {
+    if (!endsAt) {
+      setIsEnded(false);
+      return;
+    }
+
+    const remaining = new Date(endsAt).getTime() - Date.now();
+    if (remaining <= 0) {
+      setIsEnded(true);
+      return;
+    }
+
+    // Not ended yet — schedule a re-check when the time arrives
+    setIsEnded(false);
+    const timer = setTimeout(() => setIsEnded(true), remaining + 500);
+    return () => clearTimeout(timer);
+  }, [endsAt]);
 
   const isCreator = userId === poll?.creatorId;
+  const showResults = poll ? shouldShowResults(poll, isEnded) : false;
 
   // Listen for real-time poll updates via socket
+  // NOTE: Do NOT include `poll` in deps — it changes on every vote and
+  // would tear down + re-register the listener in a loop. Use setPoll
+  // updater form to access current state without a dependency.
   useEffect(() => {
     const socket = socketService.getSocket();
-    if (!socket || !poll) return;
+    if (!socket) return;
 
-    const handlePollUpdate = (updatedPoll: Poll) => {
+    // Lightweight vote event — update counts while preserving user's own hasVoted
+    const handleVoteUpdate = (data: {
+      pollId: string;
+      messageId: string;
+      voterId?: string;
+      options: Array<{
+        id: string;
+        voteCount: number;
+        percentage: number;
+        voters: string[];
+      }>;
+      totalVotes: number;
+    }) => {
+      if (data.messageId !== messageId) return;
+
+      // Skip own vote events — the HTTP response is authoritative
+      // to avoid a race condition where the socket event overwrites
+      // the correct state from the API response.
+      if (data.voterId && data.voterId === userId) return;
+
+      setPoll((prev) => {
+        if (!prev) return prev;
+        const updatedOptions = prev.options.map((opt) => {
+          const serverOpt = data.options.find((o) => o.id === opt.id);
+          if (!serverOpt) return opt;
+          return {
+            ...opt,
+            voteCount: serverOpt.voteCount,
+            percentage: serverOpt.percentage,
+            voters: serverOpt.voters,
+            // Derive hasVoted from voters list for current user
+            hasVoted: userId ? serverOpt.voters.includes(userId) : opt.hasVoted
+          };
+        });
+        return {
+          ...prev,
+          totalVotes: data.totalVotes,
+          options: updatedOptions,
+          hasVoted: updatedOptions.some((o) => o.hasVoted)
+        };
+      });
+    };
+
+    // Full poll update for ended events
+    const handlePollEnded = (updatedPoll: Poll) => {
       if (updatedPoll.messageId === messageId) {
         setPoll(updatedPoll);
-        onPollUpdate?.(updatedPoll);
       }
     };
 
-    socket.on('poll:voted', handlePollUpdate);
-    socket.on('poll:ended', handlePollUpdate);
+    socket.on('poll:voted', handleVoteUpdate);
+    socket.on('poll:ended', handlePollEnded);
 
     return () => {
-      socket.off('poll:voted', handlePollUpdate);
-      socket.off('poll:ended', handlePollUpdate);
+      socket.off('poll:voted', handleVoteUpdate);
+      socket.off('poll:ended', handlePollEnded);
     };
-  }, [messageId, poll, setPoll, onPollUpdate]);
+  }, [messageId, setPoll, userId]);
 
   if (loading) {
     return (
@@ -97,6 +173,13 @@ const PollMessageComponent: React.FC<PollMessageProps> = ({
         {isEnded && <span className="badge-danger">Avslutad</span>}
       </div>
 
+      {/* Vote error */}
+      {voteError && (
+        <div className="px-3 py-1.5 mb-2 bg-red-500/20 border border-red-500/40 rounded text-xs text-red-300">
+          {voteError}
+        </div>
+      )}
+
       {/* Options */}
       <div className="space-y-2">
         {poll.options.map((option, index) => (
@@ -116,7 +199,7 @@ const PollMessageComponent: React.FC<PollMessageProps> = ({
             )}
           >
             {/* Progress bar background */}
-            {(poll.hasVoted || isEnded) && (
+            {showResults && (
               <div
                 className={cn(
                   'absolute inset-y-0 left-0 transition-all duration-500 ease-out rounded-md opacity-20',
@@ -150,7 +233,7 @@ const PollMessageComponent: React.FC<PollMessageProps> = ({
               </div>
 
               {/* Vote count & percentage */}
-              {(poll.hasVoted || isEnded) && (
+              {showResults && (
                 <span className="flex-shrink-0 text-muted font-medium">
                   {option.voteCount} ({option.percentage}%)
                 </span>

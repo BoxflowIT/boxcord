@@ -3,8 +3,7 @@ import type { ExtendedPrismaClient } from '../../03-infrastructure/database/clie
 import {
   NotFoundError,
   ValidationError,
-  ForbiddenError,
-  ConflictError
+  ForbiddenError
 } from '../../00-core/errors.js';
 import { POLL_MESSAGE_PREFIX } from '../../00-core/constants.js';
 import {
@@ -201,39 +200,38 @@ export class PollService {
       throw new NotFoundError('Poll option', optionId);
     }
 
-    // Check for existing vote on this option
-    const existingVote = option.votes.find((v) => v.userId === userId);
+    // Check for existing vote on this option (use DB query for freshness)
+    const existingVote = await this.prisma.pollVote.findFirst({
+      where: { optionId, userId }
+    });
 
     if (existingVote) {
-      // Remove vote (toggle off)
-      await this.prisma.pollVote.delete({
+      // Remove vote (toggle off) — use deleteMany to avoid race condition crash
+      await this.prisma.pollVote.deleteMany({
         where: { id: existingVote.id }
       });
     } else {
-      // If single-choice, remove any existing votes first
+      // If single-choice, remove any existing votes for this user first
       if (!poll.isMultiple) {
-        const existingVoteIds = poll.options
-          .flatMap((o) => o.votes)
-          .filter((v) => v.userId === userId)
-          .map((v) => v.id);
-
-        if (existingVoteIds.length > 0) {
-          await this.prisma.pollVote.deleteMany({
-            where: { id: { in: existingVoteIds } }
-          });
-        }
+        await this.prisma.pollVote.deleteMany({
+          where: {
+            userId,
+            option: { pollId }
+          }
+        });
       }
 
-      // Add vote
+      // Add vote (idempotent — ignore duplicate from race condition)
       try {
         await this.prisma.pollVote.create({
           data: { optionId, userId }
         });
       } catch (err: unknown) {
         if ((err as { code?: string }).code === 'P2002') {
-          throw new ConflictError('You have already voted for this option');
+          // Vote already exists (double-click or race condition) — no-op
+        } else {
+          throw err;
         }
-        throw err;
       }
     }
 

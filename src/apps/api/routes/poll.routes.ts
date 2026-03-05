@@ -110,11 +110,46 @@ export async function pollRoutes(app: FastifyInstance) {
         request.user.id
       );
 
-      // Broadcast vote via socket
+      // Broadcast lightweight vote event (user-agnostic)
+      // Each client derives its own hasVoted from its userId
+      // NOTE: Always send actual voter IDs so clients can derive hasVoted,
+      // even for anonymous polls (client handles anonymity in display)
       if (app.io) {
-        app.io
-          .to(`channel:${poll.channelId}`)
-          .emit(SOCKET_EVENTS.POLL_VOTED, poll);
+        // Get raw poll data with actual voter IDs
+        const rawPoll = await prisma.poll.findUnique({
+          where: { id: request.params.pollId },
+          include: {
+            options: {
+              include: { votes: { select: { userId: true } } },
+              orderBy: { position: 'asc' }
+            }
+          }
+        });
+
+        if (rawPoll) {
+          const totalVotes = rawPoll.options.reduce(
+            (sum, o) => sum + o.votes.length,
+            0
+          );
+          app.io
+            .to(`channel:${poll.channelId}`)
+            .emit(SOCKET_EVENTS.POLL_VOTED, {
+              pollId: poll.id,
+              messageId: poll.messageId,
+              channelId: poll.channelId,
+              voterId: request.user.id,
+              options: rawPoll.options.map((o) => ({
+                id: o.id,
+                voteCount: o.votes.length,
+                percentage:
+                  totalVotes > 0
+                    ? Math.round((o.votes.length / totalVotes) * 100)
+                    : 0,
+                voters: o.votes.map((v) => v.userId)
+              })),
+              totalVotes
+            });
+        }
       }
 
       return { success: true, data: poll };
