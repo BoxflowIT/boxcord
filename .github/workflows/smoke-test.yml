@@ -86,7 +86,7 @@ jobs:
 
           # 2. API root reachable
           echo "→ [2/5] API endpoint..."
-          API_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" --max-time 10 "$TARGET/api/v1" 2>/dev/null || echo "000")
+          API_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" --max-time 10 "$TARGET/health" 2>/dev/null || echo "000")
           if [ "$API_STATUS" -ge 200 ] && [ "$API_STATUS" -lt 500 ]; then
             echo "  ✅ API reachable (HTTP $API_STATUS)"
           else
