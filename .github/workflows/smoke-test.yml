@@ -15,7 +15,7 @@ on:
           - staging
   # Auto-trigger after version bump (which runs on main push)
   workflow_run:
-    workflows: ["Auto Version Bump"]
+    workflows: ['Auto Version Bump']
     types: [completed]
     branches: [main]
 
