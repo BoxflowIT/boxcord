@@ -146,8 +146,8 @@ export const schemas = {
   // Poll schemas
   createPoll: z.object({
     channelId: id,
-    question: z.string().min(1).max(500),
-    options: z.array(z.string().min(1).max(200)).min(2).max(10),
+    question: z.string().trim().min(1).max(500),
+    options: z.array(z.string().trim().min(1).max(200)).min(2).max(10),
     isMultiple: z.boolean().optional(),
     isAnonymous: z.boolean().optional(),
     endsAt: z.string().datetime().optional()

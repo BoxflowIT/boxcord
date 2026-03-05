@@ -48,6 +48,13 @@ export async function registerRoutes(app: FastifyInstance) {
   // All API routes under /api/v1
   await app.register(
     async (api) => {
+      // Default: prevent browsers from caching API responses.
+      // Individual routes can override this with reply.cache() when
+      // explicit caching is desired (e.g., static channel metadata).
+      api.addHook('onRequest', async (_request, reply) => {
+        reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+      });
+
       await api.register(authRoutes, { prefix: '/auth' });
       await api.register(initialDataRoutes); // No prefix, handles /initial
       await api.register(workspaceRoutes, { prefix: '/workspaces' });

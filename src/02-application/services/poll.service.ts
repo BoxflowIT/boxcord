@@ -255,6 +255,11 @@ export class PollService {
       throw new ForbiddenError('Only the poll creator can end the poll');
     }
 
+    // Already ended — return current results without updating
+    if (poll.endsAt && poll.endsAt < new Date()) {
+      return this.getPoll(pollId, userId);
+    }
+
     await this.prisma.poll.update({
       where: { id: pollId },
       data: { endsAt: new Date() }

@@ -208,6 +208,10 @@ export function usePoll({
       setPoll(updatedPoll);
     } catch (err) {
       logger.error('Failed to end poll:', err);
+      const message =
+        err instanceof Error ? err.message : 'Kunde inte avsluta omröstningen';
+      setVoteError(translateError(message));
+      setTimeout(() => setVoteError(null), 4000);
     }
   }, [poll]);
 
