@@ -53,12 +53,11 @@ jobs:
             TARGET="${{ vars.STAGING_URL }}"
           else
             TARGET="${{ vars.PRODUCTION_URL }}"
-            # Fallback if PRODUCTION_URL var is not set
-            TARGET="${TARGET:-https://boxcord.boxflow.se}"
           fi
 
           if [ -z "$TARGET" ]; then
             echo "⚠️ No URL configured for $ENV — skipping smoke tests"
+            echo "⚠️ Set PRODUCTION_URL or STAGING_URL in GitHub repo variables to enable"
             echo "skip=true" >> $GITHUB_OUTPUT
           else
             echo "skip=false" >> $GITHUB_OUTPUT
@@ -136,7 +135,7 @@ jobs:
           fi
 
       - name: Create issue on failure
-        if: failure()
+        if: failure() && steps.url.outputs.skip != 'true'
         uses: actions/github-script@v7
         with:
           script: |
