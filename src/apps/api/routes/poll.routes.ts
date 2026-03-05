@@ -68,17 +68,36 @@ export async function pollRoutes(app: FastifyInstance) {
   );
 
   // Get poll by ID
-  app.get<{ Params: { pollId: string } }>('/:pollId', async (request) => {
-    const poll = await pollService.getPoll(
-      request.params.pollId,
-      request.user.id
-    );
-    return { success: true, data: poll };
-  });
+  app.get<{ Params: { pollId: string } }>(
+    '/:pollId',
+    {
+      config: {
+        rateLimit: {
+          max: 60,
+          timeWindow: '1 minute'
+        }
+      }
+    },
+    async (request) => {
+      const poll = await pollService.getPoll(
+        request.params.pollId,
+        request.user.id
+      );
+      return { success: true, data: poll };
+    }
+  );
 
   // Get poll by message ID
   app.get<{ Params: { messageId: string } }>(
     '/message/:messageId',
+    {
+      config: {
+        rateLimit: {
+          max: 60,
+          timeWindow: '1 minute'
+        }
+      }
+    },
     async (request) => {
       const poll = await pollService.getPollByMessageId(
         request.params.messageId,
@@ -157,25 +176,47 @@ export async function pollRoutes(app: FastifyInstance) {
   );
 
   // End a poll early
-  app.post<{ Params: { pollId: string } }>('/:pollId/end', async (request) => {
-    const poll = await pollService.endPoll(
-      request.params.pollId,
-      request.user.id
-    );
+  app.post<{ Params: { pollId: string } }>(
+    '/:pollId/end',
+    {
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: '1 minute'
+        }
+      }
+    },
+    async (request) => {
+      const poll = await pollService.endPoll(
+        request.params.pollId,
+        request.user.id
+      );
 
-    // Broadcast poll end via socket
-    if (app.io) {
-      app.io
-        .to(`channel:${poll.channelId}`)
-        .emit(SOCKET_EVENTS.POLL_ENDED, poll);
+      // Broadcast poll end via socket
+      if (app.io) {
+        app.io
+          .to(`channel:${poll.channelId}`)
+          .emit(SOCKET_EVENTS.POLL_ENDED, poll);
+      }
+
+      return { success: true, data: poll };
     }
-
-    return { success: true, data: poll };
-  });
+  );
 
   // Delete a poll
-  app.delete<{ Params: { pollId: string } }>('/:pollId', async (request) => {
-    await pollService.deletePoll(request.params.pollId, request.user.id);
-    return { success: true };
-  });
+  app.delete<{ Params: { pollId: string } }>(
+    '/:pollId',
+    {
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: '1 minute'
+        }
+      }
+    },
+    async (request) => {
+      await pollService.deletePoll(request.params.pollId, request.user.id);
+      return { success: true };
+    }
+  );
 }
