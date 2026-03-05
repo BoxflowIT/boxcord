@@ -26,13 +26,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
       - name: Deploy to Railway (Staging)
-        uses: bervProject/railway-deploy@main
-        with:
-          railway_token: ${{ secrets.RAILWAY_TOKEN }}
-          service: ${{ vars.RAILWAY_STAGING_SERVICE_ID }}
+        run: railway up --service "${{ vars.RAILWAY_STAGING_SERVICE_ID }}" --environment staging --detach
         env:
-          RAILWAY_ENVIRONMENT: staging
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: Wait for deployment
         run: sleep 30
