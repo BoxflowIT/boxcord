@@ -50,13 +50,24 @@ jobs:
         run: |
           ENV="${{ github.event.inputs.environment || 'production' }}"
           if [ "$ENV" = "staging" ]; then
-            echo "target=${{ vars.STAGING_URL }}" >> $GITHUB_OUTPUT
+            TARGET="${{ vars.STAGING_URL }}"
           else
-            echo "target=${{ vars.PRODUCTION_URL }}" >> $GITHUB_OUTPUT
+            TARGET="${{ vars.PRODUCTION_URL }}"
+            # Fallback if PRODUCTION_URL var is not set
+            TARGET="${TARGET:-https://boxcord.boxflow.se}"
           fi
+
+          if [ -z "$TARGET" ]; then
+            echo "⚠️ No URL configured for $ENV — skipping smoke tests"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+          echo "target=$TARGET" >> $GITHUB_OUTPUT
           echo "env=$ENV" >> $GITHUB_OUTPUT
 
       - name: Run smoke tests
+        if: steps.url.outputs.skip != 'true'
         id: smoke
         run: |
           TARGET="${{ steps.url.outputs.target }}"
@@ -67,7 +78,7 @@ jobs:
           # 1. Health endpoint
           echo "→ [1/5] Health check..."
           HEALTH=$(curl -sf --max-time 10 "$TARGET/health" 2>&1 || echo "TIMEOUT")
-          if echo "$HEALTH" | grep -q "ok"; then
+          if echo "$HEALTH" | grep -q "healthy\|ok"; then
             echo "  ✅ Health check passed"
           else
             echo "  ❌ Health check failed: $HEALTH"
@@ -107,7 +118,8 @@ jobs:
           echo "→ [5/5] Response time..."
           RESPONSE_TIME=$(curl -sf -o /dev/null -w "%{time_total}" --max-time 10 "$TARGET/health" 2>/dev/null || echo "99")
           RESPONSE_MS=$(echo "$RESPONSE_TIME * 1000" | bc | cut -d. -f1)
-          if [ "$RESPONSE_MS" -lt 2000 ]; then
+          RESPONSE_MS=${RESPONSE_MS:-99000}
+          if [ "$RESPONSE_MS" -lt 2000 ] 2>/dev/null; then
             echo "  ✅ Response time: ${RESPONSE_MS}ms"
           else
             echo "  ⚠️  Slow response: ${RESPONSE_MS}ms (>2s)"
