@@ -33,24 +33,42 @@ yarn test:e2e:ui
 
 # Run E2E tests in debug mode
 yarn test:e2e --debug
+
+# Run only non-auth tests (same as CI)
+yarn test:e2e --grep-invert @auth
 ```
 
-**Prerequisites:**
+**Prerequisites (local):**
 - Backend running on `http://localhost:3001`
 - Frontend running on `http://localhost:5173`
 - Test database with seed data
 
+**CI Behavior:**
+- Auth-dependent tests are tagged with `{ tag: '@auth' }` and excluded in CI (`--grep-invert @auth`)
+- CI builds backend + client, then serves static files via `serve`
+- Playwright chromium browser is cached between CI runs
+- Health check accepts `not_configured` Redis status (no Redis in CI)
+- Swagger UI test uses API request assertions (not browser rendering)
+
 **Test Coverage:**
 - ✅ Health checks (backend & frontend)
-- ✅ API documentation (Swagger)
-- ✅ Authentication flow
-- ✅ Workspace navigation
-- ✅ Messaging functionality
-- ✅ Search interface
-- ✅ User settings
-- ✅ XSS protection verification
+- ✅ API documentation (Swagger — HTML + OpenAPI JSON spec)
+- ✅ Authentication flow (`@auth` — local only)
+- ✅ Workspace navigation (`@auth` — local only)
+- ✅ Messaging functionality (`@auth` — local only)
+- ✅ Search interface (`@auth` — local only)
+- ✅ User settings (`@auth` — local only)
+- ✅ XSS protection verification (`@auth` — local only)
+- ✅ File upload flows (`@auth` — local only)
+- ✅ WebSocket real-time events (`@auth` — local only)
+- ✅ Video window controls (`@auth` — local only)
 
-**Test File:** [`tests/e2e/user-flows.spec.ts`](../tests/e2e/user-flows.spec.ts)
+**Test Files:**
+- [`tests/e2e/user-flows.spec.ts`](../tests/e2e/user-flows.spec.ts) — Core flows
+- [`tests/e2e/auth-flows.spec.ts`](../tests/e2e/auth-flows.spec.ts) — Auth flows
+- [`tests/e2e/file-upload.spec.ts`](../tests/e2e/file-upload.spec.ts) — File uploads
+- [`tests/e2e/websocket-realtime.spec.ts`](../tests/e2e/websocket-realtime.spec.ts) — WebSocket
+- [`tests/e2e/video-window-controls.spec.ts`](../tests/e2e/video-window-controls.spec.ts) — Video
 
 ### 3. Load Tests (K6)
 Performance tests that simulate concurrent users.

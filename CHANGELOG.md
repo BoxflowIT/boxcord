@@ -5,6 +5,24 @@ All notable changes to Boxcord will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-03-05
+
+### Added
+- **CI/CD pipeline overhaul** — 9 improvements to push-to-production workflow
+- **Parallel CI jobs** — E2E Tests run alongside Test & Lint (~3 min total)
+- **Playwright browser caching** — Chromium cached between CI runs (~300MB saved)
+- **E2E tests in CI** — Health check, API docs, Swagger UI with `@auth` tag exclusion
+- **Deploy staging workflow** — Auto-deploy to Railway staging on develop push
+- **Deploy preview environments** — PR-based preview deployments with auto-cleanup
+- **Post-deploy smoke tests** — 5-check health verification after production deploys
+- **Branch protection script** — `scripts/setup-branch-protection.sh` for main/develop rules
+- **Pre-push build validation** — Client build added to pre-push hook
+
+### Changed
+- **Pre-commit slimmed** — Only runs lint-staged (removed tests for faster commits)
+- **Commit message format** — PR number now optional in conventional commits
+- **CI architecture** — E2E no longer depends on Test & Lint (parallel execution)
+
 ## [1.8.1] - 2026-03-05
 
 ### Fixed
