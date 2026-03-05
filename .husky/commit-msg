@@ -11,26 +11,26 @@ SUBJECT=$(echo "$COMMIT_MSG" | head -1)
 # Check for valid conventional commit format
 VALID_TYPES="feat|fix|refactor|docs|test|chore|perf|style|ci|merge"
 
-# Pattern: [emoji] type[(scope)]: subject (#number)
-# The emoji is optional, PR number is mandatory at the end
-if ! echo "$SUBJECT" | grep -qE "^[[:space:]]*(✨|🐛|♻️|📝|🧪|🔧|⚡|💄|👷|🔀)?[[:space:]]*($VALID_TYPES)(\([a-z0-9\-]+\))?:[[:space:]].+[[:space:]]\(#[0-9]+\)$"; then
+# Pattern: [emoji] type[(scope)]: subject [(#number)]
+# Emoji, scope, and PR number are all optional
+if ! echo "$SUBJECT" | grep -qE "^[[:space:]]*(✨|🐛|♻️|📝|🧪|🔧|⚡|💄|👷|🔀)?[[:space:]]*($VALID_TYPES)(\([a-z0-9\-]+\))?:[[:space:]].+(\(#[0-9]+\))?$"; then
   echo ""
-  echo "❌ ERROR: Commit message does not follow CONTRIBUTING.md format!"
+  echo "❌ ERROR: Commit message does not follow conventional commit format!"
   echo ""
   echo "Current message:"
   echo "  $SUBJECT"
   echo ""
   echo "Required format:"
-  echo "  [emoji] type(scope): subject (#PR_NUMBER)"
+  echo "  [emoji] type[(scope)]: subject [(#PR_NUMBER)]"
   echo ""
   echo "Examples:"
   echo "  ✅ ✨ feat(frontend): add dark mode (#230)"
-  echo "  ✅ 🐛 fix: resolve memory leak (#231)"
+  echo "  ✅ 🐛 fix: resolve memory leak"
   echo "  ✅ 📝 docs: update README (#232)"
-  echo "  ✅ feat(backend): add caching (#233)"
+  echo "  ✅ feat(backend): add caching"
   echo ""
   echo "Valid types: $VALID_TYPES"
-  echo "Emoji and scope are optional, but PR number is MANDATORY"
+  echo "Emoji, scope, and PR number are all optional"
   echo ""
   exit 1
 fi

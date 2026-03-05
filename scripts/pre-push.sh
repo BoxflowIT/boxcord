@@ -28,4 +28,7 @@ yarn lint
 echo "🎨 Client: Tests..."
 yarn test
 
+echo "🎨 Client: Build..."
+yarn build
+
 echo "✅ All checks passed! Safe to push."
