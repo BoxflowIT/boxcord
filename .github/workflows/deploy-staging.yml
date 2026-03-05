@@ -19,25 +19,41 @@ jobs:
     runs-on: ubuntu-latest
     # Only deploy if CI passed (ci.yml runs on develop push too)
     environment:
-      name: staging
+      name: 'staging'
       url: ${{ vars.STAGING_URL }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Check Railway credentials
+        id: check
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "⚠️ RAILWAY_TOKEN not configured — skipping staging deploy"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
       - name: Install Railway CLI
+        if: steps.check.outputs.skip != 'true'
         run: npm install -g @railway/cli
 
       - name: Deploy to Railway (Staging)
+        if: steps.check.outputs.skip != 'true'
         run: railway up --service "${{ vars.RAILWAY_STAGING_SERVICE_ID }}" --environment staging --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: Wait for deployment
+        if: steps.check.outputs.skip != 'true'
         run: sleep 30
 
       - name: Smoke test staging
+        if: steps.check.outputs.skip != 'true'
         run: |
           STAGING_URL="${{ vars.STAGING_URL }}"
           echo "🔍 Running smoke tests against $STAGING_URL..."
