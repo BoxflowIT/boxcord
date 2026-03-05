@@ -98,31 +98,43 @@ await app.register(compress, {
 
 #### HTTP Cache Headers
 
+All `/api/v1` routes default to `no-cache, no-store, must-revalidate` via a global `onRequest` hook. Routes that benefit from caching opt-in explicitly with `reply.cache()`:
+
 ```typescript
-// Workspaces - rarely change
+// Default (all /api/v1 routes via global hook):
+// Cache-Control: no-cache, no-store, must-revalidate
+
+// Workspaces - rarely change (opt-in override)
 reply.cache({ 
   maxAge: 300,                    // 5min browser cache
   staleWhileRevalidate: 600       // Serve stale for 10min while revalidating
 });
 
-// Messages - frequently updated  
-reply.cache({ 
-  maxAge: 30,                     // 30s cache
-  staleWhileRevalidate: 120       // 2min stale
-});
+// Messages, polls, etc. - use the default (no caching)
 ```
 
-**Impact**: 80%+ cache hit rate = instant responses
+**Impact**: Prevents stale data (votes, reactions) while still caching stable resources
 
 #### ETag Support
 
+ETags are generated using a SHA-256 hash of the full response payload (`createHash('sha256')` from `node:crypto`). This ensures unique ETags even for structurally similar responses.
+
 ```typescript
+// SHA-256 hash of full payload (22-char base64url)
+const hash = createHash('sha256')
+  .update(String(payload))
+  .digest('base64url')
+  .substring(0, 22);
+const etag = `"${hash}"`;
+
 // Automatic 304 Not Modified responses
 if (ifNoneMatch === etag) {
   reply.code(304);
   return '';
 }
 ```
+
+> **Note:** A previous implementation used truncated base64 encoding (first 20 chars of the raw payload), which caused ETag collisions for JSON responses sharing the same prefix — e.g. all poll responses started with `{"success":true,...}` and got identical ETags regardless of content.
 
 **Impact**: Zero bandwidth for unchanged resources
 
@@ -226,8 +238,14 @@ Browser DevTools Network tab:
 ### Response Headers
 
 ```http
+# Default (all /api/v1 routes):
+Cache-Control: no-cache, no-store, must-revalidate
+ETag: "a1b2c3d4e5f6g7h8i9j0kl"
+Content-Encoding: gzip
+
+# Routes that opt-in via reply.cache():
 Cache-Control: public, max-age=300, stale-while-revalidate=600
-ETag: "abc123..."
+ETag: "a1b2c3d4e5f6g7h8i9j0kl"
 Content-Encoding: gzip
 ```
 
