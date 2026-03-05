@@ -74,7 +74,7 @@ async function setupAuthenticatedPage(
   await page.waitForLoadState('networkidle');
 }
 
-test.describe('Authenticated Workspace Flows', () => {
+test.describe('Authenticated Workspace Flows', { tag: '@auth' }, () => {
   test.beforeEach(async ({ page }) => {
     await setupAuthenticatedPage(page);
   });

@@ -94,14 +94,12 @@ jobs:
         run: yarn build
 
   # ─── E2E Tests (Playwright) ────────────────────────────────────────
-  # NOTE: Some tests require Cognito auth which isn't available in CI.
-  # continue-on-error allows partial E2E results without blocking PRs.
-  # TODO: Add auth mocking to make all E2E tests CI-compatible.
+  # Runs only tests that don't require Cognito auth (tagged @auth).
+  # Auth-dependent tests are skipped in CI until auth mocking is added.
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
     needs: test
-    continue-on-error: true
     permissions:
       contents: read
 
@@ -165,7 +163,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run E2E tests
-        run: yarn test:e2e --project=chromium
+        run: yarn test:e2e --project=chromium --grep-invert @auth
         env:
           DATABASE_URL: postgresql://boxcord:boxcord@localhost:5432/boxcord_e2e
           NODE_ENV: test

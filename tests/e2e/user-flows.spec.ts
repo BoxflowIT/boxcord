@@ -90,7 +90,7 @@ test.describe('API Documentation', () => {
   });
 });
 
-test.describe('Authentication', () => {
+test.describe('Authentication', { tag: '@auth' }, () => {
   test.beforeEach(async ({ page }) => {
     // Clear storage before each test
     await page.goto(FRONTEND_URL);
@@ -141,7 +141,7 @@ test.describe('Authentication', () => {
   });
 });
 
-test.describe('Workspace Navigation', () => {
+test.describe('Workspace Navigation', { tag: '@auth' }, () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
   });
@@ -175,7 +175,7 @@ test.describe('Workspace Navigation', () => {
   });
 });
 
-test.describe('Messaging', () => {
+test.describe('Messaging', { tag: '@auth' }, () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
 
@@ -265,7 +265,7 @@ test.describe('Messaging', () => {
   });
 });
 
-test.describe('Search Functionality', () => {
+test.describe('Search Functionality', { tag: '@auth' }, () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
   });
@@ -284,7 +284,7 @@ test.describe('Search Functionality', () => {
   });
 });
 
-test.describe('User Settings', () => {
+test.describe('User Settings', { tag: '@auth' }, () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
   });
@@ -315,7 +315,7 @@ test.describe('User Settings', () => {
   });
 });
 
-test.describe('XSS Protection', () => {
+test.describe('XSS Protection', { tag: '@auth' }, () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
   });

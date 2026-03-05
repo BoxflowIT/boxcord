@@ -51,7 +51,7 @@ async function navigateToChannel(page: Page): Promise<void> {
   }
 }
 
-test.describe('WebSocket - Live Messages', () => {
+test.describe('WebSocket - Live Messages', { tag: '@auth' }, () => {
   let context1: BrowserContext;
   let context2: BrowserContext;
   let page1: Page;
@@ -124,7 +124,7 @@ test.describe('WebSocket - Live Messages', () => {
   });
 });
 
-test.describe('WebSocket - Typing Indicators', () => {
+test.describe('WebSocket - Typing Indicators', { tag: '@auth' }, () => {
   let context1: BrowserContext;
   let context2: BrowserContext;
   let page1: Page;
@@ -204,7 +204,7 @@ test.describe('WebSocket - Typing Indicators', () => {
   });
 });
 
-test.describe('WebSocket - User Presence', () => {
+test.describe('WebSocket - User Presence', { tag: '@auth' }, () => {
   let context1: BrowserContext;
   let context2: BrowserContext;
   let page1: Page;
@@ -271,7 +271,7 @@ test.describe('WebSocket - User Presence', () => {
   });
 });
 
-test.describe('WebSocket - Real-Time Reactions', () => {
+test.describe('WebSocket - Real-Time Reactions', { tag: '@auth' }, () => {
   let context1: BrowserContext;
   let context2: BrowserContext;
   let page1: Page;
@@ -338,7 +338,7 @@ test.describe('WebSocket - Real-Time Reactions', () => {
   });
 });
 
-test.describe('WebSocket - Message Editing', () => {
+test.describe('WebSocket - Message Editing', { tag: '@auth' }, () => {
   let context1: BrowserContext;
   let context2: BrowserContext;
   let page1: Page;
@@ -420,7 +420,7 @@ test.describe('WebSocket - Message Editing', () => {
   });
 });
 
-test.describe('WebSocket - Voice Channel Events', () => {
+test.describe('WebSocket - Voice Channel Events', { tag: '@auth' }, () => {
   let context1: BrowserContext;
   let context2: BrowserContext;
   let page1: Page;
