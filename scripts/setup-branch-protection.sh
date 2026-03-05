@@ -33,7 +33,6 @@ gh api \
     "strict": true,
     "contexts": [
       "Test & Lint",
-      "E2E Tests",
       "Security Audit"
     ]
   },
@@ -90,5 +89,6 @@ echo ""
 echo "Summary:"
 echo "  main:    PR required | 1 approval | CI must pass | No force push"
 echo "  develop: PR required | 0 approvals | CI must pass | No force push"
+echo "  E2E Tests run but are non-blocking (continue-on-error) until auth mocking is added"
 echo ""
 echo "To modify: edit this script or use GitHub Settings → Branches"
