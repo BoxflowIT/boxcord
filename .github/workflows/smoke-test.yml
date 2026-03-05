@@ -53,12 +53,11 @@ jobs:
             TARGET="${{ vars.STAGING_URL }}"
           else
             TARGET="${{ vars.PRODUCTION_URL }}"
-            # Fallback if PRODUCTION_URL var is not set
-            TARGET="${TARGET:-https://boxcord.boxflow.se}"
           fi
 
           if [ -z "$TARGET" ]; then
             echo "⚠️ No URL configured for $ENV — skipping smoke tests"
+            echo "⚠️ Set PRODUCTION_URL or STAGING_URL in GitHub repo variables to enable"
             echo "skip=true" >> $GITHUB_OUTPUT
           else
             echo "skip=false" >> $GITHUB_OUTPUT
@@ -87,7 +86,7 @@ jobs:
 
           # 2. API root reachable
           echo "→ [2/5] API endpoint..."
-          API_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" --max-time 10 "$TARGET/api/v1" 2>/dev/null || echo "000")
+          API_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" --max-time 10 "$TARGET/health" 2>/dev/null || echo "000")
           if [ "$API_STATUS" -ge 200 ] && [ "$API_STATUS" -lt 500 ]; then
             echo "  ✅ API reachable (HTTP $API_STATUS)"
           else
@@ -136,7 +135,7 @@ jobs:
           fi
 
       - name: Create issue on failure
-        if: failure()
+        if: failure() && steps.url.outputs.skip != 'true'
         uses: actions/github-script@v7
         with:
           script: |
