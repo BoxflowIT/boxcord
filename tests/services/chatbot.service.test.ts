@@ -144,16 +144,68 @@ describe('ChatbotService', () => {
   });
 
   describe('/poll command', () => {
-    it('should create a poll with options', async () => {
+    it('should create a poll via PollService', async () => {
+      // Mock the channel lookup and transaction for poll creation
+      mockPrisma.channel.findUnique.mockResolvedValue({
+        id: 'channel-123',
+        name: 'general'
+      });
+
+      const mockMessage = {
+        id: 'msg-1',
+        channelId: 'channel-123',
+        authorId: 'user-123',
+        content: '📊 **Omröstning:** Vad ska vi äta?',
+        edited: false,
+        parentId: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      const mockPoll = {
+        id: 'poll-1',
+        messageId: 'msg-1',
+        channelId: 'channel-123',
+        creatorId: 'user-123',
+        question: 'Vad ska vi äta?',
+        isMultiple: false,
+        isAnonymous: false,
+        endsAt: null,
+        createdAt: new Date()
+      };
+      const mockOptions = [
+        { id: 'opt-1', pollId: 'poll-1', text: 'Pizza', position: 0 },
+        { id: 'opt-2', pollId: 'poll-1', text: 'Sushi', position: 1 },
+        { id: 'opt-3', pollId: 'poll-1', text: 'Tacos', position: 2 }
+      ];
+
+      (mockPrisma as any).$transaction = vi
+        .fn()
+        .mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
+          const tx = {
+            message: { create: vi.fn().mockResolvedValue(mockMessage) },
+            poll: { create: vi.fn().mockResolvedValue(mockPoll) },
+            pollOption: {
+              create: vi
+                .fn()
+                .mockImplementation(
+                  async (args: {
+                    data: { text: string; position: number };
+                  }) => {
+                    return mockOptions[args.data.position];
+                  }
+                )
+            }
+          };
+          return fn(tx);
+        });
+
       const result = await chatbotService.processMessage(
         '/poll "Vad ska vi äta?" "Pizza" "Sushi" "Tacos"',
         context
       );
-      expect(result?.content).toContain('Omröstning');
-      expect(result?.content).toContain('Pizza');
-      expect(result?.content).toContain('Sushi');
-      expect(result?.content).toContain('Tacos');
-      expect(result?.isPrivate).toBe(false);
+      expect(result?.content).toContain('Omröstning skapad');
+      expect(result?.content).toContain('Vad ska vi äta?');
+      expect(result?.isPrivate).toBe(true);
     });
 
     it('should require at least 3 args', async () => {

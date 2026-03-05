@@ -1,6 +1,7 @@
 // Chatbot Service - Slash Commands and Bot Responses
 import type { ExtendedPrismaClient } from '../../03-infrastructure/database/client.js';
 import type { Server as SocketServer } from 'socket.io';
+import { SOCKET_EVENTS } from '../../00-core/constants.js';
 
 // Slash command types
 export interface SlashCommand {
@@ -222,40 +223,50 @@ export class ChatbotService {
     // Poll command
     this.registerCommand({
       name: 'poll',
-      description: 'Skapa en enkel omröstning',
+      description: 'Skapa en omröstning',
       usage: '/poll "Fråga" "Alternativ 1" "Alternativ 2" ...',
-      execute: async (args) => {
+      execute: async (args, context) => {
         if (args.length < 3) {
           return {
-            content: '❌ Ange minst en fråga och två alternativ',
+            content:
+              '❌ Ange minst en fråga och två alternativ.\nAnvändning: `/poll "Fråga" "Alt 1" "Alt 2" ...`',
             isPrivate: true
           };
         }
 
         const question = args[0];
-        const options = args.slice(1);
-        const emojis = [
-          '1️⃣',
-          '2️⃣',
-          '3️⃣',
-          '4️⃣',
-          '5️⃣',
-          '6️⃣',
-          '7️⃣',
-          '8️⃣',
-          '9️⃣',
-          '🔟'
-        ];
+        const options = args.slice(1, 11); // Max 10 options
 
-        const optionList = options
-          .slice(0, 10)
-          .map((opt, i) => `${emojis[i]} ${opt}`)
-          .join('\n');
+        try {
+          const { PollService } = await import('./poll.service.js');
+          const pollService = new PollService(this.prisma);
+          const result = await pollService.createPoll({
+            channelId: context.channelId,
+            creatorId: context.userId,
+            question,
+            options
+          });
 
-        return {
-          content: `📊 **Omröstning:** ${question}\n\n${optionList}\n\n_Reagera med emoji för att rösta!_`,
-          isPrivate: false
-        };
+          // Broadcast via socket so the message appears in real-time
+          if (this.io) {
+            this.io
+              .to(`channel:${context.channelId}`)
+              .emit(SOCKET_EVENTS.MESSAGE_NEW, result.message);
+            this.io
+              .to(`channel:${context.channelId}`)
+              .emit(SOCKET_EVENTS.POLL_CREATED, result.poll);
+          }
+
+          return {
+            content: `✅ Omröstning skapad: **${question}**`,
+            isPrivate: true
+          };
+        } catch (err) {
+          return {
+            content: `❌ Kunde inte skapa omröstning: ${err instanceof Error ? err.message : 'Okänt fel'}`,
+            isPrivate: true
+          };
+        }
       }
     });
 

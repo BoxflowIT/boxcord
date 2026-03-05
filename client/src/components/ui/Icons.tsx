@@ -995,3 +995,39 @@ export function CheckCircleIcon({ size = 'md', className }: IconProps) {
     </svg>
   );
 }
+
+// Poll/Chart bar icon
+export function PollIcon({ size = 'md', className }: IconProps) {
+  return (
+    <svg
+      className={getClass(size, className)}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+      />
+    </svg>
+  );
+}
+
+// Checkmark icon (small, for selections)
+export function CheckIcon({ size = 'md', className }: IconProps) {
+  return (
+    <svg
+      className={getClass(size, className)}
+      fill="currentColor"
+      viewBox="0 0 20 20"
+    >
+      <path
+        fillRule="evenodd"
+        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}

@@ -37,6 +37,8 @@ model User {
     bookmarks            BookmarkedMessage[]
     pushSubscriptions    PushSubscription[]
     voiceSessions        VoiceSession[]
+    polls                Poll[]
+    pollVotes            PollVote[]
 
     @@map("users")
 }
@@ -116,6 +118,7 @@ model Channel {
     members       ChannelMember[]
     permissions   ChannelPermission[]
     voiceSessions VoiceSession[]
+    polls         Poll[]
 
     @@unique([workspaceId, name])
     @@index([workspaceId])
@@ -212,6 +215,7 @@ model Message {
     reactions   Reaction[]
     bookmarks   BookmarkedMessage[]
     thread      Thread? // If this message starts a thread
+    poll        Poll? // If this message has a poll
 
     @@index([channelId, createdAt])
     @@index([channelId, isPinned, createdAt]) // Optimize pinned message queries
@@ -452,6 +456,60 @@ model BookmarkedMessage {
     @@index([dmMessageId])
     @@index([createdAt])
     @@map("bookmarked_messages")
+}
+
+// ============================================
+// POLLS
+// ============================================
+
+model Poll {
+    id          String    @id @default(uuid())
+    messageId   String    @unique @map("message_id")
+    channelId   String    @map("channel_id")
+    creatorId   String    @map("creator_id")
+    question    String
+    isMultiple  Boolean   @default(false) @map("is_multiple")
+    isAnonymous Boolean   @default(false) @map("is_anonymous")
+    endsAt      DateTime? @map("ends_at")
+    createdAt   DateTime  @default(now()) @map("created_at")
+    updatedAt   DateTime  @updatedAt @map("updated_at")
+
+    message Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+    channel Channel      @relation(fields: [channelId], references: [id], onDelete: Cascade)
+    creator User         @relation(fields: [creatorId], references: [id])
+    options PollOption[]
+
+    @@index([channelId])
+    @@index([creatorId])
+    @@map("polls")
+}
+
+model PollOption {
+    id       String @id @default(uuid())
+    pollId   String @map("poll_id")
+    text     String
+    position Int    @default(0)
+
+    poll  Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+    votes PollVote[]
+
+    @@index([pollId])
+    @@map("poll_options")
+}
+
+model PollVote {
+    id        String   @id @default(uuid())
+    optionId  String   @map("option_id")
+    userId    String   @map("user_id")
+    createdAt DateTime @default(now()) @map("created_at")
+
+    option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+    voter  User       @relation(fields: [userId], references: [id])
+
+    @@unique([optionId, userId])
+    @@index([optionId])
+    @@index([userId])
+    @@map("poll_votes")
 }
 
 // ============================================

@@ -122,33 +122,44 @@ export function useAddBookmark() {
       }
     },
     onMutate: async (variables: AddBookmarkInput) => {
-      const queryKey = [
-        'bookmark-check',
-        variables.messageId,
-        variables.dmMessageId
-      ];
-      await queryClient.cancelQueries({ queryKey });
-      const previousValue =
-        queryClient.getQueryData<boolean>(queryKey) ?? false;
-      queryClient.setQueryData<boolean>(queryKey, true);
-      return { previousValue, queryKey };
+      // Cancel any ongoing bookmark queries to avoid stale overwrites
+      await queryClient.cancelQueries({ queryKey: ['bookmarks'] });
+
+      // Snapshot previous bookmarks list for rollback
+      const previousBookmarks =
+        queryClient.getQueryData<Bookmark[]>(['bookmarks', undefined]) ?? [];
+
+      // Optimistically add a placeholder bookmark to the list
+      queryClient.setQueryData<Bookmark[]>(['bookmarks', undefined], (old) => {
+        const placeholder: Bookmark = {
+          id: `optimistic-${Date.now()}`,
+          userId: '',
+          messageId: variables.messageId ?? null,
+          dmMessageId: variables.dmMessageId ?? null,
+          workspaceId: variables.workspaceId ?? null,
+          note: variables.note ?? null,
+          createdAt: new Date().toISOString()
+        };
+        return [...(old ?? []), placeholder];
+      });
+
+      return { previousBookmarks };
     },
     onError: async (
       _err: Error,
       _variables: AddBookmarkInput,
-      context?: { previousValue: boolean; queryKey: unknown[] }
+      context?: { previousBookmarks: Bookmark[] }
     ) => {
+      // Rollback to previous bookmarks on error
       if (context) {
-        await queryClient.invalidateQueries({ queryKey: context.queryKey });
+        queryClient.setQueryData<Bookmark[]>(
+          ['bookmarks', undefined],
+          context.previousBookmarks
+        );
       }
     },
-    onSuccess: async (_data, variables) => {
-      const queryKey = [
-        'bookmark-check',
-        variables.messageId,
-        variables.dmMessageId
-      ];
-      queryClient.setQueryData<boolean>(queryKey, true);
+    onSuccess: async () => {
+      // Refetch to get the real bookmark data from server
       await queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
       await queryClient.invalidateQueries({ queryKey: ['bookmark-count'] });
     }
@@ -194,33 +205,40 @@ export function useRemoveBookmarkByMessage() {
       return api.removeBookmarkByDM(dmMessageId!);
     },
     onMutate: async (variables) => {
-      const queryKey = [
-        'bookmark-check',
-        variables.messageId,
-        variables.dmMessageId
-      ];
-      await queryClient.cancelQueries({ queryKey });
-      const previousValue =
-        queryClient.getQueryData<boolean>(queryKey) ?? false;
-      queryClient.setQueryData<boolean>(queryKey, false);
-      return { previousValue, queryKey };
+      // Cancel any ongoing bookmark queries
+      await queryClient.cancelQueries({ queryKey: ['bookmarks'] });
+
+      // Snapshot previous bookmarks list for rollback
+      const previousBookmarks =
+        queryClient.getQueryData<Bookmark[]>(['bookmarks', undefined]) ?? [];
+
+      // Optimistically remove the bookmark from the list
+      queryClient.setQueryData<Bookmark[]>(['bookmarks', undefined], (old) => {
+        if (!old) return old;
+        return old.filter((b) => {
+          if (variables.messageId) return b.messageId !== variables.messageId;
+          if (variables.dmMessageId)
+            return b.dmMessageId !== variables.dmMessageId;
+          return true;
+        });
+      });
+
+      return { previousBookmarks };
     },
     onError: async (
       _err: Error,
       _variables: { messageId?: string; dmMessageId?: string },
-      context?: { previousValue: boolean; queryKey: unknown[] }
+      context?: { previousBookmarks: Bookmark[] }
     ) => {
+      // Rollback to previous bookmarks on error
       if (context) {
-        await queryClient.invalidateQueries({ queryKey: context.queryKey });
+        queryClient.setQueryData<Bookmark[]>(
+          ['bookmarks', undefined],
+          context.previousBookmarks
+        );
       }
     },
-    onSuccess: async (_data, variables) => {
-      const queryKey = [
-        'bookmark-check',
-        variables.messageId,
-        variables.dmMessageId
-      ];
-      queryClient.setQueryData<boolean>(queryKey, false);
+    onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
       await queryClient.invalidateQueries({ queryKey: ['bookmark-count'] });
     }

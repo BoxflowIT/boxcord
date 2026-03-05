@@ -51,6 +51,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Typing indicators** - See when users are typing
 - **Read receipts** - Track message read status
 - **Slash commands** - Quick actions with `/` commands
+- **Polls** - Create polls in channels with vote toggle, anonymous voting, and timed expiry
 
 ### 🎤 Voice & Video
 - **Voice channels** - Real-time voice communication with text chat
@@ -375,6 +376,11 @@ const users = await boxtimeService.searchUsers('john', token);
 - `voice:speaking:start` - User started speaking
 - `voice:speaking:stop` - User stopped speaking
 
+#### Poll Events
+- `poll:created` - New poll created in channel
+- `poll:voted` - Vote cast/toggled on poll (includes voter IDs for per-user hasVoted)
+- `poll:ended` - Poll ended (by creator or expiry)
+
 ## API Endpoints
 
 ### Authentication & Users
@@ -447,6 +453,16 @@ const users = await boxtimeService.searchUsers('john', token);
 | DELETE | /api/v1/bookmarks/:id            | Remove bookmark              |
 | GET    | /api/v1/bookmarks/count          | Get bookmark count           |
 | PATCH  | /api/v1/bookmarks/:id/note       | Update bookmark note         |
+
+### Polls
+| Method | Path                              | Description                  |
+| ------ | --------------------------------- | ---------------------------- |
+| POST   | /api/v1/polls                    | Create poll (with message)   |
+| GET    | /api/v1/polls/:id                | Get poll by ID               |
+| GET    | /api/v1/polls/message/:messageId | Get poll by message ID       |
+| POST   | /api/v1/polls/:id/vote           | Vote/toggle vote on poll     |
+| POST   | /api/v1/polls/:id/end            | End poll early (creator only)|
+| DELETE | /api/v1/polls/:id                | Delete poll (creator only)   |
 
 ### Invites
 | Method | Path                              | Description                  |

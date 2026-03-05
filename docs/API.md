@@ -1206,6 +1206,171 @@ Update the note/annotation on a bookmark.
 
 ---
 
+## 🗳️ Polls
+
+### Create Poll
+
+#### POST /polls
+
+Create a new poll attached to a channel message.
+
+**Rate Limit:** 10 requests per minute
+
+**Body:**
+```json
+{
+  "channelId": "uuid",
+  "question": "What should we build next?",
+  "options": ["Feature A", "Feature B", "Feature C"],
+  "isMultiple": false,
+  "isAnonymous": false,
+  "endsAt": "2026-03-10T15:00:00.000Z"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `channelId` | string | ✅ | Channel to create poll in |
+| `question` | string | ✅ | Poll question (1-500 chars) |
+| `options` | string[] | ✅ | Answer options (2-10, each 1-200 chars) |
+| `isMultiple` | boolean | ❌ | Allow multiple selections (default: false) |
+| `isAnonymous` | boolean | ❌ | Hide voter identities (default: false) |
+| `endsAt` | string | ❌ | ISO 8601 end time (null = no expiry) |
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "messageId": "uuid",
+    "channelId": "uuid",
+    "creatorId": "uuid",
+    "question": "What should we build next?",
+    "isMultiple": false,
+    "isAnonymous": false,
+    "endsAt": "2026-03-10T15:00:00.000Z",
+    "createdAt": "2026-03-05T10:00:00.000Z",
+    "totalVotes": 0,
+    "hasVoted": false,
+    "options": [
+      {
+        "id": "uuid",
+        "text": "Feature A",
+        "position": 0,
+        "voteCount": 0,
+        "percentage": 0,
+        "hasVoted": false,
+        "voters": []
+      }
+    ]
+  }
+}
+```
+
+**WebSocket Events:**
+- `message:new` — Broadcast to channel and workspace (poll message)
+- `poll:created` — Broadcast to channel
+
+---
+
+### Get Poll
+
+#### GET /polls/:pollId
+
+Get poll by ID with results relative to the authenticated user.
+
+**Parameters:**
+- `pollId` (path, required): Poll ID
+
+**Response 200:** Same format as create response, with current vote counts.
+
+---
+
+### Get Poll by Message
+
+#### GET /polls/message/:messageId
+
+Get poll by its parent message ID.
+
+**Parameters:**
+- `messageId` (path, required): Message ID
+
+**Response 200:** Same format as create response.
+
+---
+
+### Vote on Poll
+
+#### POST /polls/:pollId/vote
+
+Cast or toggle a vote on a poll option. Voting the same option again removes the vote (toggle). For single-choice polls, voting a different option automatically removes the previous vote.
+
+**Rate Limit:** 30 requests per minute
+
+**Parameters:**
+- `pollId` (path, required): Poll ID
+
+**Body:**
+```json
+{
+  "optionId": "uuid"
+}
+```
+
+**Response 200:** Updated poll with new vote counts.
+
+**Errors:**
+- `400` — Poll has ended
+- `404` — Poll or option not found
+
+**WebSocket Events:**
+- `poll:voted` — Broadcast to channel with option vote counts, percentages, and voter IDs
+
+---
+
+### End Poll
+
+#### POST /polls/:pollId/end
+
+End a poll early. Only the poll creator can end it.
+
+**Parameters:**
+- `pollId` (path, required): Poll ID
+
+**Response 200:** Updated poll with `endsAt` set to current time.
+
+**Errors:**
+- `403` — Not the poll creator
+- `400` — Poll already ended
+
+**WebSocket Events:**
+- `poll:ended` — Broadcast to channel
+
+---
+
+### Delete Poll
+
+#### DELETE /polls/:pollId
+
+Delete a poll and its associated message. Only the poll creator can delete it.
+
+**Parameters:**
+- `pollId` (path, required): Poll ID
+
+**Response 200:**
+```json
+{
+  "success": true
+}
+```
+
+**Errors:**
+- `403` — Not the poll creator
+- `404` — Poll not found
+
+---
+
 ## 🎫 Invites
 
 ### List Invites
