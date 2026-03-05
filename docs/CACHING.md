@@ -136,7 +136,7 @@ On the client side, `usePoll` hook manages poll state locally (not via React Que
 
 | Hook | Strategy | Refresh Trigger |
 |------|----------|----------------|
-| `usePoll(messageId)` | Local state (no React Query) | Mount, visibilitychange, socket `poll:voted` |
+| `usePoll(messageId)` | Local state (no React Query) | Mount, visibilitychange, socket `poll:voted`, `poll:ended`, `poll:deleted` |
 
 ### Threads (React Query, staleTime: Infinity)
 

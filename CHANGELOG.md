@@ -5,6 +5,25 @@ All notable changes to Boxcord will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.1] - 2026-03-05
+
+### Fixed
+- **ETag collision** — ETags now use SHA-256 hash of full response payload instead of truncated base64 (first 20 chars); fixes browsers receiving 304 for changed poll data, causing votes to disappear on page refresh
+- **Anonymous poll voter leak** — Voter IDs no longer sent via `poll:voted` WebSocket events for anonymous polls
+- **End poll guard** — Already-ended polls return current results (200) instead of redundant DB update
+- **handleEndPoll error feedback** — UI now shows error message when ending a poll fails
+- **setTimeout overflow** — Polls >24 days use clamped delay to avoid 32-bit int overflow firing timer immediately
+
+### Added
+- **Global no-cache default** — All `/api/v1` routes default to `Cache-Control: no-cache, no-store, must-revalidate`; individual routes opt-in to caching via `reply.cache()`
+- **Poll deletion events** — `DELETE /polls/:id` now emits `poll:deleted` and `message:delete` socket events
+- **Duplicate option validation** — Case-insensitive duplicate detection in poll creation
+- **Whitespace trimming** — Zod schemas trim poll question and option strings
+
+### Changed
+- ETag generation uses `createHash('sha256')` from `node:crypto` instead of raw base64
+- `POLL_DELETED` and `MESSAGE_DELETED` constants added to `SOCKET_EVENTS`
+
 ## [1.7.1] - 2026-03-02
 
 ### Changed

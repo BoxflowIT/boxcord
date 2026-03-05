@@ -2,7 +2,7 @@
 
 Discord-like real-time chat application for Boxflow, soon integrated with Boxtime.
 
-**Latest version:** 1.7.1 | [View Changelog](CHANGELOG.md)
+**Latest version:** 1.8.1 | [View Changelog](CHANGELOG.md)
 
 ## 🚀 Quick Start
 
@@ -378,8 +378,9 @@ const users = await boxtimeService.searchUsers('john', token);
 
 #### Poll Events
 - `poll:created` - New poll created in channel
-- `poll:voted` - Vote cast/toggled on poll (includes voter IDs for per-user hasVoted)
+- `poll:voted` - Vote cast/toggled on poll (includes voter IDs for per-user hasVoted; omitted for anonymous polls)
 - `poll:ended` - Poll ended (by creator or expiry)
+- `poll:deleted` - Poll deleted (also emits `message:delete` to remove the poll message)
 
 ## API Endpoints
 

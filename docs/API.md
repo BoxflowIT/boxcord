@@ -1232,7 +1232,7 @@ Create a new poll attached to a channel message.
 |-------|------|----------|-------------|
 | `channelId` | string | ✅ | Channel to create poll in |
 | `question` | string | ✅ | Poll question (1-500 chars) |
-| `options` | string[] | ✅ | Answer options (2-10, each 1-200 chars) |
+| `options` | string[] | ✅ | Answer options (2-10, each 1-200 chars, trimmed, no case-insensitive duplicates) |
 | `isMultiple` | boolean | ❌ | Allow multiple selections (default: false) |
 | `isAnonymous` | boolean | ❌ | Hide voter identities (default: false) |
 | `endsAt` | string | ❌ | ISO 8601 end time (null = no expiry) |
@@ -1325,7 +1325,7 @@ Cast or toggle a vote on a poll option. Voting the same option again removes the
 - `404` — Poll or option not found
 
 **WebSocket Events:**
-- `poll:voted` — Broadcast to channel with option vote counts, percentages, and voter IDs
+- `poll:voted` — Broadcast to channel with option vote counts, percentages, and voter IDs (voter IDs omitted for anonymous polls)
 
 ---
 
@@ -1342,7 +1342,8 @@ End a poll early. Only the poll creator can end it.
 
 **Errors:**
 - `403` — Not the poll creator
-- `400` — Poll already ended
+
+> **Note:** If the poll has already ended, the current results are returned (200) without modification.
 
 **WebSocket Events:**
 - `poll:ended` — Broadcast to channel
@@ -1368,6 +1369,10 @@ Delete a poll and its associated message. Only the poll creator can delete it.
 **Errors:**
 - `403` — Not the poll creator
 - `404` — Poll not found
+
+**WebSocket Events:**
+- `poll:deleted` — Broadcast to channel with `{ pollId, messageId, channelId }`
+- `message:delete` — Broadcast to channel with `{ id, channelId }` (removes the poll message from the message list)
 
 ---
 

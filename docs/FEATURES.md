@@ -242,7 +242,8 @@ Complete list of all implemented features in Boxcord.
 - ✅ **React Query** - Client-side query caching with `staleTime: Infinity` for core data
 - ✅ **WebSocket cache sync** - Targeted `setQueryData` updates instead of refetches
 - ✅ **Automatic invalidation** - Cache updates on data changes
-- ✅ **ETag support** - HTTP caching headers
+- ✅ **ETag support** - SHA-256 hash-based ETags for 304 Not Modified responses
+- ✅ **Global no-cache default** - All API routes default to `no-cache`; routes opt-in to caching
 
 ### Database
 - ✅ **Prisma 6** - 30-50% faster database queries
@@ -400,6 +401,8 @@ Complete list of all implemented features in Boxcord.
 - ✅ **Anonymous voting** - Optional anonymous vote mode
 - ✅ **Timed polls** - Set optional end time for automatic expiry
 - ✅ **Poll messages** - Polls are attached to channel messages for context
+- ✅ **Duplicate option validation** - Case-insensitive duplicate detection prevents identical options
+- ✅ **Whitespace trimming** - Question and options auto-trimmed via Zod schemas
 
 ### Voting
 - ✅ **Vote toggle** - Click to vote, click again to remove vote
@@ -408,6 +411,7 @@ Complete list of all implemented features in Boxcord.
 - ✅ **Real-time sync** - WebSocket broadcasts votes to all channel members
 - ✅ **Voter skip** - Socket events include voterId so voters skip their own update
 - ✅ **Persistent votes** - Votes survive hard refresh (cache bypass for poll models)
+- ✅ **Anonymous voter privacy** - WebSocket events omit voter IDs for anonymous polls
 
 ### Poll Display
 - ✅ **Live results** - Vote counts and percentages update in real-time
@@ -421,6 +425,10 @@ Complete list of all implemented features in Boxcord.
 - ✅ **Race-safe voting** - Uses `deleteMany` + P2002 no-op for concurrent vote handling
 - ✅ **Domain validation** - Question (1-500 chars), options (1-200 chars each)
 - ✅ **Rate limiting** - 10 req/min for creation, 30 req/min for voting
+- ✅ **Poll deletion events** - Emits `poll:deleted` and `message:delete` socket events on deletion
+- ✅ **End poll guard** - Already-ended polls return current results without DB update
+- ✅ **setTimeout overflow clamp** - Polls >24 days use clamped delay to avoid 32-bit int overflow
+- ✅ **Error feedback** - `handleEndPoll` shows error state in UI on failure
 
 ## 🎯 Coming Soon
 
@@ -461,7 +469,7 @@ Complete list of all implemented features in Boxcord.
 - ✅ Single/multiple choice with 2-10 options
 - ✅ Anonymous voting and timed poll expiry
 - ✅ Vote toggle (click to vote, click again to remove)
-- ✅ Real-time vote sync via WebSocket (`poll:voted`, `poll:created`, `poll:ended`)
+- ✅ Real-time vote sync via WebSocket (`poll:voted`, `poll:created`, `poll:ended`, `poll:deleted`)
 - ✅ Optimistic updates with server reconciliation
 - ✅ Prisma cache bypass for poll models (`NEVER_CACHE_MODELS`)
 - ✅ Race-safe voting with `deleteMany` + P2002 no-op
@@ -470,6 +478,17 @@ Complete list of all implemented features in Boxcord.
 - ✅ Swedish error translations for vote errors
 - ✅ Visibility change handler refreshes poll on tab focus
 - ✅ Database migration: Poll, PollOption, PollVote tables
+
+### v1.8.1 - Poll Fixes & Cache Hardening (March 2026)
+- ✅ ETag collision fix — SHA-256 hash replaces truncated base64 (caused votes to vanish on refresh)
+- ✅ Global `Cache-Control: no-cache` default for all API routes (19 routes were missing headers)
+- ✅ Anonymous voter privacy — voter IDs omitted from WebSocket events for anonymous polls
+- ✅ Poll deletion emits `poll:deleted` and `message:delete` socket events
+- ✅ Duplicate option validation (case-insensitive)
+- ✅ Whitespace trimming in Zod schemas for question and options
+- ✅ End poll guard — already-ended polls return results without DB update
+- ✅ Error feedback in UI for `handleEndPoll`
+- ✅ setTimeout overflow clamp for polls >24 days
 
 ### v1.7.1 - Request Optimization (March 2026)
 - ✅ Batch user fetching — single request replaces N+1 individual fetches
