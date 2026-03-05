@@ -1,5 +1,6 @@
 #!/bin/bash
 # pre-commit hook - runs before commit is created
+# Only lint-staged here — full tests run in pre-push and CI
 
 echo "🎨 Running lint-staged (ESLint + Prettier)..."
 yarn lint-staged
@@ -10,25 +11,5 @@ if [ $? -ne 0 ]; then
 fi
 
 echo ""
-echo "🧪 Running tests..."
-
-# Backend tests
-echo "📦 Backend tests..."
-yarn test --run
-if [ $? -ne 0 ]; then
-  echo "❌ Backend tests failed!"
-  exit 1
-fi
-
-# Frontend tests  
-echo "🎨 Frontend tests..."
-cd client && yarn test --run
-if [ $? -ne 0 ]; then
-  echo "❌ Frontend tests failed!"
-  exit 1
-fi
-cd ..
-
-echo ""
-echo "✅ All pre-commit checks passed!"
+echo "✅ Pre-commit checks passed!"
 exit 0

@@ -103,7 +103,7 @@ async function joinVoiceChannelWithVideo(page: Page): Promise<void> {
   }
 }
 
-test.describe('Video Window Controls', () => {
+test.describe('Video Window Controls', { tag: '@auth' }, () => {
   test.beforeEach(async ({ page }) => {
     await setupAuthenticatedPage(page);
   });

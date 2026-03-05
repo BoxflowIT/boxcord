@@ -84,7 +84,7 @@ function ensureTestFiles(): void {
 
 test.describe.configure({ mode: 'serial' });
 
-test.describe('File Upload - Images', () => {
+test.describe('File Upload - Images', { tag: '@auth' }, () => {
   test.beforeAll(() => {
     ensureTestFiles();
   });
@@ -168,7 +168,7 @@ test.describe('File Upload - Images', () => {
   });
 });
 
-test.describe('File Upload - Documents', () => {
+test.describe('File Upload - Documents', { tag: '@auth' }, () => {
   test.beforeAll(() => {
     ensureTestFiles();
   });
@@ -215,7 +215,7 @@ test.describe('File Upload - Documents', () => {
   });
 });
 
-test.describe('File Upload - Size Limits', () => {
+test.describe('File Upload - Size Limits', { tag: '@auth' }, () => {
   test.beforeAll(() => {
     ensureTestFiles();
   });
@@ -261,7 +261,7 @@ test.describe('File Upload - Size Limits', () => {
   });
 });
 
-test.describe('File Download', () => {
+test.describe('File Download', { tag: '@auth' }, () => {
   test.beforeAll(() => {
     ensureTestFiles();
   });
@@ -347,7 +347,7 @@ test.describe('File Download', () => {
   });
 });
 
-test.describe('Multiple File Upload', () => {
+test.describe('Multiple File Upload', { tag: '@auth' }, () => {
   test.beforeAll(() => {
     ensureTestFiles();
   });
