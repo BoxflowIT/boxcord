@@ -1,6 +1,7 @@
 // HTTP Cache Headers Plugin
 // Add proper cache headers to reduce server load
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { createHash } from 'node:crypto';
 import fp from 'fastify-plugin';
 
 export interface CacheOptions {
@@ -46,8 +47,16 @@ async function cachePlugin(app: FastifyInstance) {
     'onSend',
     async (request: FastifyRequest, reply: FastifyReply, payload: unknown) => {
       if (request.method === 'GET' && reply.statusCode === 200 && payload) {
-        // Generate simple ETag from payload
-        const etag = `"${Buffer.from(String(payload)).toString('base64').substring(0, 20)}"`;
+        // Generate ETag from a proper hash of the FULL payload.
+        // The previous implementation used only the first 20 base64 chars,
+        // which caused ETag collisions (e.g. all JSON responses starting with
+        // {"success":true,...} produced the same ETag regardless of content).
+        // This led to browsers receiving 304 for changed data (poll votes).
+        const hash = createHash('sha256')
+          .update(String(payload))
+          .digest('base64url')
+          .substring(0, 22);
+        const etag = `"${hash}"`;
         reply.header('ETag', etag);
 
         // Check If-None-Match header

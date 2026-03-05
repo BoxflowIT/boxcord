@@ -87,9 +87,10 @@ export const POLL_RULES = {
 } as const;
 
 export function validatePollQuestion(question: string): boolean {
+  const trimmed = question.trim();
   return (
-    question.length >= POLL_RULES.MIN_QUESTION_LENGTH &&
-    question.length <= POLL_RULES.MAX_QUESTION_LENGTH
+    trimmed.length >= POLL_RULES.MIN_QUESTION_LENGTH &&
+    trimmed.length <= POLL_RULES.MAX_QUESTION_LENGTH
   );
 }
 
@@ -100,9 +101,20 @@ export function validatePollOptions(options: string[]): boolean {
   ) {
     return false;
   }
-  return options.every(
-    (opt) =>
-      opt.length >= POLL_RULES.MIN_OPTION_LENGTH &&
-      opt.length <= POLL_RULES.MAX_OPTION_LENGTH
-  );
+
+  // Each option must be non-empty after trimming
+  const trimmed = options.map((o) => o.trim());
+  if (
+    !trimmed.every(
+      (opt) =>
+        opt.length >= POLL_RULES.MIN_OPTION_LENGTH &&
+        opt.length <= POLL_RULES.MAX_OPTION_LENGTH
+    )
+  ) {
+    return false;
+  }
+
+  // Reject duplicate options (case-insensitive)
+  const unique = new Set(trimmed.map((o) => o.toLowerCase()));
+  return unique.size === trimmed.length;
 }

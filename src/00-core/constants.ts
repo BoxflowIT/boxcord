@@ -59,7 +59,11 @@ export const SOCKET_EVENTS = {
   // Polls
   POLL_CREATED: 'poll:created',
   POLL_VOTED: 'poll:voted',
-  POLL_ENDED: 'poll:ended'
+  POLL_ENDED: 'poll:ended',
+  POLL_DELETED: 'poll:deleted',
+
+  // Shared aliases (routes use these; the socket layer uses the base names)
+  MESSAGE_DELETED: 'message:delete'
 } as const;
 
 // Rate limiting
