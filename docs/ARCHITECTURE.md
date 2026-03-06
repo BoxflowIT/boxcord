@@ -155,8 +155,6 @@ export const CACHE_TIMES = {
 | Pinned messages/DMs | `30s` | Pins change infrequently |
 | Bookmarks / count | `30s` | Not updated via WebSocket |
 | Permissions | `30s` | Rarely change |
-| Giphy search/trending | `5min` | External API, changes slowly |
-| Random GIF | `0` | Should always be fresh |
 
 ### **Centralized API Service**
 

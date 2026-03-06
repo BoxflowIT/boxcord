@@ -42,7 +42,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Quick reactions** - 5 common reactions (👍 ❤️ 😂 🎉 🔥) plus custom picker
 - **Message formatting** - Markdown support with code blocks
 - **File attachments** - Upload images, documents, videos
-- **GIF support** - Search and send GIFs via Giphy integration
+- **GIF support** - Search and send GIFs via Giphy (client-side)
 - **Message editing & deletion** - Full message history tracking
 - **Message forwarding** - Forward messages to other channels/DMs
 - **Message pinning** - Pin important messages with real-time updates (#6)
@@ -481,16 +481,6 @@ const users = await boxtimeService.searchUsers('john', token);
 | POST   | /api/v1/workspaces/:id/ban            | Ban user from workspace      |
 | POST   | /api/v1/workspaces/:id/unban          | Unban user                   |
 | GET    | /api/v1/workspaces/:id/audit-logs     | Get audit logs               |
-
-### GIFs (Giphy)
-| Method | Path                              | Description                  |
-| ------ | --------------------------------- | ---------------------------- |
-| GET    | /api/v1/giphy/search             | Search GIFs                  |
-| GET    | /api/v1/giphy/trending           | Get trending GIFs            |
-| GET    | /api/v1/giphy/random             | Get random GIF               |
-| GET    | /api/v1/giphy/:id                | Get GIF by ID                |
-| GET    | /api/v1/giphy/stickers/search    | Search GIF stickers          |
-| GET    | /api/v1/giphy/stickers/trending  | Get trending stickers        |
 
 ### File Uploads
 | Method | Path                              | Description                  |
