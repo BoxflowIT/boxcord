@@ -15,6 +15,7 @@ Complete list of all implemented features in Boxcord.
 - ✅ **Typing indicators** - Real-time "user is typing..." indicator
 - ✅ **Read receipts** - Track when messages are read
 - ✅ **Message search** - Full-text search across all messages
+- ✅ **Advanced search** - Filter by type, date range, workspace, channel, attachments
 - ✅ **Infinite scroll** - Efficient pagination with cursor-based loading
 
 ### Rich Content
@@ -433,7 +434,6 @@ Complete list of all implemented features in Boxcord.
 ## 🎯 Coming Soon
 
 ### Planned Features
-- ⏳ **Advanced search** - Filters, date range, attachments
 - ⏳ **Message templates** - Saved message templates
 - ⏳ **Bot integration** - Webhooks and bot API
 - ⏳ **Mobile apps** - Native iOS/Android apps
@@ -459,10 +459,24 @@ Complete list of all implemented features in Boxcord.
 | Video window controls | ✅ Stable | [VOICE_ARCHITECTURE.md](VOICE_ARCHITECTURE.md) |
 | Thread support | ✅ Stable | [THREADS.md](THREADS.md) |
 | Polls | ✅ Stable | - |
+| Advanced search | ✅ Stable | - |
 
 ---
 
 ## Recent Updates
+
+### v1.10.0 - Advanced Search (March 2026)
+- ✅ Filter by type: Channels, DMs, or All
+- ✅ Date range filters (from/to)
+- ✅ Workspace and channel filter dropdowns
+- ✅ Has attachment filter
+- ✅ Result counts per type (channels/DMs)
+- ✅ Attachment preview in search results
+- ✅ Collapsible advanced filter panel
+- ✅ Active filter indicator on filter button
+- ✅ Clear all filters action
+- ✅ Full i18n support (English + Swedish)
+- ✅ 13 new backend tests for search filters
 
 ### v1.8.0 - Polls (March 2026)
 - ✅ Create polls in channels via `/poll` slash command or modal

@@ -19,6 +19,17 @@ export interface PaginatedResult<T> {
   hasMore: boolean;
 }
 
+// Search filters for advanced search
+export interface SearchFilters {
+  channelId?: string;
+  workspaceId?: string;
+  authorId?: string;
+  before?: string; // ISO date string
+  after?: string; // ISO date string
+  hasAttachment?: boolean;
+  type?: 'channel' | 'dm' | 'all';
+}
+
 // API Response wrapper
 export interface ApiResponse<T> {
   success: boolean;

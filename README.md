@@ -532,7 +532,23 @@ const users = await boxtimeService.searchUsers('john', token);
 ### Search
 | Method | Path                              | Description                  |
 | ------ | --------------------------------- | ---------------------------- |
-| GET    | /api/v1/search                   | Global search                |
+| GET    | /api/v1/search                   | Global search (advanced)     |
+| GET    | /api/v1/search/messages          | Search channel messages      |
+| GET    | /api/v1/search/dms               | Search DMs                   |
+
+**Search query parameters:**
+| Parameter      | Type    | Description                        |
+| -------------- | ------- | ---------------------------------- |
+| q              | string  | Search query (2-200 chars)         |
+| type           | string  | `channel`, `dm`, or `all`          |
+| channelId      | uuid    | Filter by specific channel         |
+| workspaceId    | uuid    | Filter by workspace                |
+| authorId       | string  | Filter by author                   |
+| before         | ISO8601 | Messages before date               |
+| after          | ISO8601 | Messages after date                |
+| hasAttachment  | boolean | Only messages with attachments     |
+| cursor         | string  | Pagination cursor                  |
+| limit          | number  | Results per page (1-100)           |
 
 ### Push Notifications
 | Method | Path                              | Description                  |

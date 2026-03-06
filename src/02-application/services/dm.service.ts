@@ -1,6 +1,10 @@
 // Direct Message Service - Application Layer
 import type { ExtendedPrismaClient } from '../../03-infrastructure/database/client.js';
-import type { PaginationParams, PaginatedResult } from '../../00-core/types.js';
+import type {
+  PaginationParams,
+  PaginatedResult,
+  SearchFilters
+} from '../../00-core/types.js';
 import {
   NotFoundError,
   ForbiddenError,
@@ -597,7 +601,8 @@ export class DirectMessageService {
   async searchDirectMessages(
     userId: string,
     query: string,
-    params: PaginationParams = {}
+    params: PaginationParams = {},
+    filters: SearchFilters = {}
   ): Promise<PaginatedResult<DirectMessage>> {
     const limit = Math.min(
       params.limit ?? PAGINATION.DEFAULT_PAGE_SIZE,
@@ -612,15 +617,36 @@ export class DirectMessageService {
       })
       .then((participants) => participants.map((p) => p.channelId));
 
+    // Build where clause with filters
+    const where: Record<string, unknown> = {
+      channelId: { in: channelIds },
+      content: {
+        contains: query,
+        mode: 'insensitive'
+      }
+    };
+
+    // Author filter
+    if (filters.authorId) {
+      where.authorId = filters.authorId;
+    }
+
+    // Date range filters
+    if (filters.before || filters.after) {
+      const createdAt: Record<string, Date> = {};
+      if (filters.before) createdAt.lte = new Date(filters.before);
+      if (filters.after) createdAt.gte = new Date(filters.after);
+      where.createdAt = createdAt;
+    }
+
+    // Has attachment filter
+    if (filters.hasAttachment) {
+      where.attachments = { some: {} };
+    }
+
     // Search in accessible DM channels
     const messages = await this.prisma.directMessage.findMany({
-      where: {
-        channelId: { in: channelIds },
-        content: {
-          contains: query,
-          mode: 'insensitive'
-        }
-      },
+      where,
       orderBy: { createdAt: 'desc' },
       take: limit + 1,
       ...(params.cursor && {

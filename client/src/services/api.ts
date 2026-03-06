@@ -207,12 +207,43 @@ export const api = {
   getPinnedMessages: (channelId: string) =>
     request<Message[]>(`/messages/pinned?channelId=${channelId}`),
 
-  // Global Search
-  globalSearch: (query: string) =>
-    request<{
+  // Global Search with advanced filters
+  globalSearch: (
+    query: string,
+    filters?: {
+      channelId?: string;
+      workspaceId?: string;
+      authorId?: string;
+      before?: string;
+      after?: string;
+      hasAttachment?: boolean;
+      type?: 'channel' | 'dm' | 'all';
+    }
+  ) => {
+    const params = new URLSearchParams({ q: query });
+    // Only append non-empty filter values to avoid empty-string validation errors
+    if (filters?.channelId && filters.channelId.length > 0)
+      params.set('channelId', filters.channelId);
+    if (filters?.workspaceId && filters.workspaceId.length > 0)
+      params.set('workspaceId', filters.workspaceId);
+    if (filters?.authorId && filters.authorId.length > 0)
+      params.set('authorId', filters.authorId);
+    if (filters?.before && filters.before.length > 0)
+      params.set('before', filters.before);
+    if (filters?.after && filters.after.length > 0)
+      params.set('after', filters.after);
+    if (filters?.hasAttachment !== undefined)
+      params.set('hasAttachment', String(filters.hasAttachment));
+    if (filters?.type && filters.type !== 'all')
+      params.set('type', filters.type);
+    return request<{
       items: Array<Message & { type: 'channel' | 'dm'; channel?: Channel }>;
-      hasMore: boolean;
-    }>(`/search?q=${encodeURIComponent(query)}`),
+      totalChannelResults: number;
+      totalDMResults: number;
+      hasMoreChannels: boolean;
+      hasMoreDMs: boolean;
+    }>(`/search?${params.toString()}`);
+  },
 
   // Users
   getCurrentUser: () => request<User>('/users/me'),

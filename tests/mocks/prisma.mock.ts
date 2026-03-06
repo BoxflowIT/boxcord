@@ -67,6 +67,13 @@ export function createMockPrisma(): PrismaClient {
       create: vi.fn(),
       findFirst: vi.fn()
     },
+    directMessageParticipant: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      delete: vi.fn(),
+      findFirst: vi.fn()
+    },
     directMessage: {
       findUnique: vi.fn(),
       findMany: vi.fn(),
