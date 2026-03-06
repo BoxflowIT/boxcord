@@ -493,26 +493,6 @@ export const api = {
       method: 'DELETE'
     }),
 
-  // Giphy
-  searchGiphy: (query: string, limit = 25, offset = 0) =>
-    request<unknown>(
-      `/giphy/search?q=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`
-    ),
-  getTrendingGiphy: (limit = 25, offset = 0) =>
-    request<unknown>(`/giphy/trending?limit=${limit}&offset=${offset}`),
-  searchGiphyStickers: (query: string, limit = 25, offset = 0) =>
-    request<unknown>(
-      `/giphy/stickers/search?q=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`
-    ),
-  getTrendingGiphyStickers: (limit = 25, offset = 0) =>
-    request<unknown>(
-      `/giphy/stickers/trending?limit=${limit}&offset=${offset}`
-    ),
-  getRandomGiphy: (tag?: string) =>
-    request<unknown>(
-      tag ? `/giphy/random?tag=${encodeURIComponent(tag)}` : '/giphy/random'
-    ),
-
   // Audit Logs
   getAuditLogs: (workspaceId: string, filter = 'all') =>
     request<unknown[]>(
