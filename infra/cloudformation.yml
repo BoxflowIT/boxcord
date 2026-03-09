@@ -1,0 +1,606 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Boxcord Infrastructure — App Runner + RDS PostgreSQL + ElastiCache Redis + S3/CloudFront
+  Deployed in eu-north-1 alongside existing Cognito and S3 resources.
+
+# ──────────────────────────────────────────────────────────────────
+# Parameters
+# ──────────────────────────────────────────────────────────────────
+Parameters:
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues: [production, staging]
+    Description: Deployment environment
+
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC for RDS, ElastiCache, and App Runner VPC connector
+
+  PrivateSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Private subnets (min 2 AZs) for RDS, ElastiCache, App Runner VPC connector
+
+  PublicSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Public subnets for NAT / bastion (if needed)
+
+  DBMasterPassword:
+    Type: String
+    NoEcho: true
+    MinLength: 16
+    Description: PostgreSQL master password (min 16 chars)
+
+  DBInstanceClass:
+    Type: String
+    Default: db.t4g.micro
+    AllowedValues: [db.t4g.micro, db.t4g.small, db.t4g.medium, db.t4g.large]
+    Description: RDS instance size
+
+  CacheNodeType:
+    Type: String
+    Default: cache.t4g.micro
+    AllowedValues: [cache.t4g.micro, cache.t4g.small, cache.t4g.medium]
+    Description: ElastiCache node size
+
+  DomainName:
+    Type: String
+    Default: boxcord.boxflow.com
+    Description: Primary domain for the application
+
+  CognitoUserPoolId:
+    Type: String
+    Description: Existing Cognito User Pool ID
+
+  CognitoClientId:
+    Type: String
+    Description: Existing Cognito Client ID
+
+  JwtSecret:
+    Type: String
+    NoEcho: true
+    MinLength: 20
+    Description: JWT secret key
+
+  BoxtimeApiUrl:
+    Type: String
+    Description: Boxtime API URL
+
+  VapidPublicKey:
+    Type: String
+    Default: ''
+    Description: VAPID public key for push notifications
+
+  VapidPrivateKey:
+    Type: String
+    NoEcho: true
+    Default: ''
+    Description: VAPID private key for push notifications
+
+  ExistingS3Bucket:
+    Type: String
+    Default: boxcord-uploads
+    Description: Existing S3 bucket for file uploads
+
+  AppRunnerCpu:
+    Type: String
+    Default: '0.25 vCPU'
+    AllowedValues: ['0.25 vCPU', '0.5 vCPU', '1 vCPU', '2 vCPU', '4 vCPU']
+    Description: App Runner CPU allocation
+
+  AppRunnerMemory:
+    Type: String
+    Default: '0.5 GB'
+    AllowedValues: ['0.5 GB', '1 GB', '2 GB', '3 GB', '4 GB']
+    Description: App Runner memory allocation
+
+  ContainerImageUri:
+    Type: String
+    Description: ECR image URI (account.dkr.ecr.region.amazonaws.com/repo:tag)
+
+Conditions:
+  IsProduction: !Equals [!Ref Environment, production]
+
+# ──────────────────────────────────────────────────────────────────
+# Resources
+# ──────────────────────────────────────────────────────────────────
+Resources:
+
+  # ── Security Groups ──────────────────────────────────────────────
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub 'Boxcord ${Environment} — RDS PostgreSQL'
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref AppRunnerSecurityGroup
+          Description: Allow App Runner to connect to RDS
+      Tags:
+        - Key: Name
+          Value: !Sub 'boxcord-${Environment}-rds-sg'
+
+  ElastiCacheSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub 'Boxcord ${Environment} — ElastiCache Redis'
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 6379
+          ToPort: 6379
+          SourceSecurityGroupId: !Ref AppRunnerSecurityGroup
+          Description: Allow App Runner to connect to Redis
+      Tags:
+        - Key: Name
+          Value: !Sub 'boxcord-${Environment}-redis-sg'
+
+  AppRunnerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub 'Boxcord ${Environment} — App Runner VPC connector'
+      VpcId: !Ref VpcId
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          DestinationSecurityGroupId: !Ref RDSSecurityGroup
+          Description: To RDS
+        - IpProtocol: tcp
+          FromPort: 6379
+          ToPort: 6379
+          DestinationSecurityGroupId: !Ref ElastiCacheSecurityGroup
+          Description: To Redis
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: HTTPS outbound (Cognito, S3, external APIs)
+      Tags:
+        - Key: Name
+          Value: !Sub 'boxcord-${Environment}-apprunner-sg'
+
+  # Fix circular reference — SG egress rules added after all SGs exist
+  RDSSecurityGroupEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !Ref RDSSecurityGroup
+      IpProtocol: -1
+      CidrIp: 0.0.0.0/0
+      Description: Default outbound
+
+  ElastiCacheSecurityGroupEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !Ref ElastiCacheSecurityGroup
+      IpProtocol: -1
+      CidrIp: 0.0.0.0/0
+      Description: Default outbound
+
+  # ── RDS PostgreSQL ───────────────────────────────────────────────
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: !Sub 'Boxcord ${Environment} DB subnets'
+      SubnetIds: !Ref PrivateSubnetIds
+      Tags:
+        - Key: Name
+          Value: !Sub 'boxcord-${Environment}-db-subnets'
+
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Properties:
+      DBInstanceIdentifier: !Sub 'boxcord-${Environment}'
+      Engine: postgres
+      EngineVersion: '16.4'
+      DBInstanceClass: !Ref DBInstanceClass
+      AllocatedStorage: 20
+      MaxAllocatedStorage: 100
+      StorageType: gp3
+      StorageEncrypted: true
+      MasterUsername: boxcord
+      MasterUserPassword: !Ref DBMasterPassword
+      DBName: boxcord
+      Port: 5432
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups:
+        - !Ref RDSSecurityGroup
+      PubliclyAccessible: false
+      BackupRetentionPeriod: !If [IsProduction, 14, 3]
+      PreferredBackupWindow: '03:00-04:00'
+      PreferredMaintenanceWindow: 'sun:04:30-sun:05:30'
+      AutoMinorVersionUpgrade: true
+      DeletionProtection: !If [IsProduction, true, false]
+      CopyTagsToSnapshot: true
+      MonitoringInterval: !If [IsProduction, 60, 0]
+      MonitoringRoleArn: !If [IsProduction, !GetAtt RDSMonitoringRole.Arn, !Ref 'AWS::NoValue']
+      EnablePerformanceInsights: !If [IsProduction, true, false]
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  RDSMonitoringRole:
+    Type: AWS::IAM::Role
+    Condition: IsProduction
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: monitoring.rds.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
+
+  # ── ElastiCache Redis ────────────────────────────────────────────
+  ElastiCacheSubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      Description: !Sub 'Boxcord ${Environment} Redis subnets'
+      SubnetIds: !Ref PrivateSubnetIds
+
+  RedisCluster:
+    Type: AWS::ElastiCache::CacheCluster
+    Properties:
+      ClusterName: !Sub 'boxcord-${Environment}'
+      Engine: redis
+      EngineVersion: '7.1'
+      CacheNodeType: !Ref CacheNodeType
+      NumCacheNodes: 1
+      CacheSubnetGroupName: !Ref ElastiCacheSubnetGroup
+      VpcSecurityGroupIds:
+        - !Ref ElastiCacheSecurityGroup
+      Port: 6379
+      PreferredMaintenanceWindow: 'sun:05:00-sun:06:00'
+      SnapshotRetentionLimit: !If [IsProduction, 3, 0]
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ── ECR Repository ──────────────────────────────────────────────
+  ECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub 'boxcord-${Environment}'
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep last 10 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 10
+                },
+                "action": { "type": "expire" }
+              }
+            ]
+          }
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ── App Runner ───────────────────────────────────────────────────
+  AppRunnerAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'boxcord-${Environment}-apprunner-access'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: build.apprunner.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess
+
+  AppRunnerInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'boxcord-${Environment}-apprunner-instance'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: tasks.apprunner.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: !Sub 'arn:aws:s3:::${ExistingS3Bucket}/*'
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource: !Sub 'arn:aws:s3:::${ExistingS3Bucket}'
+
+  AppRunnerVPCConnector:
+    Type: AWS::AppRunner::VpcConnector
+    Properties:
+      VpcConnectorName: !Sub 'boxcord-${Environment}'
+      Subnets: !Ref PrivateSubnetIds
+      SecurityGroups:
+        - !Ref AppRunnerSecurityGroup
+
+  AppRunnerService:
+    Type: AWS::AppRunner::Service
+    DependsOn:
+      - RDSInstance
+      - RedisCluster
+    Properties:
+      ServiceName: !Sub 'boxcord-${Environment}'
+      SourceConfiguration:
+        AuthenticationConfiguration:
+          AccessRoleArn: !GetAtt AppRunnerAccessRole.Arn
+        AutoDeploymentsEnabled: true
+        ImageRepository:
+          ImageIdentifier: !Ref ContainerImageUri
+          ImageRepositoryType: ECR
+          ImageConfiguration:
+            Port: '3001'
+            RuntimeEnvironmentVariables:
+              - Name: NODE_ENV
+                Value: production
+              - Name: PORT
+                Value: '3001'
+              - Name: HOST
+                Value: '0.0.0.0'
+              - Name: DATABASE_URL
+                Value: !Sub
+                  - 'postgresql://boxcord:${Password}@${Host}:5432/boxcord?schema=public'
+                  - Password: !Ref DBMasterPassword
+                    Host: !GetAtt RDSInstance.Endpoint.Address
+              - Name: REDIS_URL
+                Value: !Sub
+                  - 'redis://${Host}:6379'
+                  - Host: !GetAtt RedisCluster.RedisEndpoint.Address
+              - Name: COGNITO_USER_POOL_ID
+                Value: !Ref CognitoUserPoolId
+              - Name: COGNITO_CLIENT_ID
+                Value: !Ref CognitoClientId
+              - Name: COGNITO_REGION
+                Value: eu-north-1
+              - Name: JWT_SECRET
+                Value: !Ref JwtSecret
+              - Name: BOXTIME_API_URL
+                Value: !Ref BoxtimeApiUrl
+              - Name: CORS_ORIGIN
+                Value: !Sub 'https://${DomainName}'
+              - Name: AWS_REGION
+                Value: !Ref 'AWS::Region'
+              - Name: AWS_S3_BUCKET
+                Value: !Ref ExistingS3Bucket
+              - Name: VAPID_PUBLIC_KEY
+                Value: !Ref VapidPublicKey
+              - Name: VAPID_PRIVATE_KEY
+                Value: !Ref VapidPrivateKey
+              - Name: VAPID_SUBJECT
+                Value: !Sub 'mailto:noreply@${DomainName}'
+              - Name: SERVE_STATIC
+                Value: 'false'
+      InstanceConfiguration:
+        Cpu: !Ref AppRunnerCpu
+        Memory: !Ref AppRunnerMemory
+        InstanceRoleArn: !GetAtt AppRunnerInstanceRole.Arn
+      HealthCheckConfiguration:
+        Protocol: HTTP
+        Path: /health
+        Interval: 10
+        Timeout: 5
+        HealthyThreshold: 1
+        UnhealthyThreshold: 5
+      NetworkConfiguration:
+        EgressConfiguration:
+          EgressType: VPC
+          VpcConnectorArn: !GetAtt AppRunnerVPCConnector.VpcConnectorArn
+      AutoScalingConfigurationArn: !GetAtt AutoScalingConfig.AutoScalingConfigurationArn
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  AutoScalingConfig:
+    Type: AWS::AppRunner::AutoScalingConfiguration
+    Properties:
+      AutoScalingConfigurationName: !Sub 'boxcord-${Environment}'
+      MaxConcurrency: 100
+      MaxSize: !If [IsProduction, 5, 2]
+      MinSize: 1
+
+  # ── Frontend: S3 + CloudFront ───────────────────────────────────
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub 'boxcord-${Environment}-frontend'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules:
+          - Id: CleanupOldVersions
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 30
+      VersioningConfiguration:
+        Status: Enabled
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontOAC
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub '${FrontendBucket.Arn}/*'
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}'
+
+  CloudFrontOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub 'boxcord-${Environment}-oac'
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub 'Boxcord ${Environment} — Frontend + API'
+        DefaultRootObject: index.html
+        HttpVersion: http2and3
+        PriceClass: PriceClass_100
+
+        Origins:
+          # S3 origin for static frontend
+          - Id: S3Frontend
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            OriginAccessControlId: !Ref CloudFrontOAC
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+
+          # App Runner origin for API + WebSocket
+          - Id: AppRunnerAPI
+            DomainName: !Select
+              - 2
+              - !Split ['/', !GetAtt AppRunnerService.ServiceUrl]
+            CustomOriginConfig:
+              HTTPSPort: 443
+              OriginProtocolPolicy: https-only
+              OriginSSLProtocols: [TLSv1.2]
+
+        DefaultCacheBehavior:
+          TargetOriginId: S3Frontend
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # CachingOptimized
+          Compress: true
+
+        CacheBehaviors:
+          # API requests → App Runner (no caching)
+          - PathPattern: '/api/*'
+            TargetOriginId: AppRunnerAPI
+            ViewerProtocolPolicy: redirect-to-https
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad  # CachingDisabled
+            OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3  # AllViewer
+            AllowedMethods: [GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE]
+            Compress: true
+
+          # WebSocket/Socket.IO → App Runner
+          - PathPattern: '/socket.io/*'
+            TargetOriginId: AppRunnerAPI
+            ViewerProtocolPolicy: redirect-to-https
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad  # CachingDisabled
+            OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3  # AllViewer
+            AllowedMethods: [GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE]
+            Compress: false
+
+          # Health check → App Runner
+          - PathPattern: '/health'
+            TargetOriginId: AppRunnerAPI
+            ViewerProtocolPolicy: redirect-to-https
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+            OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3
+            AllowedMethods: [GET, HEAD]
+
+        # SPA fallback — return index.html for client-side routes
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 10
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 10
+
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+# ──────────────────────────────────────────────────────────────────
+# Outputs
+# ──────────────────────────────────────────────────────────────────
+Outputs:
+  AppRunnerServiceUrl:
+    Description: App Runner service URL (API)
+    Value: !Sub 'https://${AppRunnerService.ServiceUrl}'
+    Export:
+      Name: !Sub '${AWS::StackName}-api-url'
+
+  CloudFrontDomainName:
+    Description: CloudFront distribution domain (point DNS here)
+    Value: !GetAtt CloudFrontDistribution.DomainName
+    Export:
+      Name: !Sub '${AWS::StackName}-cdn-domain'
+
+  CloudFrontDistributionId:
+    Description: CloudFront distribution ID (for cache invalidation in CI)
+    Value: !Ref CloudFrontDistribution
+    Export:
+      Name: !Sub '${AWS::StackName}-cdn-id'
+
+  FrontendBucketName:
+    Description: S3 bucket for frontend assets
+    Value: !Ref FrontendBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-frontend-bucket'
+
+  ECRRepositoryUri:
+    Description: ECR repository URI (for docker push)
+    Value: !GetAtt ECRRepository.RepositoryUri
+    Export:
+      Name: !Sub '${AWS::StackName}-ecr-uri'
+
+  DatabaseEndpoint:
+    Description: RDS PostgreSQL endpoint
+    Value: !GetAtt RDSInstance.Endpoint.Address
+    Export:
+      Name: !Sub '${AWS::StackName}-db-endpoint'
+
+  RedisEndpoint:
+    Description: ElastiCache Redis endpoint
+    Value: !GetAtt RedisCluster.RedisEndpoint.Address
+    Export:
+      Name: !Sub '${AWS::StackName}-redis-endpoint'
+
+  DatabaseUrl:
+    Description: Full DATABASE_URL (sensitive — use Secrets Manager in production)
+    Value: !Sub
+      - 'postgresql://boxcord:${Password}@${Host}:5432/boxcord?schema=public'
+      - Password: !Ref DBMasterPassword
+        Host: !GetAtt RDSInstance.Endpoint.Address

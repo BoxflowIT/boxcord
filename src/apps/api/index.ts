@@ -7,7 +7,7 @@ import { Server } from 'socket.io';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
-import { config, isProduction } from '../../00-core/config.js';
+import { config, isProduction, features } from '../../00-core/config.js';
 import { logger } from '../../00-core/logger.js';
 import { setupGracefulShutdown } from '../../00-core/shutdown.js';
 import { initSentry } from '../../03-infrastructure/sentry.js';
@@ -111,8 +111,8 @@ async function main() {
   // API routes
   await registerRoutes(app);
 
-  // Serve frontend in production
-  if (isProduction) {
+  // Serve frontend in production (disabled when using CloudFront/S3)
+  if (isProduction && features.serveStatic) {
     const clientDistPath = join(__dirname, '../../../client/dist');
     await app.register(fastifyStatic, {
       root: clientDistPath,
@@ -129,6 +129,8 @@ async function main() {
       }
       return reply.status(404).send({ error: 'Not found' });
     });
+  } else if (isProduction) {
+    logger.info('📦 Static file serving disabled — using CloudFront/S3');
   }
 
   // Connect to database
@@ -148,7 +150,7 @@ async function main() {
   const corsOrigin =
     process.env.CORS_ORIGIN ??
     (process.env.NODE_ENV === 'production'
-      ? 'https://boxcord.boxflow.se'
+      ? 'https://boxcord.boxflow.com'
       : '*');
   const io = new Server(app.server, {
     cors: {

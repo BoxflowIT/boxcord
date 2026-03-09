@@ -5,12 +5,12 @@ on:
     branches: [develop]
     types: [opened, synchronize, reopened, closed]
 
-# Cancel previous preview deploys for same PR
 concurrency:
   group: preview-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
+  id-token: write
   contents: read
   pull-requests: write
 
@@ -26,40 +26,45 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-
-      - name: Check Railway credentials
+      - name: Check AWS credentials
         id: check
         run: |
-          if [ -z "$RAILWAY_TOKEN" ]; then
-            echo "⚠️ RAILWAY_TOKEN not configured — skipping deploy preview"
+          if [ -z "${{ secrets.AWS_DEPLOY_ROLE_ARN }}" ]; then
+            echo "⚠️ AWS credentials not configured — skipping deploy preview"
             echo "skip=true" >> $GITHUB_OUTPUT
           else
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
-      - name: Deploy preview to Railway
+      - name: Setup Node.js
+        if: steps.check.outputs.skip != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Build client
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          cd client && yarn install --frozen-lockfile --ignore-engines && yarn build
+
+      - name: Configure AWS credentials
+        if: steps.check.outputs.skip != 'true'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: eu-north-1
+
+      - name: Deploy preview frontend to S3
         id: deploy
         if: steps.check.outputs.skip != 'true'
         run: |
           PR_NUM=${{ github.event.pull_request.number }}
-          ENV_NAME="pr-${PR_NUM}"
-
-          # Create or use existing PR environment
-          railway environment create "$ENV_NAME" 2>/dev/null || true
-
-          # Deploy to the PR environment
-          railway up \
-            --service "${{ vars.RAILWAY_STAGING_SERVICE_ID }}" \
-            --environment "$ENV_NAME" \
-            --detach
-
-          echo "✅ Deployed to environment: $ENV_NAME"
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          PREVIEW_PREFIX="previews/pr-${PR_NUM}"
+          aws s3 sync client/dist/ "s3://${{ vars.FRONTEND_BUCKET_NAME_STAGING }}/${PREVIEW_PREFIX}/" \
+            --delete \
+            --cache-control "public, max-age=0, must-revalidate"
+          echo "✅ Preview deployed to: ${PREVIEW_PREFIX}"
 
       - name: Comment preview URL on PR
         if: steps.check.outputs.skip != 'true'
@@ -68,8 +73,9 @@ jobs:
           script: |
             const prNumber = context.payload.pull_request.number;
             const sha = context.sha.substring(0, 7);
+            const stagingUrl = '${{ vars.STAGING_URL }}';
+            const previewPath = `previews/pr-${prNumber}`;
 
-            // Check if we already commented
             const comments = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -80,11 +86,11 @@ jobs:
             );
 
             const body = `## 🚀 Deploy Preview\n\n` +
-              `| Status | Environment | Commit |\n` +
-              `|--------|-------------|-----------|\n` +
-              `| ✅ Deployed | \`pr-${prNumber}\` | \`${sha}\` |\n\n` +
-              `> Preview will be cleaned up when this PR is closed.\n` +
-              `> Check Railway dashboard for the preview URL.`;
+              `| Status | Path | Commit |\n` +
+              `|--------|------|---------|\n` +
+              `| ✅ Deployed | \`${previewPath}\` | \`${sha}\` |\n\n` +
+              `> Preview frontend uses staging backend.\n` +
+              `> Preview will be cleaned up when this PR is closed.`;
 
             if (botComment) {
               await github.rest.issues.updateComment({
@@ -102,23 +108,24 @@ jobs:
               });
             }
 
-  # Cleanup preview environments when PRs are closed
   cleanup:
     name: Cleanup Preview
     runs-on: ubuntu-latest
     if: github.event.action == 'closed'
-    steps:
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
 
-      - name: Remove Railway preview environment
+    steps:
+      - name: Configure AWS credentials
+        id: check
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: eu-north-1
+        continue-on-error: true
+
+      - name: Remove preview files from S3
+        if: steps.check.outcome == 'success'
         run: |
-          if [ -z "$RAILWAY_TOKEN" ]; then
-            echo "⚠️ RAILWAY_TOKEN not configured — nothing to clean up"
-            exit 0
-          fi
           PR_NUM=${{ github.event.pull_request.number }}
           echo "🧹 Cleaning up preview for PR #${PR_NUM}"
-          railway environment delete "pr-${PR_NUM}" --yes 2>/dev/null || echo "Environment already removed"
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          aws s3 rm "s3://${{ vars.FRONTEND_BUCKET_NAME_STAGING }}/previews/pr-${PR_NUM}/" \
+            --recursive 2>/dev/null || echo "Preview already removed"

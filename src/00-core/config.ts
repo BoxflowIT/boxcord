@@ -46,6 +46,12 @@ const envSchema = z.object({
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
   AWS_S3_BUCKET: z.string().optional(),
 
+  // Static file serving (disable when using CloudFront/S3)
+  SERVE_STATIC: z
+    .string()
+    .transform((val) => val === 'true')
+    .default('true'),
+
   // SendGrid (optional)
   SENDGRID_API_KEY: z.string().optional(),
   SENDGRID_FROM_EMAIL: z
@@ -95,6 +101,7 @@ export const features = {
   redis: !!config.REDIS_URL,
   sentry: !!config.SENTRY_DSN,
   swagger: config.SWAGGER_ENABLED,
+  serveStatic: config.SERVE_STATIC,
   s3: !!(config.AWS_S3_BUCKET && config.AWS_ACCESS_KEY_ID),
   email: !!config.SENDGRID_API_KEY
 };

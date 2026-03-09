@@ -12,7 +12,10 @@
 # Infrastructure & DevOps
 /.github/** @BoxflowIT/devops-team
 /.husky/** @BoxflowIT/devops-team
+/infra/** @BoxflowIT/devops-team
 /docker-compose.yml @BoxflowIT/devops-team
+/Dockerfile @BoxflowIT/devops-team
+/.dockerignore @BoxflowIT/devops-team
 /railway.json @BoxflowIT/devops-team
 /nixpacks.toml @BoxflowIT/devops-team
 

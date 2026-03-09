@@ -39,10 +39,10 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Wait for Railway deploy to finish
+      - name: Wait for deployment to stabilize
         if: ${{ github.event_name != 'workflow_dispatch' }}
         run: |
-          echo "⏳ Waiting 60s for Railway to finish deploying..."
+          echo "⏳ Waiting 60s for App Runner to stabilize..."
           sleep 60
 
       - name: Determine target URL
