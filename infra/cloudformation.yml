@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  Boxcord Infrastructure — App Runner + RDS PostgreSQL + ElastiCache Redis + S3/CloudFront
+  Boxcord Infrastructure — ECS Fargate + ALB + RDS PostgreSQL + ElastiCache Redis + S3/CloudFront
   Deployed in eu-north-1 alongside existing Cognito and S3 resources.
 
 # ──────────────────────────────────────────────────────────────────
@@ -15,15 +15,15 @@ Parameters:
 
   VpcId:
     Type: AWS::EC2::VPC::Id
-    Description: VPC for RDS, ElastiCache, and App Runner VPC connector
+    Description: VPC for RDS, ElastiCache, ECS, and ALB
 
   PrivateSubnetIds:
     Type: List<AWS::EC2::Subnet::Id>
-    Description: Private subnets (min 2 AZs) for RDS, ElastiCache, App Runner VPC connector
+    Description: Private subnets (min 2 AZs) for RDS, ElastiCache, ECS tasks
 
   PublicSubnetIds:
     Type: List<AWS::EC2::Subnet::Id>
-    Description: Public subnets for NAT / bastion (if needed)
+    Description: Public subnets (min 2 AZs) for the Application Load Balancer
 
   DBMasterPassword:
     Type: String
@@ -47,6 +47,11 @@ Parameters:
     Type: String
     Default: boxcord.boxflow.com
     Description: Primary domain for the application
+
+  CertificateArn:
+    Type: String
+    Default: ''
+    Description: ACM certificate ARN (us-east-1) for CloudFront custom domain — leave empty to skip
 
   CognitoUserPoolId:
     Type: String
@@ -82,31 +87,83 @@ Parameters:
     Default: boxcord-uploads
     Description: Existing S3 bucket for file uploads
 
-  AppRunnerCpu:
+  TaskCpu:
     Type: String
-    Default: '0.25 vCPU'
-    AllowedValues: ['0.25 vCPU', '0.5 vCPU', '1 vCPU', '2 vCPU', '4 vCPU']
-    Description: App Runner CPU allocation
+    Default: '256'
+    AllowedValues: ['256', '512', '1024', '2048', '4096']
+    Description: ECS task CPU units (256 = 0.25 vCPU)
 
-  AppRunnerMemory:
+  TaskMemory:
     Type: String
-    Default: '0.5 GB'
-    AllowedValues: ['0.5 GB', '1 GB', '2 GB', '3 GB', '4 GB']
-    Description: App Runner memory allocation
+    Default: '512'
+    AllowedValues: ['512', '1024', '2048', '3072', '4096']
+    Description: ECS task memory in MB
+
+  DesiredCount:
+    Type: Number
+    Default: 1
+    MinValue: 1
+    MaxValue: 10
+    Description: Number of ECS tasks to run
 
   ContainerImageUri:
     Type: String
-    Description: ECR image URI (account.dkr.ecr.region.amazonaws.com/repo:tag)
+    Default: 'public.ecr.aws/docker/library/nginx:alpine'
+    Description: Container image URI — use placeholder for initial stack creation
+
+  GiphyApiKey:
+    Type: String
+    Default: ''
+    Description: Giphy API key
 
 Conditions:
   IsProduction: !Equals [!Ref Environment, production]
+  HasCertificate: !Not [!Equals [!Ref CertificateArn, '']]
 
 # ──────────────────────────────────────────────────────────────────
 # Resources
 # ──────────────────────────────────────────────────────────────────
 Resources:
 
-  # ── Security Groups ──────────────────────────────────────────────
+  # ── Security Groups ─────────────────────────────────────────────
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub 'Boxcord ${Environment} — ALB'
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: HTTP from anywhere (CloudFront)
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: All outbound
+      Tags:
+        - Key: Name
+          Value: !Sub 'boxcord-${Environment}-alb-sg'
+
+  ECSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub 'Boxcord ${Environment} — ECS Fargate tasks'
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3001
+          ToPort: 3001
+          SourceSecurityGroupId: !Ref ALBSecurityGroup
+          Description: Allow ALB to reach ECS tasks
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: All outbound (RDS, Redis, Cognito, S3, etc.)
+      Tags:
+        - Key: Name
+          Value: !Sub 'boxcord-${Environment}-ecs-sg'
+
   RDSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -116,8 +173,8 @@ Resources:
         - IpProtocol: tcp
           FromPort: 5432
           ToPort: 5432
-          SourceSecurityGroupId: !Ref AppRunnerSecurityGroup
-          Description: Allow App Runner to connect to RDS
+          SourceSecurityGroupId: !Ref ECSSecurityGroup
+          Description: Allow ECS tasks to connect to RDS
       Tags:
         - Key: Name
           Value: !Sub 'boxcord-${Environment}-rds-sg'
@@ -131,55 +188,13 @@ Resources:
         - IpProtocol: tcp
           FromPort: 6379
           ToPort: 6379
-          SourceSecurityGroupId: !Ref AppRunnerSecurityGroup
-          Description: Allow App Runner to connect to Redis
+          SourceSecurityGroupId: !Ref ECSSecurityGroup
+          Description: Allow ECS tasks to connect to Redis
       Tags:
         - Key: Name
           Value: !Sub 'boxcord-${Environment}-redis-sg'
 
-  AppRunnerSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: !Sub 'Boxcord ${Environment} — App Runner VPC connector'
-      VpcId: !Ref VpcId
-      SecurityGroupEgress:
-        - IpProtocol: tcp
-          FromPort: 5432
-          ToPort: 5432
-          DestinationSecurityGroupId: !Ref RDSSecurityGroup
-          Description: To RDS
-        - IpProtocol: tcp
-          FromPort: 6379
-          ToPort: 6379
-          DestinationSecurityGroupId: !Ref ElastiCacheSecurityGroup
-          Description: To Redis
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: 0.0.0.0/0
-          Description: HTTPS outbound (Cognito, S3, external APIs)
-      Tags:
-        - Key: Name
-          Value: !Sub 'boxcord-${Environment}-apprunner-sg'
-
-  # Fix circular reference — SG egress rules added after all SGs exist
-  RDSSecurityGroupEgress:
-    Type: AWS::EC2::SecurityGroupEgress
-    Properties:
-      GroupId: !Ref RDSSecurityGroup
-      IpProtocol: -1
-      CidrIp: 0.0.0.0/0
-      Description: Default outbound
-
-  ElastiCacheSecurityGroupEgress:
-    Type: AWS::EC2::SecurityGroupEgress
-    Properties:
-      GroupId: !Ref ElastiCacheSecurityGroup
-      IpProtocol: -1
-      CidrIp: 0.0.0.0/0
-      Description: Default outbound
-
-  # ── RDS PostgreSQL ───────────────────────────────────────────────
+  # ── RDS PostgreSQL ──────────────────────────────────────────────
   DBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
@@ -237,7 +252,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
 
-  # ── ElastiCache Redis ────────────────────────────────────────────
+  # ── ElastiCache Redis ───────────────────────────────────────────
   ElastiCacheSubnetGroup:
     Type: AWS::ElastiCache::SubnetGroup
     Properties:
@@ -262,7 +277,7 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
-  # ── ECR Repository ──────────────────────────────────────────────
+  # ── ECR Repository ─────────────────────────────────────────────
   ECRRepository:
     Type: AWS::ECR::Repository
     Properties:
@@ -289,31 +304,92 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
-  # ── App Runner ───────────────────────────────────────────────────
-  AppRunnerAccessRole:
+  # ── Application Load Balancer ───────────────────────────────────
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub 'boxcord-${Environment}'
+      Scheme: internet-facing
+      Type: application
+      Subnets: !Ref PublicSubnetIds
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  ALBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub 'boxcord-${Environment}-tg'
+      Port: 3001
+      Protocol: HTTP
+      VpcId: !Ref VpcId
+      TargetType: ip
+      HealthCheckPath: /health
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      TargetGroupAttributes:
+        - Key: stickiness.enabled
+          Value: 'true'
+        - Key: stickiness.type
+          Value: lb_cookie
+        - Key: stickiness.lb_cookie.duration_seconds
+          Value: '86400'
+        - Key: deregistration_delay.timeout_seconds
+          Value: '30'
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  ALBListenerHTTP:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ALB
+      Port: 80
+      Protocol: HTTP
+      DefaultAction:
+        - Type: forward
+          TargetGroupArn: !Ref ALBTargetGroup
+
+  # ── ECS Cluster + Service ───────────────────────────────────────
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub 'boxcord-${Environment}'
+      ClusterSettings:
+        - Name: containerInsights
+          Value: !If [IsProduction, enabled, disabled]
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  ECSTaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub 'boxcord-${Environment}-apprunner-access'
+      RoleName: !Sub 'boxcord-${Environment}-ecs-execution'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Principal:
-              Service: build.apprunner.amazonaws.com
+              Service: ecs-tasks.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
 
-  AppRunnerInstanceRole:
+  ECSTaskRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub 'boxcord-${Environment}-apprunner-instance'
+      RoleName: !Sub 'boxcord-${Environment}-ecs-task'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Principal:
-              Service: tasks.apprunner.amazonaws.com
+              Service: ecs-tasks.amazonaws.com
             Action: sts:AssumeRole
       Policies:
         - PolicyName: S3Access
@@ -331,97 +407,136 @@ Resources:
                   - s3:ListBucket
                 Resource: !Sub 'arn:aws:s3:::${ExistingS3Bucket}'
 
-  AppRunnerVPCConnector:
-    Type: AWS::AppRunner::VpcConnector
+  ECSLogGroup:
+    Type: AWS::Logs::LogGroup
     Properties:
-      VpcConnectorName: !Sub 'boxcord-${Environment}'
-      Subnets: !Ref PrivateSubnetIds
-      SecurityGroups:
-        - !Ref AppRunnerSecurityGroup
+      LogGroupName: !Sub '/ecs/boxcord-${Environment}'
+      RetentionInDays: !If [IsProduction, 30, 7]
 
-  AppRunnerService:
-    Type: AWS::AppRunner::Service
+  ECSTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
     DependsOn:
       - RDSInstance
       - RedisCluster
     Properties:
+      Family: !Sub 'boxcord-${Environment}'
+      Cpu: !Ref TaskCpu
+      Memory: !Ref TaskMemory
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt ECSTaskRole.Arn
+      ContainerDefinitions:
+        - Name: boxcord
+          Image: !Ref ContainerImageUri
+          Essential: true
+          PortMappings:
+            - ContainerPort: 3001
+              Protocol: tcp
+          Environment:
+            - Name: NODE_ENV
+              Value: production
+            - Name: PORT
+              Value: '3001'
+            - Name: HOST
+              Value: '0.0.0.0'
+            - Name: DATABASE_URL
+              Value: !Sub
+                - 'postgresql://boxcord:${Password}@${Host}:5432/boxcord?schema=public'
+                - Password: !Ref DBMasterPassword
+                  Host: !GetAtt RDSInstance.Endpoint.Address
+            - Name: REDIS_URL
+              Value: !Sub
+                - 'redis://${Host}:6379'
+                - Host: !GetAtt RedisCluster.RedisEndpoint.Address
+            - Name: COGNITO_USER_POOL_ID
+              Value: !Ref CognitoUserPoolId
+            - Name: COGNITO_CLIENT_ID
+              Value: !Ref CognitoClientId
+            - Name: COGNITO_REGION
+              Value: eu-north-1
+            - Name: JWT_SECRET
+              Value: !Ref JwtSecret
+            - Name: BOXTIME_API_URL
+              Value: !Ref BoxtimeApiUrl
+            - Name: CORS_ORIGIN
+              Value: !Sub 'https://${DomainName}'
+            - Name: AWS_S3_BUCKET
+              Value: !Ref ExistingS3Bucket
+            - Name: VAPID_PUBLIC_KEY
+              Value: !Ref VapidPublicKey
+            - Name: VAPID_PRIVATE_KEY
+              Value: !Ref VapidPrivateKey
+            - Name: VAPID_SUBJECT
+              Value: !Sub 'mailto:noreply@${DomainName}'
+            - Name: SERVE_STATIC
+              Value: 'false'
+            - Name: GIPHY_API_KEY
+              Value: !Ref GiphyApiKey
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref ECSLogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: boxcord
+          HealthCheck:
+            Command: ['CMD-SHELL', 'wget -qO- http://localhost:3001/health || exit 1']
+            Interval: 30
+            Timeout: 5
+            Retries: 3
+            StartPeriod: 60
+
+  ECSService:
+    Type: AWS::ECS::Service
+    DependsOn:
+      - ALBListenerHTTP
+    Properties:
       ServiceName: !Sub 'boxcord-${Environment}'
-      SourceConfiguration:
-        AuthenticationConfiguration:
-          AccessRoleArn: !GetAtt AppRunnerAccessRole.Arn
-        AutoDeploymentsEnabled: true
-        ImageRepository:
-          ImageIdentifier: !Ref ContainerImageUri
-          ImageRepositoryType: ECR
-          ImageConfiguration:
-            Port: '3001'
-            RuntimeEnvironmentVariables:
-              - Name: NODE_ENV
-                Value: production
-              - Name: PORT
-                Value: '3001'
-              - Name: HOST
-                Value: '0.0.0.0'
-              - Name: DATABASE_URL
-                Value: !Sub
-                  - 'postgresql://boxcord:${Password}@${Host}:5432/boxcord?schema=public'
-                  - Password: !Ref DBMasterPassword
-                    Host: !GetAtt RDSInstance.Endpoint.Address
-              - Name: REDIS_URL
-                Value: !Sub
-                  - 'redis://${Host}:6379'
-                  - Host: !GetAtt RedisCluster.RedisEndpoint.Address
-              - Name: COGNITO_USER_POOL_ID
-                Value: !Ref CognitoUserPoolId
-              - Name: COGNITO_CLIENT_ID
-                Value: !Ref CognitoClientId
-              - Name: COGNITO_REGION
-                Value: eu-north-1
-              - Name: JWT_SECRET
-                Value: !Ref JwtSecret
-              - Name: BOXTIME_API_URL
-                Value: !Ref BoxtimeApiUrl
-              - Name: CORS_ORIGIN
-                Value: !Sub 'https://${DomainName}'
-              - Name: AWS_REGION
-                Value: !Ref 'AWS::Region'
-              - Name: AWS_S3_BUCKET
-                Value: !Ref ExistingS3Bucket
-              - Name: VAPID_PUBLIC_KEY
-                Value: !Ref VapidPublicKey
-              - Name: VAPID_PRIVATE_KEY
-                Value: !Ref VapidPrivateKey
-              - Name: VAPID_SUBJECT
-                Value: !Sub 'mailto:noreply@${DomainName}'
-              - Name: SERVE_STATIC
-                Value: 'false'
-      InstanceConfiguration:
-        Cpu: !Ref AppRunnerCpu
-        Memory: !Ref AppRunnerMemory
-        InstanceRoleArn: !GetAtt AppRunnerInstanceRole.Arn
-      HealthCheckConfiguration:
-        Protocol: HTTP
-        Path: /health
-        Interval: 10
-        Timeout: 5
-        HealthyThreshold: 1
-        UnhealthyThreshold: 5
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref ECSTaskDefinition
+      DesiredCount: !Ref DesiredCount
+      LaunchType: FARGATE
       NetworkConfiguration:
-        EgressConfiguration:
-          EgressType: VPC
-          VpcConnectorArn: !GetAtt AppRunnerVPCConnector.VpcConnectorArn
-      AutoScalingConfigurationArn: !GetAtt AutoScalingConfig.AutoScalingConfigurationArn
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          Subnets: !Ref PrivateSubnetIds
+          SecurityGroups:
+            - !Ref ECSSecurityGroup
+      LoadBalancers:
+        - ContainerName: boxcord
+          ContainerPort: 3001
+          TargetGroupArn: !Ref ALBTargetGroup
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+      EnableExecuteCommand: true
       Tags:
         - Key: Environment
           Value: !Ref Environment
 
-  AutoScalingConfig:
-    Type: AWS::AppRunner::AutoScalingConfiguration
+  # ── ECS Auto Scaling ────────────────────────────────────────────
+  ECSScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
-      AutoScalingConfigurationName: !Sub 'boxcord-${Environment}'
-      MaxConcurrency: 100
-      MaxSize: !If [IsProduction, 5, 2]
-      MinSize: 1
+      MaxCapacity: !If [IsProduction, 5, 2]
+      MinCapacity: 1
+      ResourceId: !Sub 'service/${ECSCluster}/${ECSService.Name}'
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+      RoleARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService'
+
+  ECSScalingPolicyCPU:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub 'boxcord-${Environment}-cpu-scaling'
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref ECSScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        TargetValue: 70
+        ScaleInCooldown: 300
+        ScaleOutCooldown: 60
 
   # ── Frontend: S3 + CloudFront ───────────────────────────────────
   FrontendBucket:
@@ -485,6 +600,16 @@ Resources:
         DefaultRootObject: index.html
         HttpVersion: http2and3
         PriceClass: PriceClass_100
+        Aliases: !If
+          - HasCertificate
+          - [!Ref DomainName]
+          - !Ref 'AWS::NoValue'
+        ViewerCertificate: !If
+          - HasCertificate
+          - AcmCertificateArn: !Ref CertificateArn
+            SslSupportMethod: sni-only
+            MinimumProtocolVersion: TLSv1.2_2021
+          - CloudFrontDefaultCertificate: true
 
         Origins:
           # S3 origin for static frontend
@@ -494,15 +619,12 @@ Resources:
             S3OriginConfig:
               OriginAccessIdentity: ''
 
-          # App Runner origin for API + WebSocket
-          - Id: AppRunnerAPI
-            DomainName: !Select
-              - 2
-              - !Split ['/', !GetAtt AppRunnerService.ServiceUrl]
+          # ALB origin for API + WebSocket
+          - Id: ALBAPI
+            DomainName: !GetAtt ALB.DNSName
             CustomOriginConfig:
-              HTTPSPort: 443
-              OriginProtocolPolicy: https-only
-              OriginSSLProtocols: [TLSv1.2]
+              HTTPPort: 80
+              OriginProtocolPolicy: http-only
 
         DefaultCacheBehavior:
           TargetOriginId: S3Frontend
@@ -511,27 +633,27 @@ Resources:
           Compress: true
 
         CacheBehaviors:
-          # API requests → App Runner (no caching)
+          # API requests → ALB (no caching)
           - PathPattern: '/api/*'
-            TargetOriginId: AppRunnerAPI
+            TargetOriginId: ALBAPI
             ViewerProtocolPolicy: redirect-to-https
             CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad  # CachingDisabled
             OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3  # AllViewer
             AllowedMethods: [GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE]
             Compress: true
 
-          # WebSocket/Socket.IO → App Runner
+          # WebSocket/Socket.IO → ALB
           - PathPattern: '/socket.io/*'
-            TargetOriginId: AppRunnerAPI
+            TargetOriginId: ALBAPI
             ViewerProtocolPolicy: redirect-to-https
             CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad  # CachingDisabled
             OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3  # AllViewer
             AllowedMethods: [GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE]
             Compress: false
 
-          # Health check → App Runner
+          # Health check → ALB
           - PathPattern: '/health'
-            TargetOriginId: AppRunnerAPI
+            TargetOriginId: ALBAPI
             ViewerProtocolPolicy: redirect-to-https
             CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
             OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3
@@ -556,11 +678,11 @@ Resources:
 # Outputs
 # ──────────────────────────────────────────────────────────────────
 Outputs:
-  AppRunnerServiceUrl:
-    Description: App Runner service URL (API)
-    Value: !Sub 'https://${AppRunnerService.ServiceUrl}'
+  ALBDnsName:
+    Description: ALB DNS name (API endpoint)
+    Value: !Sub 'http://${ALB.DNSName}'
     Export:
-      Name: !Sub '${AWS::StackName}-api-url'
+      Name: !Sub '${AWS::StackName}-alb-dns'
 
   CloudFrontDomainName:
     Description: CloudFront distribution domain (point DNS here)
@@ -597,6 +719,18 @@ Outputs:
     Value: !GetAtt RedisCluster.RedisEndpoint.Address
     Export:
       Name: !Sub '${AWS::StackName}-redis-endpoint'
+
+  ECSClusterName:
+    Description: ECS cluster name
+    Value: !Ref ECSCluster
+    Export:
+      Name: !Sub '${AWS::StackName}-ecs-cluster'
+
+  ECSServiceName:
+    Description: ECS service name
+    Value: !GetAtt ECSService.Name
+    Export:
+      Name: !Sub '${AWS::StackName}-ecs-service'
 
   DatabaseUrl:
     Description: Full DATABASE_URL (sensitive — use Secrets Manager in production)

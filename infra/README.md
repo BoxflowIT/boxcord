@@ -9,9 +9,14 @@
                   └──────┬─────────────┬─────────────────┘
                          │             │
                ┌─────────▼──┐    ┌─────▼──────────┐
-               │  S3 Bucket  │    │   App Runner    │
-               │  (Frontend) │    │   (Backend API) │
-               └─────────────┘    └───┬────────┬───┘
+               │  S3 Bucket  │    │      ALB        │
+               │  (Frontend) │    │  (Load Balancer) │
+               └─────────────┘    └───────┬────────┘
+                                          │
+                                  ┌───────▼────────┐
+                                  │  ECS Fargate    │
+                                  │  (Backend API)  │
+                                  └───┬────────┬───┘
                                       │        │
                               ┌───────▼──┐ ┌───▼────────┐
                               │   RDS    │ │ ElastiCache │
@@ -21,14 +26,15 @@
 
 **Routing through CloudFront:**
 - `/*` → S3 (static frontend assets)
-- `/api/*` → App Runner (backend API)
-- `/socket.io/*` → App Runner (WebSocket)
-- `/health` → App Runner (health check)
+- `/api/*` → ALB → ECS Fargate (backend API)
+- `/socket.io/*` → ALB → ECS Fargate (WebSocket)
+- `/health` → ALB → ECS Fargate (health check)
 
 ## Prerequisites
 
 - AWS CLI v2 configured with `eu-north-1` region
-- An existing VPC with at least 2 private subnets and internet access (NAT Gateway)
+- An existing VPC with at least 2 private subnets (for ECS/RDS/Redis) and 2 public subnets (for ALB)
+- Private subnets must have internet access via NAT Gateway
 - Existing AWS resources: Cognito User Pool, S3 bucket (`boxcord-uploads`)
 
 ## Deploy Infrastructure
@@ -50,9 +56,12 @@ aws cloudformation deploy \
     CognitoUserPoolId="eu-north-1_XXXXXXX" \
     CognitoClientId="xxxxxxxxxxxxxxxxxxxxxxxxxx" \
     JwtSecret="<jwt-secret-min-20-chars>" \
-    BoxtimeApiUrl="https://boxtime.boxflow.com/api" \
-    ContainerImageUri="ACCOUNT.dkr.ecr.eu-north-1.amazonaws.com/boxcord-production:latest"
+    BoxtimeApiUrl="https://boxtime.boxflow.com" \
+    CertificateArn="arn:aws:acm:us-east-1:ACCOUNT:certificate/CERT-ID"
 ```
+
+> **Note:** `ContainerImageUri` defaults to nginx:alpine for initial stack creation.
+> After pushing your first Docker image to ECR, update the stack with the real image URI.
 
 ### 2. Get stack outputs
 
@@ -68,14 +77,19 @@ aws cloudformation describe-stacks \
 **Secrets** (Settings → Secrets and variables → Actions):
 ```
 AWS_DEPLOY_ROLE_ARN        → IAM role ARN for OIDC (see below)
-APPRUNNER_SERVICE_ARN      → from stack outputs
-APPRUNNER_SERVICE_ARN_STAGING → staging stack output
 ```
 
 **Variables** (Settings → Secrets and variables → Actions → Variables):
 ```
 ECR_REPOSITORY_NAME          → boxcord-production
 ECR_REPOSITORY_NAME_STAGING  → boxcord-staging
+ECS_CLUSTER_NAME             → boxcord-production (from ECSClusterName output)
+ECS_SERVICE_NAME             → boxcord-production (from ECSServiceName output)
+ECS_TASK_FAMILY              → boxcord-production
+ECS_CLUSTER_NAME_STAGING     → boxcord-staging
+ECS_SERVICE_NAME_STAGING     → boxcord-staging
+ECS_TASK_FAMILY_STAGING      → boxcord-staging
+ALB_DNS_NAME                 → from ALBDnsName output (without http://)
 FRONTEND_BUCKET_NAME         → from FrontendBucketName output
 FRONTEND_BUCKET_NAME_STAGING → from staging stack
 CLOUDFRONT_DISTRIBUTION_ID   → from CloudFrontDistributionId output
@@ -127,9 +141,37 @@ Trust policy (`infra/github-oidc-trust.json`):
 
 Attach permissions to the deploy role:
 - `AmazonEC2ContainerRegistryPowerUser` (ECR push)
-- `AWSAppRunnerFullAccess` (App Runner deploy)
+- `AmazonECS_FullAccess` (ECS deploy)
 - `AmazonS3FullAccess` on the frontend buckets
 - `CloudFrontFullAccess` (cache invalidation)
+- `iam:PassRole` for the ECS task roles
+
+## First Docker Push
+
+After the stack is created and ECR is available:
+
+```bash
+# Get ECR URI from stack outputs
+ECR_URI=$(aws cloudformation describe-stacks \
+  --stack-name boxcord-production \
+  --query 'Stacks[0].Outputs[?OutputKey==`ECRRepositoryUri`].OutputValue' \
+  --output text)
+
+# Login to ECR
+aws ecr get-login-password --region eu-north-1 | \
+  docker login --username AWS --password-stdin 650485669960.dkr.ecr.eu-north-1.amazonaws.com
+
+# Build and push
+docker build -t boxcord .
+docker tag boxcord:latest ${ECR_URI}:latest
+docker push ${ECR_URI}:latest
+
+# Update ECS service with new image
+aws ecs update-service \
+  --cluster boxcord-production \
+  --service boxcord-production \
+  --force-new-deployment
+```
 
 ## Database Migration
 
@@ -167,22 +209,13 @@ Point your domain to CloudFront:
 | Record | Type  | Value                          |
 |--------|-------|--------------------------------|
 | `boxcord.boxflow.com` | CNAME | `dxxxxxxxx.cloudfront.net` |
-| `staging.boxcord.boxflow.com` | CNAME | `dxxxxxxxx.cloudfront.net` |
 
-> To use a custom domain with CloudFront, you need an ACM certificate
-> in **us-east-1** (CloudFront requirement).
-
-```bash
-aws acm request-certificate \
-  --domain-name boxcord.boxflow.com \
-  --subject-alternative-names "*.boxcord.boxflow.com" \
-  --validation-method DNS \
-  --region us-east-1
-```
+> The ACM certificate in **us-east-1** is required for CloudFront custom domain.
+> Pass the ARN via the `CertificateArn` parameter.
 
 ## Environment Variables
 
-The CloudFormation template configures these on App Runner automatically:
+The CloudFormation template configures these on ECS automatically:
 
 | Variable | Source |
 |----------|--------|
@@ -193,10 +226,10 @@ The CloudFormation template configures these on App Runner automatically:
 | `JWT_SECRET` | Parameter |
 | `BOXTIME_API_URL` | Parameter |
 | `CORS_ORIGIN` | Derived from domain |
-| `AWS_REGION` | Stack region |
 | `AWS_S3_BUCKET` | Parameter |
 | `SERVE_STATIC` | `false` (CloudFront serves frontend) |
 | `NODE_ENV` | `production` |
+| `GIPHY_API_KEY` | Parameter |
 
 ## Costs (estimated, eu-north-1)
 
@@ -204,13 +237,15 @@ The CloudFormation template configures these on App Runner automatically:
 |---------|----------|-------------|
 | RDS PostgreSQL | db.t4g.micro | $15 |
 | ElastiCache Redis | cache.t4g.micro | $13 |
-| App Runner | 0.25 vCPU / 0.5 GB | $7-25 |
+| ECS Fargate | 0.25 vCPU / 0.5 GB | $9-25 |
+| ALB | — | $16 |
 | CloudFront + S3 | — | $1-2 |
-| **Total** | | **~$35-55** |
+| **Total** | | **~$55-70** |
 
 ## Scaling
 
-- **App Runner**: Auto-scales 1→5 instances based on concurrency (configurable in template)
+- **ECS Fargate**: Auto-scales 1→5 tasks based on CPU utilization (70% target)
 - **RDS**: Change `DBInstanceClass` parameter to scale vertically; add read replicas for read scaling
 - **ElastiCache**: Change `CacheNodeType` parameter; enable cluster mode for horizontal scaling
 - **CloudFront**: Scales automatically to global traffic
+- **ALB**: Scales automatically based on traffic

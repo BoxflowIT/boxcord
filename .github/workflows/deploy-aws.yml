@@ -23,7 +23,7 @@ jobs:
     name: Build Backend Image
     runs-on: ubuntu-latest
     outputs:
-      image_tag: ${{ steps.meta.outputs.tags }}
+      image_tag: ${{ steps.meta.outputs.sha_tag }}
 
     steps:
       - name: Checkout code
@@ -115,7 +115,7 @@ jobs:
             --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} \
             --paths "/index.html" "/sw.js"
 
-  # ─── Update App Runner Service ──────────────────────────────────
+  # ─── Update ECS Service ─────────────────────────────────────────
   deploy-backend:
     name: Deploy Backend
     runs-on: ubuntu-latest
@@ -128,25 +128,52 @@ jobs:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: eu-north-1
 
-      - name: Trigger App Runner deployment
+      - name: Update ECS task definition with new image
+        id: update-task
         run: |
-          echo "🚀 Triggering App Runner deployment..."
-          aws apprunner start-deployment \
-            --service-arn ${{ secrets.APPRUNNER_SERVICE_ARN }}
+          echo "🚀 Updating ECS task definition..."
 
-          echo "⏳ Waiting for deployment to complete..."
-          aws apprunner wait service-running \
-            --service-arn ${{ secrets.APPRUNNER_SERVICE_ARN }} \
-            || echo "⚠️ Wait timed out — check App Runner console"
+          # Get current task definition
+          TASK_DEF=$(aws ecs describe-task-definition \
+            --task-definition ${{ vars.ECS_TASK_FAMILY }} \
+            --query 'taskDefinition' --output json)
+
+          # Update image in container definition
+          NEW_TASK_DEF=$(echo "$TASK_DEF" | jq \
+            --arg IMAGE "${{ needs.build-backend.outputs.image_tag }}" \
+            '.containerDefinitions[0].image = $IMAGE |
+            del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)')
+
+          # Register new task definition
+          NEW_ARN=$(aws ecs register-task-definition \
+            --cli-input-json "$NEW_TASK_DEF" \
+            --query 'taskDefinition.taskDefinitionArn' --output text)
+
+          echo "task_arn=${NEW_ARN}" >> $GITHUB_OUTPUT
+          echo "✅ New task definition: $NEW_ARN"
+
+      - name: Deploy to ECS
+        run: |
+          echo "🚀 Updating ECS service..."
+          aws ecs update-service \
+            --cluster ${{ vars.ECS_CLUSTER_NAME }} \
+            --service ${{ vars.ECS_SERVICE_NAME }} \
+            --task-definition ${{ steps.update-task.outputs.task_arn }} \
+            --force-new-deployment \
+            --query 'service.serviceName' --output text
+
+          echo "⏳ Waiting for service to stabilize..."
+          aws ecs wait services-stable \
+            --cluster ${{ vars.ECS_CLUSTER_NAME }} \
+            --services ${{ vars.ECS_SERVICE_NAME }} \
+            || echo "⚠️ Wait timed out — check ECS console"
 
       - name: Verify deployment
         run: |
-          SERVICE_URL=$(aws apprunner describe-service \
-            --service-arn ${{ secrets.APPRUNNER_SERVICE_ARN }} \
-            --query 'Service.ServiceUrl' --output text)
-          echo "🔍 Checking health at https://${SERVICE_URL}/health"
+          echo "🔍 Checking health via ALB..."
+          ALB_URL="${{ vars.ALB_DNS_NAME }}"
           for i in 1 2 3 4 5; do
-            HEALTH=$(curl -sf --max-time 10 "https://${SERVICE_URL}/health" 2>&1 || echo "RETRY")
+            HEALTH=$(curl -sf --max-time 10 "http://${ALB_URL}/health" 2>&1 || echo "RETRY")
             if echo "$HEALTH" | grep -q "ok\|healthy"; then
               echo "✅ Backend healthy!"
               exit 0
@@ -175,7 +202,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Backend (App Runner) | ${{ needs.deploy-backend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend (ECS Fargate) | ${{ needs.deploy-backend.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend (S3/CloudFront) | ${{ needs.deploy-frontend.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit:** \`${GITHUB_SHA::8}\`" >> $GITHUB_STEP_SUMMARY
