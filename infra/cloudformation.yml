@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  Boxcord Infrastructure — ECS Fargate + ALB + RDS PostgreSQL + ElastiCache Redis + S3/CloudFront
+  Boxcord Infrastructure - ECS Fargate + ALB + RDS PostgreSQL + ElastiCache Redis + S3/CloudFront
   Deployed in eu-north-1 alongside existing Cognito and S3 resources.
 
 # ──────────────────────────────────────────────────────────────────
@@ -51,7 +51,7 @@ Parameters:
   CertificateArn:
     Type: String
     Default: ''
-    Description: ACM certificate ARN (us-east-1) for CloudFront custom domain — leave empty to skip
+    Description: ACM certificate ARN (us-east-1) for CloudFront custom domain - leave empty to skip
 
   CognitoUserPoolId:
     Type: String
@@ -109,7 +109,7 @@ Parameters:
   ContainerImageUri:
     Type: String
     Default: 'public.ecr.aws/docker/library/nginx:alpine'
-    Description: Container image URI — use placeholder for initial stack creation
+    Description: Container image URI - use placeholder for initial stack creation
 
   GiphyApiKey:
     Type: String
@@ -129,7 +129,7 @@ Resources:
   ALBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: !Sub 'Boxcord ${Environment} — ALB'
+      GroupDescription: !Sub 'Boxcord ${Environment} - ALB'
       VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -148,7 +148,7 @@ Resources:
   ECSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: !Sub 'Boxcord ${Environment} — ECS Fargate tasks'
+      GroupDescription: !Sub 'Boxcord ${Environment} - ECS Fargate tasks'
       VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -167,7 +167,7 @@ Resources:
   RDSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: !Sub 'Boxcord ${Environment} — RDS PostgreSQL'
+      GroupDescription: !Sub 'Boxcord ${Environment} - RDS PostgreSQL'
       VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -182,7 +182,7 @@ Resources:
   ElastiCacheSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: !Sub 'Boxcord ${Environment} — ElastiCache Redis'
+      GroupDescription: !Sub 'Boxcord ${Environment} - ElastiCache Redis'
       VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -211,7 +211,7 @@ Resources:
     Properties:
       DBInstanceIdentifier: !Sub 'boxcord-${Environment}'
       Engine: postgres
-      EngineVersion: '16.4'
+      EngineVersion: '16'
       DBInstanceClass: !Ref DBInstanceClass
       AllocatedStorage: 20
       MaxAllocatedStorage: 100
@@ -350,7 +350,7 @@ Resources:
       LoadBalancerArn: !Ref ALB
       Port: 80
       Protocol: HTTP
-      DefaultAction:
+      DefaultActions:
         - Type: forward
           TargetGroupArn: !Ref ALBTargetGroup
 
@@ -596,7 +596,7 @@ Resources:
     Properties:
       DistributionConfig:
         Enabled: true
-        Comment: !Sub 'Boxcord ${Environment} — Frontend + API'
+        Comment: !Sub 'Boxcord ${Environment} - Frontend + API'
         DefaultRootObject: index.html
         HttpVersion: http2and3
         PriceClass: PriceClass_100
@@ -659,7 +659,7 @@ Resources:
             OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3
             AllowedMethods: [GET, HEAD]
 
-        # SPA fallback — return index.html for client-side routes
+        # SPA fallback - return index.html for client-side routes
         CustomErrorResponses:
           - ErrorCode: 403
             ResponseCode: 200
@@ -733,7 +733,7 @@ Outputs:
       Name: !Sub '${AWS::StackName}-ecs-service'
 
   DatabaseUrl:
-    Description: Full DATABASE_URL (sensitive — use Secrets Manager in production)
+    Description: Full DATABASE_URL (sensitive - use Secrets Manager in production)
     Value: !Sub
       - 'postgresql://boxcord:${Password}@${Host}:5432/boxcord?schema=public'
       - Password: !Ref DBMasterPassword
