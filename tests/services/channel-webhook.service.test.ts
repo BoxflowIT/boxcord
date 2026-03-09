@@ -345,7 +345,8 @@ describe('ChannelWebhookService', () => {
       const mockMessage = {
         id: 'msg-1',
         channelId,
-        authorId: `webhook:${webhookId}`,
+        authorId: userId,
+        webhookId,
         content: 'Build passed! ✅',
         createdAt: new Date(),
         edited: false
@@ -368,7 +369,8 @@ describe('ChannelWebhookService', () => {
       expect(mockPrisma.message.create).toHaveBeenCalledWith({
         data: {
           channelId,
-          authorId: `webhook:${webhookId}`,
+          authorId: userId,
+          webhookId,
           content: 'Build passed! ✅'
         }
       });

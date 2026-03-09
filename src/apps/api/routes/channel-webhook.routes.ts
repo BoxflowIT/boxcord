@@ -34,7 +34,7 @@ const executeBody = z.object({
   avatarUrl: z.string().url().optional()
 });
 
-const _tokenParam = z.object({
+const tokenParam = z.object({
   token: z.string().min(1)
 });
 
@@ -176,7 +176,10 @@ export async function webhookExecuteRoutes(app: FastifyInstance) {
       config: {
         rateLimit: { max: 30, timeWindow: '1 minute' }
       },
-      preHandler: app.validateBody(executeBody)
+      preHandler: [
+        app.validateParams(tokenParam),
+        app.validateBody(executeBody)
+      ]
     },
     async (request) => {
       const result = await webhookService.executeWebhook(

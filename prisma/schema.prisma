@@ -211,6 +211,10 @@ model Message {
     parent   Message?  @relation("ThreadReplies", fields: [parentId], references: [id])
     replies  Message[] @relation("ThreadReplies")
 
+    // Webhook/bot integration
+    webhookId String?         @map("webhook_id")
+    webhook   ChannelWebhook? @relation(fields: [webhookId], references: [id], onDelete: SetNull)
+
     channel     Channel             @relation(fields: [channelId], references: [id], onDelete: Cascade)
     author      User                @relation(fields: [authorId], references: [id])
     attachments Attachment[]
@@ -223,6 +227,7 @@ model Message {
     @@index([channelId, isPinned, createdAt]) // Optimize pinned message queries
     @@index([authorId])
     @@index([parentId]) // Optimize thread replies queries
+    @@index([webhookId])
     @@map("messages")
 }
 
@@ -597,7 +602,8 @@ model ChannelWebhook {
     createdAt   DateTime @default(now()) @map("created_at")
     updatedAt   DateTime @updatedAt @map("updated_at")
 
-    channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+    channel  Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+    messages Message[]
 
     @@index([channelId])
     @@index([token])

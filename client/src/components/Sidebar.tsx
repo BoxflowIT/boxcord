@@ -64,7 +64,12 @@ export default function Sidebar({
   const [showNotifications, setShowNotifications] = useState(false);
 
   const threadNotifications = useThreadStore((s) => s.threadNotifications);
+  const threadMap = useThreadStore((s) => s.threads);
   const unreadNotifCount = threadNotifications.filter((n) => !n.read).length;
+  const hasFollowingThreads = Object.values(threadMap)
+    .filter(Array.isArray)
+    .flat()
+    .some((t) => t.isFollowing);
 
   const editChannelModal = useModalWithData<{
     id: string;
@@ -304,29 +309,31 @@ export default function Sidebar({
             />
           </div>
 
-          {/* Thread Notifications */}
-          <div className="relative z-50">
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="flex items-center gap-1 px-4 py-1.5 text-xs text-gray-400 hover:text-gray-200 w-full"
-            >
-              <BellIcon size="sm" />
-              <span>{t('threads.notifications')}</span>
-              {unreadNotifCount > 0 && (
-                <span className="ml-auto bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 leading-none">
-                  {unreadNotifCount}
-                </span>
+          {/* Thread Notifications — only show when there are followed threads or unread notifications */}
+          {(hasFollowingThreads || unreadNotifCount > 0) && (
+            <div className="relative z-50">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="flex items-center gap-1 px-4 py-1.5 text-xs text-gray-400 hover:text-gray-200 w-full"
+              >
+                <BellIcon size="sm" />
+                <span>{t('threads.notifications')}</span>
+                {unreadNotifCount > 0 && (
+                  <span className="ml-auto bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 leading-none">
+                    {unreadNotifCount}
+                  </span>
+                )}
+              </button>
+              {showNotifications && (
+                <ThreadNotificationPanel
+                  onSelectThread={(threadId) => {
+                    console.log('Selected thread from notification:', threadId);
+                  }}
+                  onClose={() => setShowNotifications(false)}
+                />
               )}
-            </button>
-            {showNotifications && (
-              <ThreadNotificationPanel
-                onSelectThread={(threadId) => {
-                  console.log('Selected thread from notification:', threadId);
-                }}
-                onClose={() => setShowNotifications(false)}
-              />
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Direct Messages */}
           <DMList

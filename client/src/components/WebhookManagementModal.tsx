@@ -1,8 +1,17 @@
 // Webhook Management Modal - Create, view, edit, delete channel webhooks
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from './ui/dialog';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
 import { EditIcon, TrashIcon, PlusIcon, CopyIcon } from './ui/Icons';
+import Toggle from './ui/Toggle';
 import { api } from '../services/api';
 
 interface Webhook {
@@ -48,10 +57,12 @@ export function WebhookManagementModal({
   const fetchWebhooks = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await api.getChannelWebhooks(channelId);
       setWebhooks(data);
-    } catch {
-      setError(t('webhooks.loadError'));
+    } catch (err) {
+      console.error('[Webhooks] Failed to load:', err);
+      setError(err instanceof Error ? err.message : t('webhooks.loadError'));
     } finally {
       setLoading(false);
     }
@@ -158,7 +169,7 @@ export function WebhookManagementModal({
         </DialogHeader>
 
         {error && (
-          <div className="rounded-md bg-red-500/10 p-2 text-sm text-red-400">
+          <div className="px-3 py-2 bg-red-500/20 border border-red-500 rounded-md text-sm text-red-300">
             {error}
           </div>
         )}
@@ -168,7 +179,7 @@ export function WebhookManagementModal({
           <div className="space-y-3">
             <button
               onClick={startCreate}
-              className="flex w-full items-center gap-2 rounded-md border border-dashed border-boxflow-border p-3 text-sm text-boxflow-muted transition-colors hover:border-boxflow-accent hover:text-boxflow-accent"
+              className="flex w-full items-center gap-2 rounded-lg border border-dashed border-boxflow-border-50 p-3 text-sm text-boxflow-muted transition-colors hover:border-boxflow-primary hover:text-boxflow-primary"
             >
               <PlusIcon className="h-4 w-4" />
               {t('webhooks.create')}
@@ -181,14 +192,16 @@ export function WebhookManagementModal({
             ) : webhooks.length === 0 ? (
               <div className="py-6 text-center text-sm text-boxflow-muted">
                 <p>{t('webhooks.empty')}</p>
-                <p className="mt-1 text-xs">{t('webhooks.emptyHint')}</p>
+                <p className="mt-1 text-xs text-boxflow-subtle">
+                  {t('webhooks.emptyHint')}
+                </p>
               </div>
             ) : (
               <div className="max-h-80 space-y-2 overflow-y-auto">
                 {webhooks.map((webhook) => (
                   <div
                     key={webhook.id}
-                    className="group relative rounded-md border border-boxflow-border bg-boxflow-bg-secondary p-3"
+                    className="group relative rounded-lg border border-boxflow-border-50 bg-boxflow-darker p-3"
                   >
                     <div className="flex items-start justify-between">
                       <div className="min-w-0 flex-1">
@@ -197,10 +210,10 @@ export function WebhookManagementModal({
                             {webhook.name}
                           </span>
                           <span
-                            className={`rounded-full px-2 py-0.5 text-xs ${
+                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                               webhook.isActive
-                                ? 'bg-green-500/20 text-green-400'
-                                : 'bg-red-500/20 text-red-400'
+                                ? 'bg-boxflow-success-20 text-boxflow-success'
+                                : 'bg-boxflow-danger-20 text-boxflow-danger'
                             }`}
                           >
                             {webhook.isActive
@@ -217,7 +230,7 @@ export function WebhookManagementModal({
                         {/* Token section */}
                         <div className="mt-2 space-y-1">
                           <div className="flex items-center gap-1">
-                            <code className="max-w-[250px] truncate rounded bg-boxflow-bg-primary px-1.5 py-0.5 text-xs text-boxflow-muted">
+                            <code className="max-w-[250px] truncate rounded-md bg-boxflow-darkest px-2 py-0.5 text-xs text-boxflow-subtle">
                               {showToken === webhook.id
                                 ? webhook.token
                                 : '••••••••••••'}
@@ -267,7 +280,7 @@ export function WebhookManagementModal({
                       <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                         <button
                           onClick={() => startEdit(webhook)}
-                          className="rounded p-1 text-boxflow-muted hover:bg-boxflow-bg-primary hover:text-boxflow-light"
+                          className="rounded p-1 text-boxflow-muted hover:bg-boxflow-hover hover:text-boxflow-light"
                           title={t('webhooks.edit')}
                         >
                           <EditIcon className="h-3.5 w-3.5" />
@@ -275,12 +288,14 @@ export function WebhookManagementModal({
 
                         {deleteConfirm === webhook.id ? (
                           <div className="flex items-center gap-1">
-                            <button
+                            <Button
+                              variant="destructive"
+                              size="sm"
                               onClick={() => handleDelete(webhook.id)}
-                              className="rounded bg-red-500/20 px-2 py-0.5 text-xs text-red-400 hover:bg-red-500/30"
+                              className="h-6 px-2 text-xs"
                             >
                               {t('webhooks.confirmDelete')}
-                            </button>
+                            </Button>
                             <button
                               onClick={() => setDeleteConfirm(null)}
                               className="rounded px-2 py-0.5 text-xs text-boxflow-muted hover:text-boxflow-light"
@@ -291,7 +306,7 @@ export function WebhookManagementModal({
                         ) : (
                           <button
                             onClick={() => setDeleteConfirm(webhook.id)}
-                            className="rounded p-1 text-boxflow-muted hover:bg-red-500/20 hover:text-red-400"
+                            className="rounded p-1 text-boxflow-muted hover:bg-boxflow-danger-10 hover:text-boxflow-danger"
                             title={t('webhooks.delete')}
                           >
                             <TrashIcon className="h-3.5 w-3.5" />
@@ -310,97 +325,84 @@ export function WebhookManagementModal({
         {(view === 'create' || view === 'edit') && (
           <div className="space-y-4">
             <div>
-              <label className="mb-1 block text-sm text-boxflow-muted">
+              <label className="mb-1.5 block text-sm font-medium text-boxflow-normal">
                 {t('webhooks.nameLabel')}
               </label>
-              <input
+              <Input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t('webhooks.namePlaceholder')}
                 maxLength={80}
-                className="w-full rounded-md border border-boxflow-border bg-boxflow-bg-primary px-3 py-2 text-sm text-boxflow-light placeholder-boxflow-muted focus:border-boxflow-accent focus:outline-none"
                 autoFocus
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-boxflow-muted">
+              <label className="mb-1.5 block text-sm font-medium text-boxflow-normal">
                 {t('webhooks.descriptionLabel')}
               </label>
-              <input
+              <Input
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder={t('webhooks.descriptionPlaceholder')}
                 maxLength={200}
-                className="w-full rounded-md border border-boxflow-border bg-boxflow-bg-primary px-3 py-2 text-sm text-boxflow-light placeholder-boxflow-muted focus:border-boxflow-accent focus:outline-none"
               />
             </div>
 
             {view === 'edit' && (
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-boxflow-muted">
+              <div className="flex items-center justify-between">
+                <label className="text-sm text-boxflow-normal">
                   {t('webhooks.activeLabel')}
                 </label>
-                <button
-                  onClick={() => setIsActive(!isActive)}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                    isActive ? 'bg-boxflow-accent' : 'bg-boxflow-border'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-                      isActive ? 'translate-x-4' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
+                <Toggle enabled={isActive} onChange={setIsActive} />
               </div>
             )}
 
             {view === 'edit' && editingWebhook && (
               <div>
-                <label className="mb-1 block text-sm text-boxflow-muted">
+                <label className="mb-1.5 block text-sm font-medium text-boxflow-normal">
                   {t('webhooks.tokenLabel')}
                 </label>
                 <div className="flex items-center gap-2">
-                  <code className="flex-1 truncate rounded bg-boxflow-bg-primary px-2 py-1.5 text-xs text-boxflow-muted">
+                  <code className="flex-1 truncate rounded-md bg-boxflow-darkest px-3 py-2 text-xs text-boxflow-subtle">
                     {showToken === editingWebhook.id
                       ? editingWebhook.token
                       : '••••••••••••••••'}
                   </code>
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     onClick={() => handleRegenerate(editingWebhook.id)}
-                    className="rounded bg-yellow-500/20 px-2 py-1 text-xs text-yellow-400 hover:bg-yellow-500/30"
                   >
                     {t('webhooks.regenerate')}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
 
-            <div className="flex justify-end gap-2">
-              <button
+            <DialogFooter>
+              <Button
+                variant="ghost"
                 onClick={() => {
                   setView('list');
                   setEditingWebhook(null);
                 }}
-                className="rounded-md px-3 py-1.5 text-sm text-boxflow-muted hover:text-boxflow-light"
               >
                 {t('common.cancel')}
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={view === 'create' ? handleCreate : handleUpdate}
                 disabled={!name.trim() || saving}
-                className="rounded-md bg-boxflow-accent px-3 py-1.5 text-sm text-white hover:bg-boxflow-accent/90 disabled:opacity-50"
               >
                 {saving
                   ? '...'
                   : view === 'create'
                     ? t('webhooks.create')
                     : t('webhooks.save')}
-              </button>
-            </div>
+              </Button>
+            </DialogFooter>
           </div>
         )}
       </DialogContent>

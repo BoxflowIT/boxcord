@@ -179,6 +179,9 @@ export function GlobalSearch({ onClose, onResultClick }: GlobalSearchProps) {
   };
 
   const getAuthorName = (msg: SearchResult) => {
+    if (msg.webhook) {
+      return msg.webhook.name;
+    }
     if (msg.author?.firstName || msg.author?.lastName) {
       return `${msg.author.firstName || ''} ${msg.author.lastName || ''}`.trim();
     }

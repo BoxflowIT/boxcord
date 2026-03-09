@@ -248,15 +248,15 @@ export class ChannelWebhookService {
       );
     }
 
-    // Create message with a webhook bot author ID
-    const botAuthorId = `webhook:${webhook.id}`;
+    // Use webhook creator as author (satisfies FK), link webhook for bot detection
     const displayName = input.username?.trim() || webhook.name;
     const avatarUrl = input.avatarUrl || webhook.avatarUrl;
 
     const message = await this.prisma.message.create({
       data: {
         channelId: webhook.channelId,
-        authorId: botAuthorId,
+        authorId: webhook.createdBy,
+        webhookId: webhook.id,
         content
       }
     });
@@ -270,10 +270,12 @@ export class ChannelWebhookService {
         channelId: message.channelId,
         createdAt: message.createdAt.toISOString(),
         edited: false,
-        isBot: true,
         webhookId: webhook.id,
-        webhookName: displayName,
-        webhookAvatarUrl: avatarUrl
+        webhook: {
+          id: webhook.id,
+          name: displayName,
+          avatarUrl: avatarUrl ?? null
+        }
       });
     }
 
