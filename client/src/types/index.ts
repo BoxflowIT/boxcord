@@ -54,6 +54,12 @@ export interface Message {
   parentId?: string | null;
   attachments?: MessageAttachment[];
   reactions?: MessageReaction[];
+  webhookId?: string | null;
+  webhook?: {
+    id: string;
+    name: string;
+    avatarUrl?: string | null;
+  } | null;
 }
 
 export interface MessageAttachment {

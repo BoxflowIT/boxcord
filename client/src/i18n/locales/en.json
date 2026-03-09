@@ -587,5 +587,33 @@
     "createError": "Failed to create template",
     "updateError": "Failed to update template",
     "deleteError": "Failed to delete template"
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "create": "New Webhook",
+    "edit": "Edit Webhook",
+    "save": "Save Changes",
+    "delete": "Delete",
+    "loading": "Loading webhooks...",
+    "empty": "No webhooks yet",
+    "emptyHint": "Create a webhook to let external services send messages to this channel",
+    "nameLabel": "Webhook Name",
+    "namePlaceholder": "e.g. GitHub Notifications, CI/CD Bot...",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "What is this webhook used for?",
+    "activeLabel": "Active",
+    "active": "Active",
+    "inactive": "Inactive",
+    "tokenLabel": "Webhook Token",
+    "showToken": "Show token",
+    "hideToken": "Hide token",
+    "copyUrl": "Copy webhook URL",
+    "regenerate": "Regenerate",
+    "confirmDelete": "Delete?",
+    "loadError": "Failed to load webhooks",
+    "createError": "Failed to create webhook",
+    "updateError": "Failed to update webhook",
+    "deleteError": "Failed to delete webhook",
+    "regenerateError": "Failed to regenerate token"
   }
 }

@@ -591,5 +591,33 @@
     "createError": "Kunde inte skapa mall",
     "updateError": "Kunde inte uppdatera mall",
     "deleteError": "Kunde inte ta bort mall"
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "create": "Ny webhook",
+    "edit": "Redigera webhook",
+    "save": "Spara ändringar",
+    "delete": "Ta bort",
+    "loading": "Laddar webhooks...",
+    "empty": "Inga webhooks ännu",
+    "emptyHint": "Skapa en webhook för att låta externa tjänster skicka meddelanden till denna kanal",
+    "nameLabel": "Webhook-namn",
+    "namePlaceholder": "t.ex. GitHub-notiser, CI/CD-bot...",
+    "descriptionLabel": "Beskrivning",
+    "descriptionPlaceholder": "Vad används denna webhook till?",
+    "activeLabel": "Aktiv",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "tokenLabel": "Webhook-token",
+    "showToken": "Visa token",
+    "hideToken": "Dölj token",
+    "copyUrl": "Kopiera webhook-URL",
+    "regenerate": "Regenerera",
+    "confirmDelete": "Ta bort?",
+    "loadError": "Kunde inte ladda webhooks",
+    "createError": "Kunde inte skapa webhook",
+    "updateError": "Kunde inte uppdatera webhook",
+    "deleteError": "Kunde inte ta bort webhook",
+    "regenerateError": "Kunde inte regenerera token"
   }
 }

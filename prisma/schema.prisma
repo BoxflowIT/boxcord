@@ -120,6 +120,7 @@ model Channel {
     permissions   ChannelPermission[]
     voiceSessions VoiceSession[]
     polls         Poll[]
+    webhooks      ChannelWebhook[]
 
     @@unique([workspaceId, name])
     @@index([workspaceId])
@@ -210,6 +211,10 @@ model Message {
     parent   Message?  @relation("ThreadReplies", fields: [parentId], references: [id])
     replies  Message[] @relation("ThreadReplies")
 
+    // Webhook/bot integration
+    webhookId String?         @map("webhook_id")
+    webhook   ChannelWebhook? @relation(fields: [webhookId], references: [id], onDelete: SetNull)
+
     channel     Channel             @relation(fields: [channelId], references: [id], onDelete: Cascade)
     author      User                @relation(fields: [authorId], references: [id])
     attachments Attachment[]
@@ -222,6 +227,7 @@ model Message {
     @@index([channelId, isPinned, createdAt]) // Optimize pinned message queries
     @@index([authorId])
     @@index([parentId]) // Optimize thread replies queries
+    @@index([webhookId])
     @@map("messages")
 }
 
@@ -578,4 +584,28 @@ model MessageTemplate {
 
     @@index([userId, createdAt])
     @@map("message_templates")
+}
+
+// ============================================
+// CHANNEL WEBHOOKS (Bot Integration)
+// ============================================
+
+model ChannelWebhook {
+    id          String   @id @default(uuid())
+    channelId   String   @map("channel_id")
+    name        String // Display name for the webhook/bot
+    avatarUrl   String?  @map("avatar_url") // Custom avatar for webhook messages
+    token       String   @unique // Secret token for posting messages
+    createdBy   String   @map("created_by") // User ID who created the webhook
+    isActive    Boolean  @default(true) @map("is_active")
+    description String? // What this webhook is used for
+    createdAt   DateTime @default(now()) @map("created_at")
+    updatedAt   DateTime @updatedAt @map("updated_at")
+
+    channel  Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+    messages Message[]
+
+    @@index([channelId])
+    @@index([token])
+    @@map("channel_webhooks")
 }

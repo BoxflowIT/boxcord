@@ -37,6 +37,7 @@ import { PinnedMessagesPanel } from './message/PinnedMessagesPanel';
 import { ThreadSidebar } from './thread/ThreadSidebar';
 import { CreatePollModal } from './CreatePollModal';
 import { MessageTemplateModal } from './MessageTemplateModal';
+import { WebhookManagementModal } from './WebhookManagementModal';
 import { useThreadSocket } from '../hooks/useThreadSocket';
 import {
   useThreads,
@@ -117,6 +118,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const [showPollModal, setShowPollModal] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [showWebhookModal, setShowWebhookModal] = useState(false);
   const [botResponse, setBotResponse] = useState<{
     content: string;
     isPrivate: boolean;
@@ -478,6 +480,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
         channelName={currentChannel?.name ?? t('channels.channel')}
         channelDescription={currentChannel?.description}
         onToggleMemberList={onToggleMemberList}
+        onOpenWebhooks={() => setShowWebhookModal(true)}
       />
 
       {/* Pinned Messages */}
@@ -669,6 +672,15 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
         <MessageTemplateModal
           onClose={() => setShowTemplateModal(false)}
           onUseTemplate={(content) => setInputValue(content)}
+        />
+      )}
+
+      {/* Webhook Management Modal */}
+      {showWebhookModal && channelId && currentChannel && (
+        <WebhookManagementModal
+          channelId={channelId}
+          channelName={currentChannel.name}
+          onClose={() => setShowWebhookModal(false)}
         />
       )}
     </>

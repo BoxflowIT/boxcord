@@ -340,7 +340,7 @@ Complete list of all implemented features in Boxcord.
 - ✅ **TypeScript** - Full type safety
 - ✅ **ESLint** - Code linting
 - ✅ **Prettier** - Code formatting
-- ✅ **Vitest** - Unit testing (122 tests passing: 61 backend + 61 frontend)
+- ✅ **Vitest** - Unit testing (174 tests passing: 113 backend + 61 frontend)
 - ✅ **Playwright** - E2E testing
 - ✅ **K6** - Load testing
 
@@ -453,10 +453,37 @@ Complete list of all implemented features in Boxcord.
 - ✅ **i18n** - Full English and Swedish translations (17 keys)
 - ✅ **Database** - `message_templates` table with userId index
 
+## 🔗 Bot Integration (Channel Webhooks)
+
+### Core
+- ✅ **Channel webhooks** - Create webhooks per channel for bot/integration message posting
+- ✅ **Token-based execution** - Post messages via unique webhook token (no auth required)
+- ✅ **CRUD operations** - Create, read, update, and delete webhooks
+- ✅ **Token regeneration** - Regenerate webhook tokens for security rotation
+- ✅ **Webhook limit** - Max 15 webhooks per channel
+- ✅ **Input validation** - Name (1-80 chars), content (1-4000 chars)
+- ✅ **Ownership enforcement** - Only creators can edit/delete/regenerate their webhooks
+- ✅ **Active/inactive toggle** - Enable or disable webhooks without deleting
+
+### UI
+- ✅ **Webhook management modal** - Radix Dialog with list, create, and edit views
+- ✅ **Channel header button** - WebhookIcon button for quick access
+- ✅ **Token visibility toggle** - Show/hide token with masked display for non-owners
+- ✅ **Copy webhook URL** - One-click copy of full execution URL
+- ✅ **Inline delete confirmation** - Delete overlay with confirm/cancel
+- ✅ **BOT badge** - Visual badge on webhook-sent messages
+
+### Technical
+- ✅ **REST API** - Full CRUD at `/api/v1/channel-webhooks` with Zod validation
+- ✅ **Execute endpoint** - `POST /api/webhooks/execute/:token` (no auth, rate limited 30/min)
+- ✅ **Rate limiting** - Create 5/min, manage 20/min, execute 30/min
+- ✅ **Socket.IO integration** - Webhook messages broadcast via `message:new` with `isBot: true`
+- ✅ **i18n** - Full English and Swedish translations (20 keys)
+- ✅ **Database** - `channel_webhooks` table with channelId and token indexes
+
 ## 🎯 Coming Soon
 
 ### Planned Features
-- ⏳ **Bot integration** - Webhooks and bot API
 - ⏳ **Mobile apps** - Native iOS/Android apps
 
 ---
@@ -482,10 +509,24 @@ Complete list of all implemented features in Boxcord.
 | Polls | ✅ Stable | - |
 | Advanced Search | ✅ Stable | - |
 | Message Templates | ✅ Stable | - |
+| Channel Webhooks | ✅ Stable | - |
 
 ---
 
 ## Recent Updates
+
+### v1.11.0 - Bot Integration (March 2026)
+- ✅ Channel webhooks with CRUD management (max 15 per channel)
+- ✅ Token-based message execution endpoint (no auth required)
+- ✅ Webhook management modal with list/create/edit views
+- ✅ BOT badge on webhook-sent messages
+- ✅ Token show/hide, copy URL, regenerate token
+- ✅ Active/inactive webhook toggle
+- ✅ Rate limiting: create 5/min, manage 20/min, execute 30/min
+- ✅ Socket.IO broadcast with `isBot: true` flag
+- ✅ i18n: 20 translation keys (EN + SV)
+- ✅ Database migration: `channel_webhooks` table
+- ✅ 21 backend tests for webhook service
 
 ### v1.10.0 - Advanced Search (March 2026)
 - ✅ Filter by type: Channels, DMs, or All

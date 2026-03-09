@@ -77,6 +77,14 @@ export class MessageService {
         createdAt: true,
         updatedAt: true,
         parentId: true,
+        webhookId: true,
+        webhook: {
+          select: {
+            id: true,
+            name: true,
+            avatarUrl: true
+          }
+        },
         author: {
           select: {
             id: true,
@@ -241,6 +249,13 @@ export class MessageService {
             avatarUrl: true
           }
         },
+        webhook: {
+          select: {
+            id: true,
+            name: true,
+            avatarUrl: true
+          }
+        },
         attachments: true,
         reactions: true,
         _count: {
@@ -331,6 +346,13 @@ export class MessageService {
             firstName: true,
             lastName: true,
             email: true,
+            avatarUrl: true
+          }
+        },
+        webhook: {
+          select: {
+            id: true,
+            name: true,
             avatarUrl: true
           }
         },

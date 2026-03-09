@@ -38,6 +38,12 @@ interface Message {
     email?: string;
     avatarUrl?: string;
   };
+  webhookId?: string | null;
+  webhook?: {
+    id: string;
+    name: string;
+    avatarUrl?: string | null;
+  } | null;
 }
 
 interface MessageListDisplayProps {
@@ -213,22 +219,32 @@ export default function MessageListDisplay({
                 reactionCounts={message.reactionCounts}
                 showHeader={message.showHeader}
                 isEditing={editingMessageId === message.id}
-                isOwnMessage={message.authorId === currentUserId}
+                isOwnMessage={
+                  !message.webhookId && message.authorId === currentUserId
+                }
                 authorId={message.authorId}
                 authorName={
-                  message.authorId === currentUserId
-                    ? 'Du'
-                    : message.author
-                      ? getUserDisplayName(message.author)
-                      : 'Unknown'
+                  message.webhook
+                    ? message.webhook.name
+                    : message.authorId === currentUserId
+                      ? 'Du'
+                      : message.author
+                        ? getUserDisplayName(message.author)
+                        : 'Unknown'
                 }
                 authorInitial={
-                  message.author ? getUserInitials(message.author) : '?'
+                  message.webhook
+                    ? message.webhook.name.charAt(0).toUpperCase()
+                    : message.author
+                      ? getUserInitials(message.author)
+                      : '?'
                 }
                 authorAvatarUrl={
-                  message.authorId === currentUserId
-                    ? currentUserAvatar
-                    : message.author?.avatarUrl
+                  message.webhook
+                    ? message.webhook.avatarUrl
+                    : message.authorId === currentUserId
+                      ? currentUserAvatar
+                      : message.author?.avatarUrl
                 }
                 editContent={editingMessageId === message.id ? editContent : ''}
                 editTextareaRef={editTextareaRef}
@@ -251,6 +267,11 @@ export default function MessageListDisplay({
                 renderContent={renderEnhancedMessage}
                 compact={compactMode}
                 isDM={isDM}
+                isBot={
+                  !!message.webhookId ||
+                  message.authorId === 'boxtime-bot' ||
+                  message.authorId === 'boxcord-bot'
+                }
                 onHover={onMessageHover}
               />
               {isPollMessage && (

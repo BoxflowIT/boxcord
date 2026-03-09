@@ -58,6 +58,7 @@ export interface MessageItemProps {
   renderContent?: (content: string) => React.ReactNode;
   compact?: boolean; // Use compact styling (like ChannelView)
   isDM?: boolean; // Is this a DM message? (uses different reaction endpoint)
+  isBot?: boolean; // Display BOT badge
 }
 
 const MessageItemComponent: React.FC<MessageItemProps> = ({
@@ -91,6 +92,7 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
   renderContent,
   compact = false,
   isDM = false,
+  isBot = false,
   onHover
 }) => {
   const { reactions, handleToggleReaction } = useMessageReactions({
@@ -142,6 +144,7 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
           isPinned={isPinned}
           canPin={canPin}
           onQuickReaction={handleToggleReaction}
+          isBot={isBot}
           renderContent={renderContent}
         />
       ) : (
@@ -205,6 +208,7 @@ const areEqual = (
   if (prevProps.authorAvatarUrl !== nextProps.authorAvatarUrl) return false;
   if (prevProps.compact !== nextProps.compact) return false;
   if (prevProps.isDM !== nextProps.isDM) return false;
+  if (prevProps.isBot !== nextProps.isBot) return false;
 
   // Thread state
   if (prevProps.hasThread !== nextProps.hasThread) return false;

@@ -27,6 +27,10 @@ import { permissionRoutes } from './permission.routes.js';
 import { authRoutes } from './auth.routes.js';
 import { pollRoutes } from './poll.routes.js';
 import { templateRoutes } from './template.routes.js';
+import {
+  channelWebhookRoutes,
+  webhookExecuteRoutes
+} from './channel-webhook.routes.js';
 
 export async function registerRoutes(app: FastifyInstance) {
   // Health checks (no prefix, no auth required)
@@ -77,10 +81,18 @@ export async function registerRoutes(app: FastifyInstance) {
       await api.register(permissionRoutes, { prefix: '/permissions' });
       await api.register(pollRoutes, { prefix: '/polls' });
       await api.register(templateRoutes, { prefix: '/templates' });
+      await api.register(channelWebhookRoutes, {
+        prefix: '/channel-webhooks'
+      });
     },
     { prefix: '/api/v1' }
   );
 
   // Webhook routes (external integrations) under /api/webhooks
   await app.register(webhookRoutes, { prefix: '/api/webhooks' });
+
+  // Webhook execution (token-based, no auth) under /api/webhooks/execute
+  await app.register(webhookExecuteRoutes, {
+    prefix: '/api/webhooks/execute'
+  });
 }

@@ -1,17 +1,19 @@
 // Reusable Channel Header Component
 import { useTranslation } from 'react-i18next';
-import { UsersIcon } from '../ui/Icons';
+import { UsersIcon, WebhookIcon } from '../ui/Icons';
 
 interface ChannelHeaderProps {
   channelName?: string;
   channelDescription?: string;
   onToggleMemberList?: () => void;
+  onOpenWebhooks?: () => void;
 }
 
 export function ChannelHeader({
   channelName,
   channelDescription,
-  onToggleMemberList
+  onToggleMemberList,
+  onOpenWebhooks
 }: ChannelHeaderProps) {
   const { t } = useTranslation();
   return (
@@ -27,15 +29,26 @@ export function ChannelHeader({
           </p>
         )}
       </div>
-      {onToggleMemberList && (
-        <button
-          onClick={onToggleMemberList}
-          className="btn-icon"
-          title={t('common.showMembers')}
-        >
-          <UsersIcon />
-        </button>
-      )}
+      <div className="flex items-center gap-1">
+        {onOpenWebhooks && (
+          <button
+            onClick={onOpenWebhooks}
+            className="btn-icon"
+            title={t('webhooks.title')}
+          >
+            <WebhookIcon />
+          </button>
+        )}
+        {onToggleMemberList && (
+          <button
+            onClick={onToggleMemberList}
+            className="btn-icon"
+            title={t('common.showMembers')}
+          >
+            <UsersIcon />
+          </button>
+        )}
+      </div>
     </div>
   );
 }
