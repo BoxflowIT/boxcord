@@ -590,5 +590,65 @@ export const api = {
       body: JSON.stringify(data)
     }),
   deleteTemplate: (id: string) =>
-    request<void>(`/templates/${id}`, { method: 'DELETE' })
+    request<void>(`/templates/${id}`, { method: 'DELETE' }),
+
+  // Channel Webhooks
+  getChannelWebhooks: (channelId: string) =>
+    request<
+      {
+        id: string;
+        channelId: string;
+        name: string;
+        avatarUrl: string | null;
+        token: string;
+        createdBy: string;
+        isActive: boolean;
+        description: string | null;
+        createdAt: string;
+        updatedAt: string;
+      }[]
+    >(`/channel-webhooks/${channelId}`),
+  createChannelWebhook: (
+    channelId: string,
+    data: { name: string; avatarUrl?: string; description?: string }
+  ) =>
+    request<{
+      id: string;
+      channelId: string;
+      name: string;
+      avatarUrl: string | null;
+      token: string;
+      createdBy: string;
+      isActive: boolean;
+      description: string | null;
+      createdAt: string;
+    }>(`/channel-webhooks/${channelId}`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+  updateChannelWebhook: (
+    id: string,
+    data: {
+      name?: string;
+      avatarUrl?: string | null;
+      description?: string | null;
+      isActive?: boolean;
+    }
+  ) =>
+    request<{
+      id: string;
+      name: string;
+      isActive: boolean;
+      updatedAt: string;
+    }>(`/channel-webhooks/manage/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    }),
+  deleteChannelWebhook: (id: string) =>
+    request<void>(`/channel-webhooks/manage/${id}`, { method: 'DELETE' }),
+  regenerateWebhookToken: (id: string) =>
+    request<{
+      id: string;
+      token: string;
+    }>(`/channel-webhooks/manage/${id}/regenerate`, { method: 'POST' })
 };

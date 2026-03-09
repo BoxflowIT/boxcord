@@ -251,6 +251,11 @@ export default function MessageListDisplay({
                 renderContent={renderEnhancedMessage}
                 compact={compactMode}
                 isDM={isDM}
+                isBot={
+                  message.authorId.startsWith('webhook:') ||
+                  message.authorId === 'boxtime-bot' ||
+                  message.authorId === 'boxcord-bot'
+                }
                 onHover={onMessageHover}
               />
               {isPollMessage && (

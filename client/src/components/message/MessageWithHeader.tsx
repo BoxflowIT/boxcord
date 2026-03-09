@@ -50,6 +50,9 @@ interface MessageWithHeaderProps {
   isPinned?: boolean;
   canPin?: boolean;
 
+  // Bot
+  isBot?: boolean;
+
   // Optional
   renderContent?: (content: string) => React.ReactNode;
 }
@@ -84,6 +87,7 @@ export function MessageWithHeader({
   isPinned,
   canPin,
   onQuickReaction,
+  isBot,
   renderContent
 }: MessageWithHeaderProps) {
   return (
@@ -101,6 +105,7 @@ export function MessageWithHeader({
           createdAt={createdAt}
           edited={edited}
           compact={compact}
+          isBot={isBot}
         />
 
         {isEditing ? (

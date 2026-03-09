@@ -52,6 +52,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Read receipts** - Track message read status
 - **Slash commands** - Quick actions with `/` commands
 - **Polls** - Create polls in channels with vote toggle, anonymous voting, and timed expiry
+- **Channel Webhooks** - Bot integration with token-based message posting and management UI
 
 ### 🎤 Voice & Video
 - **Voice channels** - Real-time voice communication with text chat
@@ -548,6 +549,16 @@ const users = await boxtimeService.searchUsers('john', token);
 | PATCH  | /api/v1/templates/:id            | Update template              |
 | DELETE | /api/v1/templates/:id            | Delete template              |
 
+### Channel Webhooks
+| Method | Path                                            | Description                  |
+| ------ | ----------------------------------------------- | ---------------------------- |
+| GET    | /api/v1/channel-webhooks/:channelId             | List channel webhooks        |
+| POST   | /api/v1/channel-webhooks/:channelId             | Create webhook               |
+| PATCH  | /api/v1/channel-webhooks/manage/:id             | Update webhook               |
+| DELETE | /api/v1/channel-webhooks/manage/:id             | Delete webhook               |
+| POST   | /api/v1/channel-webhooks/manage/:id/regenerate  | Regenerate token             |
+| POST   | /api/webhooks/execute/:token                    | Execute webhook (no auth)    |
+
 ### Push Notifications
 | Method | Path                              | Description                  |
 | ------ | --------------------------------- | ---------------------------- |
@@ -626,7 +637,7 @@ Full automated pipeline with parallel jobs for fast feedback (~3 min):
 
 | Job | Time | What it checks |
 |-----|------|----------------|
-| **Test & Lint** | ~2 min | TypeScript, ESLint, 122 unit/integration tests (backend + frontend) |
+| **Test & Lint** | ~2 min | TypeScript, ESLint, 174 unit/integration tests (backend + frontend) |
 | **E2E Tests** | ~3 min | Playwright browser tests (health, API, Swagger) |
 | **Security Audit** | ~8 sec | `yarn audit` for known vulnerabilities |
 

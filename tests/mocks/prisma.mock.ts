@@ -103,6 +103,15 @@ export function createMockPrisma(): PrismaClient {
       delete: vi.fn(),
       count: vi.fn()
     },
+    channelWebhook: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn()
+    },
     $transaction: vi.fn((callback) =>
       callback({
         // Provide same mock structure for transactions

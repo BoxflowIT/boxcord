@@ -8,13 +8,15 @@ interface MessageHeaderProps {
   createdAt: string;
   edited: boolean;
   compact?: boolean;
+  isBot?: boolean;
 }
 
 export function MessageHeader({
   authorName,
   createdAt,
   edited,
-  compact = false
+  compact = false,
+  isBot = false
 }: MessageHeaderProps) {
   const { t } = useTranslation();
 
@@ -28,6 +30,11 @@ export function MessageHeader({
       >
         {authorName}
       </span>
+      {isBot && (
+        <span className="inline-flex items-center rounded bg-boxflow-accent/20 px-1.5 py-0.5 text-[10px] font-bold uppercase leading-none text-boxflow-accent">
+          BOT
+        </span>
+      )}
       <span className="text-xs text-boxflow-muted">
         {formatTime(createdAt)}
       </span>
