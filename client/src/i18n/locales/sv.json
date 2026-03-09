@@ -557,5 +557,23 @@
     "fileTypeNotAllowed": "Filtypen är inte tillåten",
     "videoNotSupported": "Din webbläsare stöder inte videouppspelning",
     "audioNotSupported": "Din webbläsare stöder inte ljuduppspelning"
+  },
+  "templates": {
+    "title": "Meddelandemallar",
+    "create": "Ny mall",
+    "save": "Spara ändringar",
+    "empty": "Inga mallar än",
+    "emptyHint": "Skapa en mall för att snabbt återanvända meddelanden",
+    "nameLabel": "Mallnamn",
+    "namePlaceholder": "t.ex. Välkomstmeddelande, Mötesanteckningar...",
+    "contentLabel": "Meddelandeinnehåll",
+    "contentPlaceholder": "Skriv ditt mallmeddelande här...",
+    "useTooltip": "Klicka för att infoga denna mall",
+    "confirmDelete": "Ta bort denna mall?",
+    "hint": "Klicka på en mall för att infoga den i meddelandefältet",
+    "loadError": "Kunde inte ladda mallar",
+    "createError": "Kunde inte skapa mall",
+    "updateError": "Kunde inte uppdatera mall",
+    "deleteError": "Kunde inte ta bort mall"
   }
 }

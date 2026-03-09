@@ -430,11 +430,32 @@ Complete list of all implemented features in Boxcord.
 - ✅ **setTimeout overflow clamp** - Polls >24 days use clamped delay to avoid 32-bit int overflow
 - ✅ **Error feedback** - `handleEndPoll` shows error state in UI on failure
 
+## 📋 Message Templates
+
+### Core
+- ✅ **CRUD operations** - Create, read, update, and delete reusable message templates
+- ✅ **Template limit** - Max 50 templates per user
+- ✅ **Duplicate name check** - Case-insensitive name uniqueness per user
+- ✅ **Input validation** - Name (1-100 chars), content (1-2000 chars)
+
+### UI
+- ✅ **Template modal** - Radix Dialog with list, create, and edit views
+- ✅ **Quick insert** - One-click to insert template content into message input
+- ✅ **Channel + DM support** - Template button in both channel and DM input areas
+- ✅ **Inline delete confirmation** - Delete overlay with confirm/cancel
+- ✅ **Content preview** - Truncated content preview in template list
+
+### Technical
+- ✅ **REST API** - Full CRUD at `/api/v1/templates` with Zod validation
+- ✅ **Rate limiting** - GET 60/min, POST 10/min, PATCH/DELETE 20/min
+- ✅ **Ownership enforcement** - Users can only access/edit/delete their own templates
+- ✅ **i18n** - Full English and Swedish translations (17 keys)
+- ✅ **Database** - `message_templates` table with userId index
+
 ## 🎯 Coming Soon
 
 ### Planned Features
 - ⏳ **Advanced search** - Filters, date range, attachments
-- ⏳ **Message templates** - Saved message templates
 - ⏳ **Bot integration** - Webhooks and bot API
 - ⏳ **Mobile apps** - Native iOS/Android apps
 
@@ -459,10 +480,22 @@ Complete list of all implemented features in Boxcord.
 | Video window controls | ✅ Stable | [VOICE_ARCHITECTURE.md](VOICE_ARCHITECTURE.md) |
 | Thread support | ✅ Stable | [THREADS.md](THREADS.md) |
 | Polls | ✅ Stable | - |
+| Message Templates | ✅ Stable | - |
 
 ---
 
 ## Recent Updates
+
+### v1.9.2 - Message Templates (March 2026)
+- ✅ Full CRUD for reusable message templates (max 50 per user)
+- ✅ Template modal with list/create/edit views (Radix Dialog)
+- ✅ One-click insert into channel or DM message input
+- ✅ REST API: `GET/POST /templates`, `PATCH/DELETE /templates/:id`
+- ✅ Rate limiting, Zod validation, ownership enforcement
+- ✅ Duplicate name detection (case-insensitive)
+- ✅ Inline delete confirmation overlay
+- ✅ i18n: 17 translation keys (EN + SV)
+- ✅ Database migration: `message_templates` table
 
 ### v1.8.0 - Polls (March 2026)
 - ✅ Create polls in channels via `/poll` slash command or modal
@@ -561,4 +594,4 @@ Complete list of all implemented features in Boxcord.
 
 ---
 
-**Last Updated:** March 5, 2026
+**Last Updated:** March 9, 2026

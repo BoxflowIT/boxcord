@@ -4,7 +4,7 @@ import FileUpload, { type FileUploadHandle } from '../FileUpload';
 import EmojiPicker from '../ui/EmojiPicker';
 import MentionAutocomplete from '../MentionAutocomplete';
 import SlashCommandAutocomplete from '../SlashCommandAutocomplete';
-import { PollIcon } from '../ui/Icons';
+import { PollIcon, DocumentIcon } from '../ui/Icons';
 
 interface ChannelInputSectionProps {
   channelName?: string;
@@ -31,6 +31,7 @@ interface ChannelInputSectionProps {
   onCloseSlashCommands: () => void;
   onToggleEmojiPicker?: (show: boolean) => void;
   onCreatePoll?: () => void;
+  onOpenTemplates?: () => void;
 }
 
 export default function ChannelInputSection({
@@ -53,7 +54,8 @@ export default function ChannelInputSection({
   onCloseMentions,
   onCloseSlashCommands,
   onToggleEmojiPicker,
-  onCreatePoll
+  onCreatePoll,
+  onOpenTemplates
 }: ChannelInputSectionProps) {
   const { t } = useTranslation();
 
@@ -65,6 +67,16 @@ export default function ChannelInputSection({
           onFileSelect={onFileSelect}
           disabled={uploading}
         />
+        {onOpenTemplates && (
+          <button
+            type="button"
+            onClick={onOpenTemplates}
+            title={t('templates.title')}
+            className="btn-icon"
+          >
+            <DocumentIcon />
+          </button>
+        )}
         {onCreatePoll && (
           <button
             type="button"

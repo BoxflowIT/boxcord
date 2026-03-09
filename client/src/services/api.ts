@@ -543,5 +543,41 @@ export const api = {
   endPoll: (pollId: string) =>
     request<Poll>(`/polls/${pollId}/end`, { method: 'POST' }),
   deletePoll: (pollId: string) =>
-    request<void>(`/polls/${pollId}`, { method: 'DELETE' })
+    request<void>(`/polls/${pollId}`, { method: 'DELETE' }),
+
+  // Message Templates
+  getTemplates: () =>
+    request<
+      Array<{
+        id: string;
+        name: string;
+        content: string;
+        createdAt: string;
+        updatedAt: string;
+      }>
+    >('/templates'),
+  createTemplate: (data: { name: string; content: string }) =>
+    request<{
+      id: string;
+      name: string;
+      content: string;
+      createdAt: string;
+      updatedAt: string;
+    }>('/templates', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+  updateTemplate: (id: string, data: { name?: string; content?: string }) =>
+    request<{
+      id: string;
+      name: string;
+      content: string;
+      createdAt: string;
+      updatedAt: string;
+    }>(`/templates/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    }),
+  deleteTemplate: (id: string) =>
+    request<void>(`/templates/${id}`, { method: 'DELETE' })
 };

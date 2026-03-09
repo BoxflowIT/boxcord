@@ -44,6 +44,7 @@ import { DMHeader } from './dm/DMHeader';
 import MessageListDisplay from './channel/MessageListDisplay';
 import DMInputSection from './dm/DMInputSection';
 import { PinnedMessagesPanel } from './message/PinnedMessagesPanel';
+import { MessageTemplateModal } from './MessageTemplateModal';
 
 export default function DMView() {
   const { t } = useTranslation();
@@ -96,6 +97,7 @@ export default function DMView() {
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileUploadRef = useRef<FileUploadHandle>(null);
@@ -579,6 +581,7 @@ export default function DMView() {
         onEmojiSelect={handleEmojiSelect}
         onGifSelect={handleGifSelect}
         onToggleEmojiPicker={setShowEmojiPicker}
+        onOpenTemplates={() => setShowTemplateModal(true)}
       />
 
       {/* Delete Confirmation Modal */}
@@ -589,6 +592,14 @@ export default function DMView() {
         title={t('messages.delete')}
         message={t('messages.deleteConfirm')}
       />
+
+      {/* Message Template Modal */}
+      {showTemplateModal && (
+        <MessageTemplateModal
+          onClose={() => setShowTemplateModal(false)}
+          onUseTemplate={(content) => setInputValue(content)}
+        />
+      )}
     </div>
   );
 }

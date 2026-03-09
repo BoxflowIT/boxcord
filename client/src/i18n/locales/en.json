@@ -553,5 +553,23 @@
     "fileTypeNotAllowed": "File type not allowed",
     "videoNotSupported": "Your browser does not support video playback",
     "audioNotSupported": "Your browser does not support audio playback"
+  },
+  "templates": {
+    "title": "Message Templates",
+    "create": "New Template",
+    "save": "Save Changes",
+    "empty": "No templates yet",
+    "emptyHint": "Create a template to quickly reuse messages",
+    "nameLabel": "Template Name",
+    "namePlaceholder": "e.g. Welcome message, Meeting notes...",
+    "contentLabel": "Message Content",
+    "contentPlaceholder": "Write your template message here...",
+    "useTooltip": "Click to insert this template",
+    "confirmDelete": "Delete this template?",
+    "hint": "Click a template to insert it into the message input",
+    "loadError": "Failed to load templates",
+    "createError": "Failed to create template",
+    "updateError": "Failed to update template",
+    "deleteError": "Failed to delete template"
   }
 }

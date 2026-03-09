@@ -36,6 +36,7 @@ import { VoiceChannelView } from './voice/VoiceChannelView';
 import { PinnedMessagesPanel } from './message/PinnedMessagesPanel';
 import { ThreadSidebar } from './thread/ThreadSidebar';
 import { CreatePollModal } from './CreatePollModal';
+import { MessageTemplateModal } from './MessageTemplateModal';
 import { useThreadSocket } from '../hooks/useThreadSocket';
 import {
   useThreads,
@@ -115,6 +116,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const [showPollModal, setShowPollModal] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [botResponse, setBotResponse] = useState<{
     content: string;
     isPrivate: boolean;
@@ -144,7 +146,8 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
     handleMentionSelect,
     handleSlashCommandSelect,
     handleEmojiSelect,
-    clearInput
+    clearInput,
+    setInputValue
   } = useChannelInput({
     channelId: channelExists ? channelId : undefined,
     onShowMentions: setShowMentions,
@@ -638,6 +641,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
         onCloseSlashCommands={() => setShowSlashCommands(false)}
         onToggleEmojiPicker={setShowEmojiPicker}
         onCreatePoll={() => setShowPollModal(true)}
+        onOpenTemplates={() => setShowTemplateModal(true)}
       />
 
       {/* Delete Message Confirmation Modal */}
@@ -657,6 +661,14 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
         <CreatePollModal
           channelId={channelId}
           onClose={() => setShowPollModal(false)}
+        />
+      )}
+
+      {/* Message Template Modal */}
+      {showTemplateModal && (
+        <MessageTemplateModal
+          onClose={() => setShowTemplateModal(false)}
+          onUseTemplate={(content) => setInputValue(content)}
         />
       )}
     </>
