@@ -1,19 +1,54 @@
-// Search Routes - Global search across messages and DMs
+// Search Routes - Global search across messages and DMs with advanced filters
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { prisma } from '../../../03-infrastructure/database/client.js';
 import { MessageService } from '../../../02-application/services/message.service.js';
 import { DirectMessageService } from '../../../02-application/services/dm.service.js';
+import type { SearchFilters } from '../../../00-core/types.js';
 
 const messageService = new MessageService(prisma);
 const dmService = new DirectMessageService(prisma);
 
-// Search query schema
+// Preprocess: coerce empty strings to undefined so optional() works for query params
+const optionalString = (schema: z.ZodType) =>
+  z.preprocess(
+    (v) => (v === '' || v === undefined ? undefined : v),
+    schema.optional()
+  );
+
+// Search query schema with advanced filters
 const searchQuery = z.object({
   q: z.string().min(2, 'Search query must be at least 2 characters').max(200),
   cursor: z.string().min(1).optional(),
-  limit: z.coerce.number().int().min(1).max(100).optional()
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  // Advanced filters — empty strings from query params are stripped to undefined
+  channelId: optionalString(z.string().uuid()),
+  workspaceId: optionalString(z.string().uuid()),
+  authorId: optionalString(z.string().min(1)),
+  before: optionalString(z.string().datetime({ offset: true })),
+  after: optionalString(z.string().datetime({ offset: true })),
+  hasAttachment: z.preprocess(
+    (v) => (v === 'true' ? true : v === 'false' ? false : undefined),
+    z.boolean().optional()
+  ),
+  type: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.enum(['channel', 'dm', 'all']).optional()
+  )
 });
+
+/** Extract SearchFilters from parsed query params */
+function extractFilters(query: z.infer<typeof searchQuery>): SearchFilters {
+  return {
+    channelId: query.channelId,
+    workspaceId: query.workspaceId,
+    authorId: query.authorId,
+    before: query.before,
+    after: query.after,
+    hasAttachment: query.hasAttachment,
+    type: query.type ?? 'all'
+  };
+}
 
 export async function searchRoutes(app: FastifyInstance) {
   // All routes require authentication
@@ -37,13 +72,15 @@ export async function searchRoutes(app: FastifyInstance) {
     },
     async (request, reply) => {
       const { q, cursor, limit } = request.query;
+      const filters = extractFilters(request.query);
 
-      const result = await messageService.searchMessages(request.user.id, q, {
-        cursor,
-        limit
-      });
+      const result = await messageService.searchMessages(
+        request.user.id,
+        q,
+        { cursor, limit },
+        filters
+      );
 
-      // Short cache for search results
       reply.cache({ maxAge: 10 });
       return { success: true, data: result };
     }
@@ -65,18 +102,21 @@ export async function searchRoutes(app: FastifyInstance) {
     },
     async (request, reply) => {
       const { q, cursor, limit } = request.query;
+      const filters = extractFilters(request.query);
 
-      const result = await dmService.searchDirectMessages(request.user.id, q, {
-        cursor,
-        limit
-      });
+      const result = await dmService.searchDirectMessages(
+        request.user.id,
+        q,
+        { cursor, limit },
+        filters
+      );
 
       reply.cache({ maxAge: 10 });
       return { success: true, data: result };
     }
   );
 
-  // Combined search (messages + DMs)
+  // Combined search (messages + DMs) with advanced filters
   app.get<{
     Querystring: z.infer<typeof searchQuery>;
   }>(
@@ -92,19 +132,40 @@ export async function searchRoutes(app: FastifyInstance) {
     },
     async (request, reply) => {
       const { q, cursor, limit } = request.query;
-
+      const filters = extractFilters(request.query);
       const limitNum = limit ?? 20;
+      const effectiveType = filters.type ?? 'all';
 
-      // Search both messages and DMs in parallel
+      const searchChannels =
+        effectiveType === 'all' || effectiveType === 'channel';
+      const searchDMs = effectiveType === 'all' || effectiveType === 'dm';
+
+      // Search in parallel based on type filter
       const [messagesResult, dmsResult] = await Promise.all([
-        messageService.searchMessages(request.user.id, q, {
-          cursor,
-          limit: limitNum
-        }),
-        dmService.searchDirectMessages(request.user.id, q, {
-          cursor,
-          limit: limitNum
-        })
+        searchChannels
+          ? messageService.searchMessages(
+              request.user.id,
+              q,
+              { cursor, limit: limitNum },
+              filters
+            )
+          : Promise.resolve({
+              items: [],
+              nextCursor: undefined,
+              hasMore: false
+            }),
+        searchDMs
+          ? dmService.searchDirectMessages(
+              request.user.id,
+              q,
+              { cursor, limit: limitNum },
+              filters
+            )
+          : Promise.resolve({
+              items: [],
+              nextCursor: undefined,
+              hasMore: false
+            })
       ]);
 
       // Combine and sort by date
@@ -125,8 +186,10 @@ export async function searchRoutes(app: FastifyInstance) {
         success: true,
         data: {
           items: combined.slice(0, limitNum),
-          hasMoreChannels: messagesResult.nextCursor !== null,
-          hasMoreDMs: dmsResult.nextCursor !== null
+          totalChannelResults: messagesResult.items.length,
+          totalDMResults: dmsResult.items.length,
+          hasMoreChannels: messagesResult.hasMore,
+          hasMoreDMs: dmsResult.hasMore
         }
       };
     }

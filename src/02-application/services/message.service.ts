@@ -1,6 +1,10 @@
 // Message Service - Application Layer
 import type { ExtendedPrismaClient } from '../../03-infrastructure/database/client.js';
-import type { PaginationParams, PaginatedResult } from '../../00-core/types.js';
+import type {
+  PaginationParams,
+  PaginatedResult,
+  SearchFilters
+} from '../../00-core/types.js';
 import type {
   Message,
   CreateMessageInput,
@@ -252,7 +256,8 @@ export class MessageService {
   async searchMessages(
     userId: string,
     query: string,
-    params: PaginationParams = {}
+    params: PaginationParams = {},
+    filters: SearchFilters = {}
   ): Promise<PaginatedResult<MessageWithExtras>> {
     const limit = Math.min(
       params.limit ?? PAGINATION.DEFAULT_PAGE_SIZE,
@@ -264,22 +269,55 @@ export class MessageService {
       where: {
         members: {
           some: { userId }
-        }
+        },
+        ...(filters.workspaceId && { id: filters.workspaceId })
       },
       select: { channels: { select: { id: true } } }
     });
 
-    const channelIds = workspaces.flatMap((w) => w.channels.map((c) => c.id));
+    let channelIds = workspaces.flatMap((w) => w.channels.map((c) => c.id));
+
+    // If a specific channel is requested, intersect with accessible channels
+    if (filters.channelId) {
+      channelIds = channelIds.includes(filters.channelId)
+        ? [filters.channelId]
+        : [];
+    }
+
+    if (channelIds.length === 0) {
+      return { items: [], nextCursor: undefined, hasMore: false };
+    }
+
+    // Build where clause with filters
+    const where: Record<string, unknown> = {
+      channelId: { in: channelIds },
+      content: {
+        contains: query,
+        mode: 'insensitive'
+      }
+    };
+
+    // Author filter
+    if (filters.authorId) {
+      where.authorId = filters.authorId;
+    }
+
+    // Date range filters
+    if (filters.before || filters.after) {
+      const createdAt: Record<string, Date> = {};
+      if (filters.before) createdAt.lte = new Date(filters.before);
+      if (filters.after) createdAt.gte = new Date(filters.after);
+      where.createdAt = createdAt;
+    }
+
+    // Has attachment filter
+    if (filters.hasAttachment) {
+      where.attachments = { some: {} };
+    }
 
     // Search in accessible channels
     const messages = await this.prisma.message.findMany({
-      where: {
-        channelId: { in: channelIds },
-        content: {
-          contains: query,
-          mode: 'insensitive'
-        }
-      },
+      where,
       orderBy: { createdAt: 'desc' },
       take: limit + 1,
       ...(params.cursor && {

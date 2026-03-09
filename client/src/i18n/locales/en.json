@@ -9,7 +9,23 @@
     "typeToSearch": "Type at least 2 characters to search",
     "noResults": "No messages found",
     "hint": "Press Escape to close",
-    "searching": "Searching..."
+    "searching": "Searching...",
+    "filters": "Filters",
+    "advancedFilters": "Advanced Filters",
+    "clearFilters": "Clear filters",
+    "type": {
+      "all": "All",
+      "channel": "Channels",
+      "dm": "DMs"
+    },
+    "dateAfter": "From date",
+    "dateBefore": "To date",
+    "workspace": "Workspace",
+    "allWorkspaces": "All workspaces",
+    "channel": "Channel",
+    "allChannels": "All channels",
+    "hasAttachment": "Has attachments",
+    "resultCount": "{{count}} results"
   },
   "common": {
     "save": "Save",

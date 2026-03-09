@@ -9,7 +9,23 @@
     "typeToSearch": "Skriv minst 2 tecken för att söka",
     "noResults": "Inga meddelanden hittades",
     "hint": "Tryck Escape för att stänga",
-    "searching": "Söker..."
+    "searching": "Söker...",
+    "filters": "Filter",
+    "advancedFilters": "Avancerade filter",
+    "clearFilters": "Rensa filter",
+    "type": {
+      "all": "Alla",
+      "channel": "Kanaler",
+      "dm": "DM"
+    },
+    "dateAfter": "Från datum",
+    "dateBefore": "Till datum",
+    "workspace": "Arbetsyta",
+    "allWorkspaces": "Alla arbetsytor",
+    "channel": "Kanal",
+    "allChannels": "Alla kanaler",
+    "hasAttachment": "Har bilagor",
+    "resultCount": "{{count}} resultat"
   },
   "common": {
     "save": "Spara",
