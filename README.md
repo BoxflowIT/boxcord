@@ -540,6 +540,14 @@ const users = await boxtimeService.searchUsers('john', token);
 | cursor         | string  | Pagination cursor                  |
 | limit          | number  | Results per page (1-100)           |
 
+### Message Templates
+| Method | Path                              | Description                  |
+| ------ | --------------------------------- | ---------------------------- |
+| GET    | /api/v1/templates                | List user's templates        |
+| POST   | /api/v1/templates                | Create template              |
+| PATCH  | /api/v1/templates/:id            | Update template              |
+| DELETE | /api/v1/templates/:id            | Delete template              |
+
 ### Push Notifications
 | Method | Path                              | Description                  |
 | ------ | --------------------------------- | ---------------------------- |

@@ -2,6 +2,7 @@
 import { useTranslation } from 'react-i18next';
 import FileUpload, { type FileUploadHandle } from '../FileUpload';
 import EmojiPicker from '../ui/EmojiPicker';
+import { DocumentIcon } from '../ui/Icons';
 
 interface DMInputSectionProps {
   userName?: string;
@@ -17,6 +18,7 @@ interface DMInputSectionProps {
   onEmojiSelect: (emoji: string) => void;
   onGifSelect: (gifUrl: string) => void;
   onToggleEmojiPicker?: (show: boolean) => void;
+  onOpenTemplates?: () => void;
 }
 
 export default function DMInputSection({
@@ -32,7 +34,8 @@ export default function DMInputSection({
   onFileSelect,
   onEmojiSelect,
   onGifSelect,
-  onToggleEmojiPicker
+  onToggleEmojiPicker,
+  onOpenTemplates
 }: DMInputSectionProps) {
   const { t } = useTranslation();
 
@@ -44,6 +47,16 @@ export default function DMInputSection({
           onFileSelect={onFileSelect}
           disabled={uploading || sending}
         />
+        {onOpenTemplates && (
+          <button
+            type="button"
+            onClick={onOpenTemplates}
+            title={t('templates.title')}
+            className="btn-icon"
+          >
+            <DocumentIcon />
+          </button>
+        )}
         <textarea
           ref={textareaRef}
           value={inputValue}

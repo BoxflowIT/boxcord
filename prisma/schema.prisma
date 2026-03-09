@@ -39,6 +39,7 @@ model User {
     voiceSessions        VoiceSession[]
     polls                Poll[]
     pollVotes            PollVote[]
+    messageTemplates     MessageTemplate[]
 
     @@map("users")
 }
@@ -559,4 +560,22 @@ model VoiceSession {
     @@index([userId])
     @@index([channelId, userId, leftAt])
     @@map("voice_sessions")
+}
+
+// ============================================
+// MESSAGE TEMPLATES
+// ============================================
+
+model MessageTemplate {
+    id        String   @id @default(uuid())
+    userId    String   @map("user_id")
+    name      String // Template display name
+    content   String // Template message content
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId, createdAt])
+    @@map("message_templates")
 }
