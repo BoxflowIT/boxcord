@@ -101,10 +101,10 @@ Parameters:
 
   DesiredCount:
     Type: Number
-    Default: 1
-    MinValue: 1
+    Default: 0
+    MinValue: 0
     MaxValue: 10
-    Description: Number of ECS tasks to run
+    Description: Number of ECS tasks to run (use 0 for initial creation, then scale up after pushing real image)
 
   ContainerImageUri:
     Type: String
@@ -119,6 +119,7 @@ Parameters:
 Conditions:
   IsProduction: !Equals [!Ref Environment, production]
   HasCertificate: !Not [!Equals [!Ref CertificateArn, '']]
+  HasTasks: !Not [!Equals [!Ref DesiredCount, 0]]
 
 # ──────────────────────────────────────────────────────────────────
 # Resources
@@ -514,9 +515,10 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
-  # ── ECS Auto Scaling ────────────────────────────────────────────
+  # ── ECS Auto Scaling (only when DesiredCount > 0) ──────────────
   ECSScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Condition: HasTasks
     Properties:
       MaxCapacity: !If [IsProduction, 5, 2]
       MinCapacity: 1
@@ -527,6 +529,7 @@ Resources:
 
   ECSScalingPolicyCPU:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Condition: HasTasks
     Properties:
       PolicyName: !Sub 'boxcord-${Environment}-cpu-scaling'
       PolicyType: TargetTrackingScaling
