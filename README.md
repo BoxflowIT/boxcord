@@ -237,6 +237,11 @@ For production setup including Sentry, S3, email notifications, and scaling:
 
 **📖 See:** [docs/PRODUCTION.md](docs/PRODUCTION.md)
 
+| Environment | URL | Deploy trigger |
+|-------------|-----|----------------|
+| **Production** | `https://boxcord.boxflow.com` | Push to `main` |
+| **Staging** | `https://staging.boxcord.boxflow.com` | Push to `develop` |
+
 Quick production checklist:
 
 - ✅ Configure all required environment variables

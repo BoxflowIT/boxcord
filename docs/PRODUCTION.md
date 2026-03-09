@@ -62,6 +62,15 @@ SENDGRID_API_KEY=SG.xxx
 SENDGRID_FROM_EMAIL=noreply@boxflow.com
 ```
 
+## Environments
+
+| Environment | URL | Deploy trigger |
+|-------------|-----|----------------|
+| **Production** | `https://boxcord.boxflow.com` | Push to `main` |
+| **Staging** | `https://staging.boxcord.boxflow.com` | Push to `develop` |
+
+Both environments run the same AWS architecture (ECS Fargate + RDS + ElastiCache + CloudFront) with separate databases and resources.
+
 ## Deployment Platforms
 
 ### AWS (Recommended)
