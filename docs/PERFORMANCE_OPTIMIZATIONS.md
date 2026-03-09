@@ -162,7 +162,7 @@ Simply don't set `REDIS_URL` - the app will automatically use in-memory caching:
 
 Most cloud providers offer managed Redis:
 
-**AWS ElastiCache:**
+**AWS ElastiCache (Production):**
 
 ```bash
 # ElastiCache Redis endpoint is configured automatically
@@ -170,11 +170,12 @@ Most cloud providers offer managed Redis:
 REDIS_URL=redis://your-elasticache-endpoint:6379
 ```
 
-**Heroku:**
+**Docker Compose (Development):**
 
 ```bash
-heroku addons:create heroku-redis:hobby-dev
-# Automatically sets REDIS_URL
+# Start Redis locally for development
+docker-compose up -d redis
+# Automatically uses REDIS_URL=redis://localhost:6379
 ```
 
 **AWS/Azure/GCP:**

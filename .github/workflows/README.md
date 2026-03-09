@@ -26,7 +26,48 @@ This directory contains GitHub Actions workflows for automated CI/CD and version
 
 ---
 
-### 🔖 Auto Version Bump (`version-bump.yml`)
+### � Deploy to Production (`deploy-aws.yml`)
+
+**Triggers:** Push to `main`
+
+**Purpose:** Deploys backend and frontend to AWS production environment
+
+**Steps:**
+1. **Build & Push Docker Image** → ECR (`boxcord-production`)
+2. **Register new ECS Task Definition** with updated image
+3. **Update ECS Service** → Rolling deployment on Fargate
+4. **Build Frontend** → `npm run build` with production env vars
+5. **Deploy Frontend** → `aws s3 sync` to `boxcord-production-frontend`
+6. **Invalidate CloudFront** cache
+7. **Smoke Test** → Verify health endpoint on `https://boxcord.boxflow.com`
+
+**Required Secrets:** `AWS_ROLE_TO_ASSUME`  
+**Required Variables:** `ECR_REPOSITORY_NAME`, `ECS_CLUSTER_NAME`, `ECS_SERVICE_NAME`, `CLOUDFRONT_DISTRIBUTION_ID`, `S3_FRONTEND_BUCKET`
+
+**Duration:** ~5-8 minutes
+
+---
+
+### 🧪 Deploy to Staging (`deploy-staging.yml`)
+
+**Triggers:** Push to `develop`
+
+**Purpose:** Deploys backend and frontend to AWS staging environment
+
+**Steps:** Same as production deploy, targeting staging resources:
+- ECR: `boxcord-staging`
+- ECS: `boxcord-staging` cluster/service
+- S3: `boxcord-staging-frontend`
+- URL: `https://staging.boxcord.boxflow.com`
+
+**Required Secrets:** `AWS_ROLE_TO_ASSUME`  
+**Required Variables:** `ECR_REPOSITORY_NAME_STAGING`, `ECS_CLUSTER_NAME_STAGING`, `ECS_SERVICE_NAME_STAGING`, `CLOUDFRONT_DISTRIBUTION_ID_STAGING`, `S3_FRONTEND_BUCKET_STAGING`
+
+**Duration:** ~5-8 minutes
+
+---
+
+### �🔖 Auto Version Bump (`version-bump.yml`)
 
 **Triggers:** Push to `main` (usually from merging `develop`)
 
@@ -207,8 +248,7 @@ If you see "Resource not accessible by integration" error:
 
 Potential additions:
 
-- 🚀 Deploy workflow (staging/production)
-- 📝 Automated CHANGELOG generation
+- � Automated CHANGELOG generation
 - 🔔 Slack/Discord notifications on release
 - 🏷️ GitHub Release creation with notes
 - 📊 Test coverage reporting
@@ -216,5 +256,5 @@ Potential additions:
 
 ---
 
-**Last Updated:** February 25, 2026  
-**Workflow Version:** 1.0.0
+**Last Updated:** March 9, 2026  
+**Workflow Version:** 2.0.0

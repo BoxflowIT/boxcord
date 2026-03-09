@@ -1,6 +1,6 @@
 # Infrastructure Deployment Guide
 
-**Status:** 🏗️ Ready for deployment | **Target:** 1,000-3,000+ concurrent users | **Updated:** 2026-02-23
+**Status:** 🏗️ Ready for deployment | **Target:** 1,000-3,000+ concurrent users | **Updated:** 2026-03-09
 
 This guide provides step-by-step instructions for deploying Boxcord to production infrastructure capable of supporting thousands of concurrent users.
 
@@ -337,17 +337,17 @@ This phase deploys a basic high-availability setup with 2-3 application instance
    
    server {
        listen 80;
-       server_name boxcord.example.com;
+       server_name boxcord.boxflow.com;
        return 301 https://$server_name$request_uri;
    }
    
    server {
        listen 443 ssl http2;
-       server_name boxcord.example.com;
+       server_name boxcord.boxflow.com;
        
-       # SSL Configuration
-       ssl_certificate /etc/letsencrypt/live/boxcord.example.com/fullchain.pem;
-       ssl_certificate_key /etc/letsencrypt/live/boxcord.example.com/privkey.pem;
+       # SSL Configuration (managed by ACM when using ALB)
+       ssl_certificate /etc/letsencrypt/live/boxcord.boxflow.com/fullchain.pem;
+       ssl_certificate_key /etc/letsencrypt/live/boxcord.boxflow.com/privkey.pem;
        ssl_protocols TLSv1.2 TLSv1.3;
        ssl_ciphers HIGH:!aNULL:!MD5;
        ssl_prefer_server_ciphers on;
@@ -412,7 +412,7 @@ This phase deploys a basic high-availability setup with 2-3 application instance
          DATABASE_URL: postgresql://boxcord_app:<YOUR_PASSWORD>@db.example.com:5432/boxcord_production?connection_limit=30&pool_timeout=10
          REDIS_URL: redis://:<YOUR_REDIS_TOKEN>@redis.example.com:6379
          AWS_S3_BUCKET: boxcord-files-prod
-         AWS_REGION: us-east-1
+         AWS_REGION: eu-north-1
          JWT_SECRET: <SECURE_JWT_SECRET>
          SENTRY_DSN: <YOUR_SENTRY_DSN>
        healthcheck:
@@ -439,7 +439,7 @@ This phase deploys a basic high-availability setup with 2-3 application instance
          DATABASE_URL: postgresql://boxcord_app:<YOUR_PASSWORD>@db.example.com:5432/boxcord_production?connection_limit=30&pool_timeout=10
          REDIS_URL: redis://:<YOUR_REDIS_TOKEN>@redis.example.com:6379
          AWS_S3_BUCKET: boxcord-files-prod
-         AWS_REGION: us-east-1
+         AWS_REGION: eu-north-1
          JWT_SECRET: <SECURE_JWT_SECRET>
          SENTRY_DSN: <YOUR_SENTRY_DSN>
        healthcheck:
@@ -461,7 +461,7 @@ This phase deploys a basic high-availability setup with 2-3 application instance
          DATABASE_URL: postgresql://boxcord_app:<YOUR_PASSWORD>@db.example.com:5432/boxcord_production?connection_limit=30&pool_timeout=10
          REDIS_URL: redis://:<YOUR_REDIS_TOKEN>@redis.example.com:6379
          AWS_S3_BUCKET: boxcord-files-prod
-         AWS_REGION: us-east-1
+         AWS_REGION: eu-north-1
          JWT_SECRET: <SECURE_JWT_SECRET>
          SENTRY_DSN: <YOUR_SENTRY_DSN>
        healthcheck:
@@ -497,7 +497,7 @@ This phase deploys a basic high-availability setup with 2-3 application instance
      "containerDefinitions": [
        {
          "name": "boxcord",
-         "image": "<AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/boxcord:latest",
+         "image": "<AWS_ACCOUNT_ID>.dkr.ecr.eu-north-1.amazonaws.com/boxcord:latest",
          "portMappings": [
            {
              "containerPort": 3001,
@@ -517,15 +517,15 @@ This phase deploys a basic high-availability setup with 2-3 application instance
          "secrets": [
            {
              "name": "DATABASE_URL",
-             "valueFrom": "arn:aws:secretsmanager:us-east-1:xxxxx:secret:boxcord/db-url"
+             "valueFrom": "arn:aws:secretsmanager:eu-north-1:xxxxx:secret:boxcord/db-url"
            },
            {
              "name": "REDIS_URL",
-             "valueFrom": "arn:aws:secretsmanager:us-east-1:xxxxx:secret:boxcord/redis-url"
+             "valueFrom": "arn:aws:secretsmanager:eu-north-1:xxxxx:secret:boxcord/redis-url"
            },
            {
              "name": "JWT_SECRET",
-             "valueFrom": "arn:aws:secretsmanager:us-east-1:xxxxx:secret:boxcord/jwt"
+             "valueFrom": "arn:aws:secretsmanager:eu-north-1:xxxxx:secret:boxcord/jwt"
            }
          ],
          "healthCheck": {
@@ -539,7 +539,7 @@ This phase deploys a basic high-availability setup with 2-3 application instance
            "logDriver": "awslogs",
            "options": {
              "awslogs-group": "/ecs/boxcord-api",
-             "awslogs-region": "us-east-1",
+             "awslogs-region": "eu-north-1",
              "awslogs-stream-prefix": "ecs"
            }
          }
@@ -621,7 +621,7 @@ This phase adds read replicas, WebSocket clustering, message queue workers, and 
      --db-instance-identifier boxcord-replica-1 \
      --source-db-instance-identifier boxcord-prod \
      --db-instance-class db.t3.medium \
-     --availability-zone us-east-1b \
+     --availability-zone eu-north-1b \
      --publicly-accessible false
    ```
 
@@ -631,7 +631,7 @@ This phase adds read replicas, WebSocket clustering, message queue workers, and 
      --db-instance-identifier boxcord-replica-2 \
      --source-db-instance-identifier boxcord-prod \
      --db-instance-class db.t3.medium \
-     --availability-zone us-east-1c \
+     --availability-zone eu-north-1c \
      --publicly-accessible false
    ```
 
@@ -960,7 +960,7 @@ Separate worker processes handle background jobs (emails, webhooks, notification
            ],
            "period": 300,
            "stat": "Average",
-           "region": "us-east-1",
+           "region": "eu-north-1",
            "title": "ECS Metrics"
          }
        },
@@ -974,7 +974,7 @@ Separate worker processes handle background jobs (emails, webhooks, notification
            ],
            "period": 300,
            "stat": "Average",
-           "region": "us-east-1",
+           "region": "eu-north-1",
            "title": "Load Balancer Metrics"
          }
        },
@@ -989,7 +989,7 @@ Separate worker processes handle background jobs (emails, webhooks, notification
            ],
            "period": 300,
            "stat": "Average",
-           "region": "us-east-1",
+           "region": "eu-north-1",
            "title": "Database Metrics"
          }
        },
@@ -1005,7 +1005,7 @@ Separate worker processes handle background jobs (emails, webhooks, notification
            ],
            "period": 300,
            "stat": "Average",
-           "region": "us-east-1",
+           "region": "eu-north-1",
            "title": "Redis Cache Metrics"
          }
        }
@@ -1019,7 +1019,7 @@ Separate worker processes handle background jobs (emails, webhooks, notification
    ```bash
    aws sns create-topic --name boxcord-alerts
    aws sns subscribe \
-     --topic-arn arn:aws:sns:us-east-1:xxxxx:boxcord-alerts \
+     --topic-arn arn:aws:sns:eu-north-1:xxxxx:boxcord-alerts \
      --protocol email \
      --notification-endpoint devops@example.com
    ```
@@ -1038,7 +1038,7 @@ Separate worker processes handle background jobs (emails, webhooks, notification
      --threshold 80 \
      --comparison-operator GreaterThanThreshold \
      --evaluation-periods 2 \
-     --alarm-actions arn:aws:sns:us-east-1:xxxxx:boxcord-alerts
+     --alarm-actions arn:aws:sns:eu-north-1:xxxxx:boxcord-alerts
    ```
    
    **High Memory Alert:**
@@ -1053,7 +1053,7 @@ Separate worker processes handle background jobs (emails, webhooks, notification
      --threshold 85 \
      --comparison-operator GreaterThanThreshold \
      --evaluation-periods 2 \
-     --alarm-actions arn:aws:sns:us-east-1:xxxxx:boxcord-alerts
+     --alarm-actions arn:aws:sns:eu-north-1:xxxxx:boxcord-alerts
    ```
    
    **High Error Rate:**
@@ -1068,7 +1068,7 @@ Separate worker processes handle background jobs (emails, webhooks, notification
      --threshold 50 \
      --comparison-operator GreaterThanThreshold \
      --evaluation-periods 1 \
-     --alarm-actions arn:aws:sns:us-east-1:xxxxx:boxcord-alerts
+     --alarm-actions arn:aws:sns:eu-north-1:xxxxx:boxcord-alerts
    ```
    
    **Slow Response Time:**
@@ -1083,7 +1083,7 @@ Separate worker processes handle background jobs (emails, webhooks, notification
      --threshold 0.5 \
      --comparison-operator GreaterThanThreshold \
      --evaluation-periods 2 \
-     --alarm-actions arn:aws:sns:us-east-1:xxxxx:boxcord-alerts
+     --alarm-actions arn:aws:sns:eu-north-1:xxxxx:boxcord-alerts
    ```
    
    **Database Connections High:**
@@ -1098,7 +1098,7 @@ Separate worker processes handle background jobs (emails, webhooks, notification
      --threshold 150 \
      --comparison-operator GreaterThanThreshold \
      --evaluation-periods 1 \
-     --alarm-actions arn:aws:sns:us-east-1:xxxxx:boxcord-alerts
+     --alarm-actions arn:aws:sns:eu-north-1:xxxxx:boxcord-alerts
    ```
 
 ### Grafana Dashboard (Self-Hosted Alternative)
@@ -1465,6 +1465,6 @@ aws ecs update-service \
 
 ---
 
-**Last Updated:** 2026-02-23  
-**Version:** 1.0  
+**Last Updated:** 2026-03-09  
+**Version:** 1.1  
 **Maintainer:** DevOps Team

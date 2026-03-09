@@ -133,7 +133,7 @@ npx tsx prisma/seed.ts
 ### 2. Health Check
 
 ```bash
-curl https://your-domain.com/health
+curl https://boxcord.boxflow.com/health
 # Should return: {"status":"ok","timestamp":"..."}
 ```
 
@@ -142,7 +142,7 @@ curl https://your-domain.com/health
 Open browser console:
 
 ```javascript
-const socket = io('https://your-domain.com');
+const socket = io('https://boxcord.boxflow.com');
 socket.on('connect', () => console.log('✅ WebSocket connected'));
 ```
 
@@ -155,7 +155,7 @@ socket.on('connect', () => console.log('✅ WebSocket connected'));
 ### 5. Performance
 
 - [ ] Enable Redis caching
-- [ ] Setup CDN for static assets (Cloudflare)
+- [ ] Setup CDN for static assets (CloudFront) ✅
 - [ ] Configure database connection pooling
 - [ ] Enable Prisma Accelerate (optional)
 
@@ -181,8 +181,7 @@ When running multiple instances:
 
 3. **Enable sticky sessions** for WebSocket
    - AWS ALB: Handled automatically with ECS
-   - Kubernetes: Use `sessionAffinity: ClientIP`
-   - Load balancer: Enable session persistence
+   - ECS Fargate: Increase `DesiredCount` for more tasks behind ALB
 
 ### Database Optimization
 
@@ -203,9 +202,9 @@ When running multiple instances:
 ### CDN Setup
 
 ```bash
-# Serve static assets from CDN
-# Cloudflare, AWS CloudFront, or similar
-# Configure CORS for WebSocket upgrades
+# Static assets served via S3 + CloudFront CDN
+# Production:  https://boxcord.boxflow.com (CloudFront → S3)
+# Staging:     https://staging.boxcord.boxflow.com (CloudFront → S3)
 ```
 
 ## Monitoring & Observability

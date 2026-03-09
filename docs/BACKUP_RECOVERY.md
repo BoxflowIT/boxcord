@@ -2,54 +2,48 @@
 
 ## Database Backup Strategy
 
-### Automated Daily Backups
+### AWS RDS Automated Backups (Primary)
 
-#### Production Environment
+RDS provides automated daily snapshots and point-in-time recovery out of the box.
+
+**Current Configuration (via CloudFormation):**
+- Automated snapshots: Daily, retained for 7 days
+- Point-in-time recovery: Enabled (5-minute granularity)
+- Multi-AZ: Available for production upgrades
+
 ```bash
-# Automated backup script (run via cron daily at 2 AM)
-#!/bin/bash
+# View automated snapshots
+aws rds describe-db-snapshots \
+  --db-instance-identifier boxcord-production \
+  --snapshot-type automated
 
-DATE=$(date +%Y%m%d_%H%M%S)
-BACKUP_DIR="/backups/postgresql"
-DB_NAME="boxcord_production"
-S3_BUCKET="s3://boxcord-backups"
-
-# Create backup
-pg_dump -U postgres -d $DB_NAME -F c -f "$BACKUP_DIR/boxcord_$DATE.dump"
-
-# Compress backup
-gzip "$BACKUP_DIR/boxcord_$DATE.dump"
-
-# Upload to S3
-aws s3 cp "$BACKUP_DIR/boxcord_$DATE.dump.gz" "$S3_BUCKET/daily/"
-
-# Keep only last 7 days of local backups
-find $BACKUP_DIR -name "*.dump.gz" -mtime +7 -delete
-
-# Log backup
-echo "$(date): Backup completed - boxcord_$DATE.dump.gz" >> /var/log/boxcord-backup.log
+# Create manual snapshot before major changes
+aws rds create-db-snapshot \
+  --db-instance-identifier boxcord-production \
+  --db-snapshot-identifier boxcord-pre-migration-$(date +%Y%m%d)
 ```
 
-#### Cron Schedule
-```crontab
-# Daily backup at 2 AM
-0 2 * * * /opt/boxcord/scripts/backup-db.sh
+### Additional S3 Backups (Optional)
 
-# Weekly full backup at Sunday 3 AM
-0 3 * * 0 /opt/boxcord/scripts/backup-db-full.sh
+For extra safety, export snapshots to S3:
 
-# Monthly backup retention at 1st of month 4 AM
-0 4 1 * * /opt/boxcord/scripts/backup-retention.sh
+```bash
+# Export snapshot to S3
+aws rds start-export-task \
+  --export-task-identifier boxcord-export-$(date +%Y%m%d) \
+  --source-arn arn:aws:rds:eu-north-1:650485669960:snapshot:boxcord-manual-backup \
+  --s3-bucket-name boxcord-backups \
+  --iam-role-arn arn:aws:iam::650485669960:role/boxcord-rds-export \
+  --kms-key-id alias/aws/rds
 ```
 
 ### Backup Retention Policy
 
-- **Daily Backups**: Keep for 7 days
-- **Weekly Backups**: Keep for 4 weeks
-- **Monthly Backups**: Keep for 12 months
-- **Yearly Backups**: Keep for 3 years
+- **RDS Automated Snapshots**: 7 days (configurable up to 35)
+- **Manual Snapshots**: Kept indefinitely until deleted
+- **S3 Exports**: Managed via lifecycle rules
 
-### S3 Bucket Configuration
+### S3 Bucket Lifecycle Configuration
 ```json
 {
   "LifecycleConfiguration": {
@@ -85,71 +79,61 @@ echo "$(date): Backup completed - boxcord_$DATE.dump.gz" >> /var/log/boxcord-bac
 
 ## Database Restore Procedures
 
-### Standard Restore (Full Database)
+### Restore from RDS Snapshot
 
 ```bash
-#!/bin/bash
-# restore-db.sh - Restore from backup
+# 1. List available snapshots
+aws rds describe-db-snapshots \
+  --db-instance-identifier boxcord-production \
+  --query 'DBSnapshots[*].[DBSnapshotIdentifier,SnapshotCreateTime]' \
+  --output table
 
-# 1. Stop the application
-sudo systemctl stop boxcord
+# 2. Restore snapshot to a new instance
+aws rds restore-db-instance-from-db-snapshot \
+  --db-instance-identifier boxcord-production-restored \
+  --db-snapshot-identifier <SNAPSHOT_ID> \
+  --db-instance-class db.t4g.micro \
+  --vpc-security-group-ids <SG_ID>
 
-# 2. Download backup from S3
-BACKUP_FILE="boxcord_20260221_020000.dump.gz"
-aws s3 cp "s3://boxcord-backups/daily/$BACKUP_FILE" /tmp/
+# 3. Wait for instance to be available
+aws rds wait db-instance-available \
+  --db-instance-identifier boxcord-production-restored
 
-# 3. Decompress backup
-gunzip "/tmp/$BACKUP_FILE"
-
-# 4. Drop existing database (DANGEROUS - confirm first!)
-psql -U postgres -c "DROP DATABASE IF EXISTS boxcord_production;"
-
-# 5. Create fresh database
-psql -U postgres -c "CREATE DATABASE boxcord_production;"
-
-# 6. Restore backup
-pg_restore -U postgres -d boxcord_production "/tmp/${BACKUP_FILE%.gz}"
-
-# 7. Verify restore
-psql -U postgres -d boxcord_production -c "SELECT COUNT(*) FROM users;"
-
-# 8. Start application
-sudo systemctl start boxcord
-
-# 9. Verify application
-curl http://localhost:3001/health
-
-echo "Database restore completed!"
+# 4. Update ECS task definition with new DB endpoint
+# 5. Verify data integrity
+# 6. Switch DNS/config to restored instance
+# 7. Delete old instance when confirmed
 ```
 
 ### Point-in-Time Recovery (PITR)
 
-For PostgreSQL with WAL archiving enabled:
-
 ```bash
-# 1. Stop PostgreSQL
-sudo systemctl stop postgresql
+# Restore to a specific point in time
+aws rds restore-db-instance-to-point-in-time \
+  --source-db-instance-identifier boxcord-production \
+  --target-db-instance-identifier boxcord-production-pitr \
+  --restore-time "2026-03-09T14:30:00Z" \
+  --db-instance-class db.t4g.micro
 
-# 2. Restore base backup
-cd /var/lib/postgresql/14/main
-rm -rf *
-tar -xzf /backups/postgresql/base-backup.tar.gz
-
-# 3. Create recovery.conf
-cat > recovery.conf << EOF
-restore_command = 'cp /backups/postgresql/wal_archive/%f %p'
-recovery_target_time = '2026-02-21 14:30:00'
-EOF
-
-# 4. Start PostgreSQL - it will recover to the target time
-sudo systemctl start postgresql
+# Wait for instance
+aws rds wait db-instance-available \
+  --db-instance-identifier boxcord-production-pitr
 ```
 
 ### Partial Restore (Single Table)
 
+For table-level restores, restore the snapshot to a temporary instance and export:
+
 ```bash
-# Restore just one table
-pg_restore -U postgres -d boxcord_production -t messages backup.dump
+# 1. Restore snapshot to temp instance (see above)
+# 2. Connect and extract needed data
+pg_dump -h <RESTORED_HOST> -U boxcord -t messages boxcord > messages_backup.sql
+# 3. Import to production
+psql -h <PROD_HOST> -U boxcord boxcord < messages_backup.sql
+# 4. Delete temp instance
+aws rds delete-db-instance \
+  --db-instance-identifier boxcord-production-restored \
+  --skip-final-snapshot
 ```
 
 ## Disaster Recovery Scenarios
@@ -159,81 +143,99 @@ pg_restore -U postgres -d boxcord_production -t messages backup.dump
 **Recovery Time**: 15-30 minutes
 
 1. Identify corruption scope
-2. Stop application
-3. Restore last known good backup
-4. Verify data integrity
-5. Restart application
+2. Scale ECS service to 0 tasks (stop traffic)
+3. Restore from last known good RDS snapshot
+4. Scale ECS service back up
+5. Verify data integrity
 
 ### Scenario 2: Complete Database Loss
 **Symptoms**: Database server failure, disk failure
-**Recovery Time**: 1-2 hours
+**Recovery Time**: 30-60 minutes (RDS handles most of this automatically)
 
-1. Provision new database server
-2. Install PostgreSQL
-3. Restore latest backup
-4. Apply WAL logs if available
-5. Update connection strings
-6. Test thoroughly before switching
+1. RDS Multi-AZ failover happens automatically (if enabled)
+2. For manual recovery: Restore from latest snapshot
+3. Update ECS task definition if endpoint changed
+4. Test thoroughly before switching
 
 ### Scenario 3: Application Server Failure
-**Symptoms**: Server unreachable, OS crash
-**Recovery Time**: 30-60 minutes
+**Symptoms**: ECS tasks failing, health checks failing
+**Recovery Time**: 5-15 minutes (ECS auto-recovery)
 
-1. Provision new server
-2. Deploy application from git
-3. Install dependencies
-4. Configure environment variables
-5. Start services
-6. Verify connectivity
+1. ECS automatically replaces unhealthy tasks
+2. If persistent: Check CloudWatch logs (`/ecs/boxcord-production`)
+3. Roll back to previous task definition if needed:
+   ```bash
+   aws ecs update-service \
+     --cluster boxcord-production \
+     --service boxcord-production \
+     --task-definition boxcord-production:<PREVIOUS_VERSION> \
+     --force-new-deployment
+   ```
 
 ## Testing Backup & Restore
 
-### Monthly Restore Test
+### Quarterly Restore Test
 ```bash
 #!/bin/bash
-# test-restore.sh - Test backup validity monthly
+# test-restore.sh - Test backup validity quarterly
 
-# Create test database
-psql -U postgres -c "CREATE DATABASE boxcord_restore_test;"
+# Get latest automated snapshot
+LATEST=$(aws rds describe-db-snapshots \
+  --db-instance-identifier boxcord-production \
+  --snapshot-type automated \
+  --query 'DBSnapshots[-1].DBSnapshotIdentifier' \
+  --output text)
 
-# Restore latest backup
-LATEST_BACKUP=$(aws s3 ls s3://boxcord-backups/daily/ | sort | tail -n 1 | awk '{print $4}')
-aws s3 cp "s3://boxcord-backups/daily/$LATEST_BACKUP" /tmp/
-gunzip "/tmp/$LATEST_BACKUP"
-pg_restore -U postgres -d boxcord_restore_test "/tmp/${LATEST_BACKUP%.gz}"
+# Restore to test instance
+aws rds restore-db-instance-from-db-snapshot \
+  --db-instance-identifier boxcord-restore-test \
+  --db-snapshot-identifier "$LATEST" \
+  --db-instance-class db.t4g.micro
+
+aws rds wait db-instance-available \
+  --db-instance-identifier boxcord-restore-test
+
+# Get endpoint
+ENDPOINT=$(aws rds describe-db-instances \
+  --db-instance-identifier boxcord-restore-test \
+  --query 'DBInstances[0].Endpoint.Address' \
+  --output text)
 
 # Run integrity checks
-psql -U postgres -d boxcord_restore_test << EOF
-SELECT 'Users' as table, COUNT(*) FROM users
+psql -h "$ENDPOINT" -U boxcord -d boxcord << EOF
+SELECT 'Users' as table_name, COUNT(*) as row_count FROM "User"
 UNION ALL
-SELECT 'Messages', COUNT(*) FROM messages
+SELECT 'Messages', COUNT(*) FROM "Message"
 UNION ALL
-SELECT 'Workspaces', COUNT(*) FROM workspaces;
+SELECT 'Workspaces', COUNT(*) FROM "Workspace";
 EOF
 
 # Cleanup
-psql -U postgres -c "DROP DATABASE boxcord_restore_test;"
+aws rds delete-db-instance \
+  --db-instance-identifier boxcord-restore-test \
+  --skip-final-snapshot
 
-echo "Backup test completed - $(date)" >> /var/log/backup-test.log
+echo "Backup test completed - $(date)"
 ```
 
 ## Monitoring & Alerts
 
 ### Backup Monitoring
-- Alert if backup fails
-- Alert if backup size deviates >20% from average
-- Alert if S3 upload fails
-- Daily backup size report
+- RDS automated backups: Monitored via CloudWatch Events
+- Alert if snapshot creation fails
+- Alert if snapshot age exceeds 24 hours
+- Track backup storage usage
 
 ### CloudWatch Alarms
 ```json
 {
-  "AlarmName": "BackupFailed",
-  "MetricName": "BackupSuccess",
-  "Threshold": 1,
+  "AlarmName": "RDSBackupFailed",
+  "MetricName": "FreeStorageSpace",
+  "Namespace": "AWS/RDS",
+  "Threshold": 5368709120,
   "ComparisonOperator": "LessThanThreshold",
   "EvaluationPeriods": 1,
-  "AlarmActions": ["arn:aws:sns:region:account:ops-alerts"]
+  "AlarmActions": ["arn:aws:sns:eu-north-1:650485669960:boxcord-ops-alerts"]
 }
 ```
 

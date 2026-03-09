@@ -256,8 +256,8 @@ client/tests/
    - [ ] Monitor error rates and uptime (target: 99.9%)
 
 2. **Infrastructure Scaling**
-   - [ ] CDN for static assets (CloudFront, Cloudflare)
-   - [ ] Load balancer with auto-scaling (for 1,000+ users)
+   - [ ] CDN for static assets (CloudFront) ✅
+   - [ ] Load balancer with auto-scaling (ECS Fargate + ALB) ✅
    - [ ] Redis cluster for high availability
    - [ ] Geographic distribution for global users
 

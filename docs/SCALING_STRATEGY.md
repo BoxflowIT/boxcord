@@ -553,7 +553,7 @@ Alarms:
 
 ## Cost Estimation
 
-### Infrastructure Costs (Monthly, AWS us-east-1)
+### Infrastructure Costs (Monthly, AWS eu-north-1)
 
 **For 1,000 concurrent users (3 instances):**
 - EC2 (3x t3.large): $150

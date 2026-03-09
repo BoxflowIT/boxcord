@@ -6,7 +6,8 @@ Complete REST API reference for Boxcord. For WebSocket events, see [ARCHITECTURE
 
 ```
 Development: http://localhost:3001/api/v1
-Production:  https://your-domain.com/api/v1
+Production:  https://boxcord.boxflow.com/api/v1
+Staging:     https://staging.boxcord.boxflow.com/api/v1
 ```
 
 ## Authentication
