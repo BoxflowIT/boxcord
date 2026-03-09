@@ -132,7 +132,7 @@ export async function healthRoutes(app: FastifyInstance) {
     return reply.code(statusCode).send(health);
   });
 
-  // Readiness check (for Kubernetes/Railway)
+  // Readiness check (for Kubernetes/ECS)
   app.get('/ready', async (request, reply) => {
     try {
       await prisma.$queryRaw`SELECT 1`;
@@ -145,7 +145,7 @@ export async function healthRoutes(app: FastifyInstance) {
     }
   });
 
-  // Liveness check (for Kubernetes/Railway)
+  // Liveness check (for Kubernetes/ECS)
   app.get('/live', async (request, reply) => {
     // Basic check that the process is running
     return reply.code(200).send({

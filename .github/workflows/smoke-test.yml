@@ -1,7 +1,7 @@
 name: Post-Deploy Smoke Test
 
 on:
-  # Triggered after Railway deploys to production (main push)
+  # Triggered after deploy to production (main push)
   # Can also be triggered manually
   workflow_dispatch:
     inputs:

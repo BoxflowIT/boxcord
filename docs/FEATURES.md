@@ -348,7 +348,7 @@ Complete list of all implemented features in Boxcord.
 - ✅ **GitHub Actions** - Automated testing
 - ✅ **Pre-commit hooks** - Lint-staged validation
 - ✅ **Pre-push validation** - Run tests before push
-- ✅ **Automatic deployment** - Railway deployment on push
+- ✅ **Automatic deployment** - AWS deployment on push via GitHub Actions
 
 ### Monitoring & Observability
 - ✅ **Sentry integration** - Error tracking (optional)
@@ -363,7 +363,7 @@ Complete list of all implemented features in Boxcord.
 
 ### Deployment
 - ✅ **Docker support** - Containerized deployment
-- ✅ **Railway optimized** - Works with Railway platform
+- ✅ **AWS optimized** - ECS Fargate, RDS, ElastiCache, CloudFront
 - ✅ **Environment variables** - Flexible configuration
 - ✅ **Graceful shutdown** - SIGTERM/SIGINT handling
 - ✅ **Zero-downtime deploys** - Rolling updates

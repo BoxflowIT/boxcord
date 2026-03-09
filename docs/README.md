@@ -46,7 +46,7 @@ Make Boxcord fast and efficient:
 Deploy and scale Boxcord:
 
 - [**Infrastructure Setup**](INFRASTRUCTURE_SETUP.md) - Complete deployment guide for 1,000-3,000+ users
-- [**Production Deployment**](PRODUCTION.md) - Railway, Docker, environment variables
+- [**Production Deployment**](PRODUCTION.md) - AWS, Docker, environment variables
 - [**Scaling Strategy**](SCALING_STRATEGY.md) - Horizontal scaling, load balancing, Redis clustering
 - [**Backup & Recovery**](BACKUP_RECOVERY.md) - Database backups, disaster recovery procedures
 

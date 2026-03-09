@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Parallel CI jobs** — E2E Tests run alongside Test & Lint (~3 min total)
 - **Playwright browser caching** — Chromium cached between CI runs (~300MB saved)
 - **E2E tests in CI** — Health check, API docs, Swagger UI with `@auth` tag exclusion
-- **Deploy staging workflow** — Auto-deploy to Railway staging on develop push
+- **Deploy staging workflow** — Auto-deploy to AWS staging on develop push
 - **Deploy preview environments** — PR-based preview deployments with auto-cleanup
 - **Post-deploy smoke tests** — 5-check health verification after production deploys
 - **Branch protection script** — `scripts/setup-branch-protection.sh` for main/develop rules

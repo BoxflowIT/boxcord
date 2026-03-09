@@ -4,8 +4,8 @@ Complete guide for deploying Boxcord to production.
 
 ## Prerequisites
 
-- [ ] PostgreSQL database (Railway, Supabase, AWS RDS, etc.)
-- [ ] Redis instance (optional, but recommended)
+- [ ] PostgreSQL database (AWS RDS)
+- [ ] Redis instance (AWS ElastiCache, recommended)
 - [ ] AWS Cognito User Pool (shared with Boxtime)
 - [ ] Domain name (optional)
 
@@ -64,29 +64,17 @@ SENDGRID_FROM_EMAIL=noreply@boxflow.com
 
 ## Deployment Platforms
 
-### Railway (Recommended)
+### AWS (Recommended)
 
-1. **Connect Repository**
+Boxcord runs on AWS using ECS Fargate, RDS PostgreSQL, ElastiCache Redis, and CloudFront.
+See [infra/README.md](../infra/README.md) for the full infrastructure setup guide.
 
-   ```bash
-   # Railway will auto-detect Node.js and use nixpacks
-   # Make sure railway.json is configured
-   ```
+1. **Deploy Infrastructure** — CloudFormation creates all resources
+2. **Build & Push Docker Image** — `docker build` + push to ECR
+3. **Deploy Frontend** — `aws s3 sync` to S3, CloudFront invalidation
+4. **Update ECS Service** — Register new task definition, update service
 
-2. **Configure Environment**
-   - Add all required environment variables in Railway dashboard
-   - Railway provides PostgreSQL and Redis add-ons
-
-3. **Deploy**
-
-   ```bash
-   # Automatic on push to main branch
-   # Or manually trigger deployment
-   ```
-
-4. **Setup Custom Domain** (optional)
-   - Add custom domain in Railway settings
-   - Update DNS records
+All of this is automated via GitHub Actions (`deploy-aws.yml`).
 
 ### Docker
 
@@ -183,7 +171,7 @@ When running multiple instances:
    ```
 
 3. **Enable sticky sessions** for WebSocket
-   - Railway: Handled automatically
+   - AWS ALB: Handled automatically with ECS
    - Kubernetes: Use `sessionAffinity: ClientIP`
    - Load balancer: Enable session persistence
 
@@ -272,7 +260,7 @@ Configure alerts for:
 ### Database Backups
 
 ```bash
-# Automated backups (Railway/Supabase handle this)
+# Automated backups (RDS handles this via automated snapshots)
 # Or manual:
 pg_dump $DATABASE_URL > backup.sql
 

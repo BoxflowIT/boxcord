@@ -583,7 +583,7 @@ Alarms:
 
 ### Alternative: Managed Platforms
 
-**Railway/Render (Simpler, more expensive per user):**
+**PaaS (Simpler, more expensive per user):**
 - 1,000 users: ~$500-700/month
 - 3,000 users: ~$1,500-2,000/month
 - 5,000 users: ~$3,000-4,000/month

@@ -6,7 +6,7 @@
  * Without Redis, falls back to single-instance mode (works perfectly for 1 replica).
  *
  * Cost: $0 until you add Redis service
- * Use case: Required when running 2+ Railway replicas
+ * Use case: Required when running 2+ ECS tasks
  */
 
 import { Server } from 'socket.io';
@@ -62,7 +62,7 @@ export async function setupRedisAdapter(
 
     app.log.info('🔗 Socket.io: Redis clustering enabled');
     app.log.info(
-      '✅ Can now run multiple Railway replicas with shared WebSocket state'
+      '✅ Can now run multiple ECS tasks with shared WebSocket state'
     );
 
     // Handle Redis errors gracefully

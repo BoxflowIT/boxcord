@@ -29,8 +29,6 @@ docs/
 
 # Config files not needed in image
 docker-compose.yml
-railway.json
-nixpacks.toml
 vitest.config.ts
 client/vitest.config.ts
 eslint.config.js

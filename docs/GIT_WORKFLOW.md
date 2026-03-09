@@ -230,7 +230,7 @@ All workflows are in `.github/workflows/`:
 | Workflow | Trigger | Jobs | Duration |
 |----------|---------|------|---------|
 | **CI** (`ci.yml`) | Push to main/develop, PRs | Test & Lint, E2E Tests, Security Audit | ~3 min |
-| **Deploy Staging** (`deploy-staging.yml`) | Push to develop | Deploy to Railway staging | ~30s |
+| **Deploy Staging** (`deploy-staging.yml`) | Push to develop | Deploy to AWS staging | ~30s |
 | **Deploy Preview** (`deploy-preview.yml`) | PR to develop | Create/cleanup preview env | ~1 min |
 | **Smoke Test** (`smoke-test.yml`) | After version bump or manual | 5 production health checks | ~1 min |
 | **Version Bump** | Push to main | Auto-bump version + git tag | ~30s |

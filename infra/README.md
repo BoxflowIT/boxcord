@@ -175,11 +175,11 @@ aws ecs update-service \
 
 ## Database Migration
 
-### Export from Railway
+### Export from existing database
 
 ```bash
-# Get Railway DATABASE_URL from Railway dashboard
-pg_dump "$RAILWAY_DATABASE_URL" --no-owner --no-acl > boxcord-dump.sql
+# Export from your existing PostgreSQL database
+pg_dump "$SOURCE_DATABASE_URL" --no-owner --no-acl > boxcord-dump.sql
 ```
 
 ### Import to RDS

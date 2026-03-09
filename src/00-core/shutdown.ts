@@ -11,7 +11,7 @@ interface ShutdownOptions {
 }
 
 /**
- * Graceful shutdown handler for Kubernetes/Railway deployments
+ * Graceful shutdown handler for Kubernetes/ECS deployments
  * Handles SIGTERM and SIGINT signals to cleanly close connections
  */
 export function setupGracefulShutdown({ server, io }: ShutdownOptions) {
@@ -72,7 +72,7 @@ export function setupGracefulShutdown({ server, io }: ShutdownOptions) {
     }
   };
 
-  // Handle SIGTERM (Kubernetes, Railway, Docker)
+  // Handle SIGTERM (Kubernetes, ECS, Docker)
   process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
   // Handle SIGINT (Ctrl+C in terminal)

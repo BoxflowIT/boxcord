@@ -16,8 +16,6 @@
 /docker-compose.yml @BoxflowIT/devops-team
 /Dockerfile @BoxflowIT/devops-team
 /.dockerignore @BoxflowIT/devops-team
-/railway.json @BoxflowIT/devops-team
-/nixpacks.toml @BoxflowIT/devops-team
 
 # Documentation
 /docs/** @BoxflowIT/boxcord-team

@@ -252,7 +252,7 @@ Quick production checklist:
 - 🎯 [**Features Overview**](docs/FEATURES.md) - Complete list of all features
 - 📐 [Architecture Overview](docs/ARCHITECTURE.md) - WebSocket-first design, data flow
 - 🧪 [Testing Guide](docs/TESTING.md) - Unit tests, E2E, load testing (K6)
-- 🚀 [Production Deployment](docs/PRODUCTION.md) - Railway, Docker, environment setup
+- 🚀 [Production Deployment](docs/PRODUCTION.md) - AWS, Docker, environment setup
 
 ### Architecture & Design
 - 📐 [Architecture Overview](docs/ARCHITECTURE.md) - WebSocket-first design, data flow
@@ -269,7 +269,7 @@ Quick production checklist:
 - 🧪 [Testing Guide](docs/TESTING.md) - Unit tests, E2E, load testing (K6)
 
 ### Production & Operations
-- 🚀 [Production Deployment](docs/PRODUCTION.md) - Railway, Docker, environment setup
+- 🚀 [Production Deployment](docs/PRODUCTION.md) - AWS, Docker, environment setup
 - 📊 [Scaling Strategy](docs/SCALING_STRATEGY.md) - Horizontal scaling, load balancing
 - 💾 [Database Optimization](docs/DATABASE_INDEX_OPTIMIZATION.md) - Indexes, query optimization
 - 🔄 [Backup & Recovery](docs/BACKUP_RECOVERY.md) - Database backups, disaster recovery
@@ -626,7 +626,7 @@ SENDGRID_FROM_EMAIL=noreply@boxflow.com
 
 #### **Graceful Shutdown**
 
-- Handles SIGTERM/SIGINT for Kubernetes/Railway
+- Handles SIGTERM/SIGINT for Kubernetes/ECS
 - Closes connections cleanly
 - Prevents data loss during deployments
 - 30-second timeout for force exit
@@ -643,7 +643,7 @@ Full automated pipeline with parallel jobs for fast feedback (~3 min):
 
 **Workflows:**
 - **CI** ([ci.yml](.github/workflows/ci.yml)) — Runs on push to `main`/`develop` and PRs
-- **Deploy Staging** ([deploy-staging.yml](.github/workflows/deploy-staging.yml)) — Auto-deploy to Railway staging on `develop` push
+- **Deploy Staging** ([deploy-staging.yml](.github/workflows/deploy-staging.yml)) — Auto-deploy to AWS staging on `develop` push
 - **Deploy Preview** ([deploy-preview.yml](.github/workflows/deploy-preview.yml)) — Preview environments for PRs
 - **Smoke Test** ([smoke-test.yml](.github/workflows/smoke-test.yml)) — Post-deploy health checks (5 checks)
 - **Version Bump** — Auto-bump on merge to `main`
@@ -673,7 +673,7 @@ yarn validate
 - ✅ **Parallel CI jobs** — E2E runs alongside Test & Lint (~3 min total vs ~5 min sequential)
 - ✅ **Playwright browser caching** — ~300MB chromium cached between runs
 - ✅ **E2E tests in CI** — Health check, API, Swagger UI tests with auth-test exclusion
-- ✅ **Deploy staging workflow** — Auto-deploy to Railway staging on develop push
+- ✅ **Deploy staging workflow** — Auto-deploy to AWS staging on develop push
 - ✅ **Deploy preview environments** — PR-based preview deployments with auto-cleanup
 - ✅ **Post-deploy smoke tests** — 5-check health verification after production deploys
 - ✅ **Slimmed pre-commit** — Only lint-staged (no tests), faster commits

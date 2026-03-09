@@ -158,17 +158,16 @@ Simply don't set `REDIS_URL` - the app will automatically use in-memory caching:
 
 ## 🌐 Production Deployment
 
-### Railway/Cloud Providers
+### Cloud Providers
 
 Most cloud providers offer managed Redis:
 
-**Railway:**
+**AWS ElastiCache:**
 
 ```bash
-# Add Redis service in Railway dashboard
-# Copy the Redis URL
-# Add to environment variables:
-REDIS_URL=redis://:password@host:port
+# ElastiCache Redis endpoint is configured automatically
+# via CloudFormation. The ECS task definition sets:
+REDIS_URL=redis://your-elasticache-endpoint:6379
 ```
 
 **Heroku:**
