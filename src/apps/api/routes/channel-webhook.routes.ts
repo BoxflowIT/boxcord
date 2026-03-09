@@ -8,11 +8,11 @@ const webhookService = new ChannelWebhookService(prisma);
 
 // Schemas
 const channelIdParam = z.object({
-  channelId: z.string().uuid()
+  channelId: z.string().min(1)
 });
 
 const webhookIdParam = z.object({
-  id: z.string().uuid()
+  id: z.string().min(1)
 });
 
 const createBody = z.object({
@@ -59,7 +59,7 @@ export async function channelWebhookRoutes(app: FastifyInstance) {
       },
       preHandler: app.validateParams(channelIdParam)
     },
-    async (request, reply) => {
+    async (request) => {
       const webhooks = await webhookService.getWebhooks(
         request.params.channelId
       );
@@ -68,7 +68,6 @@ export async function channelWebhookRoutes(app: FastifyInstance) {
         ...w,
         token: w.createdBy === request.user.id ? w.token : '••••••••'
       }));
-      reply.cache({ maxAge: 15 });
       return { success: true, data: sanitized };
     }
   );

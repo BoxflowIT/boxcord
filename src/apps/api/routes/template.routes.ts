@@ -35,9 +35,8 @@ export async function templateRoutes(app: FastifyInstance) {
         rateLimit: { max: 60, timeWindow: '1 minute' }
       }
     },
-    async (request, reply) => {
+    async (request) => {
       const templates = await templateService.getTemplates(request.user.id);
-      reply.cache({ maxAge: 30 });
       return { success: true, data: templates };
     }
   );

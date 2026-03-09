@@ -11,6 +11,7 @@ export default function NotificationSettings() {
     useState<NotificationPermission>('default');
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkStatus = async () => {
@@ -30,12 +31,20 @@ export default function NotificationSettings() {
 
   const handleToggle = async () => {
     setLoading(true);
+    setError(null);
 
     try {
       if (subscribed) {
         const success = await pushService.unsubscribe();
         if (success) {
           setSubscribed(false);
+        } else {
+          setError(
+            t(
+              'notifications.unsubscribeError',
+              'Failed to disable notifications'
+            )
+          );
         }
       } else {
         const success = await pushService.subscribe();
@@ -44,9 +53,27 @@ export default function NotificationSettings() {
           setPermission('granted');
         } else {
           // Check if permission was denied
-          setPermission(Notification.permission);
+          const currentPermission = Notification.permission;
+          setPermission(currentPermission);
+          if (currentPermission === 'denied') {
+            setError(t('notifications.permissionDenied'));
+          } else {
+            setError(
+              t(
+                'notifications.subscribeError',
+                'Could not enable notifications. Make sure VAPID keys are configured on the server.'
+              )
+            );
+          }
         }
       }
+    } catch {
+      setError(
+        t(
+          'notifications.subscribeError',
+          'Could not enable notifications. Make sure VAPID keys are configured on the server.'
+        )
+      );
     } finally {
       setLoading(false);
     }
@@ -89,6 +116,8 @@ export default function NotificationSettings() {
         label={t('notifications.title')}
         description={t('notifications.description')}
       />
+
+      {error && <p className="text-sm text-red-400 mt-2">{error}</p>}
 
       {subscribed && (
         <button
