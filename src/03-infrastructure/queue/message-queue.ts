@@ -59,10 +59,13 @@ export async function initializeQueues(app: FastifyInstance): Promise<void> {
     return;
   }
 
+  // Parse REDIS_URL if available, otherwise fall back to REDIS_HOST/PORT
+  const redisUrl = process.env.REDIS_URL;
+  const parsedUrl = redisUrl ? new URL(redisUrl) : null;
   const connection = {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: Number(process.env.REDIS_PORT) || 6379,
-    password: process.env.REDIS_PASSWORD,
+    host: parsedUrl?.hostname || process.env.REDIS_HOST || 'localhost',
+    port: Number(parsedUrl?.port || process.env.REDIS_PORT) || 6379,
+    password: parsedUrl?.password || process.env.REDIS_PASSWORD || undefined,
     maxRetriesPerRequest: null // Required for BullMQ
   };
 

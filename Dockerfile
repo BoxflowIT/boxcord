@@ -35,7 +35,7 @@ RUN apk add --no-cache openssl dumb-init
 COPY package.json yarn.lock ./
 COPY prisma ./prisma/
 
-RUN yarn install --frozen-lockfile --ignore-engines --production \
+RUN yarn install --frozen-lockfile --ignore-engines --production --ignore-scripts \
     && yarn prisma:generate \
     && yarn cache clean
 
@@ -46,8 +46,12 @@ COPY --from=builder /app/dist ./dist/
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD wget -q --spider http://localhost:3001/health || exit 1
 
+# Create uploads directory
+RUN mkdir -p /app/uploads
+
 # Non-root user for security
 RUN addgroup -g 1001 -S nodejs && adduser -S boxcord -u 1001
+RUN chown -R boxcord:nodejs /app/uploads
 USER boxcord
 
 # Expose port
