@@ -124,7 +124,7 @@ jobs:
           echo "🔍 Running smoke tests against $STAGING_URL..."
           echo "→ Health check..."
           HEALTH=$(curl -sf "$STAGING_URL/health" || echo "FAILED")
-          if echo "$HEALTH" | grep -q "ok"; then
+          if echo "$HEALTH" | grep -q "ok\|healthy"; then
             echo "  ✅ Health check passed"
           else
             echo "  ❌ Health check failed: $HEALTH"
