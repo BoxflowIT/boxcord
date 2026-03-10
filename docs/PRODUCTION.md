@@ -4,10 +4,10 @@ Complete guide for deploying Boxcord to production.
 
 ## Prerequisites
 
-- [ ] PostgreSQL database (AWS RDS)
-- [ ] Redis instance (AWS ElastiCache, recommended)
-- [ ] AWS Cognito User Pool (shared with Boxtime)
-- [ ] Domain name (optional)
+- [x] PostgreSQL database (AWS RDS) ✅ `boxcord-production` (eu-north-1)
+- [x] Redis instance (AWS ElastiCache) ✅ `boxcord-production` (noeviction)
+- [x] AWS Cognito User Pool ✅ (shared with Boxtime)
+- [x] Domain name ✅ `boxcord.boxflow.com`
 
 ## Environment Variables
 
@@ -150,15 +150,15 @@ socket.on('connect', () => console.log('✅ WebSocket connected'));
 
 - [x] Configure CloudWatch dashboard ✅ (`Boxcord-Production`, 22 widgets)
 - [x] Configure CloudWatch alarms ✅ (8 alarms → SNS `boxcord-alerts`)
-- [ ] Configure Sentry alerts
-- [ ] Setup uptime monitoring (UptimeRobot, Pingdom)
+- [x] Configure Sentry alerts ✅ (client + server, error tracking active)
+- [ ] Setup uptime monitoring (UptimeRobot / BetterStack)
 
 ### 5. Performance
 
-- [ ] Enable Redis caching
-- [ ] Setup CDN for static assets (CloudFront) ✅
-- [ ] Configure database connection pooling
-- [ ] Enable Prisma Accelerate (optional)
+- [x] Enable Redis caching ✅ (ElastiCache, noeviction policy)
+- [x] Setup CDN for static assets ✅ (CloudFront `E184WCVC6C5PL4`)
+- [x] Configure database connection pooling ✅ (Prisma, 20 connections/instance)
+- [ ] Enable Prisma Accelerate (optional, not needed with current setup)
 
 ## Scaling
 
@@ -254,14 +254,14 @@ All alarms send to SNS topic `arn:aws:sns:eu-north-1:650485669960:boxcord-alerts
 
 ## Security Checklist
 
-- [ ] Use HTTPS only (enable HSTS)
-- [ ] Set secure JWT_SECRET (min 32 chars)
-- [ ] Enable rate limiting
-- [ ] Configure CORS properly
-- [ ] Enable Helmet security headers
-- [ ] Regular dependency updates
-- [ ] Database backups enabled
-- [ ] Secrets stored in environment (never in code)
+- [x] Use HTTPS only (enable HSTS) ✅ `strict-transport-security: max-age=15552000; includeSubDomains`
+- [x] JWT via AWS Cognito ✅ (RS256, JWKS validation)
+- [x] Enable rate limiting ✅ (100 req/min default, Redis-backed)
+- [x] Configure CORS properly ✅ (`origin: boxcord.boxflow.com`, credentials)
+- [x] Enable Helmet security headers ✅ (CSP, X-Frame-Options, Referrer-Policy, etc.)
+- [x] Regular dependency updates ✅ (0 vulnerabilities as of 2026-03-10)
+- [x] Database backups enabled ✅ (RDS: 14-day prod, 7-day staging)
+- [x] Secrets stored in environment ✅ (ECS task definition env vars)
 
 ## Backup & Recovery
 

@@ -67,13 +67,14 @@ export default function () {
 }
 
 export function handleSummary(data) {
+  const metrics = data.metrics;
   console.log('\n=== Health Check Load Test Summary ===');
   console.log(`Target: ${BASE_URL}`);
-  console.log(`Total requests: ${data.metrics.http_reqs.values.count}`);
-  console.log(`Avg response time: ${data.metrics.http_req_duration.values.avg.toFixed(1)}ms`);
-  console.log(`p95 response time: ${data.metrics.http_req_duration.values['p(95)'].toFixed(1)}ms`);
-  console.log(`p99 response time: ${data.metrics.http_req_duration.values['p(99)'].toFixed(1)}ms`);
-  console.log(`Error rate: ${(data.metrics.health_errors.values.rate * 100).toFixed(2)}%`);
+  console.log(`Total requests: ${metrics.http_reqs?.values?.count ?? 'N/A'}`);
+  console.log(`Avg response time: ${metrics.http_req_duration?.values?.avg?.toFixed(1) ?? 'N/A'}ms`);
+  console.log(`p95 response time: ${metrics.http_req_duration?.values?.['p(95)']?.toFixed(1) ?? 'N/A'}ms`);
+  console.log(`p99 response time: ${metrics.http_req_duration?.values?.['p(99)']?.toFixed(1) ?? 'N/A'}ms`);
+  console.log(`Error rate: ${metrics.health_errors?.values?.rate != null ? (metrics.health_errors.values.rate * 100).toFixed(2) + '%' : 'N/A'}`);
   console.log('=====================================\n');
 
   return {
