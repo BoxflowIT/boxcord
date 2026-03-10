@@ -33,6 +33,9 @@ yarn-error.log*
 # Testing
 coverage/
 
+# Load test results
+load-tests/results/*.json
+
 # Misc
 *.tsbuildinfo
 uploads/
