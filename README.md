@@ -2,7 +2,7 @@
 
 Discord-like real-time chat application for Boxflow, soon integrated with Boxtime.
 
-**Latest version:** 1.9.0 | [View Changelog](CHANGELOG.md)
+**Latest version:** 1.12.0 | [View Changelog](CHANGELOG.md)
 
 ## 🚀 Quick Start
 

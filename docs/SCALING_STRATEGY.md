@@ -437,8 +437,8 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: boxcord-api
-  minReplicas: 3
-  maxReplicas: 12
+  minReplicas: 1      # Production: min 1, max 5
+  maxReplicas: 5       # Staging: min 1, max 3
   metrics:
   - type: Resource
     resource:
@@ -458,11 +458,11 @@ spec:
 
 ```yaml
 Service:
-  DesiredCount: 3
+  DesiredCount: 1
   
-AutoScaling:
-  MinCapacity: 3
-  MaxCapacity: 12
+AutoScaling:  # Production: min 1, max 5 | Staging: min 1, max 3
+  MinCapacity: 1
+  MaxCapacity: 5
   
   TargetTrackingScaling:
     - MetricType: ECSServiceAverageCPUUtilization
@@ -539,16 +539,27 @@ Alarms:
     
   - Name: SlowResponseTime
     Metric: TargetResponseTime
-    Threshold: 500ms
-    Percentile: p95
+    Threshold: 1s
     
   - Name: HighErrorRate
-    Metric: HTTPCode_Target_5XX_Count
-    Threshold: 1%
+    Metric: HTTPCode_ELB_5XX_Count
+    Threshold: 10 per 5min
     
   - Name: DatabaseConnectionsHigh
     Metric: DatabaseConnections
-    Threshold: 180  # 90% of max
+    Threshold: 80
+
+  - Name: RDSHighCPU
+    Metric: CPUUtilization (RDS)
+    Threshold: 80%
+
+  - Name: RDSLowStorage
+    Metric: FreeStorageSpace
+    Threshold: < 2GB
+
+  - Name: RedisHighCPU
+    Metric: CPUUtilization (ElastiCache)
+    Threshold: 80%
 ```
 
 ## Cost Estimation
@@ -592,8 +603,14 @@ Alarms:
 
 ### Load Test for Target User Count
 
+> **Note:** Production-ready load test scripts are available in `load-tests/`:
+> - `k6 run load-tests/health.js` — Baseline health check (verifies DB + Redis)
+> - `k6 run load-tests/api-smoke.js` — Smoke test (5 VUs, 1 min)
+> - `k6 run load-tests/api-load.js` — Full load test (ramp to 50 VUs, 17 min)
+> - `k6 run load-tests/spike.js` — Spike test / auto-scaling validation (100 VUs)
+
 ```javascript
-// tests/load/high-scale-test.js
+// tests/load/high-scale-test.js (reference for 3,000+ user target)
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import ws from 'k6/ws';
@@ -674,11 +691,11 @@ k6 cloud tests/load/high-scale-test.js
 - 🏗️ [ ] Load balancer configured (ALB or nginx) with health checks
 - 🏗️ [ ] Sticky sessions enabled for WebSocket connections
 - 🏗️ [ ] Deploy 2-3 application instances
-- 🏗️ [ ] Monitoring dashboards created (CloudWatch/Grafana)
-- 🏗️ [ ] Alerts configured (CPU >80%, memory >85%, response time >500ms, errors >1%)
-- 🏗️ [ ] Auto-scaling rules configured (target: CPU 70%)
+- ✅ [x] Monitoring dashboards created (`Boxcord-Production` CloudWatch dashboard, 22 widgets)
+- ✅ [x] Alerts configured (8 CloudWatch alarms → SNS `boxcord-alerts`)
+- ✅ [x] Auto-scaling rules configured (CPU 70% + Memory 80% target tracking)
 - 🏗️ [ ] Rollback plan documented and tested
-- 🏗️ [ ] Database backups automated (daily snapshots, 30-day retention)
+- ✅ [x] Database backups automated (RDS snapshots: 14-day retention prod, 7-day staging)
 - 🏗️ [ ] SSL certificates installed and auto-renewing
 
 ### Before Deploying to Support 3,000+ Users

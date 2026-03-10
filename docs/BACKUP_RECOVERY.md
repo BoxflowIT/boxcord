@@ -7,7 +7,7 @@
 RDS provides automated daily snapshots and point-in-time recovery out of the box.
 
 **Current Configuration (via CloudFormation):**
-- Automated snapshots: Daily, retained for 7 days
+- Automated snapshots: Daily, retained for 14 days (production) / 7 days (staging)
 - Point-in-time recovery: Enabled (5-minute granularity)
 - Multi-AZ: Available for production upgrades
 
@@ -39,7 +39,7 @@ aws rds start-export-task \
 
 ### Backup Retention Policy
 
-- **RDS Automated Snapshots**: 7 days (configurable up to 35)
+- **RDS Automated Snapshots**: 14 days production / 7 days staging (configurable up to 35)
 - **Manual Snapshots**: Kept indefinitely until deleted
 - **S3 Exports**: Managed via lifecycle rules
 
@@ -235,7 +235,7 @@ echo "Backup test completed - $(date)"
   "Threshold": 5368709120,
   "ComparisonOperator": "LessThanThreshold",
   "EvaluationPeriods": 1,
-  "AlarmActions": ["arn:aws:sns:eu-north-1:650485669960:boxcord-ops-alerts"]
+  "AlarmActions": ["arn:aws:sns:eu-north-1:650485669960:boxcord-alerts"]
 }
 ```
 

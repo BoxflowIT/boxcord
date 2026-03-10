@@ -244,7 +244,7 @@ The CloudFormation template configures these on ECS automatically:
 
 ## Scaling
 
-- **ECS Fargate**: Auto-scales 1→5 tasks based on CPU utilization (70% target)
+- **ECS Fargate**: Auto-scales based on CPU (70% target) and memory (80% target). Production: 1→5 tasks. Staging: 1→3 tasks.
 - **RDS**: Change `DBInstanceClass` parameter to scale vertically; add read replicas for read scaling
 - **ElastiCache**: Change `CacheNodeType` parameter; enable cluster mode for horizontal scaling
 - **CloudFront**: Scales automatically to global traffic

@@ -1,6 +1,6 @@
 # Infrastructure Deployment Guide
 
-**Status:** 🏗️ Ready for deployment | **Target:** 1,000-3,000+ concurrent users | **Updated:** 2026-03-09
+**Status:** ✅ Deployed | **Target:** 1,000-3,000+ concurrent users | **Updated:** 2026-03-10
 
 This guide provides step-by-step instructions for deploying Boxcord to production infrastructure capable of supporting thousands of concurrent users.
 
@@ -117,7 +117,7 @@ This phase deploys a basic high-availability setup with 2-3 application instance
      --allocated-storage 100 \
      --storage-type gp3 \
      --vpc-security-group-ids sg-xxxxx \
-     --backup-retention-period 30 \
+     --backup-retention-period 14 \
      --preferred-backup-window "03:00-04:00" \
      --preferred-maintenance-window "sun:04:00-sun:05:00" \
      --multi-az \
@@ -241,7 +241,7 @@ This phase deploys a basic high-availability setup with 2-3 application instance
    
    # Performance
    maxmemory 2gb
-   maxmemory-policy allkeys-lru
+   maxmemory-policy noeviction  # Required for BullMQ
    
    # Persistence
    save 900 1
@@ -562,19 +562,23 @@ This phase deploys a basic high-availability setup with 2-3 application instance
    ```
 
 3. **Setup Auto-Scaling:**
+
+   > **Current configuration:** Production min 1 → max 5 tasks, Staging min 1 → max 3 tasks.
+   > Both use CPU (70%) and memory (80%) target tracking policies.
+
    ```bash
-   # Register scalable target
+   # Register scalable target (production: min 1, max 5)
    aws application-autoscaling register-scalable-target \
      --service-namespace ecs \
-     --resource-id service/boxcord-cluster/boxcord-api \
+     --resource-id service/boxcord-production/boxcord-production \
      --scalable-dimension ecs:service:DesiredCount \
-     --min-capacity 3 \
-     --max-capacity 8
+     --min-capacity 1 \
+     --max-capacity 5
    
-   # Create scaling policy (CPU-based)
+   # CPU-based scaling policy (target 70%)
    aws application-autoscaling put-scaling-policy \
      --service-namespace ecs \
-     --resource-id service/boxcord-cluster/boxcord-api \
+     --resource-id service/boxcord-production/boxcord-production \
      --scalable-dimension ecs:service:DesiredCount \
      --policy-name cpu-scaling \
      --policy-type TargetTrackingScaling \
@@ -582,6 +586,22 @@ This phase deploys a basic high-availability setup with 2-3 application instance
        "TargetValue": 70.0,
        "PredefinedMetricSpecification": {
          "PredefinedMetricType": "ECSServiceAverageCPUUtilization"
+       },
+       "ScaleInCooldown": 300,
+       "ScaleOutCooldown": 60
+     }'
+
+   # Memory-based scaling policy (target 80%)
+   aws application-autoscaling put-scaling-policy \
+     --service-namespace ecs \
+     --resource-id service/boxcord-production/boxcord-production \
+     --scalable-dimension ecs:service:DesiredCount \
+     --policy-name memory-scaling \
+     --policy-type TargetTrackingScaling \
+     --target-tracking-scaling-policy-configuration '{
+       "TargetValue": 80.0,
+       "PredefinedMetricSpecification": {
+         "PredefinedMetricType": "ECSServiceAverageMemoryUtilization"
        },
        "ScaleInCooldown": 300,
        "ScaleOutCooldown": 60
@@ -1018,87 +1038,42 @@ Separate worker processes handle background jobs (emails, webhooks, notification
 1. **Create SNS Topic for Alerts:**
    ```bash
    aws sns create-topic --name boxcord-alerts
+   # ARN: arn:aws:sns:eu-north-1:650485669960:boxcord-alerts
    aws sns subscribe \
-     --topic-arn arn:aws:sns:eu-north-1:xxxxx:boxcord-alerts \
+     --topic-arn arn:aws:sns:eu-north-1:650485669960:boxcord-alerts \
      --protocol email \
-     --notification-endpoint devops@example.com
+     --notification-endpoint jens@boxflow.com
    ```
 
-2. **Setup CloudWatch Alarms:**
+2. **Setup CloudWatch Alarms (8 alarms deployed):**
    
-   **High CPU Alert:**
+   All alarms send notifications to `arn:aws:sns:eu-north-1:650485669960:boxcord-alerts`.
+
+   | Alarm Name | Metric | Threshold | Period | Evaluations |
+   |------------|--------|-----------|--------|-------------|
+   | `boxcord-prod-high-cpu` | ECS CPUUtilization | > 80% | 5 min | 2 |
+   | `boxcord-prod-high-memory` | ECS MemoryUtilization | > 85% | 5 min | 2 |
+   | `boxcord-prod-rds-high-cpu` | RDS CPUUtilization | > 80% | 5 min | 2 |
+   | `boxcord-prod-rds-low-storage` | RDS FreeStorageSpace | < 2 GB | 5 min | 1 |
+   | `boxcord-prod-rds-high-connections` | RDS DatabaseConnections | > 80 | 5 min | 1 |
+   | `boxcord-prod-redis-high-cpu` | ElastiCache CPUUtilization | > 80% | 5 min | 2 |
+   | `boxcord-prod-alb-5xx` | ALB HTTPCode_ELB_5XX_Count | > 10 | 5 min | 1 |
+   | `boxcord-prod-alb-response-time` | ALB TargetResponseTime | > 1s | 5 min | 2 |
+
+   Example alarm creation:
    ```bash
    aws cloudwatch put-metric-alarm \
-     --alarm-name boxcord-high-cpu \
-     --alarm-description "Alert when CPU exceeds 80%" \
+     --alarm-name boxcord-prod-high-cpu \
+     --alarm-description "ECS CPU > 80% for 10 minutes" \
      --metric-name CPUUtilization \
      --namespace AWS/ECS \
+     --dimensions Name=ClusterName,Value=boxcord-production Name=ServiceName,Value=boxcord-production \
      --statistic Average \
      --period 300 \
      --threshold 80 \
      --comparison-operator GreaterThanThreshold \
      --evaluation-periods 2 \
-     --alarm-actions arn:aws:sns:eu-north-1:xxxxx:boxcord-alerts
-   ```
-   
-   **High Memory Alert:**
-   ```bash
-   aws cloudwatch put-metric-alarm \
-     --alarm-name boxcord-high-memory \
-     --alarm-description "Alert when memory exceeds 85%" \
-     --metric-name MemoryUtilization \
-     --namespace AWS/ECS \
-     --statistic Average \
-     --period 300 \
-     --threshold 85 \
-     --comparison-operator GreaterThanThreshold \
-     --evaluation-periods 2 \
-     --alarm-actions arn:aws:sns:eu-north-1:xxxxx:boxcord-alerts
-   ```
-   
-   **High Error Rate:**
-   ```bash
-   aws cloudwatch put-metric-alarm \
-     --alarm-name boxcord-high-errors \
-     --alarm-description "Alert when 5xx errors exceed 1%" \
-     --metric-name HTTPCode_Target_5XX_Count \
-     --namespace AWS/ApplicationELB \
-     --statistic Sum \
-     --period 300 \
-     --threshold 50 \
-     --comparison-operator GreaterThanThreshold \
-     --evaluation-periods 1 \
-     --alarm-actions arn:aws:sns:eu-north-1:xxxxx:boxcord-alerts
-   ```
-   
-   **Slow Response Time:**
-   ```bash
-   aws cloudwatch put-metric-alarm \
-     --alarm-name boxcord-slow-response \
-     --alarm-description "Alert when response time exceeds 500ms" \
-     --metric-name TargetResponseTime \
-     --namespace AWS/ApplicationELB \
-     --statistic Average \
-     --period 300 \
-     --threshold 0.5 \
-     --comparison-operator GreaterThanThreshold \
-     --evaluation-periods 2 \
-     --alarm-actions arn:aws:sns:eu-north-1:xxxxx:boxcord-alerts
-   ```
-   
-   **Database Connections High:**
-   ```bash
-   aws cloudwatch put-metric-alarm \
-     --alarm-name boxcord-db-connections-high \
-     --alarm-description "Alert when DB connections exceed 150" \
-     --metric-name DatabaseConnections \
-     --namespace AWS/RDS \
-     --statistic Average \
-     --period 300 \
-     --threshold 150 \
-     --comparison-operator GreaterThanThreshold \
-     --evaluation-periods 1 \
-     --alarm-actions arn:aws:sns:eu-north-1:xxxxx:boxcord-alerts
+     --alarm-actions arn:aws:sns:eu-north-1:650485669960:boxcord-alerts
    ```
 
 ### Grafana Dashboard (Self-Hosted Alternative)
@@ -1414,10 +1389,10 @@ After Phase 1 deployment (1,000 users):
 - [TESTING.md](./TESTING.md) - Testing guide and load test procedures
 
 ### Monitoring Links
-- CloudWatch Dashboard: https://console.aws.amazon.com/cloudwatch/home#dashboards:name=Boxcord-Production
-- ECS Services: https://console.aws.amazon.com/ecs/home#/clusters/boxcord-cluster/services
-- RDS Monitoring: https://console.aws.amazon.com/rds/home#database:id=boxcord-prod
-- ElastiCache: https://console.aws.amazon.com/elasticache/home#redis-group-nodes:id=boxcord-redis
+- CloudWatch Dashboard: https://eu-north-1.console.aws.amazon.com/cloudwatch/home?region=eu-north-1#dashboards/dashboard/Boxcord-Production
+- ECS Services: https://eu-north-1.console.aws.amazon.com/ecs/v2/clusters/boxcord-production/services
+- RDS Monitoring: https://eu-north-1.console.aws.amazon.com/rds/home?region=eu-north-1#database:id=boxcord-production
+- ElastiCache: https://eu-north-1.console.aws.amazon.com/elasticache/home?region=eu-north-1#/redis/boxcord-production
 
 ### Emergency Procedures
 
@@ -1465,6 +1440,6 @@ aws ecs update-service \
 
 ---
 
-**Last Updated:** 2026-03-09  
-**Version:** 1.1  
+**Last Updated:** 2026-03-10  
+**Version:** 1.2  
 **Maintainer:** DevOps Team

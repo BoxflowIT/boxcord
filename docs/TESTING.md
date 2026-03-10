@@ -77,11 +77,15 @@ Performance tests that simulate concurrent users.
 # Install K6 (first time)
 sudo snap install k6
 
-# Run load test
-k6 run tests/load/api-load-test.js
+# Production load test suite (targets staging)
+k6 run load-tests/health.js        # Baseline health check
+k6 run load-tests/api-smoke.js     # Smoke test (5 VUs, 1 min)
+k6 run load-tests/api-load.js      # Full load test (ramp to 50 VUs)
+k6 run load-tests/spike.js         # Spike test / auto-scaling validation (100 VUs)
 
-# Run with custom API URL
-API_URL=http://production-server.com k6 run tests/load/api-load-test.js
+# Legacy load test (targets custom URL)
+k6 run tests/load/api-load-test.js
+API_URL=https://staging.boxcord.boxflow.com k6 run tests/load/api-load-test.js
 ```
 
 **Test Scenarios:**
@@ -180,7 +184,7 @@ tests/
 ├── e2e/
 │   └── user-flows.spec.ts       # Playwright E2E tests
 ├── load/
-│   └── api-load-test.js         # K6 load tests
+│   └── api-load-test.js         # K6 load tests (legacy)
 ├── services/                     # Backend unit tests
 │   ├── chatbot.service.test.ts
 │   ├── push.service.test.ts
@@ -189,6 +193,14 @@ tests/
 │   ├── webhook.service.test.ts
 │   └── workspace.service.test.ts
 └── setup.ts                      # Test setup/mocks
+
+load-tests/                        # Production load test suite
+├── health.js                     # Health check baseline
+├── api-smoke.js                  # API smoke test (5 VUs)
+├── api-load.js                   # Full load test (50 VUs)
+├── spike.js                      # Spike/auto-scaling test (100 VUs)
+├── results/                      # JSON results (gitignored)
+└── README.md                     # Usage documentation
 
 client/tests/
 ├── components/                   # Frontend component tests
@@ -250,8 +262,8 @@ client/tests/
 *These are deployment/infrastructure tasks, not code changes:*
 
 1. **Production Monitoring**
-   - [ ] Configure CloudWatch/Grafana dashboards
-   - [ ] Set up alerting for performance degradation (>200ms p95)
+   - [x] Configure CloudWatch dashboards ✅ (`Boxcord-Production`, 22 widgets)
+   - [x] Set up alerting ✅ (8 CloudWatch alarms → SNS `boxcord-alerts`)
    - [ ] Track real user metrics (RUM)
    - [ ] Monitor error rates and uptime (target: 99.9%)
 

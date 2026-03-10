@@ -168,6 +168,10 @@ Most cloud providers offer managed Redis:
 # ElastiCache Redis endpoint is configured automatically
 # via CloudFormation. The ECS task definition sets:
 REDIS_URL=redis://your-elasticache-endpoint:6379
+
+# Custom parameter group 'boxcord-redis7' applied with:
+# maxmemory-policy = noeviction (required for BullMQ)
+# Applied to both production and staging clusters.
 ```
 
 **Docker Compose (Development):**

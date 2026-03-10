@@ -148,9 +148,10 @@ socket.on('connect', () => console.log('✅ WebSocket connected'));
 
 ### 4. Setup Monitoring
 
+- [x] Configure CloudWatch dashboard ✅ (`Boxcord-Production`, 22 widgets)
+- [x] Configure CloudWatch alarms ✅ (8 alarms → SNS `boxcord-alerts`)
 - [ ] Configure Sentry alerts
 - [ ] Setup uptime monitoring (UptimeRobot, Pingdom)
-- [ ] Configure log aggregation (Datadog, LogDNA)
 
 ### 5. Performance
 
@@ -242,15 +243,14 @@ Track:
 - Database query performance
 - Cache hit rates
 
-### Alerts
+### Alerts (CloudWatch — 8 alarms active)
 
-Configure alerts for:
+All alarms send to SNS topic `arn:aws:sns:eu-north-1:650485669960:boxcord-alerts`:
 
-- High error rate (> 1%)
-- Slow response times (> 500ms)
-- Database connection errors
-- High memory usage (> 80%)
-- WebSocket disconnections
+- ECS CPU > 80%, Memory > 85%
+- RDS CPU > 80%, Low storage < 2GB, Connections > 80
+- Redis CPU > 80%
+- ALB 5xx > 10/5min, Response time > 1s
 
 ## Security Checklist
 
@@ -268,12 +268,14 @@ Configure alerts for:
 ### Database Backups
 
 ```bash
-# Automated backups (RDS handles this via automated snapshots)
-# Or manual:
-pg_dump $DATABASE_URL > backup.sql
+# Automated backups via RDS automated snapshots
+# Production: 14-day retention | Staging: 7-day retention
+# Point-in-time recovery: 5-minute granularity
 
-# Restore:
-psql $DATABASE_URL < backup.sql
+# Create manual snapshot before major changes:
+aws rds create-db-snapshot \
+  --db-instance-identifier boxcord-production \
+  --db-snapshot-identifier boxcord-pre-migration-$(date +%Y%m%d)
 ```
 
 ### Disaster Recovery
