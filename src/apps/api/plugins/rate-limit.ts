@@ -24,12 +24,26 @@ async function rateLimitPlugin(app: FastifyInstance) {
     ? (cacheService as RedisCache).client
     : undefined;
 
+  // Routes excluded from rate limiting (health checks, readiness probes)
+  const RATE_LIMIT_SKIP_ROUTES = new Set([
+    '/health',
+    '/ready',
+    '/live',
+    '/metrics'
+  ]);
+
   await app.register(rateLimit, {
     global: true,
     max: 100, // 100 requests per timeWindow
     timeWindow: '1 minute',
     cache: 10000, // Cache for up to 10k users
-    allowList: ['127.0.0.1'], // Whitelist localhost
+    // Allow localhost and health/readiness endpoints (ALB health checks, monitoring, load tests)
+    allowList: (request: FastifyRequest) => {
+      const ip = request.ip;
+      if (ip === '127.0.0.1') return true;
+      const path = request.url.split('?')[0];
+      return RATE_LIMIT_SKIP_ROUTES.has(path);
+    },
     redis: redisClient, // Pass Redis client directly
     errorResponseBuilder: () => ({
       success: false,

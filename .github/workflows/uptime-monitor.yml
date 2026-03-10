@@ -1,0 +1,124 @@
+name: Uptime Monitor
+
+on:
+  schedule:
+    # Every 15 minutes
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check-uptime:
+    name: Check Uptime
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - env: production
+            url_var: PRODUCTION_URL
+          - env: staging
+            url_var: STAGING_URL
+
+    steps:
+      - name: Health Check (${{ matrix.env }})
+        id: health
+        run: |
+          TARGET="${{ vars[matrix.url_var] }}"
+          if [ -z "$TARGET" ]; then
+            echo "⚠️ No URL set for ${{ matrix.env }}"
+            echo "status=skip" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "🔍 Checking ${{ matrix.env }}: $TARGET"
+
+          # Health endpoint check with 15s timeout
+          HTTP_CODE=$(curl -sf -o /tmp/health.json -w "%{http_code}" \
+            --max-time 15 "$TARGET/health" 2>/dev/null || echo "000")
+          RESPONSE_TIME=$(curl -sf -o /dev/null -w "%{time_total}" \
+            --max-time 15 "$TARGET/health" 2>/dev/null || echo "99")
+          RESPONSE_MS=$(echo "$RESPONSE_TIME * 1000" | bc | cut -d. -f1)
+
+          echo "HTTP: $HTTP_CODE | Response: ${RESPONSE_MS}ms"
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ ${{ matrix.env }} is UP (${RESPONSE_MS}ms)"
+            echo "status=up" >> $GITHUB_OUTPUT
+
+            # Check subsystems from health response
+            if [ -f /tmp/health.json ]; then
+              echo "Health response:"
+              cat /tmp/health.json | python3 -m json.tool 2>/dev/null || cat /tmp/health.json
+            fi
+          else
+            echo "❌ ${{ matrix.env }} is DOWN (HTTP $HTTP_CODE)"
+            echo "status=down" >> $GITHUB_OUTPUT
+            echo "http_code=$HTTP_CODE" >> $GITHUB_OUTPUT
+          fi
+
+          echo "response_ms=$RESPONSE_MS" >> $GITHUB_OUTPUT
+
+      - name: Create issue on downtime
+        if: steps.health.outputs.status == 'down'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const env = '${{ matrix.env }}';
+            const httpCode = '${{ steps.health.outputs.http_code }}';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const title = `🚨 ${env} is DOWN (HTTP ${httpCode})`;
+
+            // Check if there's already an open issue for this
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'downtime',
+              per_page: 10
+            });
+
+            const existing = issues.find(i => i.title.includes(`${env} is DOWN`));
+            if (existing) {
+              // Add comment to existing issue instead of creating duplicate
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body: `⏰ Still down at ${new Date().toISOString()} (HTTP ${httpCode})\n\n[Workflow Run](${runUrl})`
+              });
+              console.log(`Updated existing issue #${existing.number}`);
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body: `## Downtime Alert\n\n` +
+                      `- **Environment:** ${env}\n` +
+                      `- **HTTP Status:** ${httpCode}\n` +
+                      `- **Detected:** ${new Date().toISOString()}\n` +
+                      `- **Workflow Run:** ${runUrl}\n\n` +
+                      `### Action Required\n\n` +
+                      `1. Check ECS service status in AWS Console\n` +
+                      `2. Check CloudWatch logs for errors\n` +
+                      `3. Verify ALB health checks\n` +
+                      `4. Check RDS and ElastiCache connectivity\n\n` +
+                      `Close this issue when the service is restored.`,
+                labels: ['bug', 'downtime', 'urgent']
+              });
+            }
+
+      - name: Summary
+        if: always() && steps.health.outputs.status != 'skip'
+        run: |
+          STATUS="${{ steps.health.outputs.status }}"
+          MS="${{ steps.health.outputs.response_ms }}"
+          if [ "$STATUS" = "up" ]; then
+            echo "## ✅ ${{ matrix.env }}: UP (${MS}ms)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## 🚨 ${{ matrix.env }}: DOWN" >> $GITHUB_STEP_SUMMARY
+          fi
