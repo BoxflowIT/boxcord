@@ -119,7 +119,7 @@ export default function NotificationSettings() {
 
       {error && <p className="text-sm text-red-400 mt-2">{error}</p>}
 
-      {subscribed && (
+      {subscribed && import.meta.env.DEV && (
         <button
           onClick={handleTest}
           disabled={loading}
