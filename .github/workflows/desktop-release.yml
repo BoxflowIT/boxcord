@@ -1,6 +1,6 @@
 name: Desktop Release
 
-# Trigger: push a tag like  git tag desktop-v1.12.0 && git push --tags
+# Trigger: push a tag like  git tag desktop-v1.13.0 && git push origin desktop-v1.13.0
 on:
   push:
     tags:
@@ -14,9 +14,31 @@ env:
   BOXCORD_URL: https://chat.boxflow.se
 
 jobs:
+  # ─── Create GitHub Release first ───────────────────────────────────
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#desktop-v}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        run: |
+          gh release create "v${{ steps.version.outputs.version }}" \
+            --title "Boxcord Desktop v${{ steps.version.outputs.version }}" \
+            --generate-notes \
+            --draft
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   # ─── Linux ──────────────────────────────────────────────────────────
   release-linux:
     name: Linux (AppImage + deb)
+    needs: create-release
     runs-on: ubuntu-latest
 
     steps:
@@ -47,6 +69,7 @@ jobs:
   # ─── Windows ────────────────────────────────────────────────────────
   release-windows:
     name: Windows (NSIS installer)
+    needs: create-release
     runs-on: windows-latest
 
     steps:
@@ -77,6 +100,7 @@ jobs:
   # ─── macOS ──────────────────────────────────────────────────────────
   release-mac:
     name: macOS (DMG)
+    needs: create-release
     runs-on: macos-latest
 
     steps:
@@ -105,3 +129,23 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Unsigned for now — needs Developer ID Application cert from Account Holder
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+  # ─── Publish Release ────────────────────────────────────────────────
+  publish-release:
+    name: Publish Release
+    needs: [release-linux, release-windows, release-mac]
+    runs-on: ubuntu-latest
+    if: always() && needs.create-release.result == 'success'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#desktop-v}" >> $GITHUB_OUTPUT
+
+      - name: Publish release (remove draft)
+        run: gh release edit "v${{ steps.version.outputs.version }}" --draft=false
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
