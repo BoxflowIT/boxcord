@@ -151,6 +151,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Publish release (remove draft)
         run: gh release edit "${{ github.ref_name }}" --draft=false
         env:
