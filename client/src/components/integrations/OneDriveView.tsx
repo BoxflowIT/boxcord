@@ -14,6 +14,7 @@ import {
   useUploadOneDriveFile,
   useDeleteOneDriveItem
 } from '../../hooks/queries/microsoft';
+import { openExternalUrl } from '../../utils/platform';
 import { toast } from '../../store/notification';
 import type { OneDriveItem } from '../../types';
 import {
@@ -253,16 +254,16 @@ function FileTableRow({
         {/* Hover actions */}
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
           {!isFolder && (
-            <a
-              href={item.webUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                openExternalUrl(item.webUrl);
+              }}
               className="p-1.5 text-boxflow-muted hover:text-white rounded transition-colors"
               title={t('microsoft.openInBrowser')}
-              onClick={(e) => e.stopPropagation()}
             >
               <ExternalLinkIcon size="sm" />
-            </a>
+            </button>
           )}
           <button
             onClick={(e) => {

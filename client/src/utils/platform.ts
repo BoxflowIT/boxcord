@@ -50,6 +50,6 @@ export const openExternalUrl = (url: string): void => {
   if (api) {
     api.openExternal(url);
   } else {
-    window.location.href = url;
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 };
