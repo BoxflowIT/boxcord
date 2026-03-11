@@ -12,7 +12,16 @@ import type {
   DMChannel,
   ReactionCount,
   MessageAttachment,
-  Poll
+  Poll,
+  MicrosoftConnectionStatus,
+  MicrosoftUser,
+  OneDriveItemList,
+  OneDriveItem,
+  CalendarEventList,
+  CalendarEvent,
+  SharePointSite,
+  CreateEventInput,
+  UpdateEventInput
 } from '../types';
 
 const API_BASE = '/api/v1';
@@ -651,4 +660,151 @@ export const api = {
       id: string;
       token: string;
     }>(`/channel-webhooks/manage/${id}/regenerate`, { method: 'POST' })
+};
+
+// ─── Microsoft 365 ──────────────────────────────────────────────────────────
+
+export const microsoft365Api = {
+  // OAuth
+  getStatus: () =>
+    request<MicrosoftConnectionStatus>('/integrations/microsoft/status'),
+  getConnectUrl: () =>
+    request<{ url: string }>('/integrations/microsoft/connect'),
+  disconnect: () =>
+    request<void>('/integrations/microsoft/disconnect', { method: 'POST' }),
+  getProfile: () => request<MicrosoftUser>('/integrations/microsoft/profile'),
+
+  // OneDrive
+  listOneDriveFiles: (folderId?: string) =>
+    request<OneDriveItemList>(
+      `/integrations/microsoft/onedrive/files${folderId ? `?folderId=${folderId}` : ''}`
+    ),
+  searchOneDrive: (query: string) =>
+    request<OneDriveItemList>(
+      `/integrations/microsoft/onedrive/search?q=${encodeURIComponent(query)}`
+    ),
+  getOneDriveItem: (itemId: string) =>
+    request<OneDriveItem>(`/integrations/microsoft/onedrive/items/${itemId}`),
+  shareOneDriveItem: (itemId: string) =>
+    request<{ url: string }>('/integrations/microsoft/onedrive/share', {
+      method: 'POST',
+      body: JSON.stringify({ itemId })
+    }),
+  uploadOneDriveFile: async (file: File, folderId?: string) => {
+    const token = useAuthStore.getState().token;
+    const formData = new FormData();
+    formData.append('file', file);
+    const url = `${API_BASE}/integrations/microsoft/onedrive/upload${folderId ? `?folderId=${folderId}` : ''}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+      body: formData
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message ?? 'Upload failed');
+    return data.data as OneDriveItem;
+  },
+  deleteOneDriveItem: (itemId: string) =>
+    request<void>(`/integrations/microsoft/onedrive/items/${itemId}`, {
+      method: 'DELETE'
+    }),
+  getOneDriveItemPermissions: (itemId: string) =>
+    request<{
+      value: Array<{
+        id: string;
+        roles: string[];
+        grantedTo?: { user?: { displayName: string; email?: string } };
+        grantedToV2?: { user?: { displayName: string; email?: string } };
+      }>;
+    }>(`/integrations/microsoft/onedrive/items/${itemId}/permissions`),
+
+  // Calendar
+  getCalendarEvents: (
+    days?: number,
+    startDateTime?: string,
+    endDateTime?: string
+  ) => {
+    const params = new URLSearchParams();
+    if (days) params.set('days', String(days));
+    if (startDateTime) params.set('startDateTime', startDateTime);
+    if (endDateTime) params.set('endDateTime', endDateTime);
+    // Send browser timezone so Graph API returns times in local tz
+    params.set('timeZone', Intl.DateTimeFormat().resolvedOptions().timeZone);
+    const qs = params.toString();
+    return request<CalendarEventList>(
+      `/integrations/microsoft/calendar/events${qs ? `?${qs}` : ''}`
+    );
+  },
+  createCalendarEvent: (input: CreateEventInput) =>
+    request<CalendarEvent>('/integrations/microsoft/calendar/events', {
+      method: 'POST',
+      body: JSON.stringify(input)
+    }),
+  updateCalendarEvent: (eventId: string, input: UpdateEventInput) =>
+    request<CalendarEvent>(
+      `/integrations/microsoft/calendar/events/${eventId}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(input)
+      }
+    ),
+  deleteCalendarEvent: (eventId: string) =>
+    request<void>(`/integrations/microsoft/calendar/events/${eventId}`, {
+      method: 'DELETE'
+    }),
+
+  // SharePoint
+  listSharePointSites: () =>
+    request<{ value: SharePointSite[] }>(
+      '/integrations/microsoft/sharepoint/sites'
+    ),
+  listSharePointFiles: (siteId: string, folderId?: string) =>
+    request<OneDriveItemList>(
+      `/integrations/microsoft/sharepoint/sites/${siteId}/files${folderId ? `?folderId=${folderId}` : ''}`
+    ),
+  searchSharePointFiles: (siteId: string, query: string) =>
+    request<OneDriveItemList>(
+      `/integrations/microsoft/sharepoint/sites/${siteId}/search?q=${encodeURIComponent(query)}`
+    ),
+  shareSharePointItem: (siteId: string, itemId: string) =>
+    request<{ url: string }>('/integrations/microsoft/sharepoint/share', {
+      method: 'POST',
+      body: JSON.stringify({ siteId, itemId })
+    }),
+  getSharePointItemPermissions: (siteId: string, itemId: string) =>
+    request<{
+      value: Array<{
+        id: string;
+        roles: string[];
+        grantedTo?: { user?: { displayName: string; email?: string } };
+        grantedToV2?: { user?: { displayName: string; email?: string } };
+      }>;
+    }>(
+      `/integrations/microsoft/sharepoint/sites/${siteId}/items/${itemId}/permissions`
+    ),
+  uploadSharePointFile: async (
+    siteId: string,
+    file: File,
+    folderId?: string
+  ) => {
+    const token = useAuthStore.getState().token;
+    const formData = new FormData();
+    formData.append('file', file);
+    const url = `${API_BASE}/integrations/microsoft/sharepoint/sites/${siteId}/upload${folderId ? `?folderId=${folderId}` : ''}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+      body: formData
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message ?? 'Upload failed');
+    return data.data as OneDriveItem;
+  },
+  deleteSharePointItem: (siteId: string, itemId: string) =>
+    request<void>(
+      `/integrations/microsoft/sharepoint/sites/${siteId}/items/${itemId}`,
+      {
+        method: 'DELETE'
+      }
+    )
 };

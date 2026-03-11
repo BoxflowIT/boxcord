@@ -19,12 +19,15 @@ import Sidebar from '../components/Sidebar';
 import ChannelView from '../components/ChannelView';
 import DMView from '../components/DMView';
 import WelcomeView from '../components/WelcomeView';
+import IntegrationView from '../components/integrations/IntegrationView';
+import HelloFlowView from '../components/integrations/HelloFlowView';
 import MemberList from '../components/MemberList';
 import ProfileModal from '../components/ProfileModal';
 import SettingsModal from '../components/SettingsModal';
 import { GlobalSearch } from '../components/GlobalSearch';
 import { DMCallOverlay } from '../components/dm/DMCallOverlay';
 import { stopRingingSound, playVoiceLeaveSound } from '../utils/voiceSound';
+import { toast } from '../store/notification';
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -136,6 +139,20 @@ export default function Chat() {
     }
   }, [workspaces, currentWorkspace, setCurrentWorkspace]);
 
+  // Handle Microsoft 365 OAuth redirect params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('microsoft_connected') === 'true') {
+      toast.success('Microsoft 365 ansluten!');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+    const msError = params.get('microsoft_error');
+    if (msError) {
+      toast.error(`Microsoft 365-fel: ${decodeURIComponent(msError)}`);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   // Auto-select first channel when workspace changes
   // BUT respect the current URL if it points to a valid channel/DM
   useEffect(() => {
@@ -199,6 +216,8 @@ export default function Chat() {
             }
           />
           <Route path="dm/:channelId" element={<DMView />} />
+          <Route path="site/helloflow" element={<HelloFlowView />} />
+          <Route path="integrations/:type" element={<IntegrationView />} />
           <Route path="*" element={<WelcomeView />} />
         </Routes>
       </div>

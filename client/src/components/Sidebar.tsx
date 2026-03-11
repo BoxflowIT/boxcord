@@ -12,6 +12,8 @@ import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
 import { signOut } from '../services/cognito';
 import { useWorkspaces, useChannels } from '../hooks/useQuery';
+import { useMicrosoftStatus } from '../hooks/queries/microsoft';
+import { microsoft365Api } from '../services/api';
 import { useWorkspaceOperations } from '../hooks/useWorkspaceOperations';
 import { useChannelOperations } from '../hooks/useChannelOperations';
 import { useModalWithData } from '../hooks/useModalState';
@@ -47,12 +49,15 @@ export default function Sidebar({
     currentWorkspace,
     setCurrentWorkspace,
     currentChannel,
-    setCurrentChannel
+    setCurrentChannel,
+    activeView,
+    setActiveView
   } = useChatStore();
 
   // Server Data from React Query
   const { data: workspaces = [] } = useWorkspaces();
   const { data: channels = [] } = useChannels(currentWorkspace?.id);
+  const { data: msStatus } = useMicrosoftStatus();
 
   const { user, logout } = useAuthStore();
 
@@ -89,7 +94,29 @@ export default function Sidebar({
   // Handlers (declared before operations hooks)
   const handleWorkspaceSelect = (workspace: Workspace | null) => {
     setCurrentWorkspace(workspace);
+    setActiveView({ type: 'workspace' });
     // Channels loaded automatically by useChannels() hook
+  };
+
+  const handleHelloFlowClick = () => {
+    setActiveView({ type: 'helloflow' });
+    navigate('/chat/site/helloflow');
+  };
+
+  const handleIntegrationClick = (
+    id: 'onedrive' | 'calendar' | 'sharepoint'
+  ) => {
+    setActiveView({ type: 'integration', id });
+    navigate(`/chat/integrations/${id}`);
+  };
+
+  const handleMsConnect = async () => {
+    try {
+      const { url } = await microsoft365Api.getConnectUrl();
+      window.location.href = url;
+    } catch {
+      // Error handled in UI
+    }
   };
 
   const handleChannelSelect = (channel: Channel | null) => {
@@ -257,7 +284,13 @@ export default function Sidebar({
         <WorkspaceSidebar
           workspaces={workspaces}
           currentWorkspaceId={currentWorkspace?.id}
+          activeView={activeView}
+          msConnected={!!msStatus?.connected}
+          msEnabled={!!msStatus?.enabled}
           onWorkspaceSelect={handleWorkspaceSelect}
+          onHelloFlowClick={handleHelloFlowClick}
+          onIntegrationClick={handleIntegrationClick}
+          onMsConnect={handleMsConnect}
           onEditWorkspace={handleEditWorkspace}
           onDeleteWorkspace={handleDeleteWorkspace}
           onLeaveWorkspace={handleLeaveWorkspace}
@@ -299,12 +332,13 @@ export default function Sidebar({
             )}
           </div>
 
+          {/* Microsoft 365 Integrations — moved to server bar */}
+
           {/* Following Threads */}
           <div className="relative z-50">
             <FollowingThreadsList
-              onSelectThread={(threadId) => {
-                // Thread sidebar will be opened by the component
-                console.log('Selected thread:', threadId);
+              onSelectThread={(_threadId, channelId) => {
+                navigate(`/chat/channels/${channelId}`);
               }}
             />
           </div>

@@ -16,6 +16,7 @@ import KeybindsTab from './settings/KeybindsTab';
 import { LanguageTab } from './settings/LanguageTab';
 import AccountTab from './settings/AccountTab';
 import AboutTab from './settings/AboutTab';
+import IntegrationsTab from './settings/IntegrationsTab';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -89,6 +90,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             {activeTab === 'keybinds' && <KeybindsTab />}
 
             {activeTab === 'language' && <LanguageTab />}
+
+            {activeTab === 'integrations' && <IntegrationsTab />}
 
             {activeTab === 'account' && <AccountTab />}
 

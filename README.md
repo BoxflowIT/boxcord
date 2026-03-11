@@ -145,6 +145,17 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Rate limiting** - API abuse protection
 - **Content Security Policy** - Browser-level security
 
+### 🔗 Microsoft 365 Integration
+- **OAuth 2.0 login** - Secure Microsoft identity with PKCE flow
+- **OneDrive file browser** - Browse, upload, download, delete, share files with Teams-style UI
+- **Calendar view** - View, create, edit, delete Outlook calendar events
+- **SharePoint file browser** - Browse SharePoint sites and document libraries
+- **HelloFlow intranet** - Quick access to Boxflow intranet via server bar
+- **Server bar icons** - OneDrive, Calendar, SharePoint accessible from workspace sidebar
+- **Sync polling** - Background sync (30s files, 60s calendar, 5min sites) via React Query
+- **Token management** - Automatic token refresh with per-user mutex locking
+- **Settings integration** - Connect/disconnect Microsoft 365 from settings
+
 ### 🎨 UI/UX
 - **Discord-inspired design** - Familiar and intuitive
 - **Theme customization** - Dark/Medium/Light themes with persistent settings (#225, #6)
@@ -173,6 +184,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Caching:** Redis (optional) + React Query
 - **Voice:** WebRTC with RNNoise AI
 - **Files:** AWS S3 or local storage
+- **Integrations:** Microsoft Graph API (OneDrive, Calendar, SharePoint)
 - **i18n:** react-i18next (English, Swedish)
 - **Architecture:** Onion Architecture (same as Boxtime)
 

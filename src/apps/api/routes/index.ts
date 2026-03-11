@@ -31,6 +31,7 @@ import {
   channelWebhookRoutes,
   webhookExecuteRoutes
 } from './channel-webhook.routes.js';
+import { microsoftRoutes } from './microsoft.routes.js';
 
 export async function registerRoutes(app: FastifyInstance) {
   // Health checks (no prefix, no auth required)
@@ -83,6 +84,9 @@ export async function registerRoutes(app: FastifyInstance) {
       await api.register(templateRoutes, { prefix: '/templates' });
       await api.register(channelWebhookRoutes, {
         prefix: '/channel-webhooks'
+      });
+      await api.register(microsoftRoutes, {
+        prefix: '/integrations/microsoft'
       });
     },
     { prefix: '/api/v1' }

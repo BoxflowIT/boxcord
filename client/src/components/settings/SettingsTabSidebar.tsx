@@ -10,6 +10,7 @@ type SettingsTab =
   | 'privacy'
   | 'keybinds'
   | 'language'
+  | 'integrations'
   | 'account'
   | 'about';
 
@@ -26,6 +27,7 @@ const tabs: { id: SettingsTab; labelKey: string }[] = [
   { id: 'privacy', labelKey: 'settings.privacy' },
   { id: 'keybinds', labelKey: 'settings.keybinds' },
   { id: 'language', labelKey: 'settings.language' },
+  { id: 'integrations', labelKey: 'settings.integrations' },
   { id: 'account', labelKey: 'settings.account' },
   { id: 'about', labelKey: 'settings.about' }
 ];
