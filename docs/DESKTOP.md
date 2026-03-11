@@ -102,52 +102,63 @@ This compiles TypeScript and starts Electron pointed at `localhost:5173`.
 
 ## Building Releases
 
-### 1. Add app icons
+### CI / CD — Automated builds (recommended)
 
-Place icons in `build/`:
-
-- `icon.png` — 512×512 PNG (Linux)
-- `icon.ico` — 256×256 ICO (Windows)
-- `icon.icns` — macOS icon set
-- `tray-icon.png` — 16×16 or 22×22 PNG (system tray)
-
-### 2. Set production URL
-
-In `desktop/src/main/main.ts`, the `APP_URL` defaults to `http://localhost:5173`. For production builds, set via environment:
+Releases are built automatically via **GitHub Actions** (`.github/workflows/desktop-release.yml`). Just push a tag:
 
 ```bash
-BOXCORD_URL=https://chat.boxflow.se yarn build:all
+# Bump version in desktop/package.json first, then:
+git tag desktop-v1.13.0
+git push origin desktop-v1.13.0
 ```
 
-Or hardcode in `main.ts` before building.
+The workflow runs three parallel jobs — Linux (`ubuntu-latest`), Windows (`windows-latest`), macOS (`macos-latest`) — and publishes the results to a GitHub Release automatically. Artifacts:
 
-### 3. Build
+| Platform | Output |
+|---|---|
+| Linux | `Boxcord-1.13.0.AppImage`, `boxcord_1.13.0_amd64.deb` |
+| Windows | `Boxcord Setup 1.13.0.exe` |
+| macOS | `Boxcord-1.13.0.dmg` |
+
+No manual icon conversion needed — `electron-builder` auto-converts `icon-1024.png` to `.ico` (Windows runner) and `.icns` (macOS runner).
+
+### Local builds
 
 ```bash
 cd desktop
 yarn build:linux    # → out/Boxcord-1.12.0.AppImage + .deb
-yarn build:win      # → out/Boxcord Setup 1.12.0.exe
-yarn build:mac      # → out/Boxcord-1.12.0.dmg
+yarn build:win      # → out/Boxcord Setup 1.12.0.exe  (Windows or cross-compile)
+yarn build:mac      # → out/Boxcord-1.12.0.dmg        (macOS only)
 ```
 
-### 4. Auto-update (GitHub Releases)
+The production URL is injected via `BOXCORD_URL` env var (defaults to `http://localhost:5173` for dev). The CI workflow sets `BOXCORD_URL=https://chat.boxflow.se` automatically.
 
-electron-builder publishes to GitHub Releases. When a new release is created:
+### Icons
 
-1. Desktop app checks every 4 hours
-2. Downloads update in background
-3. Shows notification via `update:downloaded` event
-4. Installs on next app restart (or user clicks "Install update")
+All platforms use `build/icon-1024.png` (1024×1024) as the source. `electron-builder` converts it to the required format per platform. The tray icon uses `build/icon-256.png`.
 
-Configure in `package.json` → `build.publish`:
+### macOS code signing (optional)
 
-```json
-{
-  "provider": "github",
-  "owner": "BoxflowIT",
-  "repo": "boxcord"
-}
-```
+The macOS build runs without code signing by default (`CSC_IDENTITY_AUTO_DISCOVERY=false`). For a signed + notarized DMG (required for distribution outside your org), add these secrets to the GitHub repo:
+
+| Secret | Value |
+|---|---|
+| `CSC_LINK` | Base64-encoded `.p12` certificate |
+| `CSC_KEY_PASSWORD` | Certificate password |
+| `APPLE_ID` | Apple ID email (for notarization) |
+| `APPLE_APP_SPECIFIC_PASSWORD` | App-specific password |
+| `APPLE_TEAM_ID` | Developer Team ID |
+
+Then remove the `CSC_IDENTITY_AUTO_DISCOVERY: 'false'` line from the workflow.
+
+### Auto-update (GitHub Releases)
+
+The desktop app checks for updates every 4 hours via `electron-updater`:
+
+1. Checks the GitHub Release matching `build.publish` in `package.json`
+2. Downloads the update in the background
+3. Fires `update:downloaded` event → shows notification banner in the UI
+4. Installs on next restart (or when user clicks "Install update")
 
 ## Client-Side Integration
 

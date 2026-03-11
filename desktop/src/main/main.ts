@@ -45,7 +45,7 @@ function createMainWindow(): BrowserWindow {
     minWidth: 940,
     minHeight: 600,
     title: 'Boxcord',
-    icon: path.join(__dirname, '..', '..', 'build', 'icon.png'),
+    icon: path.join(__dirname, '..', '..', 'build', 'icon-1024.png'),
     backgroundColor: '#1a1a2e',
     show: false, // Show after ready-to-show for smooth startup
     webPreferences: {

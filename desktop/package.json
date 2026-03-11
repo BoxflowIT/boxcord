@@ -39,27 +39,31 @@
     "publish": {
       "provider": "github",
       "owner": "BoxflowIT",
-      "repo": "boxcord"
+      "repo": "boxcord",
+      "releaseType": "release"
     },
     "win": {
       "target": [
         "nsis"
       ],
-      "icon": "build/icon.ico"
+      "icon": "build/icon-1024.png"
     },
     "mac": {
       "target": [
         "dmg"
       ],
-      "icon": "build/icon.icns",
-      "category": "public.app-category.business"
+      "icon": "build/icon-1024.png",
+      "category": "public.app-category.business",
+      "hardenedRuntime": true,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     },
     "linux": {
       "target": [
         "AppImage",
         "deb"
       ],
-      "icon": "build/icon.png",
+      "icon": "build/icon-1024.png",
       "category": "Chat"
     },
     "nsis": {
