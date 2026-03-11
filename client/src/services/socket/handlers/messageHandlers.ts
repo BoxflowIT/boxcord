@@ -2,6 +2,7 @@
 import { queryKeys } from '../../../hooks/useQuery';
 import { useChatStore } from '../../../store/chat';
 import { playMessageNotification } from '../../../utils/notificationSound';
+import { pushService } from '../../push';
 import { logger } from '../../../utils/logger';
 import type { PaginatedMessages, Channel, Message } from '../../../types';
 import type { SocketHandlerContext } from '../types';
@@ -53,6 +54,11 @@ export function registerMessageHandlers(context: SocketHandlerContext): void {
 
         if (isCurrentWorkspace) {
           playMessageNotification();
+          pushService.showNative(
+            message.author?.firstName || 'Nytt meddelande',
+            message.content?.slice(0, 100) || '',
+            `channel-${message.channelId}`
+          );
           // Increment unreadCount in cache directly
           queryClient.setQueryData<Channel[]>(channelsKey, (old) => {
             if (!old) return old;

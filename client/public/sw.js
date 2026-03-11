@@ -22,8 +22,8 @@ sw.addEventListener('push', (event) => {
 
     const options = {
       body: data.body,
-      icon: data.icon || '/logo.svg',
-      badge: '/logo.svg',
+      icon: data.icon || '/logo-192.png',
+      badge: '/logo-192.png',
       tag: data.tag || 'boxcord-notification',
       requireInteraction: false,
       data: {

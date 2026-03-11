@@ -1,0 +1,108 @@
+name: Desktop Release
+
+# Trigger: push a tag like  git tag desktop-v1.12.0 && git push --tags
+on:
+  push:
+    tags:
+      - 'desktop-v*'
+
+permissions:
+  contents: write # needed to create/update GitHub Releases
+
+env:
+  # Production URL loaded by the Electron app
+  BOXCORD_URL: https://chat.boxflow.se
+
+jobs:
+  # ─── Linux ──────────────────────────────────────────────────────────
+  release-linux:
+    name: Linux (AppImage + deb)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: desktop/yarn.lock
+
+      - name: Install dependencies
+        working-directory: desktop
+        run: yarn install --frozen-lockfile
+
+      - name: Compile TypeScript
+        working-directory: desktop
+        run: yarn build
+
+      - name: Build & publish Linux packages
+        working-directory: desktop
+        run: npx electron-builder --linux --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ─── Windows ────────────────────────────────────────────────────────
+  release-windows:
+    name: Windows (NSIS installer)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: desktop/yarn.lock
+
+      - name: Install dependencies
+        working-directory: desktop
+        run: yarn install --frozen-lockfile
+
+      - name: Compile TypeScript
+        working-directory: desktop
+        run: yarn build
+
+      - name: Build & publish Windows installer
+        working-directory: desktop
+        run: npx electron-builder --win --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ─── macOS ──────────────────────────────────────────────────────────
+  release-mac:
+    name: macOS (DMG)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: desktop/yarn.lock
+
+      - name: Install dependencies
+        working-directory: desktop
+        run: yarn install --frozen-lockfile
+
+      - name: Compile TypeScript
+        working-directory: desktop
+        run: yarn build
+
+      - name: Build & publish macOS DMG
+        working-directory: desktop
+        run: npx electron-builder --mac --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Code signing — add CSC_LINK + CSC_KEY_PASSWORD secrets to enable.
+          # Without them, the DMG is unsigned (works for internal distribution).
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'

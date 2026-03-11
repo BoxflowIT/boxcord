@@ -35,7 +35,7 @@ export function DMCallOverlay({
 }: DMCallOverlayProps) {
   const { t } = useTranslation();
   const { callState, otherUserName } = useDMCallStore();
-  const { isMuted, isDeafened, isVideoEnabled, isScreenSharing } =
+  const { isMuted, isDeafened, isSpeaking, isVideoEnabled, isScreenSharing } =
     useVoiceControls();
 
   if (callState === 'idle') return null;
@@ -154,24 +154,31 @@ export function DMCallOverlay({
 
           {/* Voice/Video controls */}
           <div className="flex items-center justify-center gap-1.5">
-            <button
-              onClick={handleToggleMute}
-              className={`p-2.5 rounded-lg transition-colors ${
-                isMuted
-                  ? 'bg-red-500 hover:bg-red-600 text-white'
-                  : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white'
-              }`}
-              title={isMuted ? t('voice.unmute') : t('voice.mute')}
-            >
-              {isMuted ? <MicOffIcon size="sm" /> : <MicIcon size="sm" />}
-            </button>
+            <div className="relative">
+              {!isMuted && isSpeaking && (
+                <span className="absolute inset-0 rounded-lg border-2 border-green-500 animate-pulse pointer-events-none" />
+              )}
+              <button
+                onClick={handleToggleMute}
+                className={`p-2.5 rounded-lg transition-all duration-150 ${
+                  isMuted
+                    ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                    : isSpeaking
+                      ? 'bg-green-500/20 text-green-400'
+                      : 'bg-boxflow-hover/50 text-boxflow-light hover:bg-boxflow-hover'
+                }`}
+                title={isMuted ? t('voice.unmute') : t('voice.mute')}
+              >
+                {isMuted ? <MicOffIcon size="sm" /> : <MicIcon size="sm" />}
+              </button>
+            </div>
 
             <button
               onClick={handleToggleDeafen}
-              className={`p-2.5 rounded-lg transition-colors ${
+              className={`p-2.5 rounded-lg transition-all duration-150 ${
                 isDeafened
-                  ? 'bg-red-500 hover:bg-red-600 text-white'
-                  : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white'
+                  ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                  : 'bg-boxflow-hover/50 text-boxflow-light hover:bg-boxflow-hover'
               }`}
               title={isDeafened ? t('voice.undeafen') : t('voice.deafen')}
             >
@@ -184,10 +191,10 @@ export function DMCallOverlay({
 
             <button
               onClick={handleToggleVideo}
-              className={`p-2.5 rounded-lg transition-colors ${
+              className={`p-2.5 rounded-lg transition-all duration-150 ${
                 isVideoEnabled
-                  ? 'bg-green-500 hover:bg-green-600 text-white'
-                  : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white'
+                  ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                  : 'bg-boxflow-hover/50 text-boxflow-light hover:bg-boxflow-hover'
               }`}
               title={
                 isVideoEnabled
@@ -212,10 +219,10 @@ export function DMCallOverlay({
 
             <button
               onClick={handleToggleScreenShare}
-              className={`p-2.5 rounded-lg transition-colors ${
+              className={`p-2.5 rounded-lg transition-all duration-150 ${
                 isScreenSharing
-                  ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                  : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white'
+                  ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
+                  : 'bg-boxflow-hover/50 text-boxflow-light hover:bg-boxflow-hover'
               }`}
               title={
                 isScreenSharing
@@ -228,7 +235,7 @@ export function DMCallOverlay({
 
             <button
               onClick={onEndCall}
-              className="p-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors"
+              className="p-2.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-150"
               title={t('voice.hangUp')}
             >
               <PhoneHangUpIcon size="sm" />

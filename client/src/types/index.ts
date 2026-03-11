@@ -186,3 +186,94 @@ export interface PollOption {
   hasVoted: boolean;
   voters: string[];
 }
+
+// ============================================================================
+// MICROSOFT 365 TYPES
+// ============================================================================
+
+export interface MicrosoftConnectionStatus {
+  enabled: boolean;
+  connected: boolean;
+  email?: string;
+}
+
+export interface MicrosoftUser {
+  id: string;
+  displayName: string;
+  mail: string;
+  userPrincipalName: string;
+}
+
+export interface OneDriveItem {
+  id: string;
+  name: string;
+  size: number;
+  webUrl: string;
+  createdDateTime: string;
+  lastModifiedDateTime: string;
+  createdBy?: { user?: { displayName: string; email?: string } };
+  lastModifiedBy?: { user?: { displayName: string; email?: string } };
+  file?: { mimeType: string };
+  folder?: { childCount: number };
+  '@microsoft.graph.downloadUrl'?: string;
+}
+
+export interface SharePointPermission {
+  id: string;
+  roles: string[];
+  grantedTo?: { user?: { displayName: string; email?: string } };
+  grantedToV2?: { user?: { displayName: string; email?: string } };
+}
+
+export interface OneDriveItemList {
+  value: OneDriveItem[];
+  '@odata.nextLink'?: string;
+}
+
+export interface CalendarEvent {
+  id: string;
+  subject: string;
+  start: { dateTime: string; timeZone: string };
+  end: { dateTime: string; timeZone: string };
+  location?: { displayName: string };
+  organizer?: { emailAddress: { name: string; address: string } };
+  webLink: string;
+  isAllDay: boolean;
+  bodyPreview?: string;
+  isOnlineMeeting?: boolean;
+  onlineMeeting?: { joinUrl: string };
+}
+
+export interface CalendarEventList {
+  value: CalendarEvent[];
+  '@odata.nextLink'?: string;
+}
+
+export interface SharePointSite {
+  id: string;
+  displayName: string;
+  webUrl: string;
+  description?: string;
+}
+
+export interface CreateEventInput {
+  subject: string;
+  start: { dateTime: string; timeZone: string };
+  end: { dateTime: string; timeZone: string };
+  location?: string;
+  body?: string;
+  attendees?: string[];
+  isOnlineMeeting?: boolean;
+  isAllDay?: boolean;
+}
+
+export interface UpdateEventInput {
+  subject?: string;
+  start?: { dateTime: string; timeZone: string };
+  end?: { dateTime: string; timeZone: string };
+  location?: string;
+  body?: string;
+  attendees?: string[];
+  isOnlineMeeting?: boolean;
+  isAllDay?: boolean;
+}

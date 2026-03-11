@@ -34,7 +34,7 @@ export function useSettings() {
     useLocalStorage<NotificationSoundType>('notificationSoundType', 'default');
   const [theme, setTheme] = useLocalStorage<'dark' | 'medium' | 'light'>(
     'theme',
-    'dark'
+    'medium'
   );
   const [compactMode, setCompactMode] = useLocalStorage('compactMode', false);
   const [messageDensity, setMessageDensity] = useLocalStorage<MessageDensity>(

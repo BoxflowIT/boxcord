@@ -361,7 +361,7 @@ export default function ChannelView({ onToggleMemberList }: ChannelViewProps) {
         logger.warn(
           `Channel ${channelId} not found, redirecting to ${defaultChannel.name}`
         );
-        navigate(`/channel/${defaultChannel.id}`);
+        navigate(`/chat/channels/${defaultChannel.id}`);
       }
     }
   }, [channelId, channels, setCurrentChannel, navigate]);

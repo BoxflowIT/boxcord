@@ -110,7 +110,11 @@ function NotificationMessage({
 }
 
 interface ThreadNotificationPanelProps {
-  onSelectThread: (threadId: string) => void;
+  onSelectThread: (
+    threadId: string,
+    channelId?: string,
+    workspaceId?: string
+  ) => void;
   onClose: () => void;
 }
 
@@ -130,7 +134,11 @@ export function ThreadNotificationPanel({
   const handleClick = (notification: ThreadNotification) => {
     markRead(notification.id);
     openThreadSidebar(notification.threadId);
-    onSelectThread(notification.threadId);
+    onSelectThread(
+      notification.threadId,
+      notification.channelId,
+      notification.workspaceId
+    );
   };
 
   return (

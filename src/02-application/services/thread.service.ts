@@ -12,6 +12,7 @@ export interface Thread {
   id: string;
   messageId: string;
   channelId: string;
+  workspaceId?: string;
   title: string | null;
   replyCount: number;
   participantCount: number;
@@ -190,8 +191,15 @@ export class ThreadService {
       }
     });
 
+    // Resolve workspaceId from channel
+    const channel = await this.prisma.channel.findUnique({
+      where: { id: thread.channelId },
+      select: { workspaceId: true }
+    });
+
     return {
       ...thread,
+      workspaceId: channel?.workspaceId,
       isFollowing: thread.participants.some((p) => p.userId === userId),
       unreadCount: 0
     };
@@ -234,6 +242,12 @@ export class ThreadService {
       return null;
     }
 
+    // Resolve workspaceId from channel
+    const channel = await this.prisma.channel.findUnique({
+      where: { id: thread.channelId },
+      select: { workspaceId: true }
+    });
+
     // Get last reply if exists
     const lastReply = thread.lastReplyBy
       ? await this.prisma.message.findFirst({
@@ -271,6 +285,7 @@ export class ThreadService {
 
     return {
       ...thread,
+      workspaceId: channel?.workspaceId,
       lastReply: lastReply ?? undefined,
       isFollowing: !!participant,
       unreadCount
@@ -314,6 +329,12 @@ export class ThreadService {
       return null;
     }
 
+    // Resolve workspaceId from channel
+    const channelForWs = await this.prisma.channel.findUnique({
+      where: { id: thread.channelId },
+      select: { workspaceId: true }
+    });
+
     const participant = thread.participants.find((p) => p.userId === userId);
     const unreadCount = participant?.lastReadAt
       ? await this.prisma.message.count({
@@ -326,6 +347,7 @@ export class ThreadService {
 
     return {
       ...thread,
+      workspaceId: channelForWs?.workspaceId,
       isFollowing: !!participant,
       unreadCount
     };
@@ -767,6 +789,12 @@ export class ThreadService {
       PAGINATION.MAX_PAGE_SIZE
     );
 
+    // Resolve workspaceId from channel (same for all threads)
+    const channel = await this.prisma.channel.findUnique({
+      where: { id: channelId },
+      select: { workspaceId: true }
+    });
+
     const threads = await this.prisma.thread.findMany({
       where: { channelId },
       orderBy: { lastReplyAt: 'desc' },
@@ -819,6 +847,7 @@ export class ThreadService {
 
         return {
           ...thread,
+          workspaceId: channel?.workspaceId,
           isFollowing: !!participant,
           unreadCount
         };

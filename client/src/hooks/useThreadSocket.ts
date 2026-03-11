@@ -50,6 +50,8 @@ export function useThreadSocket(socket: Socket | null) {
         const threads = useThreadStore.getState().threads;
         let threadTitle: string | null = null;
         let isFollowing = false;
+        let threadChannelId: string | undefined;
+        let threadWorkspaceId: string | undefined;
         for (const channelId in threads) {
           const thread = threads[channelId]?.find(
             (t) => t.id === data.threadId
@@ -57,6 +59,8 @@ export function useThreadSocket(socket: Socket | null) {
           if (thread) {
             threadTitle = thread.title;
             isFollowing = !!thread.isFollowing;
+            threadChannelId = thread.channelId;
+            threadWorkspaceId = thread.workspaceId;
             break;
           }
         }
@@ -73,6 +77,8 @@ export function useThreadSocket(socket: Socket | null) {
             type: 'mention',
             threadId: data.threadId,
             threadTitle,
+            channelId: threadChannelId,
+            workspaceId: threadWorkspaceId,
             actorId: data.reply.authorId,
             actorName:
               data.reply.author?.firstName ||
@@ -90,6 +96,8 @@ export function useThreadSocket(socket: Socket | null) {
             type: 'reply',
             threadId: data.threadId,
             threadTitle,
+            channelId: threadChannelId,
+            workspaceId: threadWorkspaceId,
             actorId: data.reply.authorId,
             actorName:
               data.reply.author?.firstName ||

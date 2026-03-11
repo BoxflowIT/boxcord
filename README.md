@@ -145,6 +145,17 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Rate limiting** - API abuse protection
 - **Content Security Policy** - Browser-level security
 
+### 🔗 Microsoft 365 Integration
+- **OAuth 2.0 login** - Secure Microsoft identity with PKCE flow
+- **OneDrive file browser** - Browse, upload, download, delete, share files with Teams-style UI
+- **Calendar view** - View, create, edit, delete Outlook calendar events
+- **SharePoint file browser** - Browse SharePoint sites and document libraries
+- **HelloFlow intranet** - Quick access to Boxflow intranet via server bar
+- **Server bar icons** - OneDrive, Calendar, SharePoint accessible from workspace sidebar
+- **Sync polling** - Background sync (30s files, 60s calendar, 5min sites) via React Query
+- **Token management** - Automatic token refresh with per-user mutex locking
+- **Settings integration** - Connect/disconnect Microsoft 365 from settings
+
 ### 🎨 UI/UX
 - **Discord-inspired design** - Familiar and intuitive
 - **Theme customization** - Dark/Medium/Light themes with persistent settings (#225, #6)
@@ -164,15 +175,28 @@ cd client && yarn dev # Frontend (Terminal 2)
 
 **📖 See:** [docs/SETTINGS_AND_SHORTCUTS.md](docs/SETTINGS_AND_SHORTCUTS.md)
 
+### 🖥️ Desktop App (Electron)
+- **Native desktop app** - Electron wrapper for Windows, macOS, Linux
+- **SharePoint embedding** - `<webview>` bypasses CSP for in-app SharePoint
+- **Auto-update** - Checks GitHub Releases, auto-downloads and installs
+- **System tray** - Minimize to tray with unread badge
+- **Native notifications** - OS-level notifications with click-to-focus
+- **Window state** - Persists size, position, maximized state
+- **Single instance** - Only one Boxcord window allowed
+
+**📖 See:** [docs/DESKTOP.md](docs/DESKTOP.md)
+
 ## Tech Stack
 
 - **Backend:** Fastify, Socket.io, Prisma, PostgreSQL
 - **Frontend:** React 18, Vite, TailwindCSS, Zustand
+- **Desktop:** Electron with electron-builder
 - **Auth:** AWS Cognito (shared with Boxtime)
 - **Real-time:** WebSocket (Socket.io) with optimistic updates
 - **Caching:** Redis (optional) + React Query
 - **Voice:** WebRTC with RNNoise AI
 - **Files:** AWS S3 or local storage
+- **Integrations:** Microsoft Graph API (OneDrive, Calendar, SharePoint)
 - **i18n:** react-i18next (English, Swedish)
 - **Architecture:** Onion Architecture (same as Boxtime)
 
@@ -187,6 +211,9 @@ boxcord/
 │   ├── 03-infrastructure/    # Database, external APIs
 │   └── apps/api/             # Fastify API + Socket.io
 ├── client/                   # React frontend
+├── desktop/                  # Electron desktop app
+│   ├── src/main/             # Main process (window, tray, IPC)
+│   └── src/preload/          # Context bridge for renderer
 ├── prisma/                   # Database schema
 └── docker-compose.yml        # Local PostgreSQL
 ```

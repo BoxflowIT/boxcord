@@ -73,13 +73,12 @@ export async function startScreenShare(
   try {
     const store = useVoiceStore.getState();
 
-    // Get display media stream
+    // Use standard getDisplayMedia for both web and Electron.
+    // In Electron, the main process handles source selection via
+    // session.setDisplayMediaRequestHandler + desktopCapturer.
     const screenStream = await navigator.mediaDevices.getDisplayMedia({
-      video: {
-        cursor: 'always',
-        displaySurface: 'monitor'
-      } as MediaTrackConstraints,
-      audio: false // Don't capture system audio for now
+      video: true,
+      audio: false
     });
 
     // Note: We keep existing camera video tracks

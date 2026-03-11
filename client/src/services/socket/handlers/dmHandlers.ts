@@ -4,6 +4,7 @@ import { useDMCallStore } from '../../../store/dmCallStore';
 import { useVoiceStore } from '../../../store/voiceStore';
 import { voiceService } from '../../voice.service';
 import { playMessageNotification } from '../../../utils/notificationSound';
+import { pushService } from '../../push';
 import {
   playVoiceLeaveSound,
   stopRingingSound
@@ -71,6 +72,11 @@ export function registerDMHandlers(
         });
         // Play sound if not own message AND not currently viewing
         playMessageNotification();
+        pushService.showNative(
+          message.author?.firstName || 'Nytt DM',
+          message.content?.slice(0, 100) || 'Nytt meddelande',
+          `dm-${message.channelId}`
+        );
       }
     }
 

@@ -56,6 +56,7 @@ async function main() {
     trustProxy: true, // Trust X-Forwarded-* headers from load balancer
     ignoreTrailingSlash: true, // /health and /health/ are the same
     caseSensitive: false, // Case-insensitive routing
+    maxParamLength: 300, // Microsoft Graph IDs can be 150+ chars
     // Request ID tracking
     requestIdHeader: 'x-request-id',
     requestIdLogLabel: 'requestId'

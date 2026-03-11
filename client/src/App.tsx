@@ -57,7 +57,7 @@ function App() {
     // Apply theme (useLocalStorage stores as JSON, so we need to parse)
     try {
       const themeRaw = localStorage.getItem('theme');
-      const theme = themeRaw ? JSON.parse(themeRaw) : 'dark';
+      const theme = themeRaw ? JSON.parse(themeRaw) : 'medium';
       document.documentElement.classList.remove('light-theme', 'medium-theme');
       if (theme === 'light') {
         document.documentElement.classList.add('light-theme');

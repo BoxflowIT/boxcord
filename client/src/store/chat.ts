@@ -8,10 +8,18 @@
 import { create } from 'zustand';
 import type { Channel, Workspace } from '../types';
 
+export type ActiveView =
+  | { type: 'workspace' }
+  | { type: 'helloflow' }
+  | { type: 'integration'; id: 'onedrive' | 'calendar' | 'sharepoint' };
+
 interface ChatState {
   // UI State - which workspace/channel is currently selected
   currentWorkspace: Workspace | null;
   currentChannel: Channel | null;
+
+  // Active view for server bar navigation
+  activeView: ActiveView;
 
   // Transient State - typing indicators (not persisted)
   typingUsers: Map<string, Set<string>>; // channelId -> Set of userIds
@@ -19,6 +27,7 @@ interface ChatState {
   // Actions
   setCurrentWorkspace: (workspace: Workspace | null) => void;
   setCurrentChannel: (channel: Channel | null) => void;
+  setActiveView: (view: ActiveView) => void;
   setTyping: (channelId: string, userId: string) => void;
   clearTyping: (channelId: string, userId: string) => void;
 }
@@ -27,12 +36,15 @@ export const useChatStore = create<ChatState>((set) => ({
   // Initial state
   currentWorkspace: null,
   currentChannel: null,
+  activeView: { type: 'workspace' },
   typingUsers: new Map(),
 
   // Actions
   setCurrentWorkspace: (workspace) => set({ currentWorkspace: workspace }),
 
   setCurrentChannel: (channel) => set({ currentChannel: channel }),
+
+  setActiveView: (view) => set({ activeView: view }),
 
   setTyping: (channelId, userId) =>
     set((state) => {

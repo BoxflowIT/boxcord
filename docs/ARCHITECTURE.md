@@ -305,3 +305,68 @@ Only for these scenarios:
 5. **HTTP only for user actions** - Not background operations
 
 This is how all modern real-time apps work! 🚀
+
+---
+
+## 🔗 Microsoft 365 Integration Architecture
+
+### **OAuth 2.0 Flow**
+
+```
+User clicks "Connect Microsoft 365"
+    ↓
+Client redirects to Microsoft login (PKCE)
+    ↓
+Microsoft redirects back with auth code
+    ↓
+Server exchanges code for tokens
+    ↓
+Tokens stored in MicrosoftToken table (encrypted)
+    ↓
+🟢 Connected! Graph API requests use stored tokens
+```
+
+### **Token Management**
+
+```
+Request to Graph API
+    ↓
+Check token expiry
+    ↓ (expired?)
+Per-user mutex lock → Refresh token → Update DB
+    ↓
+Make Graph API call with valid token
+```
+
+- **In-memory cache** avoids DB lookups on every request
+- **Per-user mutex** prevents concurrent refresh race conditions
+- **Auto-retry** on 401 with fresh token
+
+### **Data Flow (Polling-Based)**
+
+Unlike chat messages (WebSocket-first), Microsoft 365 data uses React Query polling:
+
+```
+OneDrive files:    Poll every 30 seconds
+Calendar events:   Poll every 60 seconds
+SharePoint sites:  Poll every 5 minutes
+```
+
+**Why polling?** Microsoft Graph does not provide WebSocket subscriptions for most resources. React Query's background refetch keeps data reasonably fresh.
+
+### **Service Layer**
+
+```
+client/src/hooks/queries/microsoft.ts    → React Query hooks
+client/src/services/api.ts               → microsoft365Api endpoints
+    ↓ HTTP
+src/apps/api/routes/microsoft.routes.ts  → Fastify route handlers
+    ↓
+src/02-application/services/microsoft-graph.service.ts → Graph API calls
+    ↓ HTTP
+Microsoft Graph API (graph.microsoft.com)
+```
+
+### **SharePoint CSP Limitation**
+
+SharePoint Online sets `frame-ancestors` headers that block iframe embedding from non-Microsoft domains. Current workaround: open HelloFlow intranet as external link. Planned: Electron desktop app with `<webview>` tag (bypasses CSP, same approach as Microsoft Teams).

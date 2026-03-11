@@ -40,6 +40,7 @@ model User {
     polls                Poll[]
     pollVotes            PollVote[]
     messageTemplates     MessageTemplate[]
+    microsoftToken       MicrosoftToken?
 
     @@map("users")
 }
@@ -608,4 +609,26 @@ model ChannelWebhook {
     @@index([channelId])
     @@index([token])
     @@map("channel_webhooks")
+}
+
+// ============================================
+// MICROSOFT 365 INTEGRATION
+// ============================================
+
+model MicrosoftToken {
+    id           String   @id @default(uuid())
+    userId       String   @unique @map("user_id") // One MS account per user
+    accessToken  String   @map("access_token") // Encrypted MS Graph access token
+    refreshToken String   @map("refresh_token") // Encrypted MS Graph refresh token
+    expiresAt    DateTime @map("expires_at") // When the access token expires
+    scopes       String // Granted scopes (space-separated)
+    msUserId     String?  @map("ms_user_id") // Microsoft user ID
+    msEmail      String?  @map("ms_email") // Microsoft email
+    createdAt    DateTime @default(now()) @map("created_at")
+    updatedAt    DateTime @updatedAt @map("updated_at")
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@map("microsoft_tokens")
 }

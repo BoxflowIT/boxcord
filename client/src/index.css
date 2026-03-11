@@ -85,27 +85,25 @@
 
 /* Light theme overrides - Discord/Slack inspired with better contrast */
 .light-theme {
-  --color-bg-darkest: #e3e5e8;    /* Sidebar/panels - darker for separation */
-  --color-bg-darker: #f2f3f5;     /* Main area background */
-  --color-bg-dark: #ffffff;       /* Messages, cards - clean white */
-  --color-bg-hover: #e8eaed;      /* Hover state - noticeable */
-  --color-bg-hover-50: rgba(232, 234, 237, 0.5);
+  --color-bg-darkest: #d5d8dc;    /* Sidebar/panels - darker for separation */
+  --color-bg-darker: #e3e5e8;     /* Main area background */
+  --color-bg-dark: #ebedef;       /* Messages, cards - soft gray instead of white */
+  --color-bg-hover: #d8dade;      /* Hover state - noticeable */
+  --color-bg-hover-50: rgba(216, 218, 222, 0.5);
   
   --color-text-light: #060607;    /* Primary text - darker for readability */
   --color-text-normal: #2e3338;   /* Normal text - good contrast */
   --color-text-muted: #4e5058;    /* Muted text - still readable */
   --color-text-subtle: #6a6d75;   /* Subtle text - timestamps etc */
   
-  --color-border: #d4d6d9;        /* Borders - visible separation */
-  --color-border-hover: #b8babf;  /* Hover borders - more prominent */
-  --color-border-50: rgba(212, 214, 217, 0.5);
-  
-  /* Primary/danger hover colors stay the same for light theme */
+  --color-border: #c5c8cc;        /* Borders - visible separation */
+  --color-border-hover: #a8acb3;  /* Hover borders - more prominent */
+  --color-border-50: rgba(197, 200, 204, 0.5);
   
   /* Scrollbar colors for light theme */
-  --scrollbar-track: #f2f3f5;
-  --scrollbar-thumb: #b8babf;
-  --scrollbar-thumb-hover: #9a9ca1;
+  --scrollbar-track: #e3e5e8;
+  --scrollbar-thumb: #a8acb3;
+  --scrollbar-thumb-hover: #8e929a;
   --scrollbar-thumb-active: #5865f2;
 }
 

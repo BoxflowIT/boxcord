@@ -59,7 +59,13 @@ const envSchema = z.object({
     .refine((val) => !val || z.string().email().safeParse(val).success, {
       message: 'Must be a valid email or empty'
     })
-    .optional()
+    .optional(),
+
+  // Microsoft 365 / Entra ID (optional)
+  MS_CLIENT_ID: z.string().optional(),
+  MS_CLIENT_SECRET: z.string().optional(),
+  MS_TENANT_ID: z.string().optional(),
+  MS_REDIRECT_URI: z.string().url().optional()
 });
 
 // Validate environment variables
@@ -103,5 +109,10 @@ export const features = {
   swagger: config.SWAGGER_ENABLED,
   serveStatic: config.SERVE_STATIC,
   s3: !!(config.AWS_S3_BUCKET && config.AWS_ACCESS_KEY_ID),
-  email: !!config.SENDGRID_API_KEY
+  email: !!config.SENDGRID_API_KEY,
+  microsoft365: !!(
+    config.MS_CLIENT_ID &&
+    config.MS_CLIENT_SECRET &&
+    config.MS_TENANT_ID
+  )
 };
