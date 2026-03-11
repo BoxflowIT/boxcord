@@ -1,0 +1,227 @@
+import { app, BrowserWindow, shell, ipcMain } from 'electron';
+import type { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
+import { autoUpdater } from 'electron-updater';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createTray } from './tray';
+import { registerNotificationHandlers } from './notifications';
+import { getStore } from './store';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// App URL — production uses deployed URL, dev uses local Vite server
+const APP_URL = process.env.BOXCORD_URL || 'http://localhost:5173';
+const IS_DEV =
+  process.env.NODE_ENV === 'development' || APP_URL.includes('localhost');
+
+let mainWindow: BrowserWindow | null = null;
+
+function createMainWindow(): BrowserWindow {
+  const store = getStore();
+
+  const windowState = store.get('windowState', {
+    width: 1280,
+    height: 800,
+    x: undefined as number | undefined,
+    y: undefined as number | undefined,
+    isMaximized: false
+  });
+
+  const win = new BrowserWindow({
+    width: windowState.width,
+    height: windowState.height,
+    x: windowState.x,
+    y: windowState.y,
+    minWidth: 940,
+    minHeight: 600,
+    title: 'Boxcord',
+    icon: path.join(__dirname, '..', '..', 'build', 'icon.png'),
+    backgroundColor: '#1a1a2e',
+    show: false, // Show after ready-to-show for smooth startup
+    webPreferences: {
+      preload: path.join(__dirname, '..', 'preload', 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      webviewTag: true, // Enable <webview> for SharePoint embedding
+      spellcheck: true
+    }
+  });
+
+  if (windowState.isMaximized) {
+    win.maximize();
+  }
+
+  // Persist window state on changes
+  const saveWindowState = () => {
+    if (win.isDestroyed()) return;
+    const bounds = win.getBounds();
+    store.set('windowState', {
+      width: bounds.width,
+      height: bounds.height,
+      x: bounds.x,
+      y: bounds.y,
+      isMaximized: win.isMaximized()
+    });
+  };
+
+  win.on('resize', saveWindowState);
+  win.on('move', saveWindowState);
+  win.on('maximize', saveWindowState);
+  win.on('unmaximize', saveWindowState);
+
+  // Smooth startup — show window once content is ready
+  win.once('ready-to-show', () => {
+    win.show();
+    win.focus();
+  });
+
+  // Open external links in default browser
+  win.webContents.setWindowOpenHandler(({ url }: { url: string }) => {
+    // Allow SharePoint webview navigations within the app
+    if (url.includes('sharepoint.com') || url.includes('office.com')) {
+      return { action: 'deny' }; // Handled by webview
+    }
+    shell.openExternal(url);
+    return { action: 'deny' };
+  });
+
+  // Navigate external links clicked in-page to default browser
+  win.webContents.on(
+    'will-navigate' as string as 'did-navigate',
+    (event, url) => {
+      const appOrigin = new URL(APP_URL).origin;
+      if (!url.startsWith(appOrigin)) {
+        event.preventDefault();
+        shell.openExternal(url);
+      }
+    }
+  );
+
+  // Load the app
+  win.loadURL(APP_URL);
+
+  // Open DevTools in dev mode
+  if (IS_DEV) {
+    win.webContents.openDevTools({ mode: 'detach' });
+  }
+
+  return win;
+}
+
+// ─── IPC Handlers ────────────────────────────────────────
+
+function registerIpcHandlers() {
+  // Window controls
+  ipcMain.on('window:minimize', () => mainWindow?.minimize());
+  ipcMain.on('window:maximize', () => {
+    if (mainWindow?.isMaximized()) {
+      mainWindow.unmaximize();
+    } else {
+      mainWindow?.maximize();
+    }
+  });
+  ipcMain.on('window:close', () => mainWindow?.close());
+
+  // SharePoint webview — open URL in webview (renderer handles the actual tag)
+  ipcMain.handle('webview:can-embed', () => true);
+
+  // App info
+  ipcMain.handle('app:version', () => app.getVersion());
+  ipcMain.handle('app:platform', () => process.platform);
+  ipcMain.handle('app:is-desktop', () => true);
+
+  // Badge count (unread messages)
+  ipcMain.on('app:set-badge', (_event: IpcMainEvent, count: number) => {
+    if (process.platform === 'darwin' && app.dock) {
+      app.dock.setBadge(count > 0 ? String(count) : '');
+    } else if (process.platform === 'linux') {
+      app.setBadgeCount(count);
+    }
+    // Windows uses tray overlay (handled in tray.ts)
+  });
+
+  // Store (persistent settings)
+  const store = getStore();
+  ipcMain.handle('store:get', (_event: IpcMainInvokeEvent, key: string) =>
+    store.get(key)
+  );
+  ipcMain.on('store:set', (_event: IpcMainEvent, key: string, value: unknown) =>
+    store.set(key, value)
+  );
+}
+
+// ─── Auto-Update ─────────────────────────────────────────
+
+function setupAutoUpdater() {
+  if (IS_DEV) return;
+
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('update-available', (info: { version: string }) => {
+    mainWindow?.webContents.send('update:available', info.version);
+  });
+
+  autoUpdater.on('update-downloaded', (info: { version: string }) => {
+    mainWindow?.webContents.send('update:downloaded', info.version);
+  });
+
+  autoUpdater.on('error', (err: Error) => {
+    console.error('Auto-update error:', err.message);
+  });
+
+  // Check for updates every 4 hours
+  autoUpdater.checkForUpdates();
+  setInterval(() => autoUpdater.checkForUpdates(), 4 * 60 * 60 * 1000);
+
+  // Allow renderer to trigger install
+  ipcMain.on('update:install', () => {
+    autoUpdater.quitAndInstall(false, true);
+  });
+}
+
+// ─── App Lifecycle ───────────────────────────────────────
+
+// Single instance lock — only one Boxcord window allowed
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
+}
+
+app.whenReady().then(() => {
+  mainWindow = createMainWindow();
+
+  registerIpcHandlers();
+  registerNotificationHandlers(mainWindow);
+  createTray(mainWindow);
+  setupAutoUpdater();
+
+  app.on('activate', () => {
+    // macOS: re-create window when dock icon clicked
+    if (BrowserWindow.getAllWindows().length === 0) {
+      mainWindow = createMainWindow();
+    }
+  });
+});
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+// Security: prevent new window creation from renderer
+(app as Electron.App).on('web-contents-created', (_event, contents) => {
+  contents.setWindowOpenHandler(({ url }: { url: string }) => {
+    shell.openExternal(url);
+    return { action: 'deny' };
+  });
+});

@@ -175,10 +175,22 @@ cd client && yarn dev # Frontend (Terminal 2)
 
 **📖 See:** [docs/SETTINGS_AND_SHORTCUTS.md](docs/SETTINGS_AND_SHORTCUTS.md)
 
+### 🖥️ Desktop App (Electron)
+- **Native desktop app** - Electron wrapper for Windows, macOS, Linux
+- **SharePoint embedding** - `<webview>` bypasses CSP for in-app SharePoint
+- **Auto-update** - Checks GitHub Releases, auto-downloads and installs
+- **System tray** - Minimize to tray with unread badge
+- **Native notifications** - OS-level notifications with click-to-focus
+- **Window state** - Persists size, position, maximized state
+- **Single instance** - Only one Boxcord window allowed
+
+**📖 See:** [docs/DESKTOP.md](docs/DESKTOP.md)
+
 ## Tech Stack
 
 - **Backend:** Fastify, Socket.io, Prisma, PostgreSQL
 - **Frontend:** React 18, Vite, TailwindCSS, Zustand
+- **Desktop:** Electron with electron-builder
 - **Auth:** AWS Cognito (shared with Boxtime)
 - **Real-time:** WebSocket (Socket.io) with optimistic updates
 - **Caching:** Redis (optional) + React Query
@@ -199,6 +211,9 @@ boxcord/
 │   ├── 03-infrastructure/    # Database, external APIs
 │   └── apps/api/             # Fastify API + Socket.io
 ├── client/                   # React frontend
+├── desktop/                  # Electron desktop app
+│   ├── src/main/             # Main process (window, tray, IPC)
+│   └── src/preload/          # Context bridge for renderer
 ├── prisma/                   # Database schema
 └── docker-compose.yml        # Local PostgreSQL
 ```

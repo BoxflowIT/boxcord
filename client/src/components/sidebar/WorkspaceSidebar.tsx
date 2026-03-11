@@ -17,21 +17,13 @@ import type { ActiveView } from '../../store/chat';
 
 function BoxflowLogo({ size = 28 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <rect width="40" height="40" rx="8" fill="#0d9488" />
-      <text
-        x="50%"
-        y="54%"
-        dominantBaseline="middle"
-        textAnchor="middle"
-        fontSize="18"
-        fontWeight="bold"
-        fill="white"
-        fontFamily="Arial, sans-serif"
-      >
-        BF
-      </text>
-    </svg>
+    <img
+      src="/logo-64.png"
+      alt="Boxflow"
+      width={size}
+      height={size}
+      className="rounded-md"
+    />
   );
 }
 
