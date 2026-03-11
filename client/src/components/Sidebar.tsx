@@ -14,6 +14,7 @@ import { signOut } from '../services/cognito';
 import { useWorkspaces, useChannels } from '../hooks/useQuery';
 import { useMicrosoftStatus } from '../hooks/queries/microsoft';
 import { microsoft365Api } from '../services/api';
+import { openExternalUrl } from '../utils/platform';
 import { useWorkspaceOperations } from '../hooks/useWorkspaceOperations';
 import { useChannelOperations } from '../hooks/useChannelOperations';
 import { useModalWithData } from '../hooks/useModalState';
@@ -113,7 +114,7 @@ export default function Sidebar({
   const handleMsConnect = async () => {
     try {
       const { url } = await microsoft365Api.getConnectUrl();
-      window.location.href = url;
+      openExternalUrl(url);
     } catch {
       // Error handled in UI
     }

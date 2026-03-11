@@ -8,6 +8,7 @@ import { useMicrosoftStatus } from '../../hooks/queries/microsoft';
 import { microsoft365Api } from '../../services/api';
 import { toast } from '../../store/notification';
 import { cn } from '../../utils/classNames';
+import { openExternalUrl } from '../../utils/platform';
 import { CloudIcon, CalendarIcon, GlobeIcon } from '../ui/Icons';
 
 // ─── Icons ───────────────────────────────────────────────────────────────────
@@ -59,7 +60,7 @@ export default function IntegrationSection() {
           onClick={async () => {
             try {
               const { url } = await microsoft365Api.getConnectUrl();
-              window.location.href = url;
+              openExternalUrl(url);
             } catch {
               toast.error('Kunde inte starta anslutningen');
             }

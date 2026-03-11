@@ -1,21 +1,16 @@
 import ElectronStore from 'electron-store';
+const Store =
+  (ElectronStore as unknown as { default: typeof ElectronStore }).default ||
+  ElectronStore;
 
-interface StoreSchema {
-  windowState: {
-    width: number;
-    height: number;
-    x: number | undefined;
-    y: number | undefined;
-    isMaximized: boolean;
-  };
-  [key: string]: unknown;
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let store: any = null;
 
-let store: ElectronStore<StoreSchema> | null = null;
-
-export function getStore(): ElectronStore<StoreSchema> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getStore(): any {
   if (!store) {
-    store = new ElectronStore<StoreSchema>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    store = new (Store as any)({
       name: 'boxcord-settings',
       defaults: {
         windowState: {

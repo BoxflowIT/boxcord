@@ -360,10 +360,18 @@ export default function AccountTab() {
             <button
               className="px-3 py-2 bg-boxflow-hover text-white rounded-lg hover:bg-boxflow-hover-bright transition-colors text-sm"
               onClick={() => {
-                window.open(
-                  'https://cognito-idp.eu-north-1.amazonaws.com/change-password',
-                  '_blank'
-                );
+                const api = (
+                  window as {
+                    electronAPI?: { openExternal: (url: string) => void };
+                  }
+                ).electronAPI;
+                const url =
+                  'https://cognito-idp.eu-north-1.amazonaws.com/change-password';
+                if (api) {
+                  api.openExternal(url);
+                } else {
+                  window.open(url, '_blank');
+                }
               }}
             >
               Change

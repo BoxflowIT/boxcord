@@ -50,7 +50,22 @@ const electronAPI = {
   storeGet: (key: string) =>
     ipcRenderer.invoke('store:get', key) as Promise<unknown>,
   storeSet: (key: string, value: unknown) =>
-    ipcRenderer.send('store:set', key, value)
+    ipcRenderer.send('store:set', key, value),
+
+  // ─── Screen sharing (desktopCapturer) ───────
+  getDesktopSources: () =>
+    ipcRenderer.invoke('desktop:get-sources') as Promise<
+      Array<{
+        id: string;
+        name: string;
+        thumbnail: string;
+        appIcon: string | null;
+      }>
+    >,
+
+  // ─── Open URL in system browser ─────────────
+  openExternal: (url: string) =>
+    ipcRenderer.invoke('shell:open-external', url) as Promise<void>
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

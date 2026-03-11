@@ -8,11 +8,16 @@
  */
 
 import { execSync, spawn } from 'node:child_process';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const root = resolve(__dirname, '..');
 
 console.log('🔨 Compiling TypeScript...');
 execSync('npx tsc -p tsconfig.main.json && npx tsc -p tsconfig.preload.json', {
   stdio: 'inherit',
-  cwd: import.meta.dirname ?? process.cwd(),
+  cwd: root,
 });
 
 console.log('🚀 Starting Electron...');
@@ -23,7 +28,7 @@ const electron = spawn('npx', ['electron', '.'], {
     NODE_ENV: 'development',
     BOXCORD_URL: 'http://localhost:5173',
   },
-  cwd: import.meta.dirname ?? process.cwd(),
+  cwd: root,
 });
 
 electron.on('close', (code) => {

@@ -1,6 +1,7 @@
 // Push Notification Service - Frontend
 import { api } from './api';
 import { logger } from '../utils/logger';
+import { isDesktop, getElectronAPI } from '../utils/platform';
 
 // Extend types for push notification support
 type PushManagerRegistration = ServiceWorkerRegistration & {
@@ -17,6 +18,8 @@ class PushNotificationService {
 
   // Check if push is supported
   isSupported(): boolean {
+    // In Electron, we use native notifications via IPC — always supported
+    if (isDesktop()) return true;
     return 'serviceWorker' in navigator && 'PushManager' in window;
   }
 
@@ -25,6 +28,12 @@ class PushNotificationService {
     if (!this.isSupported()) {
       logger.log('Push notifications not supported');
       return false;
+    }
+
+    // In Electron, skip service worker — native notifications handled via IPC
+    if (isDesktop()) {
+      logger.log('Desktop: native notifications ready via Electron');
+      return true;
     }
 
     try {
@@ -57,6 +66,12 @@ class PushNotificationService {
 
   // Request permission and subscribe
   async subscribe(): Promise<boolean> {
+    // In Electron, native notifications are always available
+    if (isDesktop()) {
+      logger.log('Desktop: notifications enabled natively');
+      return true;
+    }
+
     if (!this.registration) {
       await this.init();
     }
@@ -160,6 +175,14 @@ class PushNotificationService {
       outputArray[i] = rawData.charCodeAt(i);
     }
     return outputArray.buffer as ArrayBuffer;
+  }
+
+  // Show a native notification in Electron desktop app
+  showNative(title: string, body: string, tag?: string): void {
+    const api = getElectronAPI();
+    if (api) {
+      api.showNotification({ title, body, tag });
+    }
   }
 }
 

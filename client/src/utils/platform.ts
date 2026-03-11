@@ -25,6 +25,15 @@ export interface ElectronAPI {
   installUpdate: () => void;
   storeGet: (key: string) => Promise<unknown>;
   storeSet: (key: string, value: unknown) => void;
+  getDesktopSources: () => Promise<
+    Array<{
+      id: string;
+      name: string;
+      thumbnail: string;
+      appIcon: string | null;
+    }>
+  >;
+  openExternal: (url: string) => Promise<void>;
 }
 
 declare global {
@@ -41,4 +50,14 @@ export const isDesktop = (): boolean => {
 /** Get the Electron API (only available in desktop app) */
 export const getElectronAPI = (): ElectronAPI | null => {
   return window.electronAPI ?? null;
+};
+
+/** Navigate to an external URL — uses system browser in Electron, redirect in web */
+export const openExternalUrl = (url: string): void => {
+  const api = getElectronAPI();
+  if (api) {
+    api.openExternal(url);
+  } else {
+    window.location.href = url;
+  }
 };

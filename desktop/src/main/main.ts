@@ -1,11 +1,20 @@
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  shell,
+  ipcMain,
+  desktopCapturer,
+  session,
+  dialog
+} from 'electron';
 import type { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
-import { autoUpdater } from 'electron-updater';
+import electronUpdater from 'electron-updater';
+const { autoUpdater } = electronUpdater;
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createTray } from './tray';
-import { registerNotificationHandlers } from './notifications';
-import { getStore } from './store';
+import { createTray } from './tray.js';
+import { registerNotificationHandlers } from './notifications.js';
+import { getStore } from './store.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -149,6 +158,48 @@ function registerIpcHandlers() {
   ipcMain.on('store:set', (_event: IpcMainEvent, key: string, value: unknown) =>
     store.set(key, value)
   );
+
+  // ─── Screen sharing (desktopCapturer) ──────────────
+  ipcMain.handle('desktop:get-sources', async () => {
+    const sources = await desktopCapturer.getSources({
+      types: ['screen', 'window'],
+      thumbnailSize: { width: 320, height: 180 },
+      fetchWindowIcons: true
+    });
+    return sources.map((source) => ({
+      id: source.id,
+      name: source.name,
+      thumbnail: source.thumbnail.toDataURL(),
+      appIcon: source.appIcon?.toDataURL() || null
+    }));
+  });
+
+  // ─── Open URL in system browser ────────────────────
+  ipcMain.handle(
+    'shell:open-external',
+    (_event: IpcMainInvokeEvent, url: string) => {
+      // Only allow http/https URLs for security
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        return shell.openExternal(url);
+      }
+      return Promise.resolve();
+    }
+  );
+
+  // ─── File download with save dialog ────────────────
+  session.defaultSession.on('will-download', (_event, item) => {
+    const fileName = item.getFilename();
+    const opts: Electron.SaveDialogOptions = {
+      defaultPath: fileName
+    };
+    dialog.showSaveDialog(mainWindow!, opts).then(({ filePath, canceled }) => {
+      if (canceled || !filePath) {
+        item.cancel();
+      } else {
+        item.setSavePath(filePath);
+      }
+    });
+  });
 }
 
 // ─── Auto-Update ─────────────────────────────────────────

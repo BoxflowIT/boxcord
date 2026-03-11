@@ -5,6 +5,7 @@
  */
 
 import { microsoft365Api } from '../../services/api';
+import { openExternalUrl } from '../../utils/platform';
 import { toast } from '../../store/notification';
 import {
   useMicrosoftStatus,
@@ -120,7 +121,7 @@ export default function IntegrationsTab() {
             onClick={async () => {
               try {
                 const { url } = await microsoft365Api.getConnectUrl();
-                window.location.href = url;
+                openExternalUrl(url);
               } catch {
                 toast.error('Kunde inte starta anslutningen');
               }

@@ -6,7 +6,7 @@
   "main": "dist/main/main.js",
   "type": "module",
   "scripts": {
-    "dev": "node scripts/dev.js",
+    "dev": "node scripts/dev.mjs",
     "build": "tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json",
     "build:win": "yarn build && electron-builder --win",
     "build:mac": "yarn build && electron-builder --mac",
