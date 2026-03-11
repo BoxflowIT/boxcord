@@ -103,6 +103,10 @@ jobs:
         run: npx electron-builder --mac --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Code signing — add CSC_LINK + CSC_KEY_PASSWORD secrets to enable.
-          # Without them, the DMG is unsigned (works for internal distribution).
-          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          # Code signing
+          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          # Notarization
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: PT9H59KHPY
