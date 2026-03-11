@@ -231,7 +231,7 @@ function FileTableRow({
     <div className="grid grid-cols-[1fr_140px_160px_80px_80px] items-center px-4 py-2 hover:bg-boxflow-hover/30 transition-colors group border-b border-boxflow-hover-50/50 last:border-b-0">
       {/* Name */}
       <div
-        className={`flex items-center gap-3 min-w-0 ${onNavigate ? 'cursor-pointer' : ''}`}
+        className={`flex items-center gap-3 min-w-0 ${onNavigate ? 'cursor-pointer' : 'cursor-default'}`}
         onClick={onNavigate}
       >
         <span className="flex-shrink-0">
@@ -644,7 +644,9 @@ export function OneDriveView() {
                   key={item.id}
                   item={item}
                   onNavigate={
-                    item.folder ? () => navigateToFolder(item) : undefined
+                    item.folder
+                      ? () => navigateToFolder(item)
+                      : () => openExternalUrl(item.webUrl)
                   }
                   onShare={() => handleShare(item)}
                   onDelete={() => setDeleteTarget(item)}
