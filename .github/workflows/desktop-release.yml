@@ -26,9 +26,10 @@ jobs:
         id: version
         run: echo "version=${GITHUB_REF_NAME#desktop-v}" >> $GITHUB_OUTPUT
 
-      - name: Create GitHub Release
+      - name: Create draft GitHub Release
+        # Uses the trigger tag (desktop-v*) which already exists, avoiding v* tag rulesets
         run: |
-          gh release create "v${{ steps.version.outputs.version }}" \
+          gh release create "${{ github.ref_name }}" \
             --title "Boxcord Desktop v${{ steps.version.outputs.version }}" \
             --generate-notes \
             --draft
@@ -60,9 +61,13 @@ jobs:
         working-directory: desktop
         run: yarn build
 
-      - name: Build & publish Linux packages
+      - name: Build Linux packages
         working-directory: desktop
-        run: npx electron-builder --linux --publish always
+        run: npx electron-builder --linux --publish never
+
+      - name: Upload artifacts to release
+        working-directory: desktop/dist
+        run: gh release upload "${{ github.ref_name }}" *.AppImage *.deb latest-linux.yml --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -91,9 +96,13 @@ jobs:
         working-directory: desktop
         run: yarn build
 
-      - name: Build & publish Windows installer
+      - name: Build Windows installer
         working-directory: desktop
-        run: npx electron-builder --win --publish always
+        run: npx electron-builder --win --publish never
+
+      - name: Upload artifacts to release
+        working-directory: desktop/dist
+        run: gh release upload "${{ github.ref_name }}" *.exe *.exe.blockmap latest.yml --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -122,30 +131,27 @@ jobs:
         working-directory: desktop
         run: yarn build
 
-      - name: Build & publish macOS DMG
+      - name: Build macOS DMG
         working-directory: desktop
-        run: npx electron-builder --mac --publish always
+        run: npx electron-builder --mac --publish never
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Unsigned for now — needs Developer ID Application cert from Account Holder
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Upload artifacts to release
+        working-directory: desktop/dist
+        run: gh release upload "${{ github.ref_name }}" *.dmg *.dmg.blockmap latest-mac.yml --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ─── Publish Release ────────────────────────────────────────────────
   publish-release:
     name: Publish Release
     needs: [release-linux, release-windows, release-mac]
     runs-on: ubuntu-latest
-    if: always() && needs.create-release.result == 'success'
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Extract version from tag
-        id: version
-        run: echo "version=${GITHUB_REF_NAME#desktop-v}" >> $GITHUB_OUTPUT
-
       - name: Publish release (remove draft)
-        run: gh release edit "v${{ steps.version.outputs.version }}" --draft=false
+        run: gh release edit "${{ github.ref_name }}" --draft=false
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
