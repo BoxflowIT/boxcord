@@ -19,8 +19,9 @@ import { getStore } from './store.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// App URL — production uses deployed URL, dev uses local Vite server
-const APP_URL = process.env.BOXCORD_URL || 'http://localhost:5173';
+// App URL — dev script sets BOXCORD_URL to localhost; production always uses the real URL
+const PROD_URL = 'https://boxcord.boxflow.com';
+const APP_URL = process.env.BOXCORD_URL || PROD_URL;
 const IS_DEV =
   process.env.NODE_ENV === 'development' || APP_URL.includes('localhost');
 

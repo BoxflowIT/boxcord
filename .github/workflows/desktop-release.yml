@@ -11,7 +11,7 @@ permissions:
 
 env:
   # Production URL loaded by the Electron app
-  BOXCORD_URL: https://chat.boxflow.se
+  BOXCORD_URL: https://boxcord.boxflow.com
 
 jobs:
   # ─── Create GitHub Release first ───────────────────────────────────
