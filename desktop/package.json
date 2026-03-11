@@ -23,7 +23,7 @@
   "devDependencies": {
     "electron": "^35.1.2",
     "electron-builder": "^26.0.12",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.3"
   },
   "build": {
     "appId": "se.boxflow.boxcord",

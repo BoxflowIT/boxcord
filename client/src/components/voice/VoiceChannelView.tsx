@@ -43,6 +43,7 @@ export function VoiceChannelView({
   const {
     isMuted,
     isDeafened,
+    isSpeaking,
     isVideoEnabled,
     isScreenSharing,
     isPushToTalk,
@@ -352,6 +353,7 @@ export function VoiceChannelView({
               <VoiceControls
                 isMuted={isMuted}
                 isDeafened={isDeafened}
+                isSpeaking={isSpeaking}
                 isVideoEnabled={isVideoEnabled}
                 isScreenSharing={isScreenSharing}
                 isPushToTalk={isPushToTalk}

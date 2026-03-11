@@ -7,6 +7,7 @@ export interface Thread {
   id: string;
   messageId: string;
   channelId: string;
+  workspaceId?: string;
   title: string | null;
   replyCount: number;
   participantCount: number;
@@ -68,6 +69,8 @@ export interface ThreadNotification {
   type: ThreadNotificationType;
   threadId: string;
   threadTitle: string | null;
+  channelId?: string;
+  workspaceId?: string;
   actorId: string;
   actorName: string;
   message?: string;

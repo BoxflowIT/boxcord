@@ -159,20 +159,27 @@ function registerIpcHandlers() {
     store.set(key, value)
   );
 
-  // ─── Screen sharing (desktopCapturer) ──────────────
-  ipcMain.handle('desktop:get-sources', async () => {
-    const sources = await desktopCapturer.getSources({
-      types: ['screen', 'window'],
-      thumbnailSize: { width: 320, height: 180 },
-      fetchWindowIcons: true
-    });
-    return sources.map((source) => ({
-      id: source.id,
-      name: source.name,
-      thumbnail: source.thumbnail.toDataURL(),
-      appIcon: source.appIcon?.toDataURL() || null
-    }));
-  });
+  // ─── Screen sharing (setDisplayMediaRequestHandler) ──────────────
+  // Modern Electron approach: renderer calls standard getDisplayMedia(),
+  // main process handles source selection via desktopCapturer
+  session.defaultSession.setDisplayMediaRequestHandler(
+    async (_request, callback) => {
+      try {
+        const sources = await desktopCapturer.getSources({
+          types: ['screen', 'window'],
+          thumbnailSize: { width: 320, height: 180 }
+        });
+        // Use first screen source (primary monitor)
+        if (sources.length > 0) {
+          callback({ video: sources[0] });
+        } else {
+          callback({});
+        }
+      } catch {
+        callback({});
+      }
+    }
+  );
 
   // ─── Open URL in system browser ────────────────────
   ipcMain.handle(

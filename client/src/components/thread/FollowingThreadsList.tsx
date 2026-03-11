@@ -18,7 +18,11 @@ import { toast } from '../../store/notification';
 import type { Thread } from '../../store/thread';
 
 interface FollowingThreadsListProps {
-  onSelectThread: (threadId: string, channelId: string) => void;
+  onSelectThread: (
+    threadId: string,
+    channelId: string,
+    workspaceId?: string
+  ) => void;
 }
 
 export function FollowingThreadsList({
@@ -276,7 +280,7 @@ export function FollowingThreadsList({
               isEditing={editingThreadId === thread.id}
               onSelect={() => {
                 openThreadSidebar(thread.id);
-                onSelectThread(thread.id, thread.channelId);
+                onSelectThread(thread.id, thread.channelId, thread.workspaceId);
               }}
               onContextMenu={(x, y) =>
                 setContextMenu({ x, y, threadId: thread.id })

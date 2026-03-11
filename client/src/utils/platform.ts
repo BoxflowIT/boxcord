@@ -25,14 +25,6 @@ export interface ElectronAPI {
   installUpdate: () => void;
   storeGet: (key: string) => Promise<unknown>;
   storeSet: (key: string, value: unknown) => void;
-  getDesktopSources: () => Promise<
-    Array<{
-      id: string;
-      name: string;
-      thumbnail: string;
-      appIcon: string | null;
-    }>
-  >;
   openExternal: (url: string) => Promise<void>;
 }
 

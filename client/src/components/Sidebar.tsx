@@ -338,7 +338,12 @@ export default function Sidebar({
           {/* Following Threads */}
           <div className="relative z-50">
             <FollowingThreadsList
-              onSelectThread={(_threadId, channelId) => {
+              onSelectThread={(_threadId, channelId, workspaceId) => {
+                // Switch workspace if the thread belongs to a different one
+                if (workspaceId && workspaceId !== currentWorkspace?.id) {
+                  const target = workspaces.find((w) => w.id === workspaceId);
+                  if (target) setCurrentWorkspace(target);
+                }
                 navigate(`/chat/channels/${channelId}`);
               }}
             />
@@ -361,8 +366,38 @@ export default function Sidebar({
               </button>
               {showNotifications && (
                 <ThreadNotificationPanel
-                  onSelectThread={(threadId) => {
-                    console.log('Selected thread from notification:', threadId);
+                  onSelectThread={(threadId, channelId, workspaceId) => {
+                    // Try notification data first, then fall back to store lookup
+                    let targetChannelId = channelId;
+                    let targetWorkspaceId = workspaceId;
+
+                    if (!targetChannelId) {
+                      const allThreads = useThreadStore.getState().threads;
+                      for (const chId in allThreads) {
+                        const thread = allThreads[chId]?.find(
+                          (t) => t.id === threadId
+                        );
+                        if (thread) {
+                          targetChannelId = thread.channelId;
+                          targetWorkspaceId = thread.workspaceId;
+                          break;
+                        }
+                      }
+                    }
+
+                    if (targetChannelId) {
+                      if (
+                        targetWorkspaceId &&
+                        targetWorkspaceId !== currentWorkspace?.id
+                      ) {
+                        const target = workspaces.find(
+                          (w) => w.id === targetWorkspaceId
+                        );
+                        if (target) setCurrentWorkspace(target);
+                      }
+                      navigate(`/chat/channels/${targetChannelId}`);
+                    }
+                    setShowNotifications(false);
                   }}
                   onClose={() => setShowNotifications(false)}
                 />

@@ -2,7 +2,6 @@
 import { useVoiceStore } from '../../store/voiceStore';
 import { logger } from '../../utils/logger';
 import { getVideoConstraints } from '../../utils/videoQuality';
-import { isDesktop, getElectronAPI } from '../../utils/platform';
 import type { AudioPipelineState } from './types';
 
 /**
@@ -74,40 +73,13 @@ export async function startScreenShare(
   try {
     const store = useVoiceStore.getState();
 
-    let screenStream: MediaStream;
-
-    if (isDesktop()) {
-      // Electron: use desktopCapturer via IPC
-      const api = getElectronAPI()!;
-      const sources = await api.getDesktopSources();
-      if (sources.length === 0) {
-        logger.log('No screen sources available');
-        return;
-      }
-
-      // Use the first screen source (primary monitor)
-      // A source picker UI can be added later for multiple monitors/windows
-      const source = sources[0];
-
-      screenStream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: {
-          mandatory: {
-            chromeMediaSource: 'desktop',
-            chromeMediaSourceId: source.id
-          }
-        } as MediaTrackConstraints
-      });
-    } else {
-      // Browser: use standard getDisplayMedia
-      screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video: {
-          cursor: 'always',
-          displaySurface: 'monitor'
-        } as MediaTrackConstraints,
-        audio: false
-      });
-    }
+    // Use standard getDisplayMedia for both web and Electron.
+    // In Electron, the main process handles source selection via
+    // session.setDisplayMediaRequestHandler + desktopCapturer.
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({
+      video: true,
+      audio: false
+    });
 
     // Note: We keep existing camera video tracks
     // Screen share is added as an additional video track

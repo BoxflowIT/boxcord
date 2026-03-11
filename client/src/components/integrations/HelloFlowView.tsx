@@ -35,7 +35,8 @@ function EmbeddedView() {
         src={HELLOFLOW_URL}
         className="flex-1"
         partition="persist:microsoft"
-        allowpopups
+        // @ts-expect-error Electron webview attribute, React warns about non-boolean
+        allowpopups="true"
         style={{ width: '100%', height: '100%' }}
       />
     </div>

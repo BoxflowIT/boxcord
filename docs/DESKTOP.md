@@ -22,7 +22,7 @@ desktop/
 ├── tsconfig.preload.json     # Preload script TypeScript
 ├── build/                    # App icons (ico, icns, png)
 ├── scripts/
-│   └── dev.js                # Dev launcher
+│   └── dev.mjs               # Dev launcher (ESM)
 └── src/
     ├── main/
     │   ├── main.ts           # Main process — BrowserWindow, IPC, lifecycle
@@ -30,6 +30,7 @@ desktop/
     │   ├── notifications.ts  # Native notification handlers
     │   └── store.ts          # electron-store for persistent settings
     └── preload/
+        ├── package.json      # { "type": "commonjs" } — forces CJS output
         └── preload.ts        # contextBridge — safe API for renderer
 ```
 
@@ -66,6 +67,8 @@ desktop/
 2. **`contextBridge` only** — No `nodeIntegration`, no `require()` in renderer. All IPC goes through the typed `electronAPI` bridge.
 3. **`webviewTag: true`** — Enables `<webview>` for SharePoint. The `persist:microsoft` partition shares Microsoft auth cookies across webview instances.
 4. **Single instance** — `requestSingleInstanceLock()` prevents multiple Boxcord windows. Second launch focuses existing window.
+5. **`Node16` module strategy** — Both `tsconfig.main.json` and `tsconfig.preload.json` use `module: "Node16"` / `moduleResolution: "Node16"`. Main process outputs ESM (root `package.json` has `"type": "module"`). Preload outputs CJS via a local `src/preload/package.json` with `{"type": "commonjs"}` — required by Electron's context bridge.
+6. **`setDisplayMediaRequestHandler`** — Screen sharing uses the modern Electron API. The renderer calls standard `getDisplayMedia()`, while the main process intercepts the request and picks a source via `desktopCapturer.getSources()`. No custom IPC needed.
 
 ## Development
 
@@ -178,6 +181,20 @@ if (updateReady) {
 }
 ```
 
+### Screen Sharing
+
+Screen sharing works identically in web and desktop. The client calls the standard browser API:
+
+```typescript
+// client/src/services/voice/videoManager.ts
+const stream = await navigator.mediaDevices.getDisplayMedia({
+  video: true,
+  audio: false
+});
+```
+
+In Electron, `session.setDisplayMediaRequestHandler` in the main process intercepts the call and selects a source via `desktopCapturer.getSources()`. The renderer never touches Electron-specific APIs — all screen sharing code is platform-agnostic.
+
 ### SharePoint Webview
 
 In desktop mode, `HelloFlowView` renders:
@@ -191,6 +208,26 @@ In desktop mode, `HelloFlowView` renders:
 ```
 
 The `persist:microsoft` partition keeps Microsoft auth cookies, so users don't need to re-login to SharePoint after authenticating once.
+
+## Preload IPC API
+
+The preload script exposes these methods via `window.electronAPI`:
+
+|Category|Method|Type|
+|---|---|---|
+|Platform|`isDesktop()`|invoke → boolean|
+|Platform|`getVersion()`|invoke → string|
+|Platform|`getPlatform()`|invoke → string|
+|Window|`minimize()`, `maximize()`, `close()`|send|
+|Notifications|`showNotification(payload)`|send|
+|Notifications|`flashFrame()`|send|
+|Notifications|`onNotificationClicked(cb)`|listener|
+|Badge|`setBadgeCount(count)`|send|
+|Webview|`canEmbed()`|invoke → boolean|
+|Update|`onUpdateAvailable(cb)`, `onUpdateDownloaded(cb)`|listener|
+|Update|`installUpdate()`|send|
+|Store|`storeGet(key)`, `storeSet(key, value)`|invoke/send|
+|External|`openExternal(url)`|invoke|
 
 ## Sync Strategy
 
@@ -209,3 +246,4 @@ The `persist:microsoft` partition keeps Microsoft auth cookies, so users don't n
 - **webview partition** — Microsoft auth cookies isolated from main session
 - **Single instance lock** — Prevents duplicate windows
 - **External links** — All non-app URLs open in default browser via `shell.openExternal`
+- **URL validation** — `shell.openExternal` only allows `http://` and `https://` schemes

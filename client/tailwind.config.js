@@ -47,6 +47,15 @@ export default {
       fontFamily: {
         sans: ['Montserrat', 'Segoe UI', 'Tahoma', 'Geneva', 'Verdana', 'sans-serif'],
       },
+      keyframes: {
+        'voice-bar': {
+          '0%': { transform: 'scaleY(0.3)' },
+          '100%': { transform: 'scaleY(1)' },
+        },
+      },
+      animation: {
+        'voice-bar': 'voice-bar 0.4s ease-in-out infinite alternate',
+      },
     },
   },
   plugins: [],
