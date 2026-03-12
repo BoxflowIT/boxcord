@@ -1,13 +1,51 @@
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDetectedPlatform } from '../../hooks/useDetectedPlatform';
 import { Download } from 'lucide-react';
 
 const REPO = 'BoxflowIT/boxcord';
-const TAG = 'desktop-v1.14.0';
-const VERSION = '1.14.0';
 
-function downloadUrl(filename: string) {
-  return `https://github.com/${REPO}/releases/download/${TAG}/${filename}`;
+// Fallback values used until the GitHub API responds (or if it fails)
+const FALLBACK_TAG = 'desktop-v1.14.0';
+const FALLBACK_VERSION = '1.14.0';
+
+function useLatestDesktopRelease() {
+  const [tag, setTag] = useState(FALLBACK_TAG);
+  const [version, setVersion] = useState(FALLBACK_VERSION);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch(`https://api.github.com/repos/${REPO}/releases?per_page=20`, {
+      signal: controller.signal
+    })
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then(
+        (
+          releases: { tag_name: string; draft: boolean; prerelease: boolean }[]
+        ) => {
+          const latest = releases.find(
+            (r) =>
+              r.tag_name.startsWith('desktop-v') && !r.draft && !r.prerelease
+          );
+          if (latest) {
+            setTag(latest.tag_name);
+            setVersion(latest.tag_name.replace('desktop-v', ''));
+          }
+        }
+      )
+      .catch(() => {
+        // Keep fallback values on error
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  return { tag, version };
+}
+
+function downloadUrl(tag: string, filename: string) {
+  return `https://github.com/${REPO}/releases/download/${tag}/${filename}`;
 }
 
 function WindowsIcon({ className }: { className?: string }) {
@@ -59,7 +97,7 @@ function getPlatforms(version: string) {
       id: 'linux' as const,
       label: 'Linux',
       file: `Boxcord-${version}.AppImage`,
-      description: 'AppImage (alla distros)'
+      description: 'AppImage (all distros)'
     },
     {
       id: 'linux-deb' as const,
@@ -73,18 +111,19 @@ function getPlatforms(version: string) {
 export function DownloadSection() {
   const { t } = useTranslation();
   const detected = useDetectedPlatform();
-  const platforms = getPlatforms(VERSION);
+  const { tag, version } = useLatestDesktopRelease();
+  const platforms = getPlatforms(version);
 
   return (
     <section id="download" className="py-20 px-6 bg-boxflow-darkest/40">
       <div className="max-w-4xl mx-auto text-center">
         <h2 className="text-3xl font-bold mb-4">
-          {t('landing.downloadHeading', 'Ladda ner Boxcord')}
+          {t('landing.downloadHeading', 'Download Boxcord')}
         </h2>
         <p className="text-boxflow-muted mb-12 max-w-xl mx-auto">
           {t(
             'landing.downloadSubheading',
-            'Tillgänglig för Windows, macOS och Linux. Auto-uppdatering ingår.'
+            'Available for Windows, macOS and Linux. Auto-update included.'
           )}
         </p>
 
@@ -95,7 +134,7 @@ export function DownloadSection() {
             return (
               <a
                 key={p.id}
-                href={downloadUrl(p.file)}
+                href={downloadUrl(tag, p.file)}
                 className={`flex items-center gap-4 p-5 rounded-xl border transition-interactive group ${
                   isPrimary
                     ? 'border-boxflow-primary bg-boxflow-primary-10'
@@ -118,7 +157,7 @@ export function DownloadSection() {
                 <div className="flex items-center gap-2 shrink-0">
                   {isPrimary && (
                     <span className="badge-primary text-xs">
-                      {t('landing.recommended', 'Rekommenderad')}
+                      {t('landing.recommended', 'Recommended')}
                     </span>
                   )}
                   <Download className="w-4 h-4 text-boxflow-subtle group-hover:text-boxflow-primary transition-colors" />
@@ -128,7 +167,7 @@ export function DownloadSection() {
           })}
         </div>
 
-        <p className="text-xs text-boxflow-subtle mt-6">v{VERSION}</p>
+        <p className="text-xs text-boxflow-subtle mt-6">v{version}</p>
       </div>
     </section>
   );

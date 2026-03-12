@@ -84,7 +84,7 @@ export const signUp = (
         logger.error('Sign up failed:', err);
         resolve({
           success: false,
-          error: err.message || 'Registrering misslyckades'
+          error: err.message || 'Sign up failed'
         });
         return;
       }
@@ -126,7 +126,7 @@ export const confirmSignUp = (
         logger.error('Verification failed:', err);
         resolve({
           success: false,
-          error: err.message || 'Verifieringen misslyckades'
+          error: err.message || 'Verification failed'
         });
         return;
       }
@@ -155,7 +155,7 @@ export const resendConfirmationCode = (
         logger.error('Resend code failed:', err);
         resolve({
           success: false,
-          error: err.message || 'Kunde inte skicka om koden'
+          error: err.message || 'Could not resend verification code'
         });
         return;
       }
@@ -231,7 +231,7 @@ export const signIn = (
         logger.error('Authentication failed:', err);
         resolve({
           success: false,
-          error: err.message || 'Inloggningen misslyckades'
+          error: err.message || 'Login failed'
         });
       },
 
@@ -241,7 +241,7 @@ export const signIn = (
           success: false,
           requiresNewPassword: true,
           cognitoUser,
-          error: 'Nytt lösenord krävs'
+          error: 'New password required'
         });
       }
     });
@@ -267,6 +267,7 @@ export const getCurrentUser = (): CognitoUser | null => {
 
 /**
  * Get current session (returns valid tokens)
+ * Cognito SDK auto-refreshes using the stored refresh token if the ID token has expired.
  */
 export const getCurrentSession = (): Promise<{
   idToken: string;
@@ -302,6 +303,45 @@ export const getCurrentSession = (): Promise<{
 };
 
 /**
+ * Restore session on app startup.
+ * If Cognito has a valid/refreshable session, update the auth store
+ * so the user stays logged in without re-entering credentials.
+ */
+export const restoreSession = async (): Promise<void> => {
+  const { useAuthStore } = await import('../store/auth');
+  const { token } = useAuthStore.getState();
+  if (!token) return; // No previous session to restore
+
+  const session = await getCurrentSession();
+  if (session) {
+    // Update the store with the (possibly refreshed) token
+    const { user } = useAuthStore.getState();
+    if (user) {
+      useAuthStore.getState().setAuth(session.idToken, user);
+    }
+  } else {
+    // Refresh token expired — force re-login
+    useAuthStore.getState().logout();
+  }
+};
+
+/**
+ * Try to refresh the auth token silently.
+ * Returns a fresh idToken or null if refresh failed.
+ */
+export const refreshAuthToken = async (): Promise<string | null> => {
+  const session = await getCurrentSession();
+  if (!session) return null;
+
+  const { useAuthStore } = await import('../store/auth');
+  const { user } = useAuthStore.getState();
+  if (user) {
+    useAuthStore.getState().setAuth(session.idToken, user);
+  }
+  return session.idToken;
+};
+
+/**
  * Initiate forgot password flow
  */
 export const forgotPassword = (
@@ -323,7 +363,7 @@ export const forgotPassword = (
         logger.error('Forgot password failed:', err);
         resolve({
           success: false,
-          error: err.message || 'Kunde inte skicka återställningskod'
+          error: err.message || 'Could not send reset code'
         });
       }
     });
@@ -354,7 +394,7 @@ export const confirmPassword = (
         logger.error('Password reset failed:', err);
         resolve({
           success: false,
-          error: err.message || 'Lösenordsåterställning misslyckades'
+          error: err.message || 'Password reset failed'
         });
       }
     });
