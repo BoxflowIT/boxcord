@@ -5,10 +5,17 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+function getAssetPath(...segments: string[]): string {
+  const asarPath = path.join(__dirname, '..', '..', ...segments);
+  return app.isPackaged
+    ? asarPath.replace('app.asar', 'app.asar.unpacked')
+    : asarPath;
+}
+
 let tray: Tray | null = null;
 
 export function createTray(mainWindow: BrowserWindow): void {
-  const iconPath = path.join(__dirname, '..', '..', 'build', 'tray-icon.png');
+  const iconPath = getAssetPath('build', 'icon-256.png');
 
   // Fallback: create a simple 16x16 icon if file doesn't exist
   let trayIcon: Electron.NativeImage;
@@ -25,7 +32,7 @@ export function createTray(mainWindow: BrowserWindow): void {
 
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: 'Visa Boxcord',
+      label: 'Show Boxcord',
       click: () => {
         mainWindow.show();
         mainWindow.focus();
@@ -33,7 +40,7 @@ export function createTray(mainWindow: BrowserWindow): void {
     },
     { type: 'separator' },
     {
-      label: 'Avsluta',
+      label: 'Quit',
       click: () => {
         app.quit();
       }
@@ -55,5 +62,5 @@ export function createTray(mainWindow: BrowserWindow): void {
 
 export function updateTrayBadge(count: number): void {
   if (!tray) return;
-  tray.setToolTip(count > 0 ? `Boxcord (${count} olästa)` : 'Boxcord');
+  tray.setToolTip(count > 0 ? `Boxcord (${count} unread)` : 'Boxcord');
 }

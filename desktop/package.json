@@ -37,6 +37,9 @@
       "dist/**/*",
       "build/**/*"
     ],
+    "asarUnpack": [
+      "build/*.png"
+    ],
     "publish": {
       "provider": "github",
       "owner": "BoxflowIT",
@@ -66,7 +69,7 @@
         "deb"
       ],
       "icon": "build/icon-1024.png",
-      "category": "Chat"
+      "category": "Network;InstantMessaging;"
     },
     "nsis": {
       "oneClick": false,

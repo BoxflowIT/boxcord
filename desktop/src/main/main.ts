@@ -12,7 +12,7 @@ import electronUpdater from 'electron-updater';
 const { autoUpdater } = electronUpdater;
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createTray } from './tray.js';
+import { createTray, updateTrayBadge } from './tray.js';
 import { registerNotificationHandlers } from './notifications.js';
 import { getStore } from './store.js';
 
@@ -26,6 +26,14 @@ const IS_DEV =
   process.env.NODE_ENV === 'development' || APP_URL.includes('localhost');
 
 let mainWindow: BrowserWindow | null = null;
+
+function getAssetPath(...segments: string[]): string {
+  const asarPath = path.join(__dirname, '..', '..', ...segments);
+  // In packaged builds, icons are unpacked outside the asar archive
+  return app.isPackaged
+    ? asarPath.replace('app.asar', 'app.asar.unpacked')
+    : asarPath;
+}
 
 function createMainWindow(): BrowserWindow {
   const store = getStore();
@@ -46,7 +54,7 @@ function createMainWindow(): BrowserWindow {
     minWidth: 940,
     minHeight: 600,
     title: 'Boxcord',
-    icon: path.join(__dirname, '..', '..', 'build', 'icon-1024.png'),
+    icon: getAssetPath('build', 'icon-1024.png'),
     backgroundColor: '#1a1a2e',
     show: false, // Show after ready-to-show for smooth startup
     webPreferences: {
@@ -106,16 +114,16 @@ function createMainWindow(): BrowserWindow {
   });
 
   // Navigate external links clicked in-page to default browser
-  win.webContents.on(
-    'will-navigate' as string as 'did-navigate',
-    (event, url) => {
-      const appOrigin = new URL(APP_URL).origin;
-      if (!url.startsWith(appOrigin)) {
-        event.preventDefault();
+  // @ts-expect-error Electron types for will-navigate don't match actual event signature
+  win.webContents.on('will-navigate', (event: Event, url: string) => {
+    const appOrigin = new URL(APP_URL).origin;
+    if (!url.startsWith(appOrigin)) {
+      event.preventDefault();
+      if (url.startsWith('http://') || url.startsWith('https://')) {
         shell.openExternal(url);
       }
     }
-  );
+  });
 
   // Load the app
   win.loadURL(APP_URL);
@@ -150,6 +158,14 @@ function registerIpcHandlers() {
   ipcMain.handle('app:platform', () => process.platform);
   ipcMain.handle('app:is-desktop', () => true);
 
+  // Clear cached data (called on logout)
+  ipcMain.handle('app:clear-cache', async () => {
+    await session.defaultSession.clearCache();
+    await session.defaultSession.clearStorageData({
+      storages: ['cachestorage', 'serviceworkers']
+    });
+  });
+
   // Badge count (unread messages)
   ipcMain.on('app:set-badge', (_event: IpcMainEvent, count: number) => {
     if (process.platform === 'darwin' && app.dock) {
@@ -157,7 +173,8 @@ function registerIpcHandlers() {
     } else if (process.platform === 'linux') {
       app.setBadgeCount(count);
     }
-    // Windows uses tray overlay (handled in tray.ts)
+    // Windows: update tray tooltip with unread count
+    updateTrayBadge(count);
   });
 
   // Store (persistent settings)
@@ -237,6 +254,7 @@ function setupAutoUpdater() {
 
   autoUpdater.on('error', (err: Error) => {
     console.error('Auto-update error:', err.message);
+    mainWindow?.webContents.send('update:error', err.message);
   });
 
   // Check for updates every 4 hours
@@ -264,7 +282,7 @@ if (!gotLock) {
   });
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   mainWindow = createMainWindow();
 
   registerIpcHandlers();
@@ -289,7 +307,10 @@ app.on('window-all-closed', () => {
 // Security: prevent new window creation from renderer
 (app as Electron.App).on('web-contents-created', (_event, contents) => {
   contents.setWindowOpenHandler(({ url }: { url: string }) => {
-    shell.openExternal(url);
+    // Only allow http/https URLs for security
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      shell.openExternal(url);
+    }
     return { action: 'deny' };
   });
 });
