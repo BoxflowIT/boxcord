@@ -20,7 +20,8 @@ USER_POOL_ID="eu-north-1_SJ3dGBIPY"
 LAMBDA_DIR="infra/lambda/custom-message"
 
 echo "==> Packaging Lambda..."
-TMPZIP=$(mktemp /tmp/custom-message-XXXXX.zip)
+TMPZIP="/tmp/boxcord-custom-message-$$.zip"
+rm -f "$TMPZIP"
 (cd "$LAMBDA_DIR" && zip -j "$TMPZIP" index.mjs)
 
 # ── IAM Role ──────────────────────────────────────────────────
