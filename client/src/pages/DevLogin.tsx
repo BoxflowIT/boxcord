@@ -32,7 +32,7 @@ const DEV_USERS = [
     email: 'anna.andersson@boxflow.se',
     firstName: 'Anna',
     lastName: 'Andersson',
-    role: 'STAFF' as const,
+    role: 'MEMBER' as const,
     status: 'Backend Developer 🚀'
   },
   {
@@ -40,7 +40,7 @@ const DEV_USERS = [
     email: 'maria.svensson@boxflow.se',
     firstName: 'Maria',
     lastName: 'Svensson',
-    role: 'STAFF' as const,
+    role: 'MEMBER' as const,
     status: 'Frontend Developer 🎨'
   },
   {
@@ -48,7 +48,7 @@ const DEV_USERS = [
     email: 'jonas.berg@boxflow.se',
     firstName: 'Jonas',
     lastName: 'Berg',
-    role: 'STAFF' as const,
+    role: 'MEMBER' as const,
     status: 'DevOps Engineer ⚙️'
   },
   {
@@ -56,7 +56,7 @@ const DEV_USERS = [
     email: 'lisa.karlsson@boxflow.se',
     firstName: 'Lisa',
     lastName: 'Karlsson',
-    role: 'STAFF' as const,
+    role: 'MEMBER' as const,
     status: 'UX Designer ✨'
   },
   {
@@ -64,7 +64,7 @@ const DEV_USERS = [
     email: 'david.nilsson@boxflow.se',
     firstName: 'David',
     lastName: 'Nilsson',
-    role: 'STAFF' as const,
+    role: 'MEMBER' as const,
     status: 'Product Manager 📊'
   },
   {
@@ -72,7 +72,7 @@ const DEV_USERS = [
     email: 'sofia.larsson@boxflow.se',
     firstName: 'Sofia',
     lastName: 'Larsson',
-    role: 'STAFF' as const,
+    role: 'MEMBER' as const,
     status: 'QA Engineer 🐛'
   },
   {
@@ -80,7 +80,7 @@ const DEV_USERS = [
     email: 'peter.olsson@boxflow.se',
     firstName: 'Peter',
     lastName: 'Olsson',
-    role: 'STAFF' as const,
+    role: 'MEMBER' as const,
     status: 'Fika-ansvarig ☕'
   },
   {
@@ -88,7 +88,7 @@ const DEV_USERS = [
     email: 'emma.gustafsson@boxflow.se',
     firstName: 'Emma',
     lastName: 'Gustafsson',
-    role: 'STAFF' as const,
+    role: 'MEMBER' as const,
     status: 'Customer Success 🤝'
   }
 ];

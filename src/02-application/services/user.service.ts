@@ -56,7 +56,7 @@ export class UserService {
         email: data.email,
         firstName: data.firstName ?? null,
         lastName: data.lastName ?? null,
-        role: data.role ?? 'STAFF'
+        role: data.role ?? 'MEMBER'
       },
       update: {
         // Only update email and name, NOT role (role is admin-managed)
@@ -247,7 +247,7 @@ export class UserService {
   // Update user role (only SUPER_ADMIN can use this)
   async updateUserRole(
     userId: string,
-    newRole: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF'
+    newRole: 'SUPER_ADMIN' | 'ADMIN' | 'MEMBER'
   ): Promise<LocalUser> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId }
@@ -258,9 +258,9 @@ export class UserService {
     }
 
     // Validate role
-    if (!['SUPER_ADMIN', 'ADMIN', 'STAFF'].includes(newRole)) {
+    if (!['SUPER_ADMIN', 'ADMIN', 'MEMBER'].includes(newRole)) {
       throw new ValidationError(
-        'Invalid role. Must be SUPER_ADMIN, ADMIN, or STAFF'
+        'Invalid role. Must be SUPER_ADMIN, ADMIN, or MEMBER'
       );
     }
 

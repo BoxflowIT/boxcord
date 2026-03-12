@@ -1,0 +1,73 @@
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+
+interface ChangelogEntry {
+  version: string;
+  date: string;
+  notes: Record<string, string[]>;
+}
+
+export function ChangelogSection() {
+  const { t, i18n } = useTranslation();
+  const [entries, setEntries] = useState<ChangelogEntry[]>([]);
+
+  useEffect(() => {
+    fetch('/changelog.json')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: ChangelogEntry[]) => setEntries(data))
+      .catch(() => setEntries([]));
+  }, []);
+
+  if (entries.length === 0) return null;
+
+  const lang = i18n.language?.startsWith('sv') ? 'sv' : 'en';
+
+  if (entries.length === 0) return null;
+
+  return (
+    <section id="changelog" className="py-20 px-6">
+      <div className="max-w-3xl mx-auto">
+        <h2 className="text-3xl font-bold text-center mb-4">
+          {t('landing.changelogHeading', 'Nyheter')}
+        </h2>
+        <p className="text-boxflow-muted text-center mb-14 max-w-xl mx-auto">
+          {t(
+            'landing.changelogSubheading',
+            'Senaste uppdateringarna för Boxcord.'
+          )}
+        </p>
+
+        <div className="space-y-8">
+          {entries.map((entry) => (
+            <article
+              key={entry.version}
+              className="bg-boxflow-darker/60 border border-boxflow-border-50 rounded-xl p-6"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <span className="badge-primary">v{entry.version}</span>
+                <span className="text-xs text-boxflow-subtle">
+                  {entry.date}
+                </span>
+              </div>
+              <ul className="space-y-2">
+                {(entry.notes[lang] || entry.notes['en'] || []).map(
+                  (note, idx) => (
+                    <li
+                      key={idx}
+                      className="flex items-start gap-2 text-sm text-boxflow-muted"
+                    >
+                      <span className="text-boxflow-primary mt-1 shrink-0">
+                        •
+                      </span>
+                      {note}
+                    </li>
+                  )
+                )}
+              </ul>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

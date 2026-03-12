@@ -139,7 +139,7 @@ describe('WorkspaceService', () => {
             email: 'user1@test.com',
             firstName: 'User',
             lastName: 'One',
-            role: 'STAFF',
+            role: 'MEMBER',
             presence: null,
             createdAt: new Date(),
             updatedAt: new Date()
@@ -156,7 +156,7 @@ describe('WorkspaceService', () => {
             email: 'user2@test.com',
             firstName: 'User',
             lastName: 'Two',
-            role: 'STAFF',
+            role: 'MEMBER',
             presence: null,
             createdAt: new Date(),
             updatedAt: new Date()

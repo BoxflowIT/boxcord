@@ -279,7 +279,7 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ status, customStatus })
     }),
-  updateUserRole: (userId: string, role: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF') =>
+  updateUserRole: (userId: string, role: 'SUPER_ADMIN' | 'ADMIN' | 'MEMBER') =>
     request<User>(`/users/${userId}/role`, {
       method: 'PATCH',
       body: JSON.stringify({ role })

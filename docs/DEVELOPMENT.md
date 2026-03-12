@@ -58,7 +58,7 @@ yarn seed
 ```
 
 This creates:
-- **11 users** (1 super admin, 1 admin, 8 staff, 1 bot)
+- **11 users** (1 super admin, 1 admin, 8 members, 1 bot)
 - **2 workspaces** with channels
 - **20+ messages** with realistic conversations
 - **Reactions, bookmarks, DMs, and pinned messages**
@@ -159,14 +159,14 @@ After running `yarn seed`, these users are available:
 |-------|------|-------------|
 | admin@boxflow.se | SUPER_ADMIN | Full system access |
 | erik.johansson@boxflow.se | ADMIN | Workspace management |
-| anna.andersson@boxflow.se | STAFF | Backend Developer |
-| maria.svensson@boxflow.se | STAFF | Frontend Developer |
-| jonas.berg@boxflow.se | STAFF | DevOps Engineer |
-| lisa.karlsson@boxflow.se | STAFF | UX Designer |
-| david.nilsson@boxflow.se | STAFF | Product Manager |
-| sofia.larsson@boxflow.se | STAFF | QA Engineer |
-| peter.olsson@boxflow.se | STAFF | Staff member |
-| emma.gustafsson@boxflow.se | STAFF | Customer Success |
+| anna.andersson@boxflow.se | MEMBER | Backend Developer |
+| maria.svensson@boxflow.se | MEMBER | Frontend Developer |
+| jonas.berg@boxflow.se | MEMBER | DevOps Engineer |
+| lisa.karlsson@boxflow.se | MEMBER | UX Designer |
+| david.nilsson@boxflow.se | MEMBER | Product Manager |
+| sofia.larsson@boxflow.se | MEMBER | QA Engineer |
+| peter.olsson@boxflow.se | MEMBER | Member |
+| emma.gustafsson@boxflow.se | MEMBER | Customer Success |
 
 ### Production Authentication
 

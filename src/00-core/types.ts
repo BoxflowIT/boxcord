@@ -4,7 +4,7 @@
 export interface AuthUser {
   id: string; // Cognito sub / Boxtime user.id
   email: string;
-  role: 'ADMIN' | 'MANAGER' | 'STAFF';
+  role: 'ADMIN' | 'MANAGER' | 'MEMBER';
 }
 
 // Pagination

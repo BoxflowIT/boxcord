@@ -100,7 +100,7 @@ export function useUpdateUserRole() {
       role
     }: {
       userId: string;
-      role: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF';
+      role: 'SUPER_ADMIN' | 'ADMIN' | 'MEMBER';
     }) => api.updateUserRole(userId, role),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({

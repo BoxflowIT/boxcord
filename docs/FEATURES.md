@@ -186,7 +186,7 @@ Complete list of all implemented features in Boxcord.
 - ✅ **Ban users** - Permanently ban with reason tracking
 - ✅ **Unban users** - Restore access to banned users
 - ✅ **Role management** - Promote/demote users
-- ✅ **User roles** - Super Admin, Admin, Staff, Member
+- ✅ **User roles** - Super Admin, Admin, Member
 
 ### Moderation Tools
 - ✅ **Moderation modal** - Quick moderation actions

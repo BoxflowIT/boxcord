@@ -1,0 +1,40 @@
+[
+  {
+    "version": "1.14.0",
+    "date": "2026-03-11",
+    "notes": {
+      "sv": [
+        "Desktop-appen pekar nu mot produktionsservern",
+        "CI/CD-pipeline för automatiska desktop-releaser",
+        "Auto-uppdatering via GitHub Releases"
+      ],
+      "en": [
+        "Desktop app now points to production server",
+        "CI/CD pipeline for automatic desktop releases",
+        "Auto-update via GitHub Releases"
+      ]
+    }
+  },
+  {
+    "version": "1.13.0",
+    "date": "2026-03-11",
+    "notes": {
+      "sv": [
+        "Samtalsljud — ringsignal, anslutning och avslut",
+        "Utseendeinställningar sparas mellan sessioner",
+        "Trådar — svara i kontext utan att lämna kanalen",
+        "Omröstningar i kanaler",
+        "Electron desktop-app med skärmdelning och röstsamtal",
+        "Prestandaförbättringar och säkerhetsfixar"
+      ],
+      "en": [
+        "Call sounds — ringtone, join and leave",
+        "Appearance settings persist across sessions",
+        "Threads — reply in context without leaving the channel",
+        "Polls in channels",
+        "Electron desktop app with screen sharing and voice calls",
+        "Performance improvements and security fixes"
+      ]
+    }
+  }
+]
