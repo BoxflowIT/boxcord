@@ -22,9 +22,13 @@ export async function reactionRoutes(app: FastifyInstance) {
   });
 
   // Get available quick reactions
-  app.get('/quick', async () => {
-    return { success: true, data: QUICK_REACTIONS };
-  });
+  app.get(
+    '/quick',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+    async () => {
+      return { success: true, data: QUICK_REACTIONS };
+    }
+  );
 
   // Toggle reaction on channel message
   app.post<{

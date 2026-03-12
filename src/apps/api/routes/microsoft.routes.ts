@@ -87,37 +87,41 @@ export async function microsoftRoutes(app: FastifyInstance) {
       error_description?: string;
       state?: string;
     };
-  }>('/callback', async (request, reply) => {
-    if (!features.microsoft365 || !microsoftGraphService) {
-      return reply.redirect(clientUrl('/?microsoft_error=feature_disabled'));
-    }
+  }>(
+    '/callback',
+    { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      if (!features.microsoft365 || !microsoftGraphService) {
+        return reply.redirect(clientUrl('/?microsoft_error=feature_disabled'));
+      }
 
-    const { code, error, error_description, state } = request.query;
+      const { code, error, error_description, state } = request.query;
 
-    if (error) {
-      app.log.error({ error, error_description }, 'Microsoft OAuth error');
-      return reply.redirect(
-        clientUrl(
-          `/?microsoft_error=${encodeURIComponent(error_description || error)}`
-        )
-      );
-    }
+      if (error) {
+        app.log.error({ error, error_description }, 'Microsoft OAuth error');
+        return reply.redirect(
+          clientUrl(
+            `/?microsoft_error=${encodeURIComponent(error_description || error)}`
+          )
+        );
+      }
 
-    if (!code || !state) {
-      return reply.redirect(clientUrl('/?microsoft_error=missing_code'));
-    }
+      if (!code || !state) {
+        return reply.redirect(clientUrl('/?microsoft_error=missing_code'));
+      }
 
-    try {
-      // state contains userId from getAuthorizationUrl
-      await microsoftGraphService.exchangeCodeForTokens(code, state);
-      return reply.redirect(clientUrl('/?microsoft_connected=true'));
-    } catch (err) {
-      app.log.error(err, 'Microsoft token exchange failed');
-      return reply.redirect(
-        clientUrl('/?microsoft_error=token_exchange_failed')
-      );
+      try {
+        // state contains userId from getAuthorizationUrl
+        await microsoftGraphService.exchangeCodeForTokens(code, state);
+        return reply.redirect(clientUrl('/?microsoft_connected=true'));
+      } catch (err) {
+        app.log.error(err, 'Microsoft token exchange failed');
+        return reply.redirect(
+          clientUrl('/?microsoft_error=token_exchange_failed')
+        );
+      }
     }
-  });
+  );
 
   // ─── All other routes require authentication ──────────────────────────
   // Wrapped in sub-plugin so the auth hook doesn't affect /callback above
@@ -129,13 +133,17 @@ export async function microsoftRoutes(app: FastifyInstance) {
 
     // ─── Status (always available, even when feature disabled) ───────────
 
-    authenticated.get('/status', async (request) => {
-      if (!features.microsoft365 || !microsoftGraphService) {
-        return { success: true, data: { enabled: false, connected: false } };
+    authenticated.get(
+      '/status',
+      { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+      async (request) => {
+        if (!features.microsoft365 || !microsoftGraphService) {
+          return { success: true, data: { enabled: false, connected: false } };
+        }
+        const status = await microsoftGraphService.isConnected(request.user.id);
+        return { success: true, data: { enabled: true, ...status } };
       }
-      const status = await microsoftGraphService.isConnected(request.user.id);
-      return { success: true, data: { enabled: true, ...status } };
-    });
+    );
 
     // ─── Feature-gated routes ────────────────────────────────────────────
 
