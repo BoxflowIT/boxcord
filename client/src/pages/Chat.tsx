@@ -28,6 +28,8 @@ import { GlobalSearch } from '../components/GlobalSearch';
 import { DMCallOverlay } from '../components/dm/DMCallOverlay';
 import { stopRingingSound, playVoiceLeaveSound } from '../utils/voiceSound';
 import { toast } from '../store/notification';
+import { UpdateBanner } from '../components/UpdateBanner';
+import { getElectronAPI } from '../utils/platform';
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -132,6 +134,20 @@ export default function Chat() {
     };
   }, []);
 
+  // Desktop: navigate to channel/DM when notification is clicked
+  useEffect(() => {
+    const api = getElectronAPI();
+    if (!api) return;
+
+    return api.onNotificationClicked((tag) => {
+      if (tag.startsWith('channel-')) {
+        navigate(`/chat/channels/${tag.slice('channel-'.length)}`);
+      } else if (tag.startsWith('dm-')) {
+        navigate(`/chat/dm/${tag.slice('dm-'.length)}`);
+      }
+    });
+  }, [navigate]);
+
   // Auto-select first workspace if none selected
   useEffect(() => {
     if (workspaces.length > 0 && !currentWorkspace) {
@@ -197,86 +213,89 @@ export default function Chat() {
   ]);
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sidebar */}
-      <Sidebar
-        onProfileClick={() => setShowProfile(true)}
-        onSettingsClick={() => setShowSettings(true)}
-      />
+    <div className="flex flex-col h-screen overflow-hidden">
+      <UpdateBanner />
+      <div className="flex flex-1 min-h-0">
+        {/* Sidebar */}
+        <Sidebar
+          onProfileClick={() => setShowProfile(true)}
+          onSettingsClick={() => setShowSettings(true)}
+        />
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col bg-boxflow-dark">
-        <Routes>
-          <Route
-            path="channels/:channelId"
-            element={
-              <ChannelView
-                onToggleMemberList={() => setShowMemberList(!showMemberList)}
-              />
-            }
-          />
-          <Route path="dm/:channelId" element={<DMView />} />
-          <Route path="site/helloflow" element={<HelloFlowView />} />
-          <Route path="integrations/:type" element={<IntegrationView />} />
-          <Route path="*" element={<WelcomeView />} />
-        </Routes>
-      </div>
-
-      {/* Member List */}
-      {showMemberList && <MemberList />}
-
-      {/* Profile Modal */}
-      <ProfileModal
-        isOpen={showProfile}
-        onClose={() => setShowProfile(false)}
-      />
-
-      {/* Settings Modal */}
-      <SettingsModal
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
-      />
-
-      {/* Global Search */}
-      {showGlobalSearch && (
-        <div className="fixed inset-0 bg-black/70 flex items-start justify-center pt-20 z-50">
-          <div className="w-full max-w-2xl">
-            <GlobalSearch
-              onClose={() => setShowGlobalSearch(false)}
-              onResultClick={(result) => {
-                if (result.type === 'channel') {
-                  navigate(`/chat/channels/${result.channel?.id}`);
-                }
-                setShowGlobalSearch(false);
-              }}
+        {/* Main content */}
+        <div className="flex-1 flex flex-col bg-boxflow-dark">
+          <Routes>
+            <Route
+              path="channels/:channelId"
+              element={
+                <ChannelView
+                  onToggleMemberList={() => setShowMemberList(!showMemberList)}
+                />
+              }
             />
-          </div>
+            <Route path="dm/:channelId" element={<DMView />} />
+            <Route path="site/helloflow" element={<HelloFlowView />} />
+            <Route path="integrations/:type" element={<IntegrationView />} />
+            <Route path="*" element={<WelcomeView />} />
+          </Routes>
         </div>
-      )}
 
-      {/* Global DM Call Overlay - Shows everywhere when a call is active */}
-      <DMCallOverlay
-        onAccept={async () => {
-          acceptCall();
-          // Join WebRTC call via voice service
-          await voiceService.joinChannel(dmCallChannelId || '');
-        }}
-        onReject={() => {
-          // Play hangup sound and stop ringing
-          playVoiceLeaveSound();
-          stopRingingSound();
-          rejectCall();
-          // Clean up voice state
-          voiceService.leaveChannel();
-        }}
-        onEndCall={() => {
-          // Play hangup sound
-          playVoiceLeaveSound();
-          stopRingingSound();
-          endCall();
-          voiceService.leaveChannel();
-        }}
-      />
+        {/* Member List */}
+        {showMemberList && <MemberList />}
+
+        {/* Profile Modal */}
+        <ProfileModal
+          isOpen={showProfile}
+          onClose={() => setShowProfile(false)}
+        />
+
+        {/* Settings Modal */}
+        <SettingsModal
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
+        />
+
+        {/* Global Search */}
+        {showGlobalSearch && (
+          <div className="fixed inset-0 bg-black/70 flex items-start justify-center pt-20 z-50">
+            <div className="w-full max-w-2xl">
+              <GlobalSearch
+                onClose={() => setShowGlobalSearch(false)}
+                onResultClick={(result) => {
+                  if (result.type === 'channel') {
+                    navigate(`/chat/channels/${result.channel?.id}`);
+                  }
+                  setShowGlobalSearch(false);
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Global DM Call Overlay - Shows everywhere when a call is active */}
+        <DMCallOverlay
+          onAccept={async () => {
+            acceptCall();
+            // Join WebRTC call via voice service
+            await voiceService.joinChannel(dmCallChannelId || '');
+          }}
+          onReject={() => {
+            // Play hangup sound and stop ringing
+            playVoiceLeaveSound();
+            stopRingingSound();
+            rejectCall();
+            // Clean up voice state
+            voiceService.leaveChannel();
+          }}
+          onEndCall={() => {
+            // Play hangup sound
+            playVoiceLeaveSound();
+            stopRingingSound();
+            endCall();
+            voiceService.leaveChannel();
+          }}
+        />
+      </div>
     </div>
   );
 }

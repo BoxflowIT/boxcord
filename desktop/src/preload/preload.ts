@@ -44,6 +44,12 @@ const electronAPI = {
     ipcRenderer.on('update:downloaded', handler);
     return () => ipcRenderer.removeListener('update:downloaded', handler);
   },
+  onUpdateError: (callback: (message: string) => void) => {
+    const handler = (_event: IpcRendererEvent, message: string) =>
+      callback(message);
+    ipcRenderer.on('update:error', handler);
+    return () => ipcRenderer.removeListener('update:error', handler);
+  },
   installUpdate: () => ipcRenderer.send('update:install'),
 
   // ─── Persistent store ───────────────────────
@@ -51,6 +57,9 @@ const electronAPI = {
     ipcRenderer.invoke('store:get', key) as Promise<unknown>,
   storeSet: (key: string, value: unknown) =>
     ipcRenderer.send('store:set', key, value),
+
+  // ─── Clear cache (logout) ───────────────────
+  clearCache: () => ipcRenderer.invoke('app:clear-cache') as Promise<void>,
 
   // ─── Open URL in system browser ─────────────
   openExternal: (url: string) =>

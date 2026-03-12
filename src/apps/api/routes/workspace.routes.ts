@@ -25,22 +25,30 @@ export async function workspaceRoutes(app: FastifyInstance) {
   });
 
   // Get user's workspaces
-  app.get('/', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request, reply) => {
-    const workspaces = await workspaceService.getUserWorkspaces(
-      request.user.id
-    );
-    // NO CACHE: Workspace list can change
-    reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
-    return { success: true, data: workspaces };
-  });
+  app.get(
+    '/',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      const workspaces = await workspaceService.getUserWorkspaces(
+        request.user.id
+      );
+      // NO CACHE: Workspace list can change
+      reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return { success: true, data: workspaces };
+    }
+  );
 
   // Get single workspace
-  app.get<{ Params: { id: string } }>('/:id', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request, reply) => {
-    const workspace = await workspaceService.getWorkspace(request.params.id);
-    // NO CACHE: Workspace data can change
-    reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
-    return { success: true, data: workspace };
-  });
+  app.get<{ Params: { id: string } }>(
+    '/:id',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      const workspace = await workspaceService.getWorkspace(request.params.id);
+      // NO CACHE: Workspace data can change
+      reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return { success: true, data: workspace };
+    }
+  );
 
   // Create workspace
   app.post<{ Body: z.infer<typeof schemas.createWorkspace> }>(
@@ -103,26 +111,46 @@ export async function workspaceRoutes(app: FastifyInstance) {
   // Remove member from workspace
   app.delete<{
     Params: { id: string; userId: string };
-  }>('/:id/members/:userId', { config: { rateLimit: { max: 20, timeWindow: '1 minute' } } }, async (request, reply) => {
-    await workspaceService.removeMember(
-      request.params.id,
-      request.params.userId,
-      request.user.id
-    );
-    return reply.status(204).send();
-  });
+  }>(
+    '/:id/members/:userId',
+    { config: { rateLimit: { max: 20, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      await workspaceService.removeMember(
+        request.params.id,
+        request.params.userId,
+        request.user.id
+      );
+      return reply.status(204).send();
+    }
+  );
 
   // Leave workspace (current user leaves)
-  app.post<{ Params: { id: string } }>('/:id/leave', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (request, reply) => {
-    await workspaceService.leaveWorkspace(request.params.id, request.user.id);
-    return reply.status(204).send();
-  });
+  app.post<{ Params: { id: string } }>(
+    '/:id/leave',
+    { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      await workspaceService.leaveWorkspace(request.params.id, request.user.id);
+      return reply.status(204).send();
+    }
+  );
 
   // Delete workspace
-  app.delete<{ Params: { id: string } }>('/:id', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (request, reply) => {
-    await workspaceService.deleteWorkspace(request.params.id, request.user.id);
-    return reply.status(204).send();
-  });
+  app.delete<{ Params: { id: string } }>(
+    '/:id',
+    { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      const workspaceId = request.params.id;
+      // Emit deletion event BEFORE deleting (members are still in the room)
+      const io = app.io;
+      if (io) {
+        io.to(`workspace:${workspaceId}`).emit('workspace:deleted', {
+          workspaceId
+        });
+      }
+      await workspaceService.deleteWorkspace(workspaceId, request.user.id);
+      return reply.status(204).send();
+    }
+  );
 
   // Update workspace
   app.patch<{
@@ -174,22 +202,30 @@ export async function workspaceRoutes(app: FastifyInstance) {
   );
 
   // Get workspace invites
-  app.get<{ Params: { id: string } }>('/:id/invites', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request) => {
-    const invites = await workspaceService.getWorkspaceInvites(
-      request.params.id,
-      request.user.id
-    );
-    return { success: true, data: invites };
-  });
+  app.get<{ Params: { id: string } }>(
+    '/:id/invites',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+    async (request) => {
+      const invites = await workspaceService.getWorkspaceInvites(
+        request.params.id,
+        request.user.id
+      );
+      return { success: true, data: invites };
+    }
+  );
 
   // Delete invite
   app.delete<{
     Params: { id: string; inviteId: string };
-  }>('/:id/invites/:inviteId', { config: { rateLimit: { max: 20, timeWindow: '1 minute' } } }, async (request, reply) => {
-    await workspaceService.deleteInvite(
-      request.params.inviteId,
-      request.user.id
-    );
-    return reply.status(204).send();
-  });
+  }>(
+    '/:id/invites/:inviteId',
+    { config: { rateLimit: { max: 20, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      await workspaceService.deleteInvite(
+        request.params.inviteId,
+        request.user.id
+      );
+      return reply.status(204).send();
+    }
+  );
 }

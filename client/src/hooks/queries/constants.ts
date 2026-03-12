@@ -3,7 +3,7 @@
 // Cache duration constants (in milliseconds)
 // Discord-style: Long cache times since WebSocket keeps data fresh
 export const CACHE_TIMES = {
-  WORKSPACES: { stale: Infinity, gc: 60 * 60 * 1000 }, // Never stale (socket updates), 1h gc
+  WORKSPACES: { stale: 30 * 1000, gc: 60 * 60 * 1000 }, // 30s stale (socket keeps fresh, refetch as safety net), 1h gc
   CHANNELS: { stale: Infinity, gc: 60 * 60 * 1000 }, // Never stale (socket updates), 1h gc
   MESSAGES: { stale: Infinity, gc: 10 * 60 * 1000 }, // Never stale (WebSocket keeps fresh!), 10min gc
   USERS: { stale: Infinity, gc: 30 * 60 * 1000 }, // Never stale (socket updates), 30min gc

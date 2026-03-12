@@ -41,7 +41,7 @@ export default function Landing() {
               {t('landing.changelog', 'Changelog')}
             </a>
             <Link to="/login">
-              <Button size="sm">{t('auth.login', 'Logga in')}</Button>
+              <Button size="sm">{t('auth.login', 'Login')}</Button>
             </Link>
           </nav>
         </div>
@@ -57,23 +57,23 @@ export default function Landing() {
             <span className="text-6xl font-bold text-white">B</span>
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6 bg-gradient-to-r from-white via-white to-boxflow-muted bg-clip-text text-transparent">
-            {t('landing.heroTitle', 'Team-chatt för alla')}
+            {t('landing.heroTitle', 'Team chat for everyone')}
           </h1>
           <p className="text-lg sm:text-xl text-boxflow-muted max-w-2xl mx-auto mb-10 leading-relaxed">
             {t(
               'landing.heroDescription',
-              'Meddelanden, röstsamtal, skärmdelning och filhantering — allt i en app byggd för ditt team.'
+              'Messaging, voice calls, screen sharing and file management — all in one app built for your team.'
             )}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link to="/login">
               <Button size="lg" className="px-8 text-base">
-                {t('landing.openApp', 'Öppna i webbläsaren')}
+                {t('landing.openApp', 'Open in browser')}
               </Button>
             </Link>
             <a href="#download">
               <Button size="lg" variant="outline" className="px-8 text-base">
-                {t('landing.downloadDesktop', 'Ladda ner Desktop')}
+                {t('landing.downloadDesktop', 'Download Desktop')}
               </Button>
             </a>
           </div>

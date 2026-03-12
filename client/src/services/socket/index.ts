@@ -86,16 +86,18 @@ class SocketService {
 
     // Create socket with optimized config
     this.connecting = true;
+    const isElectron = !!window.electronAPI;
     const socket = io(socketUrl, {
       auth: { token },
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: isElectron ? 50 : 5,
       reconnectionDelay: 1000,
+      reconnectionDelayMax: isElectron ? 30000 : 5000,
       timeout: 15000,
       forceNew: true,
       autoConnect: false,
-      closeOnBeforeunload: true
+      closeOnBeforeunload: !isElectron
     });
 
     this.socket = socket;

@@ -28,13 +28,10 @@ export function ChangelogSection() {
     <section id="changelog" className="py-20 px-6">
       <div className="max-w-3xl mx-auto">
         <h2 className="text-3xl font-bold text-center mb-4">
-          {t('landing.changelogHeading', 'Nyheter')}
+          {t('landing.changelogHeading', 'Changelog')}
         </h2>
         <p className="text-boxflow-muted text-center mb-14 max-w-xl mx-auto">
-          {t(
-            'landing.changelogSubheading',
-            'Senaste uppdateringarna för Boxcord.'
-          )}
+          {t('landing.changelogSubheading', 'Latest updates for Boxcord.')}
         </p>
 
         <div className="space-y-8">

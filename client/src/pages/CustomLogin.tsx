@@ -90,9 +90,9 @@ export default function CustomLogin() {
       description={t('auth.welcomeBack')}
       footer={
         <span>
-          {t('auth.noAccount') || 'Inget konto?'}{' '}
+          {t('auth.noAccount', 'No account?')}{' '}
           <Link to="/signup" className="text-link hover:underline">
-            {t('auth.createAccount') || 'Skapa konto'}
+            {t('auth.createAccount', 'Create account')}
           </Link>
         </span>
       }
@@ -104,7 +104,7 @@ export default function CustomLogin() {
           label={t('auth.email')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="din@email.com"
+          placeholder="you@email.com"
           disabled={isLoggingIn}
           required
         />

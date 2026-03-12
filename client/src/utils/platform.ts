@@ -22,9 +22,11 @@ export interface ElectronAPI {
   canEmbed: () => Promise<boolean>;
   onUpdateAvailable: (callback: (version: string) => void) => () => void;
   onUpdateDownloaded: (callback: (version: string) => void) => () => void;
+  onUpdateError: (callback: (message: string) => void) => () => void;
   installUpdate: () => void;
   storeGet: (key: string) => Promise<unknown>;
   storeSet: (key: string, value: unknown) => void;
+  clearCache: () => Promise<void>;
   openExternal: (url: string) => Promise<void>;
 }
 

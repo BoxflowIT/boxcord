@@ -21,50 +21,50 @@ const FEATURES: Feature[] = [
   {
     icon: MessageSquare,
     titleKey: 'landing.featureChat',
-    titleFallback: 'Kanaler & DM',
+    titleFallback: 'Channels & DMs',
     descKey: 'landing.featureChatDesc',
     descFallback:
-      'Organisera konversationer i kanaler och trådar, eller skicka direktmeddelanden till kollegor.'
+      'Organize conversations in channels and threads, or send direct messages to colleagues.'
   },
   {
     icon: Mic,
     titleKey: 'landing.featureVoice',
-    titleFallback: 'Röstsamtal',
+    titleFallback: 'Voice calls',
     descKey: 'landing.featureVoiceDesc',
     descFallback:
-      'Hoppa in i röstkanaler med AI-brusreducering och justerbar ljudkvalitet.'
+      'Jump into voice channels with AI noise reduction and adjustable audio quality.'
   },
   {
     icon: Monitor,
     titleKey: 'landing.featureScreen',
-    titleFallback: 'Skärmdelning',
+    titleFallback: 'Screen sharing',
     descKey: 'landing.featureScreenDesc',
     descFallback:
-      'Dela din skärm direkt i samtalet — perfekt för presentationer och felsökning.'
+      'Share your screen directly in the call — perfect for presentations and troubleshooting.'
   },
   {
     icon: Paperclip,
     titleKey: 'landing.featureFiles',
-    titleFallback: 'Filer & bilder',
+    titleFallback: 'Files & images',
     descKey: 'landing.featureFilesDesc',
     descFallback:
-      'Dra-och-släpp filer, bilder och dokument. Öppna SharePoint-filer direkt.'
+      'Drag and drop files, images and documents. Open SharePoint files directly.'
   },
   {
     icon: Bell,
     titleKey: 'landing.featureNotifications',
-    titleFallback: 'Notiser & mentions',
+    titleFallback: 'Notifications & mentions',
     descKey: 'landing.featureNotificationsDesc',
     descFallback:
-      'Push-notiser på desktop och i webbläsaren. @-nämn kollegor för att fånga deras uppmärksamhet.'
+      'Push notifications on desktop and in the browser. @mention colleagues to get their attention.'
   },
   {
     icon: Laptop,
     titleKey: 'landing.featureDesktop',
-    titleFallback: 'Desktop-app',
+    titleFallback: 'Desktop app',
     descKey: 'landing.featureDesktopDesc',
     descFallback:
-      'Nativ app för Windows, macOS och Linux med auto-uppdatering och systemnotiser.'
+      'Native app for Windows, macOS and Linux with auto-update and system notifications.'
   }
 ];
 
@@ -75,12 +75,12 @@ export function FeaturesSection() {
     <section id="features" className="py-20 px-6">
       <div className="max-w-6xl mx-auto">
         <h2 className="text-3xl font-bold text-center mb-4">
-          {t('landing.featuresHeading', 'Allt ditt team behöver')}
+          {t('landing.featuresHeading', 'Everything your team needs')}
         </h2>
         <p className="text-boxflow-muted text-center mb-14 max-w-xl mx-auto">
           {t(
             'landing.featuresSubheading',
-            'En plattform för kommunikation, samarbete och fildelning.'
+            'One platform for communication, collaboration and file sharing.'
           )}
         </p>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
