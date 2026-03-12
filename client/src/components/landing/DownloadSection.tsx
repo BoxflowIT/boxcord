@@ -3,11 +3,11 @@ import { useDetectedPlatform } from '../../hooks/useDetectedPlatform';
 import { Download } from 'lucide-react';
 
 const REPO = 'BoxflowIT/boxcord';
-const LATEST_TAG = 'desktop-v1.14.0';
+const TAG = 'desktop-v1.14.0';
 const VERSION = '1.14.0';
 
 function downloadUrl(filename: string) {
-  return `https://github.com/${REPO}/releases/download/${LATEST_TAG}/${filename}`;
+  return `https://github.com/${REPO}/releases/download/${TAG}/${filename}`;
 }
 
 function WindowsIcon({ className }: { className?: string }) {
@@ -41,36 +41,39 @@ const PLATFORM_ICONS = {
   'linux-deb': LinuxIcon
 } as const;
 
-const PLATFORMS = [
-  {
-    id: 'windows' as const,
-    label: 'Windows',
-    file: `Boxcord.Setup.${VERSION}.exe`,
-    description: 'Windows 10+'
-  },
-  {
-    id: 'mac' as const,
-    label: 'macOS',
-    file: `Boxcord-${VERSION}-arm64.dmg`,
-    description: 'macOS 12+ (Apple Silicon)'
-  },
-  {
-    id: 'linux' as const,
-    label: 'Linux',
-    file: `Boxcord-${VERSION}.AppImage`,
-    description: 'AppImage (alla distros)'
-  },
-  {
-    id: 'linux-deb' as const,
-    label: 'Linux (.deb)',
-    file: `boxcord-desktop_${VERSION}_amd64.deb`,
-    description: 'Ubuntu / Debian'
-  }
-] as const;
+function getPlatforms(version: string) {
+  return [
+    {
+      id: 'windows' as const,
+      label: 'Windows',
+      file: `Boxcord.Setup.${version}.exe`,
+      description: 'Windows 10+'
+    },
+    {
+      id: 'mac' as const,
+      label: 'macOS',
+      file: `Boxcord-${version}-arm64.dmg`,
+      description: 'macOS 12+ (Apple Silicon)'
+    },
+    {
+      id: 'linux' as const,
+      label: 'Linux',
+      file: `Boxcord-${version}.AppImage`,
+      description: 'AppImage (alla distros)'
+    },
+    {
+      id: 'linux-deb' as const,
+      label: 'Linux (.deb)',
+      file: `boxcord-desktop_${version}_amd64.deb`,
+      description: 'Ubuntu / Debian'
+    }
+  ];
+}
 
 export function DownloadSection() {
   const { t } = useTranslation();
   const detected = useDetectedPlatform();
+  const platforms = getPlatforms(VERSION);
 
   return (
     <section id="download" className="py-20 px-6 bg-boxflow-darkest/40">
@@ -86,7 +89,7 @@ export function DownloadSection() {
         </p>
 
         <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-          {PLATFORMS.map((p) => {
+          {platforms.map((p) => {
             const isPrimary = detected === p.id;
             const PlatformIcon = PLATFORM_ICONS[p.id];
             return (
@@ -125,17 +128,7 @@ export function DownloadSection() {
           })}
         </div>
 
-        <p className="text-xs text-boxflow-subtle mt-6">
-          v{VERSION} &middot;{' '}
-          <a
-            href={`https://github.com/${REPO}/releases/tag/${LATEST_TAG}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-link hover:underline"
-          >
-            {t('landing.releaseNotes', 'Release notes')}
-          </a>
-        </p>
+        <p className="text-xs text-boxflow-subtle mt-6">v{VERSION}</p>
       </div>
     </section>
   );

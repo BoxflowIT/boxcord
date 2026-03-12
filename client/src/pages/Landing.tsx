@@ -57,7 +57,7 @@ export default function Landing() {
             <span className="text-6xl font-bold text-white">B</span>
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6 bg-gradient-to-r from-white via-white to-boxflow-muted bg-clip-text text-transparent">
-            {t('landing.heroTitle', 'Team-chatt för Boxflow')}
+            {t('landing.heroTitle', 'Team-chatt för alla')}
           </h1>
           <p className="text-lg sm:text-xl text-boxflow-muted max-w-2xl mx-auto mb-10 leading-relaxed">
             {t(
