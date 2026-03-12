@@ -192,7 +192,7 @@ const message = 'Hello!';
 **How to test:**
 1. Be logged in as super admin
 2. Open member list (right sidebar)
-3. Hover over a STAFF member (not admin/super admin)
+3. Hover over a MEMBER (not admin/super admin)
 4. Click **three-dots menu (⋮)**
 5. ModerationModal opens
 6. Select "Kick" or "Ban"
@@ -331,7 +331,7 @@ const message = 'Hello!';
 - [ ] Click result to navigate
 
 ### Moderation Tests (Admin only):
-- [ ] Hover staff member in member list
+- [ ] Hover member in member list
 - [ ] Click three-dots menu
 - [ ] Select kick/ban
 - [ ] Enter reason

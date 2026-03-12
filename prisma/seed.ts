@@ -43,7 +43,7 @@ async function main() {
       }
     }),
     
-    // Regular staff
+    // Regular members
     prisma.user.upsert({
       where: { id: 'user-anna' },
       update: {},
@@ -677,7 +677,7 @@ async function main() {
   // ============================================
   console.log('\n🎉 Seeding complete!');
   console.log('📊 Summary:');
-  console.log(`  - ${users.length} users (1 super admin, 1 admin, 8 staff, 1 bot)`);
+  console.log(`  - ${users.length} users (1 super admin, 1 admin, 8 members, 1 bot)`);
   console.log('  - 2 workspaces (Boxflow HQ, Development)');
   console.log('  - 7 channels (4 in Boxflow HQ, 3 in Development)');
   console.log('  - 20+ channel messages with realistic conversations');

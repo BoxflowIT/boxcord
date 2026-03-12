@@ -260,7 +260,7 @@ export class UserService {
     // Validate role
     if (!['SUPER_ADMIN', 'ADMIN', 'MEMBER'].includes(newRole)) {
       throw new ValidationError(
-        'Invalid role. Must be SUPER_ADMIN, ADMIN, or STAFF'
+        'Invalid role. Must be SUPER_ADMIN, ADMIN, or MEMBER'
       );
     }
 

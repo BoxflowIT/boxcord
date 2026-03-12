@@ -59,13 +59,13 @@ export async function authRoutes(app: FastifyInstance) {
           });
         }
 
-        // Create new user in database with STAFF role
+        // Create new user in database with MEMBER role
         const user = await userService.upsertUser({
           id,
           email,
           firstName,
           lastName,
-          role: 'MEMBER' // New users start as STAFF
+          role: 'MEMBER' // New users start as MEMBER
         });
 
         // Create initial presence record

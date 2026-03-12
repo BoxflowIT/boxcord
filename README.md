@@ -97,7 +97,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Custom status** - Set status text and emoji
 - **Member list** - See all workspace members with status
 - **User search** - Find users quickly
-- **Role-based permissions** - Admin, Staff, Member roles
+- **Role-based permissions** - Admin, Member roles
 
 ### 🛡️ Moderation & Admin
 - **Kick users** - Remove users from workspace

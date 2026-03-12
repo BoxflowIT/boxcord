@@ -201,7 +201,7 @@ Update user's role (requires ADMIN or SUPER_ADMIN role).
 }
 ```
 
-**Valid Roles:** `USER`, `STAFF`, `ADMIN`, `SUPER_ADMIN`
+**Valid Roles:** `MEMBER`, `ADMIN`, `SUPER_ADMIN`
 
 **Response 200:**
 ```json
