@@ -14,6 +14,8 @@ import SignUp from './pages/SignUp';
 import ForgotPassword from './pages/ForgotPassword';
 import JoinPage from './pages/JoinPage';
 import Chat from './pages/Chat';
+import Landing from './pages/Landing';
+import { isDesktop } from './utils/platform';
 import { logger } from './utils/logger';
 
 // Create QueryClient with optimized settings
@@ -146,10 +148,20 @@ function App() {
             }
           />
           <Route
-            path="*"
+            path="/"
             element={
-              <Navigate to={isAuthenticated ? '/chat' : '/login'} replace />
+              isAuthenticated ? (
+                <Navigate to="/chat" replace />
+              ) : isDesktop() ? (
+                <Navigate to="/login" replace />
+              ) : (
+                <Landing />
+              )
             }
+          />
+          <Route
+            path="*"
+            element={<Navigate to={isAuthenticated ? '/chat' : '/'} replace />}
           />
         </Routes>
       </ErrorBoundary>
