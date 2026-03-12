@@ -295,7 +295,7 @@ export default function MemberList() {
             users.find((u) => u.id === moderationUserId) ?? {
               id: moderationUserId,
               email: 'Unknown',
-              role: 'STAFF'
+              role: 'MEMBER'
             }
           )}
           onKick={handleKickUser}

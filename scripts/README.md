@@ -73,7 +73,7 @@ node scripts/generate-dev-tokens.cjs
 **Output includes:**
 - SUPER_ADMIN token (admin@boxflow.se)
 - ADMIN token (erik.johansson@boxflow.se)
-- 8 STAFF tokens with different names and roles
+- 8 MEMBER tokens with different names and roles
 
 **Use cases:**
 - Quick authentication for frontend testing

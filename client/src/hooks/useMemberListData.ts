@@ -22,12 +22,12 @@ interface UseMemberListDataProps {
   searchQuery: string;
 }
 
-const ROLE_ORDER = ['SUPER_ADMIN', 'ADMIN', 'STAFF'];
+const ROLE_ORDER = ['SUPER_ADMIN', 'ADMIN', 'MEMBER'];
 
 export const ROLE_LABELS: Record<string, string> = {
   SUPER_ADMIN: 'Super Admin',
   ADMIN: 'Administratörer',
-  STAFF: 'Personal'
+  MEMBER: 'Medlemmar'
 };
 
 /**
@@ -54,7 +54,7 @@ export function useMemberListData({
   const groupedByRole = useMemo(() => {
     return filteredUsers.reduce(
       (acc, user) => {
-        const role = user.role || 'STAFF';
+        const role = user.role || 'MEMBER';
         if (!acc[role]) acc[role] = [];
         acc[role].push(user);
         return acc;

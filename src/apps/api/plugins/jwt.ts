@@ -145,7 +145,7 @@ async function jwtPluginImpl(app: FastifyInstance) {
       request.user = {
         id: payload.sub,
         email: payload.email || payload['cognito:username'] || '',
-        role: (payload['custom:role'] as AuthUser['role']) ?? 'STAFF'
+        role: (payload['custom:role'] as AuthUser['role']) ?? 'MEMBER'
       };
     } catch (err) {
       if (err instanceof UnauthorizedError) {

@@ -21,7 +21,7 @@ model User {
     lastName    String?   @map("last_name")
     avatarUrl   String?   @map("avatar_url")
     bio         String?
-    role        String    @default("STAFF") // SUPER_ADMIN | ADMIN | STAFF
+    role        String    @default("MEMBER") // SUPER_ADMIN | ADMIN | MEMBER
     status      String? // Custom status message
     statusEmoji String?   @map("status_emoji") // Emoji for status
     dndMode     Boolean   @default(false) @map("dnd_mode") // Do Not Disturb

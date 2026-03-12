@@ -138,11 +138,22 @@ jobs:
             --task-definition ${{ vars.ECS_TASK_FAMILY }} \
             --query 'taskDefinition' --output json)
 
-          # Update image in container definition
+          # Update image and inject Microsoft 365 env vars
           NEW_TASK_DEF=$(echo "$TASK_DEF" | jq \
             --arg IMAGE "${{ needs.build-backend.outputs.image_tag }}" \
-            '.containerDefinitions[0].image = $IMAGE |
-            del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)')
+            --arg MS_CID "${{ vars.MS_CLIENT_ID }}" \
+            --arg MS_SEC "${{ secrets.MS_CLIENT_SECRET }}" \
+            --arg MS_TID "${{ vars.MS_TENANT_ID }}" \
+            '
+            .containerDefinitions[0].image = $IMAGE |
+            # Upsert Microsoft env vars
+            (.containerDefinitions[0].environment // []) as $env |
+            .containerDefinitions[0].environment = (
+              [$env[] | select(.name != "MS_CLIENT_ID" and .name != "MS_CLIENT_SECRET" and .name != "MS_TENANT_ID")] +
+              [{"name":"MS_CLIENT_ID","value":$MS_CID},{"name":"MS_CLIENT_SECRET","value":$MS_SEC},{"name":"MS_TENANT_ID","value":$MS_TID}]
+            ) |
+            del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)
+            ')
 
           # Register new task definition
           NEW_ARN=$(aws ecs register-task-definition \

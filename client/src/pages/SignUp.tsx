@@ -153,7 +153,7 @@ export default function SignUp() {
         email: loginResult.user?.email || email,
         firstName: loginResult.user?.given_name || firstName,
         lastName: loginResult.user?.family_name || lastName,
-        role: 'STAFF' // Default role
+        role: 'MEMBER' // Default role
       });
 
       // Step 4: Register user in Boxcord backend

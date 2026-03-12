@@ -201,7 +201,7 @@ Update user's role (requires ADMIN or SUPER_ADMIN role).
 }
 ```
 
-**Valid Roles:** `USER`, `STAFF`, `ADMIN`, `SUPER_ADMIN`
+**Valid Roles:** `MEMBER`, `ADMIN`, `SUPER_ADMIN`
 
 **Response 200:**
 ```json
@@ -1920,7 +1920,7 @@ Get all role permissions for a channel.
   "success": true,
   "data": {
     "ADMIN": { "sendMessages": true, "manageChannel": true },
-    "STAFF": { "sendMessages": true, "manageChannel": false },
+    "MEMBER": { "sendMessages": true, "manageChannel": false },
     "USER": { "sendMessages": true, "manageChannel": false }
   }
 }

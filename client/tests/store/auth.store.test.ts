@@ -27,7 +27,7 @@ describe('useAuthStore', () => {
       email: 'test@example.com',
       firstName: 'Test',
       lastName: 'User',
-      role: 'STAFF'
+      role: 'MEMBER'
     };
 
     act(() => {
@@ -46,7 +46,7 @@ describe('useAuthStore', () => {
       result.current.setAuth('mock-token', {
         id: 'user-1',
         email: 'test@example.com',
-        role: 'STAFF'
+        role: 'MEMBER'
       });
     });
 
