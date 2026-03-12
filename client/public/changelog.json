@@ -1,5 +1,43 @@
 [
   {
+    "version": "1.17.2",
+    "date": "2026-03-12",
+    "notes": {
+      "sv": [
+        "Landningssidan helt på engelska",
+        "OS-detektering rekommenderar .deb för Ubuntu/Debian",
+        "Tillbakaknapp från inloggningssidan till landningssidan",
+        "Fixat ikon som inte laddades i Linux .deb-versionen",
+        "System tray-ikon och etiketter på engelska",
+        "Desktop: Inloggning sparas mellan omstarter (Cognito session restore)",
+        "Desktop: Token auto-refresh vid 401 — ingen utloggning vid utgången session",
+        "Desktop: Klick på notifikation navigerar till rätt kanal/DM",
+        "Desktop: Uppdateringsbanner när ny version är nedladdad",
+        "Desktop: Fixat stale cache — workspace:deleted event, staleTime 30s",
+        "Desktop: Socket reconnection 50 försök, 30s max delay",
+        "Desktop: URL-validering på alla externa länkar (säkerhetsfix)",
+        "Nedladdningssidan hämtar automatiskt senaste versionen från GitHub",
+        "Alla svenska felmeddelanden i Cognito-tjänsten översatta till engelska"
+      ],
+      "en": [
+        "Landing page fully translated to English",
+        "OS detection recommends .deb for Ubuntu/Debian",
+        "Back button from login page to landing page",
+        "Fixed icon not loading in Linux .deb build",
+        "System tray icon and labels in English",
+        "Desktop: Login persisted across restarts (Cognito session restore)",
+        "Desktop: Token auto-refresh on 401 — no logout on expired session",
+        "Desktop: Notification click navigates to correct channel/DM",
+        "Desktop: Update banner when new version is downloaded",
+        "Desktop: Fixed stale cache — workspace:deleted event, staleTime 30s",
+        "Desktop: Socket reconnection 50 attempts, 30s max delay",
+        "Desktop: URL scheme validation on all external links (security fix)",
+        "Download section auto-fetches latest version from GitHub Releases",
+        "All Swedish error messages in Cognito service translated to English"
+      ]
+    }
+  },
+  {
     "version": "1.14.0",
     "date": "2026-03-11",
     "notes": {

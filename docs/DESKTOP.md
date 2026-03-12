@@ -137,6 +137,8 @@ The production URL is injected via `BOXCORD_URL` env var (defaults to `http://lo
 
 All platforms use `build/icon-1024.png` (1024×1024) as the source. `electron-builder` converts it to the required format per platform. The tray icon uses `build/icon-256.png`.
 
+Icon PNGs are marked as `asarUnpack` in `package.json` so they are extracted outside the asar archive at build time. The `getAssetPath()` helper in `main.ts` and `tray.ts` resolves to the unpacked path in production and the regular path in development. This is required on Linux where BrowserWindow and Tray cannot reliably read icons from inside asar.
+
 ### macOS code signing (optional)
 
 The macOS build runs without code signing by default (`CSC_IDENTITY_AUTO_DISCOVERY=false`). For a signed + notarized DMG (required for distribution outside your org), add these secrets to the GitHub repo:
@@ -235,8 +237,9 @@ The preload script exposes these methods via `window.electronAPI`:
 |Notifications|`onNotificationClicked(cb)`|listener|
 |Badge|`setBadgeCount(count)`|send|
 |Webview|`canEmbed()`|invoke → boolean|
-|Update|`onUpdateAvailable(cb)`, `onUpdateDownloaded(cb)`|listener|
+|Update|`onUpdateAvailable(cb)`, `onUpdateDownloaded(cb)`, `onUpdateError(cb)`|listener|
 |Update|`installUpdate()`|send|
+|Cache|`clearCache()`|invoke|
 |Store|`storeGet(key)`, `storeSet(key, value)`|invoke/send|
 |External|`openExternal(url)`|invoke|
 
@@ -249,6 +252,22 @@ The preload script exposes these methods via `window.electronAPI`:
 - Same React Query cache → same UI state
 - Desktop-specific features (notifications, tray, webview) degrade gracefully in browser
 
+## Session Persistence
+
+The desktop app keeps users logged in across restarts:
+
+1. **Cognito session restore** — On startup, `restoreSession()` in `App.tsx` calls `getCurrentSession()` which uses the Cognito SDK refresh token (stored in localStorage by the SDK) to obtain a fresh ID token. Users stay logged in for up to 30 days without re-entering credentials.
+2. **Auto-refresh on 401** — If a request returns 401, the API service automatically tries to refresh the token via `refreshAuthToken()` before logging out. This handles mid-session token expiry transparently.
+3. **Cache management** — Logout clears React Query cache and Electron HTTP cache via `clearCache()` IPC to prevent stale data.
+
+## Notification Click Navigation
+
+Desktop notifications include a tag (`channel-{id}` or `dm-{id}`). When the user clicks a notification, the `onNotificationClicked` handler in `Chat.tsx` parses the tag and navigates to the correct channel or DM.
+
+## Update Banner
+
+When `electron-updater` downloads a new version, the `UpdateBanner` component appears at the top of the chat page showing "Version X.Y.Z is ready — restart to update" with a restart button. Errors from the update process are also captured via `onUpdateError` IPC.
+
 ## Security
 
 - **contextIsolation: true** — Renderer cannot access Node.js APIs
@@ -257,4 +276,5 @@ The preload script exposes these methods via `window.electronAPI`:
 - **webview partition** — Microsoft auth cookies isolated from main session
 - **Single instance lock** — Prevents duplicate windows
 - **External links** — All non-app URLs open in default browser via `shell.openExternal`
-- **URL validation** — `shell.openExternal` only allows `http://` and `https://` schemes
+- **URL validation** — Only `http://` and `https://` schemes allowed for `shell.openExternal` and `will-navigate`
+- **Global navigation guard** — `web-contents-created` listener blocks non-HTTP navigations on all webContents
