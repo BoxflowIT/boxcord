@@ -30,56 +30,56 @@ const users = [
     email: 'anna.andersson@boxflow.se',
     firstName: 'Anna',
     lastName: 'Andersson',
-    role: 'STAFF'
+    role: 'MEMBER'
   },
   {
     id: 'user-maria',
     email: 'maria.svensson@boxflow.se',
     firstName: 'Maria',
     lastName: 'Svensson',
-    role: 'STAFF'
+    role: 'MEMBER'
   },
   {
     id: 'user-jonas',
     email: 'jonas.berg@boxflow.se',
     firstName: 'Jonas',
     lastName: 'Berg',
-    role: 'STAFF'
+    role: 'MEMBER'
   },
   {
     id: 'user-lisa',
     email: 'lisa.karlsson@boxflow.se',
     firstName: 'Lisa',
     lastName: 'Karlsson',
-    role: 'STAFF'
+    role: 'MEMBER'
   },
   {
     id: 'user-david',
     email: 'david.nilsson@boxflow.se',
     firstName: 'David',
     lastName: 'Nilsson',
-    role: 'STAFF'
+    role: 'MEMBER'
   },
   {
     id: 'user-sofia',
     email: 'sofia.larsson@boxflow.se',
     firstName: 'Sofia',
     lastName: 'Larsson',
-    role: 'STAFF'
+    role: 'MEMBER'
   },
   {
     id: 'user-peter',
     email: 'peter.olsson@boxflow.se',
     firstName: 'Peter',
     lastName: 'Olsson',
-    role: 'STAFF'
+    role: 'MEMBER'
   },
   {
     id: 'user-emma',
     email: 'emma.gustafsson@boxflow.se',
     firstName: 'Emma',
     lastName: 'Gustafsson',
-    role: 'STAFF'
+    role: 'MEMBER'
   }
 ];
 

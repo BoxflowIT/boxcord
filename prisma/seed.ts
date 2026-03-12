@@ -52,7 +52,7 @@ async function main() {
         email: 'anna.andersson@boxflow.se',
         firstName: 'Anna',
         lastName: 'Andersson',
-        role: 'STAFF',
+        role: 'MEMBER',
         status: 'Backend Developer',
         statusEmoji: '🚀',
         presence: { create: { status: 'ONLINE' } }
@@ -66,7 +66,7 @@ async function main() {
         email: 'maria.svensson@boxflow.se',
         firstName: 'Maria',
         lastName: 'Svensson',
-        role: 'STAFF',
+        role: 'MEMBER',
         status: 'Frontend Developer',
         statusEmoji: '🎨',
         presence: { create: { status: 'AWAY' } }
@@ -80,7 +80,7 @@ async function main() {
         email: 'jonas.berg@boxflow.se',
         firstName: 'Jonas',
         lastName: 'Berg',
-        role: 'STAFF',
+        role: 'MEMBER',
         status: 'DevOps Engineer',
         statusEmoji: '⚙️',
         presence: { create: { status: 'ONLINE' } }
@@ -94,7 +94,7 @@ async function main() {
         email: 'lisa.karlsson@boxflow.se',
         firstName: 'Lisa',
         lastName: 'Karlsson',
-        role: 'STAFF',
+        role: 'MEMBER',
         status: 'UX Designer',
         statusEmoji: '✨',
         presence: { create: { status: 'ONLINE' } }
@@ -108,7 +108,7 @@ async function main() {
         email: 'david.nilsson@boxflow.se',
         firstName: 'David',
         lastName: 'Nilsson',
-        role: 'STAFF',
+        role: 'MEMBER',
         status: 'Product Manager',
         statusEmoji: '📊',
         presence: { create: { status: 'BUSY' } }
@@ -122,7 +122,7 @@ async function main() {
         email: 'sofia.larsson@boxflow.se',
         firstName: 'Sofia',
         lastName: 'Larsson',
-        role: 'STAFF',
+        role: 'MEMBER',
         status: 'QA Engineer',
         statusEmoji: '🐛',
         presence: { create: { status: 'ONLINE' } }
@@ -136,7 +136,7 @@ async function main() {
         email: 'peter.olsson@boxflow.se',
         firstName: 'Peter',
         lastName: 'Olsson',
-        role: 'STAFF',
+        role: 'MEMBER',
         status: 'Fika-ansvarig',
         statusEmoji: '☕',
         presence: { create: { status: 'AWAY' } }
@@ -150,7 +150,7 @@ async function main() {
         email: 'emma.gustafsson@boxflow.se',
         firstName: 'Emma',
         lastName: 'Gustafsson',
-        role: 'STAFF',
+        role: 'MEMBER',
         status: 'Customer Success',
         statusEmoji: '🤝',
         presence: { create: { status: 'OFFLINE' } }

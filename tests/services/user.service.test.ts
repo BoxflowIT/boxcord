@@ -27,7 +27,7 @@ describe('UserService', () => {
         lastName: null,
         avatarUrl: null,
         bio: null,
-        role: 'STAFF',
+        role: 'MEMBER',
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -43,7 +43,7 @@ describe('UserService', () => {
           email: 'test@example.com',
           firstName: null,
           lastName: null,
-          role: 'STAFF'
+          role: 'MEMBER'
         },
         update: {
           email: 'test@example.com',
@@ -110,7 +110,7 @@ describe('UserService', () => {
         lastName: 'User',
         avatarUrl: null,
         bio: null,
-        role: 'STAFF',
+        role: 'MEMBER',
         createdAt: new Date(),
         updatedAt: new Date(),
         presence: {
@@ -202,7 +202,7 @@ describe('UserService', () => {
         lastName: 'Name',
         avatarUrl: 'https://example.com/avatar.png',
         bio: 'New bio',
-        role: 'STAFF',
+        role: 'MEMBER',
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -234,7 +234,7 @@ describe('UserService', () => {
         id: 'user-1',
         email: 'test@example.com',
         bio: exactBio,
-        role: 'STAFF',
+        role: 'MEMBER',
         createdAt: new Date(),
         updatedAt: new Date()
       };

@@ -1,7 +1,7 @@
 interface RoleManagementProps {
   userId: string;
-  currentRole: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF' | 'USER';
-  onChangeRole: (role: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF') => void;
+  currentRole: 'SUPER_ADMIN' | 'ADMIN' | 'MEMBER' | 'USER';
+  onChangeRole: (role: 'SUPER_ADMIN' | 'ADMIN' | 'MEMBER') => void;
   isChanging: boolean;
 }
 
@@ -25,13 +25,13 @@ export default function RoleManagement({
           <span className="text-white font-semibold">{currentRole}</span>
         </p>
         <div className="flex gap-2">
-          {currentRole !== 'STAFF' && (
+          {currentRole !== 'MEMBER' && (
             <button
-              onClick={() => onChangeRole('STAFF')}
+              onClick={() => onChangeRole('MEMBER')}
               disabled={isChanging}
               className="flex-1 px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded disabled:opacity-50"
             >
-              Gör till Staff
+              Gör till Medlem
             </button>
           )}
           {currentRole !== 'ADMIN' && (

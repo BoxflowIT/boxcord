@@ -59,7 +59,7 @@ export default function CustomLogin() {
         email: result.user?.email || email,
         firstName: result.user?.given_name || email.split('@')[0],
         lastName: result.user?.family_name || '',
-        role: 'STAFF' // Temporary, will be updated below
+        role: 'MEMBER' // Temporary, will be updated below
       });
 
       // Fetch actual user data from backend (includes correct role from DB)

@@ -1920,7 +1920,7 @@ Get all role permissions for a channel.
   "success": true,
   "data": {
     "ADMIN": { "sendMessages": true, "manageChannel": true },
-    "STAFF": { "sendMessages": true, "manageChannel": false },
+    "MEMBER": { "sendMessages": true, "manageChannel": false },
     "USER": { "sendMessages": true, "manageChannel": false }
   }
 }
