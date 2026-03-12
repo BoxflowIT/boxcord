@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
 import { signOut } from '../services/cognito';
+import { socketService } from '../services/socket';
 import { useWorkspaces, useChannels } from '../hooks/useQuery';
 import { useMicrosoftStatus } from '../hooks/queries/microsoft';
 import { microsoft365Api } from '../services/api';
@@ -271,11 +272,11 @@ export default function Sidebar({
   };
 
   const handleLogout = () => {
-    // Sign out from Cognito
+    socketService.disconnect();
     signOut();
-    // Clear local auth state
     logout();
     navigate('/login');
+    window.location.reload();
   };
 
   return (

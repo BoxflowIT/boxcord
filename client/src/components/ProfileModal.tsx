@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { signOut } from '../services/cognito';
+import { socketService } from '../services/socket';
 import { logger } from '../utils/logger';
 import { toast } from '../store/notification';
 import { useAuthStore } from '../store/auth';
@@ -102,9 +103,9 @@ export default function ProfileModal({
   const handleDelete = async () => {
     try {
       await api.deleteAccount();
-      // Sign out from Cognito
+      socketService.disconnect();
       signOut();
-      // Clear local auth state
+      queryClient.clear();
       logout();
       navigate('/login');
     } catch (err) {
@@ -113,7 +114,7 @@ export default function ProfileModal({
     }
   };
 
-  const handleChangeRole = (newRole: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF') => {
+  const handleChangeRole = (newRole: 'SUPER_ADMIN' | 'ADMIN' | 'MEMBER') => {
     if (!profile) return;
 
     updateUserRole(
@@ -264,7 +265,7 @@ export default function ProfileModal({
                 <RoleManagement
                   userId={profile.id}
                   currentRole={
-                    profile.role as 'SUPER_ADMIN' | 'ADMIN' | 'STAFF' | 'USER'
+                    profile.role as 'SUPER_ADMIN' | 'ADMIN' | 'MEMBER' | 'USER'
                   }
                   onChangeRole={handleChangeRole}
                   isChanging={changingRole}
