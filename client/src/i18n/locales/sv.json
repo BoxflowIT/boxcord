@@ -367,7 +367,10 @@
     "tryAgainWithInvite": "försök igen med en inbjudningslänk.",
     "leave": "Lämna server",
     "leaveConfirm": "Är du säker på att du vill lämna {{name}}? Du kan gå med igen med en inbjudningslänk.",
-    "addWorkspace": "Lägg till workspace"
+    "addWorkspace": "Lägg till workspace",
+    "joinWithInvite": "Gå med via inbjudan",
+    "joinWorkspace": "Gå med",
+    "inviteCodePlaceholder": "Klistra in inbjudningslänk eller kod"
   },
   "invite": {
     "title": "Bjud in",

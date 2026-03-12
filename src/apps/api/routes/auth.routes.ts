@@ -65,7 +65,7 @@ export async function authRoutes(app: FastifyInstance) {
           email,
           firstName,
           lastName,
-          role: 'STAFF' // New users start as STAFF
+          role: 'MEMBER' // New users start as STAFF
         });
 
         // Create initial presence record
@@ -75,50 +75,6 @@ export async function authRoutes(app: FastifyInstance) {
             status: 'ONLINE'
           }
         });
-
-        // Check if any workspaces exist
-        const workspaceCount = await prisma.workspace.count();
-
-        // If no workspaces exist, create a default one with this user as owner
-        if (workspaceCount === 0) {
-          logger.info('No workspaces exist, creating default workspace');
-
-          const defaultWorkspace = await prisma.workspace.create({
-            data: {
-              name: 'General Workspace',
-              description: 'Default workspace for Boxcord',
-              members: {
-                create: {
-                  userId: id,
-                  role: 'ADMIN'
-                }
-              },
-              channels: {
-                create: [
-                  {
-                    name: 'general',
-                    description: 'General discussion',
-                    type: 'TEXT',
-                    position: 0
-                  },
-                  {
-                    name: 'random',
-                    description: 'Random chat',
-                    type: 'TEXT',
-                    position: 1
-                  }
-                ]
-              }
-            },
-            include: {
-              channels: true
-            }
-          });
-
-          logger.info(
-            `Created default workspace: ${defaultWorkspace.id} with ${defaultWorkspace.channels.length} channels`
-          );
-        }
 
         logger.info(`New user registered: ${email} (${id})`);
 

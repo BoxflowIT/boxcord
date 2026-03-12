@@ -26,7 +26,7 @@ const batchBody = z.object({
 });
 
 const roleBody = z.object({
-  role: z.enum(['SUPER_ADMIN', 'ADMIN', 'STAFF'])
+  role: z.enum(['SUPER_ADMIN', 'ADMIN', 'MEMBER'])
 });
 
 const statusBody = z.object({
@@ -46,44 +46,53 @@ export async function userRoutes(app: FastifyInstance) {
   });
 
   // Get current user (creates/updates local profile)
-  app.get('/me', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request, reply) => {
-    // Upsert local user on each request (without role - role is admin-managed)
-    const localUser = await userService.upsertUser({
-      id: request.user.id,
-      email: request.user.email
-      // NOTE: Don't pass role here - it's admin-managed in database
-    });
+  app.get(
+    '/me',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      // Upsert local user on each request (without role - role is admin-managed)
+      const localUser = await userService.upsertUser({
+        id: request.user.id,
+        email: request.user.email
+        // NOTE: Don't pass role here - it's admin-managed in database
+      });
 
-    // Try to get extra info from Boxtime
-    try {
-      const token = request.headers.authorization?.replace('Bearer ', '') ?? '';
-      const boxtimeUser = await boxtimeService.getCurrentUser(token);
+      // Try to get extra info from Boxtime
+      try {
+        const token =
+          request.headers.authorization?.replace('Bearer ', '') ?? '';
+        const boxtimeUser = await boxtimeService.getCurrentUser(token);
 
-      // Update local profile with Boxtime data if available
-      if (boxtimeUser.firstName || boxtimeUser.lastName) {
-        const updated = await userService.updateProfile(request.user.id, {
-          firstName: boxtimeUser.firstName,
-          lastName: boxtimeUser.lastName
-        });
-        // NO CACHE: User data can change (status, role, profile) and needs to be fresh
-        reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
-        return { success: true, data: updated };
+        // Update local profile with Boxtime data if available
+        if (boxtimeUser.firstName || boxtimeUser.lastName) {
+          const updated = await userService.updateProfile(request.user.id, {
+            firstName: boxtimeUser.firstName,
+            lastName: boxtimeUser.lastName
+          });
+          // NO CACHE: User data can change (status, role, profile) and needs to be fresh
+          reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+          return { success: true, data: updated };
+        }
+      } catch {
+        // Boxtime unavailable, continue with local data
       }
-    } catch {
-      // Boxtime unavailable, continue with local data
-    }
 
-    // NO CACHE: User data can change (status, role, profile) and needs to be fresh
-    reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
-    return { success: true, data: localUser };
-  });
+      // NO CACHE: User data can change (status, role, profile) and needs to be fresh
+      reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return { success: true, data: localUser };
+    }
+  );
 
   // Get user by ID
-  app.get<{ Params: { id: string } }>('/:id', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request, reply) => {
-    const user = await userService.getUser(request.params.id);
-    reply.cache({ maxAge: 300, staleWhileRevalidate: 600 });
-    return { success: true, data: user };
-  });
+  app.get<{ Params: { id: string } }>(
+    '/:id',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      const user = await userService.getUser(request.params.id);
+      reply.cache({ maxAge: 300, staleWhileRevalidate: 600 });
+      return { success: true, data: user };
+    }
+  );
 
   // Update current user's profile
   app.patch<{
@@ -178,10 +187,14 @@ export async function userRoutes(app: FastifyInstance) {
   );
 
   // Get all online users
-  app.get('/online', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async () => {
-    const users = await userService.getAllOnlineUsers();
-    return { success: true, data: users };
-  });
+  app.get(
+    '/online',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+    async () => {
+      const users = await userService.getAllOnlineUsers();
+      return { success: true, data: users };
+    }
+  );
 
   // Update user role (only SUPER_ADMIN can do this)
   app.patch<{
@@ -224,64 +237,31 @@ export async function userRoutes(app: FastifyInstance) {
   );
 
   // Delete current user account
-  app.delete('/me', { config: { rateLimit: { max: 5, timeWindow: '1 minute' } } }, async (request) => {
-    await userService.deleteUser(request.user.id);
-    return { success: true };
-  });
-
-  // Initialize user (create + add to default workspace)
-  // Called after first login to ensure user exists and has access
-  app.post('/me/init', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (request) => {
-    // Create/update user
-    const user = await userService.upsertUser({
-      id: request.user.id,
-      email: request.user.email,
-      role: request.user.role
-    });
-
-    // Check if user is member of any workspace
-    const memberships = await prisma.workspaceMember.findMany({
-      where: { userId: request.user.id }
-    });
-
-    // If no memberships, add to first workspace (or create one)
-    if (memberships.length === 0) {
-      const defaultWorkspace = await prisma.workspace.findFirst();
-
-      if (defaultWorkspace) {
-        await prisma.workspaceMember.create({
-          data: {
-            workspaceId: defaultWorkspace.id,
-            userId: request.user.id,
-            role: 'MEMBER'
-          }
-        });
-      } else {
-        // No workspaces exist, create one with this user as owner
-        await prisma.workspace.create({
-          data: {
-            name: 'Boxflow HQ',
-            description: 'Huvudkontoret för Boxflow-teamet',
-            members: {
-              create: {
-                userId: request.user.id,
-                role: 'OWNER'
-              }
-            },
-            channels: {
-              create: {
-                name: 'allmänt',
-                description: 'Allmän diskussion',
-                type: 'TEXT'
-              }
-            }
-          }
-        });
-      }
+  app.delete(
+    '/me',
+    { config: { rateLimit: { max: 5, timeWindow: '1 minute' } } },
+    async (request) => {
+      await userService.deleteUser(request.user.id);
+      return { success: true };
     }
+  );
 
-    return { success: true, data: user };
-  });
+  // Initialize user (ensure user record exists)
+  // Called after first login to ensure user exists in the database
+  app.post(
+    '/me/init',
+    { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
+    async (request) => {
+      // Create/update user
+      const user = await userService.upsertUser({
+        id: request.user.id,
+        email: request.user.email,
+        role: request.user.role
+      });
+
+      return { success: true, data: user };
+    }
+  );
 
   // PATCH /users/me/status - Update custom status
   app.patch<{

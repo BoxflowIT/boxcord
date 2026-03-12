@@ -363,7 +363,10 @@
     "tryAgainWithInvite": "try again with an invite link.",
     "leave": "Leave server",
     "leaveConfirm": "Are you sure you want to leave {{name}}? You can rejoin with an invite link.",
-    "addWorkspace": "Add workspace"
+    "addWorkspace": "Add workspace",
+    "joinWithInvite": "Join with invite",
+    "joinWorkspace": "Join",
+    "inviteCodePlaceholder": "Paste invite link or code"
   },
   "invite": {
     "title": "Invite",
