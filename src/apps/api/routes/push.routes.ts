@@ -31,12 +31,16 @@ export async function pushRoutes(app: FastifyInstance) {
   });
 
   // Get VAPID public key for client subscription
-  app.get('/vapid-public-key', async () => {
-    return {
-      success: true,
-      data: { publicKey: VAPID_PUBLIC_KEY }
-    };
-  });
+  app.get(
+    '/vapid-public-key',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+    async () => {
+      return {
+        success: true,
+        data: { publicKey: VAPID_PUBLIC_KEY }
+      };
+    }
+  );
 
   // Subscribe to push notifications
   app.post<{

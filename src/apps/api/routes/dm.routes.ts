@@ -28,13 +28,17 @@ export async function dmRoutes(app: FastifyInstance) {
   });
 
   // Get user's DM channels
-  app.get('/channels', async (request, reply) => {
-    const channels = await dmService.getUserChannels(request.user.id);
-    // NO CACHE: DM list changes frequently (new messages, unread counts)
-    // Socket events keep React Query cache fresh instead
-    reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
-    return { success: true, data: channels };
-  });
+  app.get(
+    '/channels',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      const channels = await dmService.getUserChannels(request.user.id);
+      // NO CACHE: DM list changes frequently (new messages, unread counts)
+      // Socket events keep React Query cache fresh instead
+      reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return { success: true, data: channels };
+    }
+  );
 
   // Get or create DM channel with another user
   app.post<{ Body: z.infer<typeof createDMChannelBody> }>(

@@ -409,12 +409,12 @@ This phase deploys a basic high-availability setup with 2-3 application instance
        environment:
          NODE_ENV: production
          PORT: 3001
-         DATABASE_URL: postgresql://boxcord_app:<YOUR_PASSWORD>@db.example.com:5432/boxcord_production?connection_limit=30&pool_timeout=10
-         REDIS_URL: redis://:<YOUR_REDIS_TOKEN>@redis.example.com:6379
-         AWS_S3_BUCKET: boxcord-files-prod
-         AWS_REGION: eu-north-1
-         JWT_SECRET: <SECURE_JWT_SECRET>
-         SENTRY_DSN: <YOUR_SENTRY_DSN>
+         DATABASE_URL: ${DATABASE_URL}
+         REDIS_URL: ${REDIS_URL}
+         AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+         AWS_REGION: ${AWS_REGION}
+         JWT_SECRET: ${JWT_SECRET}
+         SENTRY_DSN: ${SENTRY_DSN}
        healthcheck:
          test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
          interval: 30s
@@ -436,12 +436,12 @@ This phase deploys a basic high-availability setup with 2-3 application instance
        environment:
          NODE_ENV: production
          PORT: 3001
-         DATABASE_URL: postgresql://boxcord_app:<YOUR_PASSWORD>@db.example.com:5432/boxcord_production?connection_limit=30&pool_timeout=10
-         REDIS_URL: redis://:<YOUR_REDIS_TOKEN>@redis.example.com:6379
-         AWS_S3_BUCKET: boxcord-files-prod
-         AWS_REGION: eu-north-1
-         JWT_SECRET: <SECURE_JWT_SECRET>
-         SENTRY_DSN: <YOUR_SENTRY_DSN>
+         DATABASE_URL: ${DATABASE_URL}
+         REDIS_URL: ${REDIS_URL}
+         AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+         AWS_REGION: ${AWS_REGION}
+         JWT_SECRET: ${JWT_SECRET}
+         SENTRY_DSN: ${SENTRY_DSN}
        healthcheck:
          test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
          interval: 30s
@@ -458,11 +458,11 @@ This phase deploys a basic high-availability setup with 2-3 application instance
        environment:
          NODE_ENV: production
          PORT: 3001
-         DATABASE_URL: postgresql://boxcord_app:<YOUR_PASSWORD>@db.example.com:5432/boxcord_production?connection_limit=30&pool_timeout=10
-         REDIS_URL: redis://:<YOUR_REDIS_TOKEN>@redis.example.com:6379
-         AWS_S3_BUCKET: boxcord-files-prod
-         AWS_REGION: eu-north-1
-         JWT_SECRET: <SECURE_JWT_SECRET>
+         DATABASE_URL: ${DATABASE_URL}
+         REDIS_URL: ${REDIS_URL}
+         AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+         AWS_REGION: ${AWS_REGION}
+         JWT_SECRET: ${JWT_SECRET}
          SENTRY_DSN: <YOUR_SENTRY_DSN>
        healthcheck:
          test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
@@ -659,7 +659,7 @@ This phase adds read replicas, WebSocket clustering, message queue workers, and 
    
    Add to environment variables:
    ```env
-   DATABASE_READ_REPLICA_URL=postgresql://<DB_USER>:<DB_PASSWORD>@<REPLICA_HOST>:5432/<DB_NAME>
+   DATABASE_READ_REPLICA_URL=${DATABASE_READ_REPLICA_URL}
    ```
 
 4. **Implement Read/Write Client Separation:**
@@ -1274,7 +1274,7 @@ ECONNREFUSED: Connection refused
 4. Check connection string format:
    ```env
    # Correct format
-   REDIS_URL=redis://:<YOUR_REDIS_TOKEN>@host:6379
+   REDIS_URL=redis://:${REDIS_AUTH_TOKEN}@${REDIS_HOST}:6379
    ```
 
 #### 5. Slow Query Performance

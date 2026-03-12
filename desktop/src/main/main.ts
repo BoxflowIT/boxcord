@@ -88,9 +88,18 @@ function createMainWindow(): BrowserWindow {
 
   // Open external links in default browser
   win.webContents.setWindowOpenHandler(({ url }: { url: string }) => {
-    // Allow SharePoint webview navigations within the app
-    if (url.includes('sharepoint.com') || url.includes('office.com')) {
-      return { action: 'deny' }; // Handled by webview
+    try {
+      const parsed = new URL(url);
+      // Allow SharePoint/Office navigations within the app (hostname check, not substring)
+      if (
+        parsed.hostname.endsWith('.sharepoint.com') ||
+        parsed.hostname.endsWith('.office.com')
+      ) {
+        return { action: 'deny' }; // Handled by webview
+      }
+    } catch {
+      // Invalid URL — deny and don't open externally
+      return { action: 'deny' };
     }
     shell.openExternal(url);
     return { action: 'deny' };
