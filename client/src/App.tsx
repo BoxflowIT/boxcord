@@ -4,8 +4,9 @@ import { useAuthStore } from './store/auth';
 import { useVoiceStore } from './store/voiceStore';
 import { useNotificationStore } from './store/notification';
 import { setQueryClient } from './services/socket';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import Spinner from './components/ui/Spinner';
+import { restoreSession } from './services/cognito';
 import { ErrorBoundary } from './components/utility';
 import ToastContainer from './components/notification/ToastContainer';
 import CustomLogin from './pages/CustomLogin';
@@ -37,6 +38,14 @@ setQueryClient(queryClient);
 function App() {
   const { token, isLoading } = useAuthStore();
   const resetVoiceStore = useVoiceStore((state) => state.reset);
+  const sessionRestored = useRef(false);
+
+  // Restore Cognito session on startup (auto-refresh expired tokens)
+  useEffect(() => {
+    if (sessionRestored.current) return;
+    sessionRestored.current = true;
+    restoreSession();
+  }, []);
 
   // Reset voice store on mount to clear any stale state
   useEffect(() => {
