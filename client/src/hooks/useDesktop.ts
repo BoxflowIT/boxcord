@@ -11,6 +11,7 @@ export function useDesktop() {
   const [canEmbed, setCanEmbed] = useState(false);
   const [version, setVersion] = useState<string | null>(null);
   const [updateReady, setUpdateReady] = useState<string | null>(null);
+  const [updateError, setUpdateError] = useState<string | null>(null);
 
   useEffect(() => {
     const api = getElectronAPI();
@@ -23,8 +24,10 @@ export function useDesktop() {
     const unsubDownloaded = api.onUpdateDownloaded((ver) =>
       setUpdateReady(ver)
     );
+    const unsubError = api.onUpdateError?.((msg) => setUpdateError(msg));
     return () => {
       unsubDownloaded();
+      unsubError?.();
     };
   }, []);
 
@@ -33,6 +36,7 @@ export function useDesktop() {
     canEmbed,
     version,
     updateReady,
+    updateError,
     installUpdate: () => getElectronAPI()?.installUpdate(),
     showNotification: (payload: {
       title: string;

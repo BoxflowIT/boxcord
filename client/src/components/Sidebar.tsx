@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { useChatStore } from '../store/chat';
 import { useAuthStore } from '../store/auth';
 import { signOut } from '../services/cognito';
@@ -15,7 +16,7 @@ import { socketService } from '../services/socket';
 import { useWorkspaces, useChannels } from '../hooks/useQuery';
 import { useMicrosoftStatus } from '../hooks/queries/microsoft';
 import { microsoft365Api } from '../services/api';
-import { openExternalUrl } from '../utils/platform';
+import { openExternalUrl, getElectronAPI } from '../utils/platform';
 import { useWorkspaceOperations } from '../hooks/useWorkspaceOperations';
 import { useChannelOperations } from '../hooks/useChannelOperations';
 import { useModalWithData } from '../hooks/useModalState';
@@ -45,6 +46,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
   // UI State from Zustand
   const {
@@ -275,6 +277,10 @@ export default function Sidebar({
     socketService.disconnect();
     signOut();
     logout();
+    // Clear all cached server data to prevent stale data on next login
+    queryClient.clear();
+    // Clear Electron HTTP cache if running in desktop
+    getElectronAPI()?.clearCache();
     navigate('/login');
     window.location.reload();
   };

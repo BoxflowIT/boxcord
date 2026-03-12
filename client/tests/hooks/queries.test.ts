@@ -63,8 +63,9 @@ describe('Query Constants', () => {
   });
 
   describe('CACHE_TIMES', () => {
-    it('should have infinite stale time for socket-updated data', () => {
-      expect(CACHE_TIMES.WORKSPACES.stale).toBe(Infinity);
+    it('should have appropriate stale times for socket-updated data', () => {
+      // Workspaces use a short stale time as safety net (socket keeps fresh)
+      expect(CACHE_TIMES.WORKSPACES.stale).toBe(30 * 1000);
       expect(CACHE_TIMES.CHANNELS.stale).toBe(Infinity);
       expect(CACHE_TIMES.MESSAGES.stale).toBe(Infinity);
       expect(CACHE_TIMES.USERS.stale).toBe(Infinity);

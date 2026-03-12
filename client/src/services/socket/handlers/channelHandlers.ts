@@ -1,6 +1,7 @@
-// Channel Lifecycle Event Handlers
+// Channel & Workspace Lifecycle Event Handlers
 import { queryKeys } from '../../../hooks/useQuery';
-import type { Channel } from '../../../types';
+import { useChatStore } from '../../../store/chat';
+import type { Channel, Workspace } from '../../../types';
 import type {
   SocketHandlerContext,
   ChannelPayload,
@@ -9,6 +10,32 @@ import type {
 
 export function registerChannelHandlers(context: SocketHandlerContext): void {
   const { socket, queryClient } = context;
+
+  // workspace:deleted — Another client (or this user) deleted a workspace
+  socket.on('workspace:deleted', ({ workspaceId }: { workspaceId: string }) => {
+    // Remove from workspaces list cache
+    queryClient.setQueryData<Workspace[]>(queryKeys.workspaces, (old) => {
+      if (!old) return old;
+      return old.filter((ws) => ws.id !== workspaceId);
+    });
+
+    // If user is viewing the deleted workspace, switch away
+    const { currentWorkspace, setCurrentWorkspace, setCurrentChannel } =
+      useChatStore.getState();
+    if (currentWorkspace?.id === workspaceId) {
+      const remaining = queryClient.getQueryData<Workspace[]>(
+        queryKeys.workspaces
+      );
+      setCurrentWorkspace(remaining?.[0] ?? null);
+      setCurrentChannel(null);
+    }
+
+    // Clean up related caches
+    queryClient.removeQueries({ queryKey: queryKeys.channels(workspaceId) });
+    queryClient.removeQueries({
+      queryKey: queryKeys.workspaceMembers(workspaceId)
+    });
+  });
 
   // channel:created - New channel created
   socket.on('channel:created', (channel: ChannelPayload) => {
