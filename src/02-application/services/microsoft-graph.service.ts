@@ -13,6 +13,17 @@ const AUTHORIZE_URL = `${AUTHORITY}/oauth2/v2.0/authorize`;
 const TOKEN_URL = `${AUTHORITY}/oauth2/v2.0/token`;
 const GRAPH_URL = 'https://graph.microsoft.com/v1.0';
 
+/**
+ * Validate that a Graph API path is a safe relative path (SSRF protection).
+ * Only allows paths starting with '/' without protocol/host traversal.
+ */
+function validateGraphPath(path: string): string {
+  if (!path.startsWith('/') || path.includes('://') || path.includes('..')) {
+    throw new Error(`Invalid Graph API path: ${path}`);
+  }
+  return path;
+}
+
 // Scopes we request — use least privilege:
 // Sites.Read.All = read sites user has access to (delegated = user's own permissions)
 // Files.ReadWrite.All = read/write files in user's OneDrive + sites they have access to
@@ -347,7 +358,8 @@ class MicrosoftGraphService {
     accessToken: string,
     extraHeaders?: Record<string, string>
   ): Promise<T> {
-    const response = await fetch(`${GRAPH_URL}${path}`, {
+    const safePath = validateGraphPath(path);
+    const response = await fetch(`${GRAPH_URL}${safePath}`, {
       headers: { Authorization: `Bearer ${accessToken}`, ...extraHeaders }
     });
 
@@ -366,7 +378,8 @@ class MicrosoftGraphService {
     accessToken: string,
     body: unknown
   ): Promise<T> {
-    const response = await fetch(`${GRAPH_URL}${path}`, {
+    const safePath = validateGraphPath(path);
+    const response = await fetch(`${GRAPH_URL}${safePath}`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -390,7 +403,8 @@ class MicrosoftGraphService {
     accessToken: string,
     body: unknown
   ): Promise<T> {
-    const response = await fetch(`${GRAPH_URL}${path}`, {
+    const safePath = validateGraphPath(path);
+    const response = await fetch(`${GRAPH_URL}${safePath}`, {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -413,7 +427,8 @@ class MicrosoftGraphService {
     path: string,
     accessToken: string
   ): Promise<void> {
-    const response = await fetch(`${GRAPH_URL}${path}`, {
+    const safePath = validateGraphPath(path);
+    const response = await fetch(`${GRAPH_URL}${safePath}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${accessToken}` }
     });
@@ -887,7 +902,8 @@ class MicrosoftGraphService {
     const basePath = folderId
       ? `/sites/${siteId}/drive/items/${folderId}`
       : `/sites/${siteId}/drive/root`;
-    const url = `${GRAPH_URL}${basePath}:/${encodedName}:/content`;
+    const safePath = validateGraphPath(`${basePath}:/${encodedName}:/content`);
+    const url = `${GRAPH_URL}${safePath}`;
 
     const response = await fetch(url, {
       method: 'PUT',

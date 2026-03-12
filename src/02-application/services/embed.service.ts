@@ -238,25 +238,27 @@ function parseOpenGraph(html: string, url: string): EmbedData {
  */
 export async function fetchUrlMetadata(url: string): Promise<EmbedData | null> {
   try {
-    // Validate URL
+    // Validate URL — only allow http/https protocols
     const urlObj = new URL(url);
     if (!['http:', 'https:'].includes(urlObj.protocol)) {
       return null;
     }
+    // Use the parsed and validated URL to prevent manipulation
+    const validatedUrl = urlObj.href;
 
     // SSRF protection: validate URL doesn't resolve to private/internal IP
-    if (!(await validateUrlNotInternal(url))) {
+    if (!(await validateUrlNotInternal(validatedUrl))) {
       return null;
     }
 
     // Try oEmbed first (better for rich embeds)
-    const oembedData = await fetchOEmbed(url);
+    const oembedData = await fetchOEmbed(validatedUrl);
     if (oembedData) {
       return oembedData;
     }
 
     // Fallback to OpenGraph/HTML parsing
-    const response = await fetch(url, {
+    const response = await fetch(validatedUrl, {
       headers: {
         'User-Agent':
           'Mozilla/5.0 (compatible; BoxcordBot/1.0; +https://boxflow.com)'
@@ -267,7 +269,7 @@ export async function fetchUrlMetadata(url: string): Promise<EmbedData | null> {
     if (!response.ok) return null;
 
     const html = await response.text();
-    return parseOpenGraph(html, url);
+    return parseOpenGraph(html, validatedUrl);
   } catch {
     logger.warn(`Failed to fetch URL metadata: ${url}`);
     return null;

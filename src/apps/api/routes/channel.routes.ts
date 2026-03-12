@@ -35,7 +35,8 @@ export async function channelRoutes(app: FastifyInstance) {
   app.get<{ Querystring: z.infer<typeof getChannelsQuery> }>(
     '/',
     {
-      preHandler: app.validateQuery(getChannelsQuery)
+      preHandler: app.validateQuery(getChannelsQuery),
+      config: { rateLimit: { max: 60, timeWindow: '1 minute' } }
     },
     async (request, reply) => {
       const { workspaceId } = request.query;
