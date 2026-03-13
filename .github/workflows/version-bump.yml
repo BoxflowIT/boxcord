@@ -141,6 +141,22 @@ jobs:
           git push origin main --follow-tags
           echo "✅ Pushed to main with tags"
 
+      - name: Trigger desktop release
+        env:
+          NEW_VERSION: ${{ steps.new_version.outputs.version }}
+        run: |
+          DESKTOP_TAG="desktop-v$NEW_VERSION"
+
+          # Remove old desktop tag if it exists
+          if git rev-parse "$DESKTOP_TAG" >/dev/null 2>&1; then
+            git tag -d "$DESKTOP_TAG"
+            git push origin --delete "$DESKTOP_TAG" 2>/dev/null || true
+          fi
+
+          git tag -a "$DESKTOP_TAG" -m "Desktop release v$NEW_VERSION"
+          git push origin "$DESKTOP_TAG"
+          echo "✅ Pushed $DESKTOP_TAG — desktop-release.yml will build .exe/.dmg/.AppImage/.deb"
+
       - name: Update PR number file
         run: |
           CURRENT_PR=${{ steps.pr_number.outputs.pr_number }}

@@ -5,8 +5,8 @@ import { Download, Terminal } from 'lucide-react';
 const REPO = 'BoxflowIT/boxcord';
 
 // Fallback values used until the GitHub API responds (or if it fails)
-const FALLBACK_TAG = 'desktop-v1.18.1';
-const FALLBACK_VERSION = '1.18.1';
+const FALLBACK_TAG = 'desktop-v1.19.0';
+const FALLBACK_VERSION = '1.19.0';
 
 function useLatestDesktopRelease() {
   const [tag, setTag] = useState(FALLBACK_TAG);
