@@ -278,3 +278,18 @@ When `electron-updater` downloads a new version, the `UpdateBanner` component ap
 - **External links** — All non-app URLs open in default browser via `shell.openExternal`
 - **URL validation** — Only `http://` and `https://` schemes allowed for `shell.openExternal` and `will-navigate`
 - **Global navigation guard** — `web-contents-created` listener blocks non-HTTP navigations on all webContents
+- **Certificate error rejection** — Invalid SSL certificates are rejected by default
+- **Media permissions whitelist** — Only `media`, `display-capture`, `mediaKeySystem`, and `notifications` are granted
+
+## Crash Recovery
+
+The desktop app handles renderer crashes and freezes gracefully:
+
+- **`render-process-gone`** — If the renderer crashes (non-clean exit), the user sees an error dialog and the app automatically restarts.
+- **`unresponsive`** — If the renderer freezes, a dialog offers "Wait" or "Restart".
+- **`child-process-gone`** — GPU and other child process crashes are logged.
+- **`unhandledRejection` / `uncaughtException`** — Global handlers prevent silent main-process failures.
+
+## Close-to-Tray
+
+On Windows and Linux, closing the window **hides it to the system tray** instead of quitting. The app keeps running for notifications. Use "Quit" from the tray menu or `Cmd+Q` / `Alt+F4` to fully exit. On macOS, the standard hide-on-close behavior applies.

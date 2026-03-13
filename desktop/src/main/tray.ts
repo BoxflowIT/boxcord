@@ -23,8 +23,19 @@ export function createTray(mainWindow: BrowserWindow): void {
     trayIcon = nativeImage.createFromPath(iconPath);
     if (trayIcon.isEmpty()) throw new Error('Empty icon');
   } catch {
-    // Create a minimal tray icon programmatically
-    trayIcon = nativeImage.createEmpty();
+    // Create a minimal 16x16 blue icon as fallback
+    const size = 16;
+    const buffer = Buffer.alloc(size * size * 4);
+    for (let i = 0; i < size * size; i++) {
+      buffer[i * 4] = 88; // R
+      buffer[i * 4 + 1] = 101; // G
+      buffer[i * 4 + 2] = 242; // B
+      buffer[i * 4 + 3] = 255; // A
+    }
+    trayIcon = nativeImage.createFromBuffer(buffer, {
+      width: size,
+      height: size
+    });
   }
 
   tray = new Tray(trayIcon);

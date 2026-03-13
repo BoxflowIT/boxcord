@@ -1,5 +1,31 @@
 [
   {
+    "version": "1.18.1",
+    "date": "2026-03-13",
+    "notes": {
+      "sv": [
+        "Desktop: WebRTC-rättigheter — röstsamtal fungerar nu i desktop-appen",
+        "Desktop: Kraschåterställning — appen startar om vid krasch istället för vit skärm",
+        "Desktop: Stäng-till-tray — appen körs i bakgrunden vid stängning",
+        "Desktop: Fixat auto-update krasch vid nätverksproblem",
+        "Desktop: Notifikationsikon och tray-ikon korrekt",
+        "Desktop: Certifikatfelhantering och child-process recovery",
+        "CI: Desktop-version bumpar automatiskt med web-versionen",
+        "CI: Desktop TypeScript-check i CI-pipeline"
+      ],
+      "en": [
+        "Desktop: WebRTC permissions — voice calls now work in desktop app",
+        "Desktop: Crash recovery — app restarts on crash instead of white screen",
+        "Desktop: Close-to-tray — app keeps running in background on close",
+        "Desktop: Fixed auto-update crash on network issues",
+        "Desktop: Notification icon and tray icon fixed",
+        "Desktop: Certificate error handling and child-process recovery",
+        "CI: Desktop version auto-bumps with web version",
+        "CI: Desktop TypeScript check in CI pipeline"
+      ]
+    }
+  },
+  {
     "version": "1.18.0",
     "date": "2026-03-12",
     "notes": {

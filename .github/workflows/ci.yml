@@ -93,6 +93,32 @@ jobs:
         working-directory: ./client
         run: yarn build
 
+  # ─── Desktop TypeScript Check ──────────────────────────────────────
+  desktop-typecheck:
+    name: Desktop Typecheck
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+          cache-dependency-path: desktop/yarn.lock
+
+      - name: Install dependencies
+        working-directory: ./desktop
+        run: yarn install --frozen-lockfile
+
+      - name: TypeScript check
+        working-directory: ./desktop
+        run: yarn typecheck
+
   # ─── E2E Tests (Playwright) ────────────────────────────────────────
   # Runs only tests that don't require Cognito auth (tagged @auth).
   # Auth-dependent tests are skipped in CI until auth mocking is added.

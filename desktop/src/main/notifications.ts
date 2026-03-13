@@ -1,4 +1,16 @@
-import { BrowserWindow, ipcMain, Notification } from 'electron';
+import { BrowserWindow, ipcMain, Notification, app } from 'electron';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+function getAssetPath(...segments: string[]): string {
+  const asarPath = path.join(__dirname, '..', '..', ...segments);
+  return app.isPackaged
+    ? asarPath.replace('app.asar', 'app.asar.unpacked')
+    : asarPath;
+}
 
 export function registerNotificationHandlers(mainWindow: BrowserWindow): void {
   // Desktop notification from renderer
@@ -18,7 +30,7 @@ export function registerNotificationHandlers(mainWindow: BrowserWindow): void {
       const notification = new Notification({
         title: payload.title,
         body: payload.body,
-        icon: undefined, // Uses app icon by default
+        icon: getAssetPath('build', 'icon-256.png'),
         silent: false
       });
 

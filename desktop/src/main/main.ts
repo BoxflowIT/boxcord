@@ -19,6 +19,15 @@ import { getStore } from './store.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// ─── Global error handlers (prevent silent crashes) ──────────────
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection in main process:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception in main process:', error);
+});
+
 // App URL — dev script sets BOXCORD_URL to localhost; production always uses the real URL
 const PROD_URL = 'https://boxcord.boxflow.com';
 const APP_URL = process.env.BOXCORD_URL || PROD_URL;
@@ -122,6 +131,49 @@ function createMainWindow(): BrowserWindow {
       if (url.startsWith('http://') || url.startsWith('https://')) {
         shell.openExternal(url);
       }
+    }
+  });
+
+  // ─── Crash recovery ─────────────────────────────────────
+  win.webContents.on('render-process-gone', (_event, details) => {
+    console.error('Renderer process gone:', details.reason);
+    if (details.reason !== 'clean-exit') {
+      dialog.showErrorBox(
+        'Boxcord crashed',
+        'The app encountered an error and needs to restart.'
+      );
+      app.relaunch();
+      app.quit();
+    }
+  });
+
+  win.webContents.on('unresponsive', () => {
+    dialog
+      .showMessageBox(win, {
+        type: 'warning',
+        title: 'Boxcord is not responding',
+        message: 'Do you want to wait or restart?',
+        buttons: ['Wait', 'Restart'],
+        defaultId: 1
+      })
+      .then(({ response }) => {
+        if (response === 1) {
+          app.relaunch();
+          app.quit();
+        }
+      });
+  });
+
+  // ─── Close-to-tray (keep running for notifications) ────
+  let forceQuit = false;
+  app.on('before-quit', () => {
+    forceQuit = true;
+  });
+
+  win.on('close', (event) => {
+    if (!forceQuit && process.platform !== 'darwin') {
+      event.preventDefault();
+      win.hide();
     }
   });
 
@@ -284,8 +336,11 @@ function setupAutoUpdater() {
   });
 
   // Check for updates every 4 hours
-  autoUpdater.checkForUpdates();
-  setInterval(() => autoUpdater.checkForUpdates(), 4 * 60 * 60 * 1000);
+  autoUpdater.checkForUpdates().catch(() => {});
+  setInterval(
+    () => autoUpdater.checkForUpdates().catch(() => {}),
+    4 * 60 * 60 * 1000
+  );
 
   // Allow renderer to trigger install
   ipcMain.on('update:install', () => {
@@ -320,7 +375,21 @@ app.whenReady().then(async () => {
     // macOS: re-create window when dock icon clicked
     if (BrowserWindow.getAllWindows().length === 0) {
       mainWindow = createMainWindow();
+    } else {
+      mainWindow?.show();
     }
+  });
+
+  app.on(
+    'certificate-error',
+    (event, _webContents, _url, _error, _cert, callback) => {
+      event.preventDefault();
+      callback(false); // Reject invalid certificates (secure default)
+    }
+  );
+
+  app.on('child-process-gone', (_event, details) => {
+    console.error('Child process gone:', details.type, details.reason);
   });
 });
 
