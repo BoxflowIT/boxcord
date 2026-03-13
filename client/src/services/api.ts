@@ -26,6 +26,18 @@ import type {
 
 const API_BASE = '/api/v1';
 
+// Shared refresh promise to prevent concurrent 401 refresh races
+let refreshPromise: Promise<string | null> | null = null;
+
+async function refreshOnce(): Promise<string | null> {
+  if (refreshPromise) return refreshPromise;
+  const { refreshAuthToken } = await import('./cognito');
+  refreshPromise = refreshAuthToken().finally(() => {
+    refreshPromise = null;
+  });
+  return refreshPromise;
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = useAuthStore.getState().token;
 
@@ -41,8 +53,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   // Handle 401 Unauthorized — try refreshing the Cognito session first
   if (response.status === 401) {
-    const { refreshAuthToken } = await import('./cognito');
-    const freshToken = await refreshAuthToken();
+    const freshToken = await refreshOnce();
     if (freshToken) {
       // Retry the original request with the fresh token
       const retry = await fetch(`${API_BASE}${path}`, {

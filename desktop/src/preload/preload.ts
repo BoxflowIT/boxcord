@@ -63,7 +63,14 @@ const electronAPI = {
 
   // ─── Open URL in system browser ─────────────
   openExternal: (url: string) =>
-    ipcRenderer.invoke('shell:open-external', url) as Promise<void>
+    ipcRenderer.invoke('shell:open-external', url) as Promise<void>,
+
+  // ─── System events ──────────────────────────
+  onSystemResume: (callback: () => void) => {
+    const handler = () => callback();
+    ipcRenderer.on('system:resume', handler);
+    return () => ipcRenderer.removeListener('system:resume', handler);
+  }
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

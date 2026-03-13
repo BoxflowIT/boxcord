@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { isDesktop, getElectronAPI } from '../utils/platform';
+import { socketService, getQueryClient } from '../services/socket';
 
 /**
  * Hook for desktop app features.
@@ -25,9 +26,21 @@ export function useDesktop() {
       setUpdateReady(ver)
     );
     const unsubError = api.onUpdateError?.((msg) => setUpdateError(msg));
+
+    // Sleep/wake: refresh token, reconnect socket, invalidate stale queries
+    const unsubResume = api.onSystemResume?.(() => {
+      import('../services/cognito').then(({ refreshAuthToken }) => {
+        refreshAuthToken().then(() => {
+          socketService.reconnect();
+          getQueryClient()?.invalidateQueries();
+        });
+      });
+    });
+
     return () => {
       unsubDownloaded();
       unsubError?.();
+      unsubResume?.();
     };
   }, []);
 

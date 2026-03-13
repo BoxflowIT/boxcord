@@ -5,7 +5,8 @@ import {
   ipcMain,
   desktopCapturer,
   session,
-  dialog
+  dialog,
+  powerMonitor
 } from 'electron';
 import type { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
 import electronUpdater from 'electron-updater';
@@ -390,6 +391,11 @@ app.whenReady().then(async () => {
 
   app.on('child-process-gone', (_event, details) => {
     console.error('Child process gone:', details.type, details.reason);
+  });
+
+  // ─── Sleep/wake: notify renderer to refresh token + reconnect ───
+  powerMonitor.on('resume', () => {
+    mainWindow?.webContents.send('system:resume');
   });
 });
 
