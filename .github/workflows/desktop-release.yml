@@ -1,10 +1,15 @@
 name: Desktop Release
 
-# Trigger: push a tag like  git tag desktop-v1.13.0 && git push origin desktop-v1.13.0
 on:
   push:
     tags:
       - 'desktop-v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g. 1.19.2)'
+        required: true
+        type: string
 
 permissions:
   contents: write # needed to create/update GitHub Releases
@@ -12,24 +17,50 @@ permissions:
 env:
   # Production URL loaded by the Electron app
   BOXCORD_URL: https://boxcord.boxflow.com
+  # Resolve version: workflow_dispatch input takes priority, otherwise extract from tag
+  RELEASE_VERSION: ${{ inputs.version || '' }}
 
 jobs:
   # ─── Create GitHub Release first ───────────────────────────────────
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Extract version from tag
+      - name: Resolve version
         id: version
-        run: echo "version=${GITHUB_REF_NAME#desktop-v}" >> $GITHUB_OUTPUT
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#desktop-v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=desktop-v$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Resolved version: $VERSION"
+
+      - name: Ensure desktop tag exists
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+            git tag -a "$TAG" -m "Desktop release v${{ steps.version.outputs.version }}"
+            git push origin "$TAG"
+            echo "✅ Created tag $TAG"
+          else
+            echo "✅ Tag $TAG already exists"
+          fi
 
       - name: Create draft GitHub Release
-        # Uses the trigger tag (desktop-v*) which already exists, avoiding v* tag rulesets
         run: |
-          gh release create "${{ github.ref_name }}" \
+          TAG="${{ steps.version.outputs.tag }}"
+          gh release create "$TAG" \
             --title "Boxcord Desktop v${{ steps.version.outputs.version }}" \
             --generate-notes \
             --draft
@@ -67,7 +98,7 @@ jobs:
 
       - name: Upload artifacts to release
         working-directory: desktop/out
-        run: gh release upload "${{ github.ref_name }}" *.AppImage *.deb latest-linux.yml --clobber
+        run: gh release upload "${{ needs.create-release.outputs.tag }}" *.AppImage *.deb latest-linux.yml --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -102,7 +133,7 @@ jobs:
 
       - name: Upload artifacts to release
         working-directory: desktop/out
-        run: gh release upload "${{ github.ref_name }}" *.exe *.exe.blockmap latest.yml --clobber
+        run: gh release upload "${{ needs.create-release.outputs.tag }}" *.exe *.exe.blockmap latest.yml --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -140,14 +171,14 @@ jobs:
 
       - name: Upload artifacts to release
         working-directory: desktop/out
-        run: gh release upload "${{ github.ref_name }}" *.dmg *.dmg.blockmap latest-mac.yml --clobber
+        run: gh release upload "${{ needs.create-release.outputs.tag }}" *.dmg *.dmg.blockmap latest-mac.yml --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ─── Publish Release ────────────────────────────────────────────────
   publish-release:
     name: Publish Release
-    needs: [release-linux, release-windows, release-mac]
+    needs: [create-release, release-linux, release-windows, release-mac]
     runs-on: ubuntu-latest
 
     steps:
@@ -155,6 +186,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Publish release (remove draft)
-        run: gh release edit "${{ github.ref_name }}" --draft=false
+        run: gh release edit "${{ needs.create-release.outputs.tag }}" --draft=false
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

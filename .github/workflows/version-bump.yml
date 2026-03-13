@@ -143,29 +143,11 @@ jobs:
 
       - name: Trigger desktop release
         env:
-          NEW_VERSION: ${{ steps.new_version.outputs.version }}
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          DESKTOP_TAG="desktop-v$NEW_VERSION"
-          SHA=$(git rev-parse HEAD)
-
-          # Delete existing tag ref via API if present
-          gh api "repos/${{ github.repository }}/git/refs/tags/$DESKTOP_TAG" -X DELETE 2>/dev/null || true
-
-          # Create annotated tag object via API
-          TAG_SHA=$(gh api "repos/${{ github.repository }}/git/tags" \
-            -f tag="$DESKTOP_TAG" \
-            -f message="Desktop release v$NEW_VERSION" \
-            -f object="$SHA" \
-            -f type="commit" \
-            --jq '.sha')
-
-          # Create tag ref — API-created tags with PAT DO trigger workflows
-          gh api "repos/${{ github.repository }}/git/refs" \
-            -f ref="refs/tags/$DESKTOP_TAG" \
-            -f sha="$TAG_SHA"
-
-          echo "✅ Created $DESKTOP_TAG via GitHub API — desktop-release.yml will trigger"
+          gh workflow run "Desktop Release" \
+            -f version="${{ steps.new_version.outputs.version }}"
+          echo "✅ Triggered desktop-release.yml for v${{ steps.new_version.outputs.version }}"
 
       - name: Update PR number file
         run: |
