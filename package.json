@@ -1,6 +1,6 @@
 {
   "name": "boxcord",
-  "version": "1.19.4",
+  "version": "1.20.0",
   "description": "Internal chat system for Boxflow - Discord-like chat integrated with Boxtime",
   "type": "module",
   "scripts": {
