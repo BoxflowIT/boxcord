@@ -1,44 +1,12 @@
-import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Download, Terminal } from 'lucide-react';
 
+declare const __APP_VERSION__: string;
+
 const REPO = 'BoxflowIT/boxcord';
-
-// Fallback values used until the API responds (or if it fails)
-const FALLBACK_TAG = 'desktop-v1.19.2';
-const FALLBACK_VERSION = '1.19.2';
-
-interface DesktopRelease {
-  tag: string;
-  version: string;
-  assets: { name: string; url: string; size: number }[];
-}
-
-function useLatestDesktopRelease() {
-  const [tag, setTag] = useState(FALLBACK_TAG);
-  const [version, setVersion] = useState(FALLBACK_VERSION);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    fetch('/api/desktop-releases', { signal: controller.signal })
-      .then((res) => (res.ok ? res.json() : Promise.reject()))
-      .then((releases: DesktopRelease[]) => {
-        const latest = releases[0];
-        if (latest) {
-          setTag(latest.tag);
-          setVersion(latest.version);
-        }
-      })
-      .catch(() => {
-        // Keep fallback values on error
-      });
-
-    return () => controller.abort();
-  }, []);
-
-  return { tag, version };
-}
+const VERSION =
+  typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.19.3';
+const TAG = `desktop-v${VERSION}`;
 
 function downloadUrl(tag: string, filename: string) {
   return `https://github.com/${REPO}/releases/download/${tag}/${filename}`;
@@ -102,7 +70,8 @@ function getPlatforms(version: string) {
 
 export function DownloadSection() {
   const { t } = useTranslation();
-  const { tag, version } = useLatestDesktopRelease();
+  const tag = TAG;
+  const version = VERSION;
   const platforms = getPlatforms(version);
 
   return (
