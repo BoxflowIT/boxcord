@@ -1,7 +1,10 @@
 // About Tab Component
 import { APP_VERSION } from '../../utils/version';
+import { useDesktop } from '../../hooks/useDesktop';
 
 export default function AboutTab() {
+  const { isDesktop, version: desktopVersion } = useDesktop();
+
   return (
     <div className="space-y-6">
       <div className="text-gray-400">
@@ -9,7 +12,11 @@ export default function AboutTab() {
         <div className="space-y-4">
           <div>
             <p className="text-sm font-semibold text-gray-300">Version</p>
-            <p className="text-sm">{APP_VERSION}</p>
+            <p className="text-sm">
+              {isDesktop && desktopVersion
+                ? `${desktopVersion} (desktop)`
+                : APP_VERSION}
+            </p>
           </div>
           <div className="border-t border-discord-darkest pt-4">
             <p className="text-sm font-semibold text-gray-300 mb-2">

@@ -1,6 +1,6 @@
 [
   {
-    "version": "1.17.2",
+    "version": "1.18.0",
     "date": "2026-03-12",
     "notes": {
       "sv": [
@@ -17,7 +17,10 @@
         "Desktop: Socket reconnection 50 försök, 30s max delay",
         "Desktop: URL-validering på alla externa länkar (säkerhetsfix)",
         "Nedladdningssidan hämtar automatiskt senaste versionen från GitHub",
-        "Alla svenska felmeddelanden i Cognito-tjänsten översatta till engelska"
+        "Alla svenska felmeddelanden i Cognito-tjänsten översatta till engelska",
+        "Fixat Linux-ikoner på nedladdningssidan",
+        "Borttagen 'Recommended'-markering från nedladdningskorten",
+        "Desktop: About-dialog visar korrekt desktopversion"
       ],
       "en": [
         "Landing page fully translated to English",
@@ -33,7 +36,10 @@
         "Desktop: Socket reconnection 50 attempts, 30s max delay",
         "Desktop: URL scheme validation on all external links (security fix)",
         "Download section auto-fetches latest version from GitHub Releases",
-        "All Swedish error messages in Cognito service translated to English"
+        "All Swedish error messages in Cognito service translated to English",
+        "Fixed Linux icons on download section",
+        "Removed 'Recommended' highlight from download cards",
+        "Desktop: About dialog shows correct desktop version"
       ]
     }
   },
