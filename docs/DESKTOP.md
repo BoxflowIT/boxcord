@@ -104,17 +104,22 @@ This compiles TypeScript and starts Electron pointed at `localhost:5173`.
 
 ### CI / CD — Automated builds (recommended)
 
-Releases are built automatically via **GitHub Actions** (`.github/workflows/desktop-release.yml`). The release is triggered automatically by the version-bump workflow — every merge to main bumps all three `package.json` files and creates a `desktop-v*` tag via the **GitHub API** (using `GH_PAT`), which triggers the desktop build. Note: tags must be created via the API, not `git push`, because GitHub Actions won't trigger workflows from tags pushed by another workflow.
+Releases are built automatically via **GitHub Actions** (`.github/workflows/desktop-release.yml`). The release is triggered automatically by the version-bump workflow — every merge to main bumps all three `package.json` files and dispatches the Desktop Release workflow via `gh workflow run`.
 
 Manual trigger (if needed):
 
 ```bash
-# Bump version in desktop/package.json first, then:
-git tag desktop-v1.13.0
-git push origin desktop-v1.13.0
+gh workflow run "Desktop Release" -f version=1.20.0
 ```
 
-The workflow runs three parallel jobs — Linux (`ubuntu-latest`), Windows (`windows-latest`), macOS (`macos-latest`) — and publishes the results to a GitHub Release automatically. Artifacts:
+Or push a tag:
+
+```bash
+git tag desktop-v1.20.0
+git push origin desktop-v1.20.0
+```
+
+The workflow runs three parallel jobs — Linux (`ubuntu-latest`), Windows (`windows-latest`), macOS (`macos-latest`) — and publishes the results to a GitHub Release automatically. Each job also uploads the update files to S3 for auto-update (see below). Artifacts:
 
 | Platform | Output |
 |---|---|
@@ -155,14 +160,35 @@ The macOS build runs without code signing by default (`CSC_IDENTITY_AUTO_DISCOVE
 
 Then remove the `CSC_IDENTITY_AUTO_DISCOVERY: 'false'` line from the workflow.
 
-### Auto-update (GitHub Releases)
+### Auto-update (S3 / CloudFront)
 
-The desktop app checks for updates every 4 hours via `electron-updater`:
+The desktop app checks for updates every 4 hours via `electron-updater` using a **generic** provider hosted on S3:
 
-1. Checks the GitHub Release matching `build.publish` in `package.json`
-2. Downloads the update in the background
+1. `electron-updater` fetches the update manifest (`latest.yml`, `latest-linux.yml`, or `latest-mac.yml`) from `https://boxcord.boxflow.com/desktop-updates/`
+2. If a newer version exists, downloads the installer from the same S3 path
 3. Fires `update:downloaded` event → shows notification banner in the UI
 4. Installs on next restart (or when user clicks "Install update")
+
+**Why S3 instead of GitHub Releases?** The repo is private. `electron-updater`'s GitHub provider cannot access releases without a token baked into the binary. S3/CloudFront requires no authentication.
+
+**S3 file layout:**
+
+```
+s3://FRONTEND_BUCKET/desktop-updates/
+  latest.yml              # Windows manifest
+  latest-linux.yml        # Linux manifest
+  latest-mac.yml          # macOS manifest
+  Boxcord-Setup-X.Y.Z.exe
+  Boxcord-Setup-X.Y.Z.exe.blockmap
+  Boxcord-X.Y.Z.AppImage
+  boxcord_X.Y.Z_amd64.deb
+  Boxcord-X.Y.Z.dmg
+  Boxcord-X.Y.Z.dmg.blockmap
+```
+
+Manifests use 5-minute cache (`max-age=300`). Binaries use immutable cache (`max-age=31536000`). CloudFront is invalidated for the manifest paths on each release.
+
+> **Note:** The `deploy-aws.yml` frontend sync excludes `desktop-updates/*` so desktop files are not deleted during frontend deployments.
 
 ## Client-Side Integration
 

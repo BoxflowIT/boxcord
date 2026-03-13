@@ -41,10 +41,8 @@
       "build/*.png"
     ],
     "publish": {
-      "provider": "github",
-      "owner": "BoxflowIT",
-      "repo": "boxcord",
-      "releaseType": "release"
+      "provider": "generic",
+      "url": "https://boxcord.boxflow.com/desktop-updates"
     },
     "win": {
       "target": [

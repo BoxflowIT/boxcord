@@ -101,7 +101,8 @@ jobs:
             --cache-control "public, max-age=31536000, immutable" \
             --exclude "index.html" \
             --exclude "sw.js" \
-            --exclude "changelog.json"
+            --exclude "changelog.json" \
+            --exclude "desktop-updates/*"
 
           # index.html, sw.js and changelog.json should not be cached aggressively
           aws s3 cp client/dist/index.html s3://${{ vars.FRONTEND_BUCKET_NAME }}/index.html \

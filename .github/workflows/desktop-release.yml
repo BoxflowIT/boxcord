@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: write # needed to create/update GitHub Releases
+  id-token: write # needed to assume AWS role for S3 upload
 
 env:
   # Production URL loaded by the Electron app
@@ -107,6 +108,24 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: eu-north-1
+
+      - name: Upload update files to S3
+        working-directory: desktop/out
+        run: |
+          # Binaries — immutable cache
+          for f in *.AppImage *.deb; do
+            aws s3 cp "$f" "s3://${{ vars.FRONTEND_BUCKET_NAME }}/desktop-updates/$f" \
+              --cache-control "public, max-age=31536000, immutable"
+          done
+          # Manifest — short cache so clients see new versions quickly
+          aws s3 cp latest-linux.yml "s3://${{ vars.FRONTEND_BUCKET_NAME }}/desktop-updates/latest-linux.yml" \
+            --cache-control "public, max-age=300, must-revalidate"
+
   # ─── Windows ────────────────────────────────────────────────────────
   release-windows:
     name: Windows (NSIS installer)
@@ -141,6 +160,25 @@ jobs:
         run: gh release upload "${{ needs.create-release.outputs.tag }}" *.exe *.exe.blockmap latest.yml --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: eu-north-1
+
+      - name: Upload update files to S3
+        working-directory: desktop/out
+        shell: bash
+        run: |
+          # Binaries — immutable cache
+          for f in *.exe *.exe.blockmap; do
+            aws s3 cp "$f" "s3://${{ vars.FRONTEND_BUCKET_NAME }}/desktop-updates/$f" \
+              --cache-control "public, max-age=31536000, immutable"
+          done
+          # Manifest — short cache so clients see new versions quickly
+          aws s3 cp latest.yml "s3://${{ vars.FRONTEND_BUCKET_NAME }}/desktop-updates/latest.yml" \
+            --cache-control "public, max-age=300, must-revalidate"
 
   # ─── macOS ──────────────────────────────────────────────────────────
   release-mac:
@@ -180,6 +218,24 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: eu-north-1
+
+      - name: Upload update files to S3
+        working-directory: desktop/out
+        run: |
+          # Binaries — immutable cache
+          for f in *.dmg *.dmg.blockmap; do
+            aws s3 cp "$f" "s3://${{ vars.FRONTEND_BUCKET_NAME }}/desktop-updates/$f" \
+              --cache-control "public, max-age=31536000, immutable"
+          done
+          # Manifest — short cache so clients see new versions quickly
+          aws s3 cp latest-mac.yml "s3://${{ vars.FRONTEND_BUCKET_NAME }}/desktop-updates/latest-mac.yml" \
+            --cache-control "public, max-age=300, must-revalidate"
+
   # ─── Publish Release ────────────────────────────────────────────────
   publish-release:
     name: Publish Release
@@ -194,3 +250,15 @@ jobs:
         run: gh release edit "${{ needs.create-release.outputs.tag }}" --draft=false
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: eu-north-1
+
+      - name: Invalidate CloudFront cache for update manifests
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/desktop-updates/latest.yml" "/desktop-updates/latest-linux.yml" "/desktop-updates/latest-mac.yml"
