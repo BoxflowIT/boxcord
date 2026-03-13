@@ -242,6 +242,7 @@ The preload script exposes these methods via `window.electronAPI`:
 |Cache|`clearCache()`|invoke|
 |Store|`storeGet(key)`, `storeSet(key, value)`|invoke/send|
 |External|`openExternal(url)`|invoke|
+|System|`onSystemResume(cb)`|listener|
 
 ## Sync Strategy
 
@@ -257,7 +258,7 @@ The preload script exposes these methods via `window.electronAPI`:
 The desktop app keeps users logged in across restarts:
 
 1. **Cognito session restore** — On startup, `restoreSession()` in `App.tsx` calls `getCurrentSession()` which uses the Cognito SDK refresh token (stored in localStorage by the SDK) to obtain a fresh ID token. Users stay logged in for up to 30 days without re-entering credentials.
-2. **Auto-refresh on 401** — If a request returns 401, the API service automatically tries to refresh the token via `refreshAuthToken()` before logging out. This handles mid-session token expiry transparently.
+2. **Auto-refresh on 401** — If a request returns 401, the API service automatically tries to refresh the token via a **locked** `refreshOnce()` (prevents concurrent refresh races) before logging out. This handles mid-session token expiry transparently.
 3. **Cache management** — Logout clears React Query cache and Electron HTTP cache via `clearCache()` IPC to prevent stale data.
 
 ## Notification Click Navigation
@@ -280,6 +281,7 @@ When `electron-updater` downloads a new version, the `UpdateBanner` component ap
 - **Global navigation guard** — `web-contents-created` listener blocks non-HTTP navigations on all webContents
 - **Certificate error rejection** — Invalid SSL certificates are rejected by default
 - **Media permissions whitelist** — Only `media`, `display-capture`, `mediaKeySystem`, and `notifications` are granted
+- **WebRTC permissions** — `setPermissionRequestHandler` and `setPermissionCheckHandler` grant microphone/camera for voice calls
 
 ## Crash Recovery
 
@@ -293,3 +295,24 @@ The desktop app handles renderer crashes and freezes gracefully:
 ## Close-to-Tray
 
 On Windows and Linux, closing the window **hides it to the system tray** instead of quitting. The app keeps running for notifications. Use "Quit" from the tray menu or `Cmd+Q` / `Alt+F4` to fully exit. On macOS, the standard hide-on-close behavior applies.
+
+## Sleep/Wake Sync
+
+The desktop app handles laptop sleep/wake gracefully via `powerMonitor`:
+
+1. **`powerMonitor.on('resume')`** — Main process sends `system:resume` to the renderer.
+2. **Token refresh** — `refreshAuthToken()` obtains a fresh Cognito ID token (the old one likely expired during sleep).
+3. **Socket reconnect** — `socketService.reconnect()` creates a new socket connection with the fresh token.
+4. **Cache invalidation** — `queryClient.invalidateQueries()` refetches all stale data (messages, channels, presence).
+
+This prevents the common issue of stale data and broken connections after waking from sleep.
+
+## Token Refresh Lock
+
+The API service uses a shared `refreshPromise` to prevent concurrent 401 refresh races. When multiple API calls hit 401 simultaneously (common at session boundary), only one `refreshAuthToken()` call executes — all others await the same promise. This prevents duplicate Cognito calls and store write races.
+
+## Socket Resilience
+
+- **Stale token recovery** — On `connect_error`, the socket handler checks for token expiry errors and automatically refreshes the token before the next retry attempt.
+- **Queued operations** — `joinDM`, `leaveDM`, `sendTyping`, and `sendDMTyping` are routed through the operation queue. If the socket is momentarily disconnected, these calls are queued and replayed on reconnect instead of being silently dropped.
+- **Desktop-aware config** — 50 reconnection attempts with 30s max delay (vs 5 attempts / 5s for web).
