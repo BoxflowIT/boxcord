@@ -104,7 +104,7 @@ This compiles TypeScript and starts Electron pointed at `localhost:5173`.
 
 ### CI / CD — Automated builds (recommended)
 
-Releases are built automatically via **GitHub Actions** (`.github/workflows/desktop-release.yml`). The release is triggered automatically by the version-bump workflow — every merge to main bumps all three `package.json` files and creates a `desktop-v*` tag, which triggers the desktop build.
+Releases are built automatically via **GitHub Actions** (`.github/workflows/desktop-release.yml`). The release is triggered automatically by the version-bump workflow — every merge to main bumps all three `package.json` files and creates a `desktop-v*` tag via the **GitHub API** (using `GH_PAT`), which triggers the desktop build. Note: tags must be created via the API, not `git push`, because GitHub Actions won't trigger workflows from tags pushed by another workflow.
 
 Manual trigger (if needed):
 

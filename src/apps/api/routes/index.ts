@@ -32,10 +32,14 @@ import {
   webhookExecuteRoutes
 } from './channel-webhook.routes.js';
 import { microsoftRoutes } from './microsoft.routes.js';
+import { desktopReleaseRoutes } from './desktop-release.routes.js';
 
 export async function registerRoutes(app: FastifyInstance) {
   // Health checks (no prefix, no auth required)
   await app.register(healthRoutes);
+
+  // Desktop releases proxy (no auth required — proxies GitHub API with server-side PAT)
+  await app.register(desktopReleaseRoutes);
 
   // Ensure uploads directory exists
   const uploadDir = join(process.cwd(), process.env.UPLOAD_DIR ?? 'uploads');

@@ -1,5 +1,29 @@
 [
   {
+    "version": "1.19.1",
+    "date": "2026-03-13",
+    "notes": {
+      "sv": [
+        "Desktop: Changelog-paginering — visa 2 versioner, expandera med knapp",
+        "Desktop: Token refresh-lås — förhindrar 401-race conditions vid samtidiga requests",
+        "Desktop: Sov/vakna-synk — automatisk tokenförnyelse och cache-invalidering vid systemåterupptagning",
+        "Desktop: Socket reconnect hämtar automatiskt ny token vid utgången session",
+        "Desktop: DM-operationer (join/leave/typing) körs via operations-kö",
+        "CI: Desktop-release triggas automatiskt via GitHub API vid version-bump",
+        "Fix: Nedladdningslänkar fallback till senaste fungerande release"
+      ],
+      "en": [
+        "Desktop: Changelog pagination — show 2 versions, expand with button",
+        "Desktop: Token refresh lock — prevents 401 race conditions on concurrent requests",
+        "Desktop: Sleep/wake sync — automatic token refresh and cache invalidation on system resume",
+        "Desktop: Socket reconnect auto-refreshes token on expired session",
+        "Desktop: DM operations (join/leave/typing) routed through operation queue",
+        "CI: Desktop release auto-triggered via GitHub API on version bump",
+        "Fix: Download links fallback to latest working release"
+      ]
+    }
+  },
+  {
     "version": "1.18.1",
     "date": "2026-03-13",
     "notes": {

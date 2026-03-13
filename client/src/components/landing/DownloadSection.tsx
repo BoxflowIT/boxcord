@@ -4,9 +4,15 @@ import { Download, Terminal } from 'lucide-react';
 
 const REPO = 'BoxflowIT/boxcord';
 
-// Fallback values used until the GitHub API responds (or if it fails)
-const FALLBACK_TAG = 'desktop-v1.19.0';
-const FALLBACK_VERSION = '1.19.0';
+// Fallback values used until the API responds (or if it fails)
+const FALLBACK_TAG = 'desktop-v1.15.0';
+const FALLBACK_VERSION = '1.15.0';
+
+interface DesktopRelease {
+  tag: string;
+  version: string;
+  assets: { name: string; url: string; size: number }[];
+}
 
 function useLatestDesktopRelease() {
   const [tag, setTag] = useState(FALLBACK_TAG);
@@ -15,24 +21,15 @@ function useLatestDesktopRelease() {
   useEffect(() => {
     const controller = new AbortController();
 
-    fetch(`https://api.github.com/repos/${REPO}/releases?per_page=20`, {
-      signal: controller.signal
-    })
+    fetch('/api/desktop-releases', { signal: controller.signal })
       .then((res) => (res.ok ? res.json() : Promise.reject()))
-      .then(
-        (
-          releases: { tag_name: string; draft: boolean; prerelease: boolean }[]
-        ) => {
-          const latest = releases.find(
-            (r) =>
-              r.tag_name.startsWith('desktop-v') && !r.draft && !r.prerelease
-          );
-          if (latest) {
-            setTag(latest.tag_name);
-            setVersion(latest.tag_name.replace('desktop-v', ''));
-          }
+      .then((releases: DesktopRelease[]) => {
+        const latest = releases[0];
+        if (latest) {
+          setTag(latest.tag);
+          setVersion(latest.version);
         }
-      )
+      })
       .catch(() => {
         // Keep fallback values on error
       });
