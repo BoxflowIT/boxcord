@@ -1,5 +1,53 @@
 [
   {
+    "version": "1.20.0",
+    "date": "2026-03-13",
+    "notes": {
+      "sv": [
+        "Desktop: Auto-uppdatering via S3/CloudFront — fungerar nu med privat repo",
+        "Desktop: Versionen visas korrekt på landningssidan (build-time injection)",
+        "CI: Desktop-uppdateringsfiler laddas upp till S3 vid varje release",
+        "CI: CloudFront-invalidering av uppdateringsmanifest"
+      ],
+      "en": [
+        "Desktop: Auto-update via S3/CloudFront — now works with private repo",
+        "Desktop: Version displays correctly on landing page (build-time injection)",
+        "CI: Desktop update files uploaded to S3 on each release",
+        "CI: CloudFront invalidation for update manifests"
+      ]
+    }
+  },
+  {
+    "version": "1.19.3",
+    "date": "2026-03-13",
+    "notes": {
+      "sv": [
+        "Fix: Changelog uppdateras på produktion — S3 cache-fix + CloudFront-invalidering",
+        "CI: Desktop-release triggas via workflow_dispatch istället för taggar",
+        "CI: Git-konfiguration fixad i desktop-release workflow"
+      ],
+      "en": [
+        "Fix: Changelog updates on production — S3 cache fix + CloudFront invalidation",
+        "CI: Desktop release triggered via workflow_dispatch instead of tags",
+        "CI: Git config fixed in desktop-release workflow"
+      ]
+    }
+  },
+  {
+    "version": "1.19.2",
+    "date": "2026-03-13",
+    "notes": {
+      "sv": [
+        "Fix: Backend-proxy för GitHub Releases — nedladdningslänkar fungerar med privat repo",
+        "CI: Desktop-release auto-triggas korrekt vid version-bump"
+      ],
+      "en": [
+        "Fix: Backend proxy for GitHub Releases — download links work with private repo",
+        "CI: Desktop release auto-triggered correctly on version bump"
+      ]
+    }
+  },
+  {
     "version": "1.19.1",
     "date": "2026-03-13",
     "notes": {

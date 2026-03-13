@@ -8,6 +8,7 @@ on:
       - '*.md'
       - '.pr-number'
       - '.github/workflows/version-bump.yml'
+  workflow_dispatch:
 
 concurrency:
   group: aws-deploy-${{ github.ref_name }}

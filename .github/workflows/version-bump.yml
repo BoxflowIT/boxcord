@@ -149,6 +149,13 @@ jobs:
             -f version="${{ steps.new_version.outputs.version }}"
           echo "✅ Triggered desktop-release.yml for v${{ steps.new_version.outputs.version }}"
 
+      - name: Trigger redeploy with new version
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh workflow run "Deploy to AWS"
+          echo "✅ Triggered deploy-aws.yml to deploy with v${{ steps.new_version.outputs.version }}"
+
       - name: Update PR number file
         run: |
           CURRENT_PR=${{ steps.pr_number.outputs.pr_number }}
