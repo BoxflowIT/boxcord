@@ -186,6 +186,32 @@ function registerIpcHandlers() {
     store.set(key, value)
   );
 
+  // ─── Media permissions (WebRTC: microphone, camera) ──────────────
+  // Electron denies media permissions by default — grant them for WebRTC voice/video
+  session.defaultSession.setPermissionRequestHandler(
+    (_webContents, permission, callback) => {
+      const allowedPermissions = [
+        'media',
+        'mediaKeySystem',
+        'display-capture',
+        'notifications'
+      ];
+      callback(allowedPermissions.includes(permission));
+    }
+  );
+
+  session.defaultSession.setPermissionCheckHandler(
+    (_webContents, permission) => {
+      const allowedPermissions = [
+        'media',
+        'mediaKeySystem',
+        'display-capture',
+        'notifications'
+      ];
+      return allowedPermissions.includes(permission);
+    }
+  );
+
   // ─── Screen sharing (setDisplayMediaRequestHandler) ──────────────
   // Modern Electron approach: renderer calls standard getDisplayMedia(),
   // main process handles source selection via desktopCapturer
