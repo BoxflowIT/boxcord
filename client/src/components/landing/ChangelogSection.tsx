@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface ChangelogEntry {
   version: string;
@@ -7,9 +8,12 @@ interface ChangelogEntry {
   notes: Record<string, string[]>;
 }
 
+const INITIAL_VISIBLE = 2;
+
 export function ChangelogSection() {
   const { t, i18n } = useTranslation();
   const [entries, setEntries] = useState<ChangelogEntry[]>([]);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     fetch('/changelog.json')
@@ -21,8 +25,8 @@ export function ChangelogSection() {
   if (entries.length === 0) return null;
 
   const lang = i18n.language?.startsWith('sv') ? 'sv' : 'en';
-
-  if (entries.length === 0) return null;
+  const visible = expanded ? entries : entries.slice(0, INITIAL_VISIBLE);
+  const hasMore = entries.length > INITIAL_VISIBLE;
 
   return (
     <section id="changelog" className="py-20 px-6">
@@ -35,7 +39,7 @@ export function ChangelogSection() {
         </p>
 
         <div className="space-y-8">
-          {entries.map((entry) => (
+          {visible.map((entry) => (
             <article
               key={entry.version}
               className="bg-boxflow-darker/60 border border-boxflow-border-50 rounded-xl p-6"
@@ -64,6 +68,24 @@ export function ChangelogSection() {
             </article>
           ))}
         </div>
+
+        {hasMore && (
+          <div className="text-center mt-8">
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-boxflow-muted hover:text-white border border-boxflow-border-50 hover:border-boxflow-primary-30 rounded-lg transition-colors"
+            >
+              {expanded
+                ? t('landing.showLess', 'Show less')
+                : t('landing.showMore', 'Show older versions')}
+              {expanded ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );

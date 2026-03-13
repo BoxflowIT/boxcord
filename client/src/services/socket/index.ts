@@ -108,9 +108,27 @@ class SocketService {
       this.executePendingOperations();
     });
 
-    socket.on('connect_error', (error) => {
+    socket.on('connect_error', async (error) => {
       this.connecting = false;
       logger.error('Socket connection error:', error.message);
+      // If token expired, refresh and update socket auth for next retry
+      if (
+        error.message.includes('expired') ||
+        error.message.includes('Invalid token') ||
+        error.message.includes('jwt')
+      ) {
+        try {
+          const { refreshAuthToken } = await import('../cognito');
+          const freshToken = await refreshAuthToken();
+          if (freshToken && this.socket) {
+            (this.socket.auth as Record<string, string>).token = freshToken;
+          } else if (!freshToken) {
+            useAuthStore.getState().logout();
+          }
+        } catch {
+          // Refresh failed — socket will continue retrying
+        }
+      }
     });
 
     socket.on('disconnect', (_reason) => {
@@ -248,7 +266,7 @@ class SocketService {
   }
 
   sendTyping(channelId: string) {
-    this.socket?.emit('channel:typing', channelId);
+    this.emit('channel:typing', channelId);
   }
 
   // ============================================
@@ -264,11 +282,11 @@ class SocketService {
   // ============================================
 
   joinDM(channelId: string) {
-    this.socket?.emit('dm:join', channelId);
+    this.emit('dm:join', channelId);
   }
 
   leaveDM(channelId: string) {
-    this.socket?.emit('dm:leave', channelId);
+    this.emit('dm:leave', channelId);
   }
 
   sendDM(channelId: string, content: string) {
@@ -284,7 +302,7 @@ class SocketService {
   }
 
   sendDMTyping(channelId: string) {
-    this.socket?.emit('dm:typing', channelId);
+    this.emit('dm:typing', channelId);
   }
 
   // ============================================

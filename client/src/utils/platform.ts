@@ -28,6 +28,7 @@ export interface ElectronAPI {
   storeSet: (key: string, value: unknown) => void;
   clearCache: () => Promise<void>;
   openExternal: (url: string) => Promise<void>;
+  onSystemResume: (callback: () => void) => () => void;
 }
 
 declare global {

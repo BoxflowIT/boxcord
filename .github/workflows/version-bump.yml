@@ -99,6 +99,11 @@ jobs:
           npm version $BUMP_TYPE --no-git-tag-version
           cd ..
 
+          # Bump desktop package.json
+          cd desktop
+          npm version $BUMP_TYPE --no-git-tag-version
+          cd ..
+
           # Get new version
           NEW_VERSION=$(node -p "require('./package.json').version")
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
@@ -118,7 +123,7 @@ jobs:
           NEW_VERSION: ${{ steps.new_version.outputs.version }}
           PR_NUMBER: ${{ steps.pr_number.outputs.pr_number }}
         run: |
-          git add package.json client/package.json .pr-number
+          git add package.json client/package.json desktop/package.json .pr-number
           git commit -m "🔖 chore: auto bump version to $NEW_VERSION (#$PR_NUMBER) [skip ci]"
 
           # Create or update git tag (force-replace if it already exists)

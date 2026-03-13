@@ -1,6 +1,32 @@
 [
   {
-    "version": "1.17.2",
+    "version": "1.18.1",
+    "date": "2026-03-13",
+    "notes": {
+      "sv": [
+        "Desktop: WebRTC-rättigheter — röstsamtal fungerar nu i desktop-appen",
+        "Desktop: Kraschåterställning — appen startar om vid krasch istället för vit skärm",
+        "Desktop: Stäng-till-tray — appen körs i bakgrunden vid stängning",
+        "Desktop: Fixat auto-update krasch vid nätverksproblem",
+        "Desktop: Notifikationsikon och tray-ikon korrekt",
+        "Desktop: Certifikatfelhantering och child-process recovery",
+        "CI: Desktop-version bumpar automatiskt med web-versionen",
+        "CI: Desktop TypeScript-check i CI-pipeline"
+      ],
+      "en": [
+        "Desktop: WebRTC permissions — voice calls now work in desktop app",
+        "Desktop: Crash recovery — app restarts on crash instead of white screen",
+        "Desktop: Close-to-tray — app keeps running in background on close",
+        "Desktop: Fixed auto-update crash on network issues",
+        "Desktop: Notification icon and tray icon fixed",
+        "Desktop: Certificate error handling and child-process recovery",
+        "CI: Desktop version auto-bumps with web version",
+        "CI: Desktop TypeScript check in CI pipeline"
+      ]
+    }
+  },
+  {
+    "version": "1.18.0",
     "date": "2026-03-12",
     "notes": {
       "sv": [
@@ -17,7 +43,10 @@
         "Desktop: Socket reconnection 50 försök, 30s max delay",
         "Desktop: URL-validering på alla externa länkar (säkerhetsfix)",
         "Nedladdningssidan hämtar automatiskt senaste versionen från GitHub",
-        "Alla svenska felmeddelanden i Cognito-tjänsten översatta till engelska"
+        "Alla svenska felmeddelanden i Cognito-tjänsten översatta till engelska",
+        "Fixat Linux-ikoner på nedladdningssidan",
+        "Borttagen 'Recommended'-markering från nedladdningskorten",
+        "Desktop: About-dialog visar korrekt desktopversion"
       ],
       "en": [
         "Landing page fully translated to English",
@@ -33,7 +62,10 @@
         "Desktop: Socket reconnection 50 attempts, 30s max delay",
         "Desktop: URL scheme validation on all external links (security fix)",
         "Download section auto-fetches latest version from GitHub Releases",
-        "All Swedish error messages in Cognito service translated to English"
+        "All Swedish error messages in Cognito service translated to English",
+        "Fixed Linux icons on download section",
+        "Removed 'Recommended' highlight from download cards",
+        "Desktop: About dialog shows correct desktop version"
       ]
     }
   },
