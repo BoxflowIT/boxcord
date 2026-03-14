@@ -470,6 +470,7 @@
     "sameAsBoxtime": "Uses the same login as Boxtime",
     "password": "Password",
     "forgotPassword": "Forgot password?",
+    "staySignedIn": "Stay signed in",
     "createAccount": "Create Account",
     "creatingAccount": "Creating account...",
     "joinBoxcord": "Join Boxcord to start chatting",

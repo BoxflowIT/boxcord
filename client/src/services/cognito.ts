@@ -14,7 +14,22 @@ const poolData = {
   ClientId: '6rsp6ebi274j0nlrc6t44p3pu3'
 };
 
+// Default pool uses localStorage (persistent sessions)
 const userPool = new CognitoUserPool(poolData);
+
+// Session-only pool uses sessionStorage (cleared on browser close)
+const sessionOnlyPool = new CognitoUserPool({
+  ...poolData,
+  Storage: sessionStorage
+});
+
+function getPool(rememberMe?: boolean): CognitoUserPool {
+  if (rememberMe !== undefined) return rememberMe ? userPool : sessionOnlyPool;
+  // Auto-detect based on saved preference
+  return localStorage.getItem('boxcord-remember-me') === 'true'
+    ? userPool
+    : sessionOnlyPool;
+}
 
 export interface LoginResult {
   success: boolean;
@@ -170,7 +185,8 @@ export const resendConfirmationCode = (
  */
 export const signIn = (
   email: string,
-  password: string
+  password: string,
+  rememberMe: boolean = true
 ): Promise<LoginResult> => {
   return new Promise((resolve) => {
     const authenticationDetails = new AuthenticationDetails({
@@ -178,9 +194,11 @@ export const signIn = (
       Password: password
     });
 
+    const pool = getPool(rememberMe);
     const userData = {
       Username: email,
-      Pool: userPool
+      Pool: pool,
+      ...(rememberMe ? {} : { Storage: sessionStorage })
     };
 
     const cognitoUser = new CognitoUser(userData);
@@ -252,7 +270,8 @@ export const signIn = (
  * Sign out current user
  */
 export const signOut = (): void => {
-  const currentUser = userPool.getCurrentUser();
+  const pool = getPool();
+  const currentUser = pool.getCurrentUser();
   if (currentUser) {
     currentUser.signOut();
   }
@@ -262,7 +281,7 @@ export const signOut = (): void => {
  * Get current authenticated user
  */
 export const getCurrentUser = (): CognitoUser | null => {
-  return userPool.getCurrentUser();
+  return getPool().getCurrentUser();
 };
 
 /**

@@ -66,6 +66,7 @@ function createMainWindow(): BrowserWindow {
     title: 'Boxcord',
     icon: getAssetPath('build', 'icon-1024.png'),
     backgroundColor: '#1a1a2e',
+    autoHideMenuBar: !IS_DEV,
     show: false, // Show after ready-to-show for smooth startup
     webPreferences: {
       preload: path.join(__dirname, '..', 'preload', 'preload.js'),

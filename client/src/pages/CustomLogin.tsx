@@ -15,11 +15,12 @@ import { logger } from '../utils/logger';
 export default function CustomLogin() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { token, setAuth, setLoading } = useAuthStore();
+  const { token, setAuth, setLoading, setRememberMe } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [rememberMe, setLocalRememberMe] = useState(true);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -35,8 +36,11 @@ export default function CustomLogin() {
     setLoading(true);
 
     try {
+      // Set remember-me preference before authentication
+      setRememberMe(rememberMe);
+
       // Authenticate with Cognito
-      const result = await signIn(email, password);
+      const result = await signIn(email, password, rememberMe);
 
       if (!result.success) {
         setError(result.error || t('auth.loginFailed'));
@@ -122,7 +126,19 @@ export default function CustomLogin() {
 
         {error && <Alert type="error" message={error} />}
 
-        <div className="text-right">
+        <div className="flex items-center justify-between">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setLocalRememberMe(e.target.checked)}
+              className="w-4 h-4 rounded border-boxflow-hover bg-boxflow-darkest text-boxflow-primary focus:ring-boxflow-primary focus:ring-offset-0 cursor-pointer"
+              disabled={isLoggingIn}
+            />
+            <span className="text-sm text-boxflow-muted">
+              {t('auth.staySignedIn')}
+            </span>
+          </label>
           <Link to="/forgot-password" className="text-sm text-link">
             {t('auth.forgotPassword')}
           </Link>

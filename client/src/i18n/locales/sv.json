@@ -474,6 +474,7 @@
     "sameAsBoxtime": "Använder samma inloggning som Boxtime",
     "password": "Lösenord",
     "forgotPassword": "Glömt lösenord?",
+    "staySignedIn": "Håll mig inloggad",
     "createAccount": "Skapa konto",
     "creatingAccount": "Skapar konto...",
     "joinBoxcord": "Gå med i Boxcord för att börja chatta",
