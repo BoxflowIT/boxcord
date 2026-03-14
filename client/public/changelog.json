@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.21.4",
+    "date": "2026-03-14",
+    "notes": {
+      "en": ["Add per-route rate limits to file attachment routes"]
+    }
+  },
+  {
     "version": "1.21.3",
     "date": "2026-03-14",
     "notes": {
@@ -23,9 +30,7 @@
     "version": "1.21.1",
     "date": "2026-03-14",
     "notes": {
-      "en": [
-        "Add security resolutions to client package.json"
-      ]
+      "en": ["Add security resolutions to client package.json"]
     }
   },
   {
