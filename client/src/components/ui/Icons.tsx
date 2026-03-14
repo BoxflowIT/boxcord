@@ -1437,6 +1437,25 @@ export function ZipIcon({ size = 'md', className }: IconProps) {
 }
 
 // Map pin icon (location)
+// Hamburger/Menu icon
+export function MenuIcon({ size = 'md', className }: IconProps) {
+  return (
+    <svg
+      className={getClass(size, className)}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M4 6h16M4 12h16M4 18h16"
+      />
+    </svg>
+  );
+}
+
 export function MapPinIcon({ size = 'md', className }: IconProps) {
   return (
     <svg

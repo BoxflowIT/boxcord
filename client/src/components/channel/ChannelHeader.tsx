@@ -18,7 +18,7 @@ export function ChannelHeader({
   const { t } = useTranslation();
   return (
     <div className="panel-header justify-between">
-      <div>
+      <div className="hidden lg:block">
         <h2 className="text-heading">
           <span className="text-boxflow-muted mr-1">#</span>
           {channelName ?? t('common.loading')}

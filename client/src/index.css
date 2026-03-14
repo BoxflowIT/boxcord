@@ -250,9 +250,9 @@ body {
     @apply btn bg-boxflow-warning text-boxflow-dark hover-brightness;
   }
 
-  /* Icon button base */
+  /* Icon button base — min 44px touch target on mobile */
   .btn-icon {
-    @apply p-1.5 rounded-lg text-boxflow-muted transition-interactive;
+    @apply p-2.5 lg:p-1.5 rounded-lg text-boxflow-muted transition-interactive;
   }
 
   .btn-icon-default {

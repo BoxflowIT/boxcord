@@ -30,12 +30,19 @@ import { stopRingingSound, playVoiceLeaveSound } from '../utils/voiceSound';
 import { toast } from '../store/notification';
 import { UpdateBanner } from '../components/UpdateBanner';
 import { getElectronAPI } from '../utils/platform';
+import { MenuIcon } from '../components/ui/Icons';
 
 export default function Chat() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setCurrentWorkspace, setCurrentChannel, currentWorkspace } =
-    useChatStore();
+  const {
+    setCurrentWorkspace,
+    setCurrentChannel,
+    currentWorkspace,
+    currentChannel,
+    mobileSidebarOpen,
+    setMobileSidebarOpen
+  } = useChatStore();
   const {
     acceptCall,
     rejectCall,
@@ -212,18 +219,67 @@ export default function Chat() {
     location.pathname
   ]);
 
+  // Auto-close mobile sidebar on navigation
+  useEffect(() => {
+    setMobileSidebarOpen(false);
+  }, [location.pathname, setMobileSidebarOpen]);
+
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <UpdateBanner />
       <div className="flex flex-1 min-h-0">
-        {/* Sidebar */}
-        <Sidebar
-          onProfileClick={() => setShowProfile(true)}
-          onSettingsClick={() => setShowSettings(true)}
-        />
+        {/* Mobile sidebar overlay */}
+        {mobileSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+        )}
+
+        {/* Sidebar — hidden on mobile, shown as overlay when open */}
+        <div
+          className={`
+            fixed inset-y-0 left-0 z-50 max-w-[calc(100vw-3rem)]
+            lg:relative lg:z-auto lg:max-w-none
+            transition-transform duration-200 ease-in-out
+            ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          `}
+        >
+          <Sidebar
+            onProfileClick={() => {
+              setShowProfile(true);
+              setMobileSidebarOpen(false);
+            }}
+            onSettingsClick={() => {
+              setShowSettings(true);
+              setMobileSidebarOpen(false);
+            }}
+          />
+        </div>
 
         {/* Main content */}
-        <div className="flex-1 flex flex-col bg-boxflow-dark">
+        <div className="flex-1 flex flex-col bg-boxflow-dark min-w-0">
+          {/* Mobile header — visible only on small screens */}
+          <div className="flex items-center gap-3 px-3 py-2 bg-boxflow-darker border-b border-boxflow-border lg:hidden">
+            <button
+              onClick={() => setMobileSidebarOpen(true)}
+              className="btn-icon"
+              aria-label="Open menu"
+            >
+              <MenuIcon size="md" />
+            </button>
+            <h2 className="text-heading text-sm truncate">
+              {currentChannel ? (
+                <>
+                  <span className="text-boxflow-muted mr-1">#</span>
+                  {currentChannel.name}
+                </>
+              ) : (
+                (currentWorkspace?.name ?? '')
+              )}
+            </h2>
+          </div>
+
           <Routes>
             <Route
               path="channels/:channelId"
@@ -240,8 +296,12 @@ export default function Chat() {
           </Routes>
         </div>
 
-        {/* Member List */}
-        {showMemberList && <MemberList />}
+        {/* Member List — hidden on mobile/tablet */}
+        {showMemberList && (
+          <div className="hidden lg:block">
+            <MemberList />
+          </div>
+        )}
 
         {/* Profile Modal */}
         <ProfileModal

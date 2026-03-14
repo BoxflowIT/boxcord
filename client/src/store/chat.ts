@@ -21,6 +21,9 @@ interface ChatState {
   // Active view for server bar navigation
   activeView: ActiveView;
 
+  // Mobile sidebar toggle
+  mobileSidebarOpen: boolean;
+
   // Transient State - typing indicators (not persisted)
   typingUsers: Map<string, Set<string>>; // channelId -> Set of userIds
 
@@ -28,6 +31,7 @@ interface ChatState {
   setCurrentWorkspace: (workspace: Workspace | null) => void;
   setCurrentChannel: (channel: Channel | null) => void;
   setActiveView: (view: ActiveView) => void;
+  setMobileSidebarOpen: (open: boolean) => void;
   setTyping: (channelId: string, userId: string) => void;
   clearTyping: (channelId: string, userId: string) => void;
 }
@@ -37,6 +41,7 @@ export const useChatStore = create<ChatState>((set) => ({
   currentWorkspace: null,
   currentChannel: null,
   activeView: { type: 'workspace' },
+  mobileSidebarOpen: false,
   typingUsers: new Map(),
 
   // Actions
@@ -45,6 +50,8 @@ export const useChatStore = create<ChatState>((set) => ({
   setCurrentChannel: (channel) => set({ currentChannel: channel }),
 
   setActiveView: (view) => set({ activeView: view }),
+
+  setMobileSidebarOpen: (open) => set({ mobileSidebarOpen: open }),
 
   setTyping: (channelId, userId) =>
     set((state) => {
