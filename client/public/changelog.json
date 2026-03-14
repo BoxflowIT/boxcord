@@ -1,5 +1,15 @@
 [
   {
+    "version": "1.21.0",
+    "date": "2026-03-14",
+    "notes": {
+      "en": [
+        "Resolve high severity vulnerabilities (flatted, undici)",
+        "Auto-generate changelog from conventional commits"
+      ]
+    }
+  },
+  {
     "version": "1.20.0",
     "date": "2026-03-13",
     "notes": {
