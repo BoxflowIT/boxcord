@@ -140,7 +140,7 @@ When you merge `develop` to `main`, version is **automatically bumped** based on
 3. Get approval and merge to `main`
 4. 🤖 **GitHub Actions automatically:**
    - Analyzes commits since last tag
-   - Bumps version in `package.json` and `client/package.json`
+   - Bumps version in `package.json`, `client/package.json`, and `desktop/package.json`
    - Creates git tag (e.g., `v1.7.0`)
    - Commits and pushes to `main`
 5. Merge `main` back to `develop` to sync versions
@@ -235,24 +235,29 @@ All workflows are in `.github/workflows/`:
 
 | Workflow | Trigger | Jobs | Duration |
 |----------|---------|------|---------|
-| **CI** (`ci.yml`) | Push to main/develop, PRs | Test & Lint, E2E Tests, Security Audit | ~3 min |
+| **CI** (`ci.yml`) | Push to main/develop, PRs | Test & Lint, Desktop Typecheck, E2E Tests, Security Audit | ~3 min |
 | **Deploy Staging** (`deploy-staging.yml`) | Push to develop | Deploy to AWS staging | ~30s |
 | **Deploy Preview** (`deploy-preview.yml`) | PR to develop | Create/cleanup preview env | ~1 min |
 | **Smoke Test** (`smoke-test.yml`) | After version bump or manual | 5 production health checks | ~1 min |
-| **Version Bump** | Push to main | Auto-bump version + git tag | ~30s |
+| **Version Bump** (`version-bump.yml`) | Push to main | Auto-bump version + git tag | ~30s |
+| **Desktop Release** (`desktop-release.yml`) | After version bump | Build Win/Mac/Linux installers | ~5 min |
+| **Deploy to AWS** (`deploy-aws.yml`) | Push to main | Build backend + deploy frontend | ~3 min |
+| **Uptime Monitor** (`uptime.yml`) | Cron (every 10 min) | Health check on production | ~10s |
 
 ### CI Pipeline Architecture
 
-All 3 CI jobs run **in parallel** for fast feedback:
+All 4 CI jobs run **in parallel** for fast feedback:
 
 ```
-┌────────────────┐
-│  Test & Lint    │  ~2 min (typecheck, lint, 122 tests)
-├────────────────┤
-│  E2E Tests     │  ~3 min (Playwright, chromium cached)
-├────────────────┤
-│  Security Audit│  ~8 sec (yarn audit)
-└────────────────┘
+┌────────────────────┐
+│  Test & Lint       │  ~2 min (typecheck, lint, 174 tests)
+├────────────────────┤
+│  Desktop Typecheck │  ~20 sec (Electron main + preload)
+├────────────────────┤
+│  E2E Tests         │  ~3 min (Playwright, chromium cached)
+├────────────────────┤
+│  Security Audit    │  ~8 sec (yarn audit)
+└────────────────────┘
 ```
 
 ### E2E Test Strategy
@@ -267,8 +272,8 @@ All 3 CI jobs run **in parallel** for fast feedback:
 Activate via: `./scripts/setup-branch-protection.sh`
 
 This configures:
-- **main**: Require PR + 1 approval + CI green
-- **develop**: Require PR + CI green
+- **main**: Require PR + 1 approval + 3 CI checks (`Test & Lint`, `Security Audit`, `Desktop Typecheck`)
+- **develop**: Require 3 CI checks + `enforce_admins` (no admin bypass)
 
 ---
 
@@ -281,7 +286,7 @@ This configures:
 - ⚠️ Rotate secrets regularly (every 90 days)
 
 ### Dependency Audits
-- ✅ Automated via CI: `yarn audit --level moderate`
+- ✅ Automated via CI: `yarn audit --level high`
 - ✅ Run manually before releases: `yarn audit --level high`
 - ⚠️ Review and update dependencies monthly
 

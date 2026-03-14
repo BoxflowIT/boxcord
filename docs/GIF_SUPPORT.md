@@ -38,7 +38,7 @@ VITE_GIPHY_API_KEY=your_api_key_here
 ### 3. Restart Dev Server
 
 ```bash
-cd client && npm run dev
+cd client && yarn dev
 ```
 
 The **GIFs** tab will appear in the emoji picker when the key is set.

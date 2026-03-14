@@ -41,7 +41,7 @@ desktop/
 │  Electron Main Process                      │
 │                                             │
 │  BrowserWindow loads → APP_URL              │
-│    • Production: https://chat.boxflow.se    │
+│    • Production: https://boxcord.boxflow.com │
 │    • Dev: http://localhost:5173             │
 │                                             │
 │  Same React app, same API, same WebSocket   │
@@ -138,7 +138,7 @@ yarn build:win      # → out/Boxcord Setup 1.12.0.exe  (Windows or cross-compil
 yarn build:mac      # → out/Boxcord-1.12.0.dmg        (macOS only)
 ```
 
-The production URL is injected via `BOXCORD_URL` env var (defaults to `http://localhost:5173` for dev). The CI workflow sets `BOXCORD_URL=https://chat.boxflow.se` automatically.
+The production URL is injected via `BOXCORD_URL` env var (defaults to `http://localhost:5173` for dev). The CI workflow sets `BOXCORD_URL=https://boxcord.boxflow.com` automatically.
 
 ### Icons
 

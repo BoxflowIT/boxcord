@@ -129,7 +129,7 @@ Automatic detection and logging of slow queries:
 docker-compose -f docker-compose.dev.yml up -d
 
 # Your app will automatically use Redis
-REDIS_URL=redis://localhost:6379 npm run dev
+REDIS_URL=redis://localhost:6379 yarn dev
 ```
 
 ### Option 2: Install Redis Locally
@@ -389,7 +389,7 @@ If Redis fails to connect, the app automatically falls back to in-memory caching
 
 ### Cache Not Working
 
-1. Check TypeScript compilation: `npm run typecheck`
+1. Check TypeScript compilation: `yarn typecheck`
 2. Verify environment variables are set
 3. Check logs for cache connection status
 4. Test cache: `getCacheStats()`

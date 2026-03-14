@@ -103,10 +103,10 @@ docker run -p 3001:3001 \
 
 ```bash
 # 1. Install dependencies
-npm install --production
+yarn install --production
 
 # 2. Build frontend
-cd client && npm install && npm run build && cd ..
+cd client && yarn install && yarn build && cd ..
 
 # 3. Run migrations
 npx prisma migrate deploy
@@ -115,7 +115,7 @@ npx prisma migrate deploy
 npx prisma generate
 
 # 5. Start server
-npm start
+yarn start
 ```
 
 ## Post-Deployment Checklist

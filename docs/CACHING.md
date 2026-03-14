@@ -358,7 +358,7 @@ queryClient.setQueryData(['user', userId], updatedUser);
 Install the devtools to see cache state:
 
 ```bash
-npm install @tanstack/react-query-devtools
+yarn add @tanstack/react-query-devtools
 ```
 
 ```tsx

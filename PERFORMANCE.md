@@ -267,15 +267,18 @@ Content-Encoding: gzip
 ❌ Skip database indexes
 ❌ Ignore slow query warnings
 
-## Future Optimizations
+## Infrastructure (Already Implemented)
+
+These optimizations are already operational:
+
+1. **Redis Cache Layer**: Caching frequently accessed data (workspace members, channels)
+2. **CDN**: CloudFront serves static assets and desktop update files
+3. **Connection Pooling**: Prisma connection pool with configurable limits
 
 ### When Scaling Further (10K+ users)
 
-1. **Redis Cache Layer**: Cache frequently accessed data
-2. **Read Replicas**: Distribute read load
-3. **CDN**: Serve static assets and API responses
-4. **Database Sharding**: Partition data by workspace
-5. **Connection Pooling**: External pool (PgBouncer)
+1. **Read Replicas**: Distribute read load
+2. **Database Sharding**: Partition data by workspace
 
 ### Cost-Benefit Analysis
 
