@@ -21,37 +21,44 @@ export async function fileRoutes(app: FastifyInstance) {
   });
 
   // Upload general file (for workspace icons, etc.)
-  app.post('/', {
-    config: {
-      rateLimit: {
-        max: 10,
-        timeWindow: '1 minute'
+  app.post(
+    '/',
+    {
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: '1 minute'
+        }
       }
-    }
-  }, async (request, reply) => {
-    const file = await request.file();
+    },
+    async (request, reply) => {
+      const file = await request.file();
 
-    if (!file) {
-      return reply.status(400).send({
-        success: false,
-        error: { code: 'NO_FILE', message: 'No file uploaded' }
+      if (!file) {
+        return reply.status(400).send({
+          success: false,
+          error: { code: 'NO_FILE', message: 'No file uploaded' }
+        });
+      }
+
+      const buffer = await file.toBuffer();
+
+      // Save to uploads directory with unique filename
+      const fileUrl = await fileService.uploadGeneral({
+        fileName: file.filename,
+        fileType: file.mimetype,
+        fileSize: buffer.length,
+        buffer
       });
+
+      return reply
+        .status(201)
+        .send({
+          success: true,
+          data: { url: fileUrl, fileName: file.filename }
+        });
     }
-
-    const buffer = await file.toBuffer();
-
-    // Save to uploads directory with unique filename
-    const fileUrl = await fileService.uploadGeneral({
-      fileName: file.filename,
-      fileType: file.mimetype,
-      fileSize: buffer.length,
-      buffer
-    });
-
-    return reply
-      .status(201)
-      .send({ success: true, data: { url: fileUrl, fileName: file.filename } });
-  });
+  );
 
   // Upload file for channel message
   app.post<{ Params: { messageId: string } }>(
@@ -128,22 +135,44 @@ export async function fileRoutes(app: FastifyInstance) {
   );
 
   // Get attachment info
-  app.get<{ Params: { id: string } }>('/:id', async (request, reply) => {
-    const attachment = await fileService.getAttachment(request.params.id);
+  app.get<{ Params: { id: string } }>(
+    '/:id',
+    {
+      config: {
+        rateLimit: {
+          max: 60,
+          timeWindow: '1 minute'
+        }
+      }
+    },
+    async (request, reply) => {
+      const attachment = await fileService.getAttachment(request.params.id);
 
-    if (!attachment) {
-      return reply.status(404).send({
-        success: false,
-        error: { code: 'NOT_FOUND', message: 'Attachment not found' }
-      });
+      if (!attachment) {
+        return reply.status(404).send({
+          success: false,
+          error: { code: 'NOT_FOUND', message: 'Attachment not found' }
+        });
+      }
+
+      return { success: true, data: attachment };
     }
-
-    return { success: true, data: attachment };
-  });
+  );
 
   // Delete attachment
-  app.delete<{ Params: { id: string } }>('/:id', async (request, reply) => {
-    await fileService.deleteAttachment(request.params.id);
-    return reply.status(204).send();
-  });
+  app.delete<{ Params: { id: string } }>(
+    '/:id',
+    {
+      config: {
+        rateLimit: {
+          max: 20,
+          timeWindow: '1 minute'
+        }
+      }
+    },
+    async (request, reply) => {
+      await fileService.deleteAttachment(request.params.id);
+      return reply.status(204).send();
+    }
+  );
 }
