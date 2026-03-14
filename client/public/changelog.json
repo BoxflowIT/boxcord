@@ -1,5 +1,16 @@
 [
   {
+    "version": "1.21.3",
+    "date": "2026-03-14",
+    "notes": {
+      "en": [
+        "Set Linux WM_CLASS so taskbar icon shows Boxcord logo",
+        "Add per-route rate limits to channel, dm, reaction, and push routes",
+        "Resolve CodeQL SSRF and missing rate-limiting alerts"
+      ]
+    }
+  },
+  {
     "version": "1.21.2",
     "date": "2026-03-14",
     "notes": {
@@ -12,7 +23,9 @@
     "version": "1.21.1",
     "date": "2026-03-14",
     "notes": {
-      "en": ["Add security resolutions to client package.json"]
+      "en": [
+        "Add security resolutions to client package.json"
+      ]
     }
   },
   {
