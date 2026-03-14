@@ -32,6 +32,8 @@ yarn-error.log*
 
 # Testing
 coverage/
+playwright-report/
+test-results/
 
 # Load test results
 load-tests/results/*.json

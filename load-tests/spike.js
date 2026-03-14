@@ -6,7 +6,6 @@ import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.3/index.js';
 
 // ─── Configuration ───────────────────────────────────────────────────────────
 const BASE_URL = __ENV.BASE_URL || 'https://staging.boxcord.boxflow.com';
-const API = `${BASE_URL}/api/v1`;
 const SPIKE_VUS = parseInt(__ENV.SPIKE_VUS) || 100;
 
 // ─── Custom Metrics ──────────────────────────────────────────────────────────
@@ -40,8 +39,6 @@ export const options = {
 
 // ─── Main Test ───────────────────────────────────────────────────────────────
 export default function () {
-  const iteration = __ITER;
-
   // Health check — core availability metric
   group('Health Check', () => {
     const res = http.get(`${BASE_URL}/health`);

@@ -17,9 +17,6 @@ export const options = {
   },
 };
 
-// Shared auth token (set during setup)
-let authToken = '';
-
 export function setup() {
   // Register or login a test user
   const registerRes = http.post(

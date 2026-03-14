@@ -184,7 +184,7 @@ test.describe('WebSocket - Typing Indicators', { tag: '@auth' }, () => {
       await page1.waitForTimeout(500);
 
       // Check indicator appears
-      let typingVisible = await page2
+      await page2
         .locator('[data-testid="typing-indicator"]')
         .isVisible({ timeout: 2000 })
         .catch(() => false);
@@ -194,7 +194,7 @@ test.describe('WebSocket - Typing Indicators', { tag: '@auth' }, () => {
       await page2.waitForTimeout(1000);
 
       // Typing indicator should disappear
-      typingVisible = await page2
+      const typingVisible = await page2
         .locator('[data-testid="typing-indicator"]')
         .isVisible()
         .catch(() => false);

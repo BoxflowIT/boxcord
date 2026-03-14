@@ -23,7 +23,7 @@ export class ErrorBoundary extends Component<Props, State> {
   static getDerivedStateFromError(error: Error): Partial<State> {
     // Categorize error type
     const errorMessage = error.message.toLowerCase();
-    let errorType: State['errorType'] = 'unknown';
+    let errorType: State['errorType'];
 
     if (
       errorMessage.includes('loading chunk') ||
