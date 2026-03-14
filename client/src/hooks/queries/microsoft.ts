@@ -1,4 +1,5 @@
 // Microsoft 365 React Query hooks
+import { useCallback, useRef } from 'react';
 import {
   useQuery,
   useMutation,
@@ -6,6 +7,9 @@ import {
   type QueryClient
 } from '@tanstack/react-query';
 import { microsoft365Api } from '../../services/api';
+import { isDesktop } from '../../utils/platform';
+import { openExternalUrl } from '../../utils/platform';
+import { toast } from '../../store/notification';
 import type { OneDriveItemList, UpdateEventInput } from '../../types';
 
 // ─── Sync intervals ─────────────────────────────────────────────────────────
@@ -68,6 +72,60 @@ export function useMicrosoftDisconnect() {
       queryClient.invalidateQueries({ queryKey: ['microsoft'] });
     }
   });
+}
+
+/**
+ * Hook for initiating Microsoft 365 OAuth connection.
+ * On desktop: opens external browser and polls for connection status,
+ * since the OAuth callback lands in the browser, not the Electron app.
+ * On web: just opens the URL (callback handles the rest via query params).
+ */
+export function useMicrosoftConnect() {
+  const queryClient = useQueryClient();
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stopPolling = useCallback(() => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }, []);
+
+  const connect = useCallback(async () => {
+    try {
+      const { url } = await microsoft365Api.getConnectUrl();
+      openExternalUrl(url);
+
+      // On desktop, poll for status since callback goes to browser
+      if (isDesktop()) {
+        stopPolling();
+        let attempts = 0;
+        const maxAttempts = 60; // 3 min max (60 × 3s)
+
+        pollRef.current = setInterval(async () => {
+          attempts++;
+          if (attempts > maxAttempts) {
+            stopPolling();
+            return;
+          }
+          try {
+            const status = await microsoft365Api.getStatus();
+            if (status.connected) {
+              stopPolling();
+              queryClient.invalidateQueries({ queryKey: ['microsoft'] });
+              toast.success('Microsoft 365 ansluten!');
+            }
+          } catch {
+            // Ignore errors, keep polling
+          }
+        }, 3000);
+      }
+    } catch {
+      toast.error('Kunde inte starta anslutningen');
+    }
+  }, [queryClient, stopPolling]);
+
+  return { connect, stopPolling };
 }
 
 // ─── OneDrive ────────────────────────────────────────────────────────────────

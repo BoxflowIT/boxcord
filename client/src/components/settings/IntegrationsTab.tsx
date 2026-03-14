@@ -4,12 +4,11 @@
  * OneDrive, Calendar, and SharePoint are accessed from the sidebar.
  */
 
-import { microsoft365Api } from '../../services/api';
-import { openExternalUrl } from '../../utils/platform';
 import { toast } from '../../store/notification';
 import {
   useMicrosoftStatus,
-  useMicrosoftDisconnect
+  useMicrosoftDisconnect,
+  useMicrosoftConnect
 } from '../../hooks/queries/microsoft';
 
 // ─── Icons ───────────────────────────────────────────────────────────────────
@@ -30,6 +29,7 @@ function MicrosoftIcon() {
 export default function IntegrationsTab() {
   const { data: status, isLoading } = useMicrosoftStatus();
   const disconnect = useMicrosoftDisconnect();
+  const { connect } = useMicrosoftConnect();
 
   if (isLoading) {
     return (
@@ -118,14 +118,7 @@ export default function IntegrationsTab() {
             </div>
           </div>
           <button
-            onClick={async () => {
-              try {
-                const { url } = await microsoft365Api.getConnectUrl();
-                openExternalUrl(url);
-              } catch {
-                toast.error('Kunde inte starta anslutningen');
-              }
-            }}
+            onClick={() => connect()}
             className="px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors"
           >
             Anslut
