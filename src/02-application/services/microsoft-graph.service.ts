@@ -582,7 +582,8 @@ class MicrosoftGraphService {
     const basePath = folderId
       ? `/me/drive/items/${folderId}`
       : '/me/drive/root';
-    const url = `${GRAPH_URL}${basePath}:/${encodedName}:/content`;
+    const safePath = validateGraphPath(`${basePath}:/${encodedName}:/content`);
+    const url = `${GRAPH_URL}${safePath}`;
 
     const response = await fetch(url, {
       method: 'PUT',

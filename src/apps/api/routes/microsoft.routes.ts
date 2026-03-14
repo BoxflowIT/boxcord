@@ -207,29 +207,44 @@ export async function microsoftRoutes(app: FastifyInstance) {
       });
 
       // Get Microsoft OAuth consent URL
-      gated.get('/connect', async (request) => {
-        const url = microsoftGraphService!.getAuthorizationUrl(request.user.id);
-        return { success: true, data: { url } };
-      });
+      gated.get(
+        '/connect',
+        { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
+        async (request) => {
+          const url = microsoftGraphService!.getAuthorizationUrl(
+            request.user.id
+          );
+          return { success: true, data: { url } };
+        }
+      );
 
       // Disconnect Microsoft 365
-      gated.post('/disconnect', async (request) => {
-        await microsoftGraphService!.disconnect(request.user.id);
-        return { success: true };
-      });
+      gated.post(
+        '/disconnect',
+        { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
+        async (request) => {
+          await microsoftGraphService!.disconnect(request.user.id);
+          return { success: true };
+        }
+      );
 
       // Get Microsoft profile
-      gated.get('/profile', async (request) => {
-        const profile = await microsoftGraphService!.getMicrosoftProfile(
-          request.user.id
-        );
-        return { success: true, data: profile };
-      });
+      gated.get(
+        '/profile',
+        { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } },
+        async (request) => {
+          const profile = await microsoftGraphService!.getMicrosoftProfile(
+            request.user.id
+          );
+          return { success: true, data: profile };
+        }
+      );
 
       // ─── OneDrive ────────────────────────────────────────────────────────
 
       gated.get<{ Querystring: { folderId?: string } }>(
         '/onedrive/files',
+        { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } },
         async (request) => {
           const { folderId } = folderQuery.parse(request.query);
           const files = await microsoftGraphService!.listOneDriveFiles(
@@ -242,6 +257,7 @@ export async function microsoftRoutes(app: FastifyInstance) {
 
       gated.get<{ Querystring: { q: string } }>(
         '/onedrive/search',
+        { config: { rateLimit: { max: 20, timeWindow: '1 minute' } } },
         async (request) => {
           const { q } = searchQuery.parse(request.query);
           const files = await microsoftGraphService!.searchOneDrive(
@@ -254,6 +270,7 @@ export async function microsoftRoutes(app: FastifyInstance) {
 
       gated.get<{ Params: { itemId: string } }>(
         '/onedrive/items/:itemId',
+        { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } },
         async (request) => {
           const item = await microsoftGraphService!.getOneDriveItem(
             request.user.id,
@@ -263,18 +280,23 @@ export async function microsoftRoutes(app: FastifyInstance) {
         }
       );
 
-      gated.post('/onedrive/share', async (request) => {
-        const { itemId } = shareBody.parse(request.body);
-        const url = await microsoftGraphService!.createOneDriveSharingLink(
-          request.user.id,
-          itemId
-        );
-        return { success: true, data: { url } };
-      });
+      gated.post(
+        '/onedrive/share',
+        { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
+        async (request) => {
+          const { itemId } = shareBody.parse(request.body);
+          const url = await microsoftGraphService!.createOneDriveSharingLink(
+            request.user.id,
+            itemId
+          );
+          return { success: true, data: { url } };
+        }
+      );
 
       // Get permissions for a OneDrive item
       gated.get<{ Params: { itemId: string } }>(
         '/onedrive/items/:itemId/permissions',
+        { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } },
         async (request) => {
           const perms = await microsoftGraphService!.getOneDriveItemPermissions(
             request.user.id,
@@ -292,6 +314,7 @@ export async function microsoftRoutes(app: FastifyInstance) {
 
         oneDriveUploadPlugin.post<{ Querystring: { folderId?: string } }>(
           '/onedrive/upload',
+          { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
           async (request) => {
             const file = await request.file();
             if (!file) {
@@ -314,6 +337,7 @@ export async function microsoftRoutes(app: FastifyInstance) {
       // Delete OneDrive item
       gated.delete<{ Params: { itemId: string } }>(
         '/onedrive/items/:itemId',
+        { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
         async (request) => {
           await microsoftGraphService!.deleteOneDriveItem(
             request.user.id,
@@ -332,30 +356,39 @@ export async function microsoftRoutes(app: FastifyInstance) {
           endDateTime?: string;
           timeZone?: string;
         };
-      }>('/calendar/events', async (request) => {
-        const { days, startDateTime, endDateTime, timeZone } =
-          calendarQuery.parse(request.query);
-        const events = await microsoftGraphService!.getCalendarEvents(
-          request.user.id,
-          days,
-          startDateTime,
-          endDateTime,
-          timeZone
-        );
-        return { success: true, data: events };
-      });
+      }>(
+        '/calendar/events',
+        { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } },
+        async (request) => {
+          const { days, startDateTime, endDateTime, timeZone } =
+            calendarQuery.parse(request.query);
+          const events = await microsoftGraphService!.getCalendarEvents(
+            request.user.id,
+            days,
+            startDateTime,
+            endDateTime,
+            timeZone
+          );
+          return { success: true, data: events };
+        }
+      );
 
-      gated.post('/calendar/events', async (request) => {
-        const input = createEventBody.parse(request.body);
-        const event = await microsoftGraphService!.createCalendarEvent(
-          request.user.id,
-          input
-        );
-        return { success: true, data: event };
-      });
+      gated.post(
+        '/calendar/events',
+        { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
+        async (request) => {
+          const input = createEventBody.parse(request.body);
+          const event = await microsoftGraphService!.createCalendarEvent(
+            request.user.id,
+            input
+          );
+          return { success: true, data: event };
+        }
+      );
 
       gated.patch<{ Params: { eventId: string } }>(
         '/calendar/events/:eventId',
+        { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
         async (request) => {
           const input = updateEventBody.parse(request.body);
           const event = await microsoftGraphService!.updateCalendarEvent(
@@ -369,6 +402,7 @@ export async function microsoftRoutes(app: FastifyInstance) {
 
       gated.delete<{ Params: { eventId: string } }>(
         '/calendar/events/:eventId',
+        { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
         async (request) => {
           await microsoftGraphService!.deleteCalendarEvent(
             request.user.id,
@@ -380,28 +414,37 @@ export async function microsoftRoutes(app: FastifyInstance) {
 
       // ─── SharePoint ──────────────────────────────────────────────────────
 
-      gated.get('/sharepoint/sites', async (request) => {
-        const sites = await microsoftGraphService!.listSharePointSites(
-          request.user.id
-        );
-        return { success: true, data: sites };
-      });
+      gated.get(
+        '/sharepoint/sites',
+        { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } },
+        async (request) => {
+          const sites = await microsoftGraphService!.listSharePointSites(
+            request.user.id
+          );
+          return { success: true, data: sites };
+        }
+      );
 
       gated.get<{
         Params: { siteId: string };
         Querystring: { folderId?: string };
-      }>('/sharepoint/sites/:siteId/files', async (request) => {
-        const { folderId } = folderQuery.parse(request.query);
-        const files = await microsoftGraphService!.listSharePointFiles(
-          request.user.id,
-          request.params.siteId,
-          folderId
-        );
-        return { success: true, data: files };
-      });
+      }>(
+        '/sharepoint/sites/:siteId/files',
+        { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } },
+        async (request) => {
+          const { folderId } = folderQuery.parse(request.query);
+          const files = await microsoftGraphService!.listSharePointFiles(
+            request.user.id,
+            request.params.siteId,
+            folderId
+          );
+          return { success: true, data: files };
+        }
+      );
 
       gated.get<{ Params: { siteId: string }; Querystring: { q: string } }>(
         '/sharepoint/sites/:siteId/search',
+        { config: { rateLimit: { max: 20, timeWindow: '1 minute' } } },
         async (request) => {
           const { q } = searchQuery.parse(request.query);
           const files = await microsoftGraphService!.searchSharePointFiles(
@@ -413,19 +456,24 @@ export async function microsoftRoutes(app: FastifyInstance) {
         }
       );
 
-      gated.post('/sharepoint/share', async (request) => {
-        const { siteId, itemId } = sharePointShareBody.parse(request.body);
-        const url = await microsoftGraphService!.createSharePointSharingLink(
-          request.user.id,
-          siteId,
-          itemId
-        );
-        return { success: true, data: { url } };
-      });
+      gated.post(
+        '/sharepoint/share',
+        { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
+        async (request) => {
+          const { siteId, itemId } = sharePointShareBody.parse(request.body);
+          const url = await microsoftGraphService!.createSharePointSharingLink(
+            request.user.id,
+            siteId,
+            itemId
+          );
+          return { success: true, data: { url } };
+        }
+      );
 
       // Get permissions/people for a SharePoint item
       gated.get<{ Params: { siteId: string; itemId: string } }>(
         '/sharepoint/sites/:siteId/items/:itemId/permissions',
+        { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } },
         async (request) => {
           const perms =
             await microsoftGraphService!.getSharePointItemPermissions(
@@ -446,28 +494,33 @@ export async function microsoftRoutes(app: FastifyInstance) {
         uploadPlugin.post<{
           Params: { siteId: string };
           Querystring: { folderId?: string };
-        }>('/sharepoint/sites/:siteId/upload', async (request) => {
-          const file = await request.file();
-          if (!file) {
-            throw new Error('No file uploaded');
+        }>(
+          '/sharepoint/sites/:siteId/upload',
+          { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
+          async (request) => {
+            const file = await request.file();
+            if (!file) {
+              throw new Error('No file uploaded');
+            }
+            const buffer = await file.toBuffer();
+            const { folderId } = folderQuery.parse(request.query);
+            const result = await microsoftGraphService!.uploadSharePointFile(
+              request.user.id,
+              request.params.siteId,
+              folderId,
+              file.filename,
+              buffer,
+              file.mimetype
+            );
+            return { success: true, data: result };
           }
-          const buffer = await file.toBuffer();
-          const { folderId } = folderQuery.parse(request.query);
-          const result = await microsoftGraphService!.uploadSharePointFile(
-            request.user.id,
-            request.params.siteId,
-            folderId,
-            file.filename,
-            buffer,
-            file.mimetype
-          );
-          return { success: true, data: result };
-        });
+        );
       });
 
       // Delete SharePoint item
       gated.delete<{ Params: { siteId: string; itemId: string } }>(
         '/sharepoint/sites/:siteId/items/:itemId',
+        { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
         async (request) => {
           await microsoftGraphService!.deleteSharePointItem(
             request.user.id,
