@@ -672,6 +672,11 @@ Full automated pipeline with parallel jobs for fast feedback (~3 min):
 | **Test & Lint** | ~2 min | TypeScript, ESLint, 174 unit/integration tests (backend + frontend) |
 | **E2E Tests** | ~3 min | Playwright browser tests (health, API, Swagger) |
 | **Security Audit** | ~8 sec | `yarn audit` for known vulnerabilities |
+| **Desktop Typecheck** | ~20 sec | TypeScript validation for Electron main + preload |
+
+**Branch Protection:**
+- `develop` — Requires `Test & Lint` + `Security Audit` + `Desktop Typecheck` to pass. Enforced for admins (no bypass).
+- `main` — Same checks + requires PR with 1 approval.
 
 **Workflows:**
 - **CI** ([ci.yml](.github/workflows/ci.yml)) — Runs on push to `main`/`develop` and PRs

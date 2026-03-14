@@ -12,6 +12,7 @@ To ensure code quality and prevent accidental force pushes or direct commits to 
 - ✅ Require status checks to pass before merging
   - `Test & Lint` (from CI workflow)
   - `Security Audit` (from CI workflow)
+  - `Desktop Typecheck` (from CI workflow)
 - ✅ Require branches to be up to date before merging
 
 #### Pull Request Requirements
@@ -39,6 +40,11 @@ To ensure code quality and prevent accidental force pushes or direct commits to 
 - ✅ Require status checks to pass before merging
   - `Test & Lint` (from CI workflow)
   - `Security Audit` (from CI workflow)
+  - `Desktop Typecheck` (from CI workflow)
+- ✅ Require branches to be up to date before merging
+
+#### Enforce for Admins
+- ✅ **Do not allow bypassing the above settings** — Admins cannot push to develop unless all CI checks pass. This ensures no untested code reaches develop or main.
 
 #### Pull Request Requirements
 - ✅ Require a pull request before merging
