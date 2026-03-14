@@ -413,6 +413,7 @@ export default function Sidebar({
             onSelectDM={(channelId, _otherUser) => {
               navigate(`/chat/dm/${channelId}`);
             }}
+            onInviteToServer={() => setShowInviteModal(true)}
           />
 
           {/* User info */}

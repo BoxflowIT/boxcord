@@ -336,23 +336,31 @@ export default function Chat() {
         <DMCallOverlay
           onAccept={async () => {
             acceptCall();
-            // Join WebRTC call via voice service
-            await voiceService.joinChannel(dmCallChannelId || '');
+            // Notify server so caller gets dm:call:accepted event
+            socketService
+              .getSocket()
+              ?.emit('dm:call:accept', { channelId: dmCallChannelId });
+            // Join DM voice call (no API session needed)
+            await voiceService.joinDMCall(dmCallChannelId || '');
           }}
           onReject={() => {
-            // Play hangup sound and stop ringing
             playVoiceLeaveSound();
             stopRingingSound();
+            // Notify server so caller gets dm:call:rejected event
+            socketService
+              .getSocket()
+              ?.emit('dm:call:reject', { channelId: dmCallChannelId });
             rejectCall();
-            // Clean up voice state
-            voiceService.leaveChannel();
           }}
-          onEndCall={() => {
-            // Play hangup sound
+          onEndCall={async () => {
             playVoiceLeaveSound();
             stopRingingSound();
+            // Notify server so other participant gets dm:call:ended event
+            socketService
+              .getSocket()
+              ?.emit('dm:call:end', { channelId: dmCallChannelId });
+            await voiceService.leaveDMCall();
             endCall();
-            voiceService.leaveChannel();
           }}
         />
       </div>
