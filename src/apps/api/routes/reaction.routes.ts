@@ -75,6 +75,7 @@ export async function reactionRoutes(app: FastifyInstance) {
   // Get reaction counts for a message
   app.get<{ Params: { messageId: string } }>(
     '/messages/:messageId',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
     async (request) => {
       const counts = await reactionService.getReactionCounts(
         request.params.messageId,
@@ -91,6 +92,7 @@ export async function reactionRoutes(app: FastifyInstance) {
   }>(
     '/messages/:messageId/users',
     {
+      config: { rateLimit: { max: 60, timeWindow: '1 minute' } },
       preHandler: app.validateQuery(emojiQuery)
     },
     async (request) => {
@@ -109,6 +111,7 @@ export async function reactionRoutes(app: FastifyInstance) {
   }>(
     '/dm/:messageId',
     {
+      config: { rateLimit: { max: 60, timeWindow: '1 minute' } },
       preHandler: app.validateBody(schemas.toggleReaction)
     },
     async (request) => {

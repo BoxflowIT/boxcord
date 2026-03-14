@@ -68,11 +68,15 @@ export async function channelRoutes(app: FastifyInstance) {
   );
 
   // Get single channel
-  app.get<{ Params: { id: string } }>('/:id', async (request, reply) => {
-    const channel = await channelService.getChannel(request.params.id);
-    reply.cache({ maxAge: 300, staleWhileRevalidate: 600 });
-    return { success: true, data: channel };
-  });
+  app.get<{ Params: { id: string } }>(
+    '/:id',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      const channel = await channelService.getChannel(request.params.id);
+      reply.cache({ maxAge: 300, staleWhileRevalidate: 600 });
+      return { success: true, data: channel };
+    }
+  );
 
   // Create channel
   app.post<{
@@ -132,22 +136,26 @@ export async function channelRoutes(app: FastifyInstance) {
   );
 
   // Delete channel
-  app.delete<{ Params: { id: string } }>('/:id', async (request, reply) => {
-    // Get channel info before deletion for socket event
-    const channel = await channelService.getChannel(request.params.id);
-    await channelService.deleteChannel(request.params.id);
+  app.delete<{ Params: { id: string } }>(
+    '/:id',
+    { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      // Get channel info before deletion for socket event
+      const channel = await channelService.getChannel(request.params.id);
+      await channelService.deleteChannel(request.params.id);
 
-    // Emit socket event to all users in workspace
-    const io = app.io;
-    if (io && channel) {
-      io.to(`workspace:${channel.workspaceId}`).emit('channel:deleted', {
-        channelId: request.params.id,
-        workspaceId: channel.workspaceId
-      });
+      // Emit socket event to all users in workspace
+      const io = app.io;
+      if (io && channel) {
+        io.to(`workspace:${channel.workspaceId}`).emit('channel:deleted', {
+          channelId: request.params.id,
+          workspaceId: channel.workspaceId
+        });
+      }
+
+      return reply.status(204).send();
     }
-
-    return reply.status(204).send();
-  });
+  );
 
   // Update channel
   app.patch<{
@@ -156,6 +164,7 @@ export async function channelRoutes(app: FastifyInstance) {
   }>(
     '/:id',
     {
+      config: { rateLimit: { max: 20, timeWindow: '1 minute' } },
       preHandler: app.validateBody(updateChannelBody)
     },
     async (request) => {
@@ -168,37 +177,49 @@ export async function channelRoutes(app: FastifyInstance) {
   );
 
   // Join channel
-  app.post<{ Params: { id: string } }>('/:id/join', async (request) => {
-    await channelService.joinChannel(request.params.id, request.user.id);
-    return { success: true };
-  });
+  app.post<{ Params: { id: string } }>(
+    '/:id/join',
+    { config: { rateLimit: { max: 20, timeWindow: '1 minute' } } },
+    async (request) => {
+      await channelService.joinChannel(request.params.id, request.user.id);
+      return { success: true };
+    }
+  );
 
   // Leave channel
-  app.post<{ Params: { id: string } }>('/:id/leave', async (request) => {
-    await channelService.leaveChannel(request.params.id, request.user.id);
-    return { success: true };
-  });
+  app.post<{ Params: { id: string } }>(
+    '/:id/leave',
+    { config: { rateLimit: { max: 20, timeWindow: '1 minute' } } },
+    async (request) => {
+      await channelService.leaveChannel(request.params.id, request.user.id);
+      return { success: true };
+    }
+  );
 
   // Mark channel as read
-  app.post<{ Params: { id: string } }>('/:id/read', async (request, reply) => {
-    // Use upsert to create membership if it doesn't exist (for public channels)
-    await prisma.channelMember.upsert({
-      where: {
-        channelId_userId: {
+  app.post<{ Params: { id: string } }>(
+    '/:id/read',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      // Use upsert to create membership if it doesn't exist (for public channels)
+      await prisma.channelMember.upsert({
+        where: {
+          channelId_userId: {
+            channelId: request.params.id,
+            userId: request.user.id
+          }
+        },
+        update: {
+          lastReadAt: new Date()
+        },
+        create: {
           channelId: request.params.id,
-          userId: request.user.id
+          userId: request.user.id,
+          lastReadAt: new Date()
         }
-      },
-      update: {
-        lastReadAt: new Date()
-      },
-      create: {
-        channelId: request.params.id,
-        userId: request.user.id,
-        lastReadAt: new Date()
-      }
-    });
+      });
 
-    return reply.status(204).send();
-  });
+      return reply.status(204).send();
+    }
+  );
 }

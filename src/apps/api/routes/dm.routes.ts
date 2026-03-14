@@ -68,6 +68,7 @@ export async function dmRoutes(app: FastifyInstance) {
   }>(
     '/channels/:channelId/messages',
     {
+      config: { rateLimit: { max: 60, timeWindow: '1 minute' } },
       preHandler: app.validateQuery(getMessagesQuery)
     },
     async (request, reply) => {
@@ -92,6 +93,7 @@ export async function dmRoutes(app: FastifyInstance) {
   }>(
     '/channels/:channelId/messages',
     {
+      config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
       preHandler: app.validateBody(schemas.sendDM)
     },
     async (request, reply) => {
@@ -117,6 +119,7 @@ export async function dmRoutes(app: FastifyInstance) {
   }>(
     '/messages/:messageId',
     {
+      config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
       preHandler: app.validateBody(schemas.sendDM)
     },
     async (request) => {
@@ -138,6 +141,7 @@ export async function dmRoutes(app: FastifyInstance) {
   // Delete DM
   app.delete<{ Params: { messageId: string } }>(
     '/messages/:messageId',
+    { config: { rateLimit: { max: 20, timeWindow: '1 minute' } } },
     async (request, reply) => {
       await dmService.deleteMessage(request.params.messageId, request.user.id);
       return reply.status(204).send();
@@ -147,6 +151,7 @@ export async function dmRoutes(app: FastifyInstance) {
   // Delete DM channel (remove user's participation)
   app.delete<{ Params: { channelId: string } }>(
     '/channels/:channelId',
+    { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
     async (request, reply) => {
       await dmService.deleteChannel(request.params.channelId, request.user.id);
       return reply.status(204).send();
@@ -156,6 +161,7 @@ export async function dmRoutes(app: FastifyInstance) {
   // Mark DM channel as read
   app.post<{ Params: { channelId: string } }>(
     '/channels/:channelId/read',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
     async (request, reply) => {
       // Use upsert to create participant if it doesn't exist
       await prisma.directMessageParticipant.upsert({
@@ -186,6 +192,7 @@ export async function dmRoutes(app: FastifyInstance) {
   }>(
     '/messages/:messageId/pin',
     {
+      config: { rateLimit: { max: 20, timeWindow: '1 minute' } },
       preHandler: app.validateBody(channelIdBody)
     },
     async (request, _reply) => {
@@ -212,6 +219,7 @@ export async function dmRoutes(app: FastifyInstance) {
   }>(
     '/messages/:messageId/pin',
     {
+      config: { rateLimit: { max: 20, timeWindow: '1 minute' } },
       preHandler: app.validateBody(channelIdBody)
     },
     async (request, _reply) => {
@@ -234,11 +242,15 @@ export async function dmRoutes(app: FastifyInstance) {
   // Get pinned messages in DM channel
   app.get<{
     Params: { channelId: string };
-  }>('/channels/:channelId/pinned', async (request, _reply) => {
-    const messages = await dmService.getPinnedMessages(
-      request.params.channelId,
-      request.user.id
-    );
-    return { success: true, data: messages };
-  });
+  }>(
+    '/channels/:channelId/pinned',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+    async (request, _reply) => {
+      const messages = await dmService.getPinnedMessages(
+        request.params.channelId,
+        request.user.id
+      );
+      return { success: true, data: messages };
+    }
+  );
 }

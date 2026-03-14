@@ -70,49 +70,63 @@ export async function pushRoutes(app: FastifyInstance) {
   // Unsubscribe from push notifications
   app.post<{
     Body: { endpoint: string };
-  }>('/unsubscribe', async (request) => {
-    await pushService.unsubscribe(request.body.endpoint);
-
-    return {
-      success: true,
-      message: 'Successfully unsubscribed from push notifications'
-    };
-  });
-
-  // Check subscription status
-  app.get('/status', async (request) => {
-    const hasSubscription = await pushService.hasSubscription(request.user.id);
-
-    return {
-      success: true,
-      data: { subscribed: hasSubscription }
-    };
-  });
-
-  // Test notification (development only)
-  if (process.env.NODE_ENV !== 'production') {
-    app.post('/test', async (request) => {
-      const subscriptions = await pushService.getUserSubscriptions(
-        request.user.id
-      );
-
-      if (subscriptions.length === 0) {
-        return {
-          success: false,
-          message: 'No subscriptions found. Enable notifications first.'
-        };
-      }
-
-      await pushService.sendNotification(subscriptions, {
-        title: 'Test Notification',
-        body: 'Push notifications are working! 🎉',
-        icon: '/icon-192.png'
-      });
+  }>(
+    '/unsubscribe',
+    { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
+    async (request) => {
+      await pushService.unsubscribe(request.body.endpoint);
 
       return {
         success: true,
-        message: 'Test notification sent'
+        message: 'Successfully unsubscribed from push notifications'
       };
-    });
+    }
+  );
+
+  // Check subscription status
+  app.get(
+    '/status',
+    { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } },
+    async (request) => {
+      const hasSubscription = await pushService.hasSubscription(
+        request.user.id
+      );
+
+      return {
+        success: true,
+        data: { subscribed: hasSubscription }
+      };
+    }
+  );
+
+  // Test notification (development only)
+  if (process.env.NODE_ENV !== 'production') {
+    app.post(
+      '/test',
+      { config: { rateLimit: { max: 5, timeWindow: '1 minute' } } },
+      async (request) => {
+        const subscriptions = await pushService.getUserSubscriptions(
+          request.user.id
+        );
+
+        if (subscriptions.length === 0) {
+          return {
+            success: false,
+            message: 'No subscriptions found. Enable notifications first.'
+          };
+        }
+
+        await pushService.sendNotification(subscriptions, {
+          title: 'Test Notification',
+          body: 'Push notifications are working! 🎉',
+          icon: '/icon-192.png'
+        });
+
+        return {
+          success: true,
+          message: 'Test notification sent'
+        };
+      }
+    );
   }
 }
