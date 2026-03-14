@@ -40,3 +40,5 @@ load-tests/results/*.json
 *.tsbuildinfo
 uploads/
 infra/lambda/custom-message/preview/
+package-lock.json
+client/package-lock.json
