@@ -1,11 +1,18 @@
 [
   {
-    "version": "1.21.1",
+    "version": "1.21.2",
     "date": "2026-03-14",
     "notes": {
       "en": [
-        "Add security resolutions to client package.json"
+        "Remove stale package-lock.json files, dismiss all Dependabot alerts"
       ]
+    }
+  },
+  {
+    "version": "1.21.1",
+    "date": "2026-03-14",
+    "notes": {
+      "en": ["Add security resolutions to client package.json"]
     }
   },
   {
