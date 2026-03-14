@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.21.1",
+    "date": "2026-03-14",
+    "notes": {
+      "en": [
+        "Add security resolutions to client package.json"
+      ]
+    }
+  },
+  {
     "version": "1.21.0",
     "date": "2026-03-14",
     "notes": {
