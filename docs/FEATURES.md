@@ -99,7 +99,9 @@ Complete list of all implemented features in Boxcord.
 - ✅ **Workspace settings** - Configure workspace name, icon
 - ✅ **Workspace deletion** - Remove workspaces (admin only)
 - ✅ **Workspace invites** - Share invite links
+- ✅ **Invite to server via DM** - Right-click DM user, pick server, send invite as DM
 - ✅ **Member list** - View all workspace members
+- ✅ **Member role management** - Promote/demote members (ADMIN/MEMBER) via context menu
 
 ### Channel Types
 - ✅ **Text channels** - Topic-specific conversations
@@ -297,10 +299,15 @@ Complete list of all implemented features in Boxcord.
 ### Design
 - ✅ **Discord-inspired design** - Familiar and intuitive
 - ✅ **Dark mode** - Easy on the eyes
-- ✅ **Responsive layout** - Mobile, tablet, desktop
+- ✅ **Responsive layout** - Mobile, tablet, desktop with breakpoint at 1024px
+- ✅ **Mobile sidebar drawer** - Slide-in sidebar overlay with hamburger menu
+- ✅ **Mobile header** - Channel name + hamburger menu on small screens
+- ✅ **Touch-friendly targets** - 44px+ button targets on mobile
 - ✅ **TailwindCSS** - Modern utility-first styling
 - ✅ **Custom components** - Reusable UI components
-- ✅ **Smooth animations** - Polished interactions
+- ✅ **Smooth animations** - 8 animation keyframes (fade-in, scale-in, slide-in, etc.)
+- ✅ **Skeleton loading** - Message, channel, and member list skeletons
+- ✅ **Backdrop blur** - Frosted glass effect on modals and overlays
 
 ### User Experience
 - ✅ **Keyboard shortcuts** - 17+ customizable shortcuts for power users (#227)
@@ -515,6 +522,23 @@ Complete list of all implemented features in Boxcord.
 
 ## Recent Updates
 
+### v1.12.0 - UI/UX Refresh & Fixes (March 2026)
+- ✅ 8 animation keyframes: fade-in, fade-in-up/down, scale-in, slide-in-left/right, pulse-soft, shimmer
+- ✅ Skeleton loading components for messages, channels, and member list
+- ✅ Backdrop blur on modals and overlays
+- ✅ Enhanced button active states (scale + brightness)
+- ✅ Gradient profile banner
+- ✅ Improved empty states with icons and fade-in animation
+- ✅ Mobile/tablet responsive layout with sidebar drawer and hamburger menu
+- ✅ Touch-friendly button targets (44px+) on mobile
+- ✅ Auto-close sidebar on navigation
+- ✅ DM call accept/reject/end now properly emits socket events
+- ✅ Fixed voiceService.joinDMCall() vs joinChannel() for DM calls
+- ✅ Invite-to-server via DM with workspace picker modal
+- ✅ Member role update: PATCH endpoint + toggle ADMIN/MEMBER in context menu
+- ✅ Desktop Microsoft OAuth polling for seamless status detection
+- ✅ i18n: New keys for invite flow, role management (EN + SV)
+
 ### v1.11.0 - Bot Integration (March 2026)
 - ✅ Channel webhooks with CRUD management (max 15 per channel)
 - ✅ Token-based message execution endpoint (no auth required)
@@ -649,4 +673,4 @@ Complete list of all implemented features in Boxcord.
 
 ---
 
-**Last Updated:** March 9, 2026
+**Last Updated:** March 14, 2026

@@ -2,7 +2,7 @@
 
 Discord-like real-time chat application for Boxflow, soon integrated with Boxtime.
 
-**Latest version:** 1.21.3 | [View Changelog](CHANGELOG.md)
+**Latest version:** 1.22.0 | [View Changelog](CHANGELOG.md)
 
 ## 🚀 Quick Start
 
@@ -90,6 +90,8 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Voice channels** - Real-time audio rooms
 - **Channel permissions** - Granular access control
 - **Workspace invites** - Invite users via shareable links
+- **Invite to server via DM** - Right-click DM user, pick server, send invite as DM message
+- **Member role management** - Promote/demote members via context menu (ADMIN/MEMBER)
 
 ### 👥 User Management
 - **User profiles** - Customizable with bio, avatar, status
@@ -160,7 +162,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Discord-inspired design** - Familiar and intuitive
 - **Theme customization** - Dark/Medium/Light themes with persistent settings (#225, #6)
 - **Message density** - Compact/Cozy/Spacious spacing (#225)
-- **Responsive layout** - Mobile, tablet, desktop
+- **Responsive layout** - Mobile sidebar drawer, hamburger menu, touch-friendly targets
 - **Keyboard shortcuts** - 17+ customizable shortcuts (#227)
   - Navigation: Alt+↑/↓ (channel navigation), Ctrl+K (search)
   - Voice: Ctrl+Shift+M/D/V/S/L (mute/deafen/video/screen/leave)
@@ -170,7 +172,8 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Advanced settings** - Appearance, Audio, Video, Notifications, Privacy, Keybinds, Account tabs
 - **High contrast mode** - Enhanced contrast for accessibility (#225)
 - **Reduced motion** - Minimize animations for accessibility (#225)
-- **Smooth animations** - Polished interactions
+- **Smooth animations** - 8 keyframes (fade-in, scale-in, slide-in, shimmer, etc.)
+- **Skeleton loading** - Message, channel, and member list loading skeletons
 - **TailwindCSS** - Modern utility-first styling
 
 **📖 See:** [docs/SETTINGS_AND_SHORTCUTS.md](docs/SETTINGS_AND_SHORTCUTS.md)

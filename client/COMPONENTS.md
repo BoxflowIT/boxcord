@@ -29,7 +29,7 @@ client/src/components/
 ├── message/          # Message-related components (6)
 ├── channel/          # Channel-related components (8)
 ├── sidebar/          # Sidebar components (4)
-├── dm/               # Direct message components (2)
+├── dm/               # Direct message components (11)
 ├── form/             # Form components (9)
 ├── layout/           # Layout components (2)
 ├── profile/          # Profile components (6)
