@@ -1,7 +1,7 @@
 // Message List Component - Displays messages with loading and empty states
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { LoadingState } from '../ui/LoadingSpinner';
+import { MessageListSkeleton } from '../ui/Skeleton';
 import ChannelEmptyState from '../channel/ChannelEmptyState';
 import { MessageItem } from '../MessageItem';
 import { PollMessage } from '../PollMessage';
@@ -188,8 +188,10 @@ export default function MessageListDisplay({
 
   if (loading) {
     return (
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        <LoadingState text={t('common.loadingMessages')} />
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="max-w-4xl mx-auto">
+          <MessageListSkeleton count={8} />
+        </div>
       </div>
     );
   }

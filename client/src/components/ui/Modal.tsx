@@ -33,12 +33,12 @@ export default function Modal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
       <div
         className={cn(
-          'bg-boxflow-dark rounded-2xl shadow-2xl w-full max-h-[90vh] overflow-hidden border border-boxflow-hover-50',
+          'bg-boxflow-dark rounded-2xl shadow-2xl w-full max-h-[90vh] overflow-hidden border border-boxflow-hover-50 animate-scale-in',
           maxWidthClasses[maxWidth]
         )}
         onClick={(e) => e.stopPropagation()}

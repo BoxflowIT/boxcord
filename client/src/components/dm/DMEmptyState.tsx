@@ -15,7 +15,7 @@ export default function DMEmptyState({
 }: DMEmptyStateProps) {
   const { t } = useTranslation();
   return (
-    <div className="flex flex-col items-center justify-center h-full text-boxflow-muted">
+    <div className="flex flex-col items-center justify-center h-full text-boxflow-muted animate-fade-in-up">
       <Avatar size="lg" className="mb-4">
         {userInitial}
       </Avatar>

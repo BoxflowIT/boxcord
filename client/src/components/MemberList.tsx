@@ -334,12 +334,13 @@ export default function MemberList() {
               <MemberContextMenu
                 userId={contextMenu.user.id}
                 displayName={getUserDisplayName(contextMenu.user)}
+                currentRole={contextMenu.user.role}
                 isCurrentUser={contextMenu.user.id === currentUser?.id}
                 canModerate={
                   isAdmin &&
                   contextMenu.user.id !== currentUser?.id &&
                   contextMenu.user.role !== 'SUPER_ADMIN' &&
-                  contextMenu.user.role !== 'ADMIN'
+                  contextMenu.user.role !== 'OWNER'
                 }
                 onViewProfile={() => {
                   handleUserClick(contextMenu.user.id);
@@ -385,9 +386,32 @@ export default function MemberList() {
                     );
                   }
                 }}
-                onChangeRole={() => {
-                  handleUserClick(contextMenu.user.id);
+                onChangeRole={async () => {
+                  const user = contextMenu.user;
+                  const newRole = user.role === 'ADMIN' ? 'MEMBER' : 'ADMIN';
                   closeContextMenu();
+                  try {
+                    await api.updateMemberRole(
+                      currentWorkspace!.id,
+                      user.id,
+                      newRole as 'ADMIN' | 'MEMBER'
+                    );
+                    // Update local state
+                    setUsers((prev) =>
+                      prev.map((u) =>
+                        u.id === user.id ? { ...u, role: newRole } : u
+                      )
+                    );
+                    toast.success(
+                      t('moderation.roleChanged', {
+                        name: getUserDisplayName(user),
+                        role: newRole
+                      })
+                    );
+                  } catch (err) {
+                    logger.error('Failed to change role:', err);
+                    toast.error(t('errors.generic'));
+                  }
                 }}
                 onKick={() => {
                   setModerationUserId(contextMenu.user.id);

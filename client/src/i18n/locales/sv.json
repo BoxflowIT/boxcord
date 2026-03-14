@@ -397,7 +397,12 @@
     "joinFailed": "Kunde inte gå med i servern",
     "goToChat": "Gå till chatten",
     "youveBeenInvited": "Du har blivit inbjuden att gå med i",
-    "accept": "Acceptera inbjudan"
+    "accept": "Acceptera inbjudan",
+    "pickServer": "Bjud in till server",
+    "noServers": "Du har inga servrar ännu",
+    "sentInvite": "Du har blivit inbjuden till **{{server}}**! Klicka på länken nedan för att gå med:",
+    "inviteSent": "Inbjudan skickad!",
+    "failedToSend": "Kunde inte skicka inbjudan"
   },
   "profile": {
     "title": "Profil",
@@ -560,7 +565,10 @@
     "youWereBanned": "Du har bannats från servern",
     "youWereUnbanned": "Du har avbannats och kan nu gå med i servern igen",
     "auditLogs": "Granskningsloggar",
-    "noAuditLogs": "Inga granskningsloggar att visa"
+    "noAuditLogs": "Inga granskningsloggar att visa",
+    "promoteToAdmin": "Befordra till Admin",
+    "demoteToMember": "Degradera till Medlem",
+    "roleChanged": "{{name}} är nu {{role}}"
   },
   "files": {
     "uploadFile": "Ladda upp fil",

@@ -60,7 +60,7 @@ export default function ChannelInputSection({
   const { t } = useTranslation();
 
   return (
-    <div className="px-4 pb-6">
+    <div className="px-2 pb-3 lg:px-4 lg:pb-6">
       <div className="message-input-container">
         <FileUpload
           ref={fileUploadRef}

@@ -116,6 +116,49 @@ export class WorkspaceService {
     });
   }
 
+  async updateMemberRole(
+    workspaceId: string,
+    userId: string,
+    role: 'ADMIN' | 'MEMBER',
+    requesterId: string
+  ): Promise<WorkspaceMember> {
+    const requesterMembership = await this.prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId, userId: requesterId } }
+    });
+
+    if (
+      !requesterMembership ||
+      !['OWNER', 'ADMIN'].includes(requesterMembership.role)
+    ) {
+      throw new ForbiddenError(
+        'Only owners and admins can change member roles'
+      );
+    }
+
+    // Cannot change own role
+    if (userId === requesterId) {
+      throw new ForbiddenError('Cannot change your own role');
+    }
+
+    // Cannot change owner's role
+    const targetMembership = await this.prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId, userId } }
+    });
+
+    if (!targetMembership) {
+      throw new NotFoundError('Membership', `${workspaceId}/${userId}`);
+    }
+
+    if (targetMembership.role === 'OWNER') {
+      throw new ForbiddenError("Cannot change the owner's role");
+    }
+
+    return this.prisma.workspaceMember.update({
+      where: { workspaceId_userId: { workspaceId, userId } },
+      data: { role }
+    });
+  }
+
   async checkMembership(workspaceId: string, userId: string): Promise<boolean> {
     const membership = await this.prisma.workspaceMember.findUnique({
       where: { workspaceId_userId: { workspaceId, userId } }

@@ -16,7 +16,10 @@ const alertStyles = {
 export function Alert({ type, message }: AlertProps) {
   return (
     <div
-      className={cn('p-3 border rounded text-sm', alertStyles[type])}
+      className={cn(
+        'p-3 border rounded-lg text-sm animate-fade-in',
+        alertStyles[type]
+      )}
       role="alert"
     >
       {message}

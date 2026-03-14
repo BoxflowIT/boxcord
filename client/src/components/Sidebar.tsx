@@ -14,9 +14,11 @@ import { useAuthStore } from '../store/auth';
 import { signOut } from '../services/cognito';
 import { socketService } from '../services/socket';
 import { useWorkspaces, useChannels } from '../hooks/useQuery';
-import { useMicrosoftStatus } from '../hooks/queries/microsoft';
-import { microsoft365Api } from '../services/api';
-import { openExternalUrl, getElectronAPI } from '../utils/platform';
+import {
+  useMicrosoftStatus,
+  useMicrosoftConnect
+} from '../hooks/queries/microsoft';
+import { getElectronAPI } from '../utils/platform';
 import { useWorkspaceOperations } from '../hooks/useWorkspaceOperations';
 import { useChannelOperations } from '../hooks/useChannelOperations';
 import { useModalWithData } from '../hooks/useModalState';
@@ -24,6 +26,7 @@ import DeleteConfirmModal from './DeleteConfirmModal';
 import EditModal from './EditModal';
 import CreateModal from './CreateModal';
 import InviteModal from './InviteModal';
+import { InviteToServerModal } from './dm/InviteToServerModal';
 import JoinServerModal from './JoinServerModal';
 import DMList from './DMList';
 import { FollowingThreadsList } from './thread/FollowingThreadsList';
@@ -64,6 +67,7 @@ export default function Sidebar({
   const { data: msStatus } = useMicrosoftStatus();
 
   const { user, logout } = useAuthStore();
+  const { connect: msConnect } = useMicrosoftConnect();
 
   // Modal state
   const [showNewChannel, setShowNewChannel] = useState(false);
@@ -71,6 +75,9 @@ export default function Sidebar({
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [inviteTargetUserId, setInviteTargetUserId] = useState<string | null>(
+    null
+  );
 
   const threadNotifications = useThreadStore((s) => s.threadNotifications);
   const threadMap = useThreadStore((s) => s.threads);
@@ -114,14 +121,7 @@ export default function Sidebar({
     navigate(`/chat/integrations/${id}`);
   };
 
-  const handleMsConnect = async () => {
-    try {
-      const { url } = await microsoft365Api.getConnectUrl();
-      openExternalUrl(url);
-    } catch {
-      // Error handled in UI
-    }
-  };
+  const handleMsConnect = () => msConnect();
 
   const handleChannelSelect = (channel: Channel | null) => {
     setCurrentChannel(channel);
@@ -417,6 +417,7 @@ export default function Sidebar({
             onSelectDM={(channelId, _otherUser) => {
               navigate(`/chat/dm/${channelId}`);
             }}
+            onInviteToServer={(userId) => setInviteTargetUserId(userId)}
           />
 
           {/* User info */}
@@ -510,6 +511,15 @@ export default function Sidebar({
           workspaceId={currentWorkspace.id}
           workspaceName={currentWorkspace.name}
           onClose={() => setShowInviteModal(false)}
+        />
+      )}
+
+      {/* Invite to Server via DM */}
+      {inviteTargetUserId && (
+        <InviteToServerModal
+          isOpen={!!inviteTargetUserId}
+          targetUserId={inviteTargetUserId}
+          onClose={() => setInviteTargetUserId(null)}
         />
       )}
 

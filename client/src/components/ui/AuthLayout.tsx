@@ -28,7 +28,7 @@ export function AuthLayout({
           Back to home
         </Link>
       )}
-      <div className="bg-boxflow-dark p-10 rounded-2xl shadow-2xl w-full max-w-md border border-boxflow-hover-50 backdrop-blur-sm">
+      <div className="bg-boxflow-dark p-10 rounded-2xl shadow-2xl w-full max-w-md border border-boxflow-hover-50 backdrop-blur-sm animate-fade-in-up">
         <div className="text-center mb-8">
           <div className="w-20 h-20 gradient-primary-br rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-primary">
             <span className="text-5xl font-bold text-white">B</span>

@@ -227,15 +227,15 @@ body {
 
   /* ========== Button Styles ========== */
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-interactive;
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
   }
 
   .btn-primary {
-    @apply btn bg-boxflow-primary text-white hover:bg-boxflow-secondary active:scale-95 disabled:opacity-50;
+    @apply btn bg-boxflow-primary text-white hover:bg-boxflow-secondary active:scale-[0.97] active:brightness-90 disabled:opacity-50;
   }
 
   .btn-secondary {
-    @apply btn bg-boxflow-darker text-boxflow-light hover:bg-boxflow-hover border border-boxflow-border;
+    @apply btn bg-boxflow-darker text-boxflow-light hover:bg-boxflow-hover active:scale-[0.97] border border-boxflow-border;
   }
 
   .btn-success {
@@ -250,9 +250,9 @@ body {
     @apply btn bg-boxflow-warning text-boxflow-dark hover-brightness;
   }
 
-  /* Icon button base */
+  /* Icon button base — min 44px touch target on mobile */
   .btn-icon {
-    @apply p-1.5 rounded-lg text-boxflow-muted transition-interactive;
+    @apply p-2.5 lg:p-1.5 rounded-lg text-boxflow-muted transition-interactive;
   }
 
   .btn-icon-default {
@@ -280,6 +280,7 @@ body {
   /* ========== Dropdown Menu Styles ========== */
   .dropdown-menu {
     @apply absolute bg-boxflow-darker border border-boxflow-border rounded-lg shadow-2xl z-10 overflow-hidden min-w-[200px];
+    animation: fade-in-down 0.25s ease-out;
   }
 
   .dropdown-item {
@@ -301,6 +302,7 @@ body {
   /* ========== Popup/Autocomplete Styles ========== */
   .popup-container {
     @apply absolute bg-boxflow-darker border border-boxflow-border rounded-lg shadow-2xl overflow-hidden z-50;
+    animation: fade-in-up 0.25s ease-out;
   }
 
   .popup-list-item {
@@ -365,14 +367,17 @@ body {
 
   .modal-container {
     @apply bg-boxflow-dark rounded-2xl shadow-2xl border border-boxflow-hover-50 overflow-hidden;
+    animation: scale-in 0.2s ease-out;
   }
 
   .modal-panel {
     @apply bg-boxflow-dark rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-boxflow-hover-50;
+    animation: scale-in 0.2s ease-out;
   }
 
   .modal-panel-lg {
     @apply bg-boxflow-dark rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex overflow-hidden border border-boxflow-hover-50;
+    animation: scale-in 0.2s ease-out;
   }
 
   /* ========== Action Bars & Hovers ========== */
@@ -386,16 +391,18 @@ body {
      Higher position to ensure visibility even with long messages
      z-40 to stay below modals (z-50+) and thread sidebar (z-50) */
   .message-actions {
-    @apply absolute -top-16 right-0 opacity-0 transition-interactive;
+    @apply absolute -top-16 right-0 opacity-0 transition-all duration-150;
     @apply bg-boxflow-darker border border-boxflow-hover rounded-lg shadow-xl;
     @apply px-2 py-1 flex items-center gap-1 z-40;
     pointer-events: none;
+    transform: translateY(4px);
   }
 
   /* Show actions on hover - triggered by parent group (entire message) */
   .group:hover .message-actions {
     @apply opacity-100;
     pointer-events: auto;
+    transform: translateY(0);
   }
 
   .message-input-container {
@@ -412,7 +419,7 @@ body {
   }
 
   .card-interactive {
-    @apply card hover:bg-boxflow-hover transition-interactive cursor-pointer;
+    @apply card hover:bg-boxflow-hover transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:shadow-lg;
   }
 
   /* ========== Text Styles ========== */
@@ -450,11 +457,11 @@ body {
 
   /* ========== Message Styles ========== */
   .message-container {
-    @apply group -mx-4 px-4 py-1 rounded transition-interactive;
+    @apply group -mx-4 px-4 py-1 rounded transition-all duration-150;
   }
   
   .message-container:hover {
-    background-color: color-mix(in srgb, var(--color-bg-hover) 40%, transparent);
+    background-color: color-mix(in srgb, var(--color-bg-hover) 50%, transparent);
   }
 
   .message-time {
@@ -526,11 +533,13 @@ body {
 
   /* ========== Modal/Dialog Styles ========== */
   .modal-overlay {
-    @apply fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm p-4;
+    @apply fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm p-4;
+    animation: fade-in 0.2s ease-out;
   }
 
   .modal-content {
     @apply bg-boxflow-darker rounded-xl shadow-2xl border border-boxflow-border max-w-md w-full max-h-[90vh] overflow-y-auto;
+    animation: scale-in 0.2s ease-out;
   }
 
   .modal-header {
@@ -684,7 +693,7 @@ body {
 
   /* ========== Tooltip/Popup Styles ========== */
   .tooltip {
-    @apply absolute bottom-full left-0 mb-1 px-2 py-1 bg-red-500 text-white text-xs rounded whitespace-nowrap;
+    @apply absolute bottom-full left-0 mb-1 px-2.5 py-1.5 bg-red-500 text-white text-xs rounded-lg whitespace-nowrap shadow-lg animate-fade-in;
   }
 
   /* ========== Mention/Link Styles ========== */
@@ -816,6 +825,7 @@ body {
   .message-wrapper {
     margin-top: var(--message-gap);
     padding: var(--message-padding);
+    animation: fade-in-up 0.2s ease-out;
   }
 
   .message-compact-wrapper {

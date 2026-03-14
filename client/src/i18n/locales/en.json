@@ -393,7 +393,12 @@
     "joinFailed": "Could not join the server",
     "goToChat": "Go to chat",
     "youveBeenInvited": "You've been invited to join",
-    "accept": "Accept invite"
+    "accept": "Accept invite",
+    "pickServer": "Invite to server",
+    "noServers": "You don't have any servers yet",
+    "sentInvite": "You've been invited to join **{{server}}**! Click the link below to join:",
+    "inviteSent": "Invite sent!",
+    "failedToSend": "Failed to send invite"
   },
   "profile": {
     "title": "Profile",
@@ -556,7 +561,10 @@
     "youWereBanned": "You were banned from the server",
     "youWereUnbanned": "Your ban has been removed and you can rejoin the server",
     "auditLogs": "Audit Logs",
-    "noAuditLogs": "No audit logs to display"
+    "noAuditLogs": "No audit logs to display",
+    "promoteToAdmin": "Promote to Admin",
+    "demoteToMember": "Demote to Member",
+    "roleChanged": "{{name}} is now {{role}}"
   },
   "files": {
     "uploadFile": "Upload File",
