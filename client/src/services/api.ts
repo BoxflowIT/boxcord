@@ -137,6 +137,15 @@ export const api = {
     }),
   leaveWorkspace: (id: string) =>
     request<void>(`/workspaces/${id}/leave`, { method: 'POST' }),
+  updateMemberRole: (
+    workspaceId: string,
+    userId: string,
+    role: 'ADMIN' | 'MEMBER'
+  ) =>
+    request<unknown>(`/workspaces/${workspaceId}/members/${userId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role })
+    }),
 
   // Workspace Invites
   createInvite: (

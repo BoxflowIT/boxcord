@@ -26,6 +26,7 @@ import DeleteConfirmModal from './DeleteConfirmModal';
 import EditModal from './EditModal';
 import CreateModal from './CreateModal';
 import InviteModal from './InviteModal';
+import { InviteToServerModal } from './dm/InviteToServerModal';
 import JoinServerModal from './JoinServerModal';
 import DMList from './DMList';
 import { FollowingThreadsList } from './thread/FollowingThreadsList';
@@ -74,6 +75,9 @@ export default function Sidebar({
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [inviteTargetUserId, setInviteTargetUserId] = useState<string | null>(
+    null
+  );
 
   const threadNotifications = useThreadStore((s) => s.threadNotifications);
   const threadMap = useThreadStore((s) => s.threads);
@@ -413,7 +417,7 @@ export default function Sidebar({
             onSelectDM={(channelId, _otherUser) => {
               navigate(`/chat/dm/${channelId}`);
             }}
-            onInviteToServer={() => setShowInviteModal(true)}
+            onInviteToServer={(userId) => setInviteTargetUserId(userId)}
           />
 
           {/* User info */}
@@ -507,6 +511,15 @@ export default function Sidebar({
           workspaceId={currentWorkspace.id}
           workspaceName={currentWorkspace.name}
           onClose={() => setShowInviteModal(false)}
+        />
+      )}
+
+      {/* Invite to Server via DM */}
+      {inviteTargetUserId && (
+        <InviteToServerModal
+          isOpen={!!inviteTargetUserId}
+          targetUserId={inviteTargetUserId}
+          onClose={() => setInviteTargetUserId(null)}
         />
       )}
 
