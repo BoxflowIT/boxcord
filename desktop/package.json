@@ -66,6 +66,7 @@
         "AppImage",
         "deb"
       ],
+      "executableName": "boxcord",
       "icon": "build/icon-1024.png",
       "category": "Network;InstantMessaging;"
     },
