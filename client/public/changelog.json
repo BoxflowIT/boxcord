@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.21.7",
+    "date": "2026-03-14",
+    "notes": {
+      "en": ["Fix Ubuntu taskbar icon, pinning, and multi-size icons"]
+    }
+  },
+  {
     "version": "1.21.6",
     "date": "2026-03-14",
     "notes": {
@@ -12,18 +19,14 @@
     "version": "1.21.5",
     "date": "2026-03-14",
     "notes": {
-      "en": [
-        "Resolve all 84 CodeQL code quality findings"
-      ]
+      "en": ["Resolve all 84 CodeQL code quality findings"]
     }
   },
   {
     "version": "1.21.4",
     "date": "2026-03-14",
     "notes": {
-      "en": [
-        "Add per-route rate limits to file attachment routes"
-      ]
+      "en": ["Add per-route rate limits to file attachment routes"]
     }
   },
   {
@@ -50,9 +53,7 @@
     "version": "1.21.1",
     "date": "2026-03-14",
     "notes": {
-      "en": [
-        "Add security resolutions to client package.json"
-      ]
+      "en": ["Add security resolutions to client package.json"]
     }
   },
   {
