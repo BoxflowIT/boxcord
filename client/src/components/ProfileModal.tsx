@@ -193,15 +193,15 @@ export default function ProfileModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="bg-boxflow-dark rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-boxflow-hover-50"
+        className="bg-boxflow-dark rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-boxflow-hover-50 animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header/Banner */}
-        <div className="h-24 bg-boxflow-darker" />
+        {/* Header/Banner - Gradient */}
+        <div className="h-24 bg-gradient-to-r from-boxflow-primary via-boxflow-secondary to-boxflow-primary rounded-t-2xl" />
 
         {/* Profile content */}
         <div className="px-4 pb-4">

@@ -20,7 +20,7 @@ export default function Tooltip({
   content,
   children,
   position = 'top',
-  delay = 300
+  delay = 200
 }: TooltipProps) {
   const [show, setShow] = useState(false);
   const [timeoutId, setTimeoutId] = useState<number | null>(null);
@@ -45,7 +45,7 @@ export default function Tooltip({
       {show && (
         <div
           className={cn(
-            'absolute z-50 px-2 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap',
+            'absolute z-50 px-2.5 py-1.5 text-xs font-medium text-white bg-boxflow-darkest rounded-lg whitespace-nowrap shadow-lg animate-fade-in',
             positionClasses[position]
           )}
         >

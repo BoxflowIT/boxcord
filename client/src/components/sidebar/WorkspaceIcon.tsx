@@ -67,7 +67,7 @@ export default function WorkspaceIcon({
       {showMenu && (
         <div
           ref={menuRef}
-          className="fixed z-50 bg-boxflow-darkest border border-boxflow-border rounded-md shadow-2xl py-1.5 min-w-[180px]"
+          className="fixed z-50 bg-boxflow-darkest border border-boxflow-border rounded-lg shadow-2xl py-1.5 min-w-[180px] animate-scale-in"
           style={{ left: menuPos.x, top: menuPos.y }}
         >
           <button

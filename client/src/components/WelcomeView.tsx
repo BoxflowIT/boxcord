@@ -50,8 +50,8 @@ export default function WelcomeView() {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-8">
-      <div className="text-center max-w-md">
-        <div className="welcome-icon">
+      <div className="text-center max-w-md animate-fade-in-up">
+        <div className="welcome-icon shadow-lg shadow-boxflow-primary/30">
           <ChatIcon size="lg" className="text-white" />
         </div>
 
@@ -59,7 +59,7 @@ export default function WelcomeView() {
           {t('workspace.welcome', { workspace: user?.firstName ?? 'Boxcord' })}
         </h1>
 
-        <p className="text-discord-light mb-8">
+        <p className="text-boxflow-muted mb-8">
           {currentWorkspace
             ? t('workspace.selectChannel')
             : t('workspace.welcomeMessage')}
