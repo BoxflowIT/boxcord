@@ -118,12 +118,57 @@ jobs:
           echo "pr_number=$NEXT_PR" >> $GITHUB_OUTPUT
         id: pr_number
 
+      - name: Generate changelog
+        env:
+          NEW_VERSION: ${{ steps.new_version.outputs.version }}
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$LATEST_TAG" ]; then
+            RANGE="${LATEST_TAG}..HEAD"
+          else
+            RANGE="HEAD"
+          fi
+
+          # Collect feat/fix commits, strip emoji prefix, type prefix, scope, and PR number
+          NOTES=$(git log "$RANGE" --pretty=format:"%s" \
+            | grep -iE "^(✨ |🐛 )?(feat|fix)(\(.+\))?:" \
+            | sed -E 's/^[^ ]+ //' \
+            | sed -E 's/^(feat|fix)(\([^)]*\))?:\s*//' \
+            | sed -E 's/\s*\(#[0-9]+\)\s*$//' \
+            | sed -E 's/^\s+//;s/\s+$//' \
+            | grep -v '^$' || true)
+
+          if [ -z "$NOTES" ]; then
+            echo "ℹ️ No feat/fix commits found — skipping changelog update"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            TODAY=$(date +%Y-%m-%d)
+            # Build JSON array of notes
+            NOTES_JSON=$(echo "$NOTES" | jq -R -s 'split("\n") | map(select(length > 0)) | map((.[0:1] | ascii_upcase) + .[1:])')
+
+            # Build new entry
+            NEW_ENTRY=$(jq -n \
+              --arg version "$NEW_VERSION" \
+              --arg date "$TODAY" \
+              --argjson notes "$NOTES_JSON" \
+              '{version: $version, date: $date, notes: {en: $notes}}')
+
+            # Prepend to existing changelog
+            EXISTING=$(cat client/public/changelog.json)
+            echo "$EXISTING" | jq --argjson entry "$NEW_ENTRY" '[$entry] + .' > client/public/changelog.json
+
+            echo "✅ Added changelog entry for v$NEW_VERSION:"
+            echo "$NOTES"
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+        id: changelog
+
       - name: Commit version bump
         env:
           NEW_VERSION: ${{ steps.new_version.outputs.version }}
           PR_NUMBER: ${{ steps.pr_number.outputs.pr_number }}
         run: |
-          git add package.json client/package.json desktop/package.json .pr-number
+          git add package.json client/package.json desktop/package.json .pr-number client/public/changelog.json
           git commit -m "🔖 chore: auto bump version to $NEW_VERSION (#$PR_NUMBER) [skip ci]"
 
           # Create or update git tag (force-replace if it already exists)
