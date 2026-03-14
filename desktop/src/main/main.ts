@@ -351,11 +351,12 @@ function setupAutoUpdater() {
 
 // ─── App Lifecycle ───────────────────────────────────────
 
-// Linux: set WM_CLASS to match the .desktop file's StartupWMClass
+// Linux: set WM_CLASS to match the .desktop file's StartupWMClass=Boxcord
 // Without this, GNOME/KDE can't match the window to the .desktop entry
 // and falls back to a generic cogwheel icon in the taskbar/dock.
 if (process.platform === 'linux') {
-  app.commandLine.appendSwitch('class', 'boxcord');
+  app.commandLine.appendSwitch('class', 'Boxcord');
+  app.setName('Boxcord');
 }
 
 // Single instance lock — only one Boxcord window allowed

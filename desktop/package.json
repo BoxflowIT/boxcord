@@ -38,7 +38,8 @@
       "build/**/*"
     ],
     "asarUnpack": [
-      "build/*.png"
+      "build/*.png",
+      "build/icons/*.png"
     ],
     "publish": {
       "provider": "generic",
@@ -67,7 +68,7 @@
         "deb"
       ],
       "executableName": "boxcord",
-      "icon": "build/icon-1024.png",
+      "icon": "build/icons",
       "category": "Network;InstantMessaging;"
     },
     "nsis": {
