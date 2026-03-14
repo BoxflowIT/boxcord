@@ -78,6 +78,8 @@
     "vitest": "^4.0.18"
   },
   "resolutions": {
-    "minimatch": "^10.2.3"
+    "minimatch": "^10.2.3",
+    "flatted": ">=3.4.0",
+    "undici": ">=7.24.0"
   }
 }
