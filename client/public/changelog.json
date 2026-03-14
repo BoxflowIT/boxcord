@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.21.2",
+    "date": "2026-03-14",
+    "notes": {
+      "en": [
+        "Remove stale package-lock.json files, dismiss all Dependabot alerts"
+      ]
+    }
+  },
+  {
     "version": "1.21.1",
     "date": "2026-03-14",
     "notes": {
