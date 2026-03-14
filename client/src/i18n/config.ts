@@ -29,13 +29,8 @@ i18n
 // Save language to localStorage when it changes
 i18n.on('languageChanged', (lng) => {
   localStorage.setItem('language', lng);
-  // Dispatch event for cross-tab sync
-  window.dispatchEvent(
-    new StorageEvent('storage', {
-      key: 'language',
-      newValue: lng
-    })
-  );
+  // Notify same-tab listeners (cross-tab sync happens via native storage events)
+  window.dispatchEvent(new Event('settingsChanged'));
 });
 
 export default i18n;
