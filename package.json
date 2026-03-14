@@ -99,7 +99,9 @@
     "minimatch": "^10.2.3"
   },
   "resolutions": {
-    "minimatch": "^10.2.3"
+    "minimatch": "^10.2.3",
+    "flatted": ">=3.4.0",
+    "undici": ">=7.24.0"
   },
   "engines": {
     "node": ">=20.0.0"
