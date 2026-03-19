@@ -189,7 +189,7 @@ body {
 
   /* Sidebar/Panel Backgrounds */
   .sidebar-main {
-    @apply w-72 bg-boxflow-darker flex flex-col shadow-2xl;
+    @apply w-72 h-full bg-boxflow-darker flex flex-col shadow-2xl;
   }
 
   .sidebar-icon {
