@@ -298,7 +298,7 @@ export default function Chat() {
 
         {/* Member List — hidden on mobile/tablet */}
         {showMemberList && (
-          <div className="hidden lg:block">
+          <div className="hidden lg:flex lg:flex-col">
             <MemberList />
           </div>
         )}
