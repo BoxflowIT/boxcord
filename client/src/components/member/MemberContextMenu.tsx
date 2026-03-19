@@ -13,6 +13,7 @@ import MenuItem from '../menu/MenuItem';
 interface MemberContextMenuProps {
   userId: string;
   displayName: string;
+  currentRole?: string;
   isCurrentUser?: boolean;
   canModerate?: boolean;
   onViewProfile?: () => void;
@@ -25,6 +26,7 @@ interface MemberContextMenuProps {
 
 export default function MemberContextMenu({
   isCurrentUser = false,
+  currentRole,
   canModerate = false,
   onViewProfile,
   onSendMessage,
@@ -72,7 +74,11 @@ export default function MemberContextMenu({
           {/* Change Role */}
           <MenuItem
             icon={<Shield size={16} />}
-            label={t('moderation.changeRole')}
+            label={
+              currentRole === 'ADMIN'
+                ? t('moderation.demoteToMember')
+                : t('moderation.promoteToAdmin')
+            }
             onClick={onChangeRole}
           />
 

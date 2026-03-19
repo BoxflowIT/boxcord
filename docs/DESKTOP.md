@@ -142,9 +142,15 @@ The production URL is injected via `BOXCORD_URL` env var (defaults to `http://lo
 
 ### Icons
 
-All platforms use `build/icon-1024.png` (1024×1024) as the source. `electron-builder` converts it to the required format per platform. The tray icon uses `build/icon-256.png`.
+Windows and macOS use `build/icon-1024.png` (1024×1024) as the source. `electron-builder` converts it to the required format per platform. The tray icon uses `build/icon-256.png`.
+
+Linux uses `build/icons/` — a directory with pre-generated PNGs at 16, 32, 48, 64, 128, 256, 512, and 1024px. `electron-builder` installs these into the `hicolor` icon theme (`/usr/share/icons/hicolor/{size}x{size}/apps/boxcord.png`) so GNOME/KDE can display the correct icon at every size.
 
 Icon PNGs are marked as `asarUnpack` in `package.json` so they are extracted outside the asar archive at build time. The `getAssetPath()` helper in `main.ts` and `tray.ts` resolves to the unpacked path in production and the regular path in development. This is required on Linux where BrowserWindow and Tray cannot reliably read icons from inside asar.
+
+### Menu Bar
+
+The native menu bar (File, Edit, View, Window, Help) is **hidden by default** in production via `autoHideMenuBar: true`. Users can press **Alt** to toggle it temporarily. In development mode the menu bar is always visible for easy access to DevTools.
 
 ### macOS code signing (optional)
 
@@ -285,9 +291,12 @@ The preload script exposes these methods via `window.electronAPI`:
 
 The desktop app keeps users logged in across restarts:
 
-1. **Cognito session restore** — On startup, `restoreSession()` in `App.tsx` calls `getCurrentSession()` which uses the Cognito SDK refresh token (stored in localStorage by the SDK) to obtain a fresh ID token. Users stay logged in for up to 30 days without re-entering credentials.
-2. **Auto-refresh on 401** — If a request returns 401, the API service automatically tries to refresh the token via a **locked** `refreshOnce()` (prevents concurrent refresh races) before logging out. This handles mid-session token expiry transparently.
-3. **Cache management** — Logout clears React Query cache and Electron HTTP cache via `clearCache()` IPC to prevent stale data.
+1. **"Stay signed in" checkbox** — On the login page, users choose whether to persist their session:
+   - **Checked (default):** Auth tokens stored in `localStorage` — survives browser/app close. Cognito SDK also uses `localStorage` for refresh tokens.
+   - **Unchecked:** Auth tokens stored in `sessionStorage` — cleared when the browser tab or Electron window closes. Cognito SDK uses `sessionStorage` to match.
+2. **Cognito session restore** — On startup, `restoreSession()` in `App.tsx` calls `getCurrentSession()` which uses the Cognito SDK refresh token to obtain a fresh ID token. Users stay logged in for up to 30 days without re-entering credentials (when "Stay signed in" is checked).
+3. **Auto-refresh on 401** — If a request returns 401, the API service automatically tries to refresh the token via a **locked** `refreshOnce()` (prevents concurrent refresh races) before logging out. This handles mid-session token expiry transparently.
+4. **Cache management** — Logout clears React Query cache, Cognito tokens from both storages, and Electron HTTP cache via `clearCache()` IPC.
 
 ## Notification Click Navigation
 

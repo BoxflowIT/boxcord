@@ -1,7 +1,6 @@
 // Reusable Message List Component
 import React, { useRef, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { LoadingState } from '../ui/LoadingSpinner';
+import { MessageListSkeleton } from '../ui/Skeleton';
 
 interface MessageListProps {
   loading: boolean;
@@ -16,7 +15,6 @@ export function MessageList({
   emptyState,
   autoScroll = true
 }: MessageListProps) {
-  const { t } = useTranslation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -27,8 +25,8 @@ export function MessageList({
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <LoadingState text={t('common.loadingMessages')} />
+      <div className="flex-1 overflow-y-auto p-4">
+        <MessageListSkeleton count={8} />
       </div>
     );
   }

@@ -458,6 +458,40 @@ List all workspace members with their roles.
 }
 ```
 
+### Update Member Role
+
+#### PATCH /workspaces/:id/members/:userId/role
+
+Change a member's role within a workspace. Requires OWNER or ADMIN role.
+
+**Parameters:**
+- `id` (path, required): Workspace ID
+- `userId` (path, required): Target user ID
+
+**Request Body:**
+```json
+{
+  "role": "ADMIN"  // "ADMIN" or "MEMBER"
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "workspaceId": "uuid",
+    "userId": "uuid",
+    "role": "ADMIN"
+  }
+}
+```
+
+**Errors:**
+- `403`: Not an owner/admin, changing own role, or changing owner's role
+- `404`: Member not found
+
 ---
 
 ## 📢 Channels

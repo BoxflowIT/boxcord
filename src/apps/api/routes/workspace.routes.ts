@@ -13,6 +13,10 @@ const addMemberBody = z.object({
   role: z.enum(['ADMIN', 'MEMBER']).optional()
 });
 
+const updateMemberRoleBody = z.object({
+  role: z.enum(['ADMIN', 'MEMBER'])
+});
+
 const createInviteBody = z.object({
   maxUses: z.number().int().min(1).max(100).optional(),
   expiresInDays: z.number().int().min(1).max(30).optional()
@@ -121,6 +125,27 @@ export async function workspaceRoutes(app: FastifyInstance) {
         request.user.id
       );
       return reply.status(204).send();
+    }
+  );
+
+  // Update member role
+  app.patch<{
+    Params: { id: string; userId: string };
+    Body: z.infer<typeof updateMemberRoleBody>;
+  }>(
+    '/:id/members/:userId/role',
+    {
+      config: { rateLimit: { max: 20, timeWindow: '1 minute' } },
+      preHandler: app.validateBody(updateMemberRoleBody)
+    },
+    async (request) => {
+      const member = await workspaceService.updateMemberRole(
+        request.params.id,
+        request.params.userId,
+        request.body.role,
+        request.user.id
+      );
+      return { success: true, data: member };
     }
   );
 

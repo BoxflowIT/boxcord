@@ -4,11 +4,11 @@
  */
 
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useMicrosoftStatus } from '../../hooks/queries/microsoft';
-import { microsoft365Api } from '../../services/api';
-import { toast } from '../../store/notification';
+import {
+  useMicrosoftStatus,
+  useMicrosoftConnect
+} from '../../hooks/queries/microsoft';
 import { cn } from '../../utils/classNames';
-import { openExternalUrl } from '../../utils/platform';
 import { CloudIcon, CalendarIcon, GlobeIcon } from '../ui/Icons';
 
 // ─── Icons ───────────────────────────────────────────────────────────────────
@@ -38,6 +38,7 @@ export default function IntegrationSection() {
   const navigate = useNavigate();
   const location = useLocation();
   const { data: status, isLoading } = useMicrosoftStatus();
+  const { connect } = useMicrosoftConnect();
 
   // Don't render anything while loading or if feature is disabled
   if (isLoading || !status?.enabled) return null;
@@ -57,14 +58,7 @@ export default function IntegrationSection() {
           </span>
         </div>
         <button
-          onClick={async () => {
-            try {
-              const { url } = await microsoft365Api.getConnectUrl();
-              openExternalUrl(url);
-            } catch {
-              toast.error('Kunde inte starta anslutningen');
-            }
-          }}
+          onClick={() => connect()}
           className="w-full flex items-center gap-2 px-2 py-1.5 mx-1 rounded-lg text-sm text-boxflow-muted hover:text-white hover:bg-boxflow-hover/50 transition-colors cursor-pointer"
         >
           <MicrosoftIcon />

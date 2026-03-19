@@ -48,9 +48,11 @@ export default function Toast({
     <div
       className={cn(
         variantClasses[variant],
-        'border-l-4 rounded-lg shadow-lg px-4 py-3 flex items-center gap-3',
+        'border-l-4 rounded-lg shadow-2xl px-4 py-3 flex items-center gap-3 backdrop-blur-sm',
         'transition-all duration-300',
-        isLeaving ? 'opacity-0 translate-x-full' : 'opacity-100 translate-x-0'
+        isLeaving
+          ? 'opacity-0 translate-x-full scale-95'
+          : 'opacity-100 translate-x-0 scale-100 animate-slide-in-right'
       )}
     >
       <p className="flex-1 text-white font-medium">{message}</p>

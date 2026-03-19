@@ -72,6 +72,11 @@ export { default as Avatar } from './ui/Avatar';
 export { default as Modal } from './ui/Modal';
 export * from './ui/Icons';
 export * from './ui/LoadingSpinner';
+export {
+  MessageListSkeleton,
+  ChannelSkeleton,
+  MemberListSkeleton
+} from './ui/Skeleton';
 
 // UI components (new)
 export { default as Badge } from './ui/Badge';
