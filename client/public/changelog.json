@@ -1,5 +1,21 @@
 [
   {
+    "version": "1.23.0",
+    "date": "2026-03-19",
+    "notes": {
+      "en": [
+        "Resolve client socket.io-parser vulnerability",
+        "Resolve socket.io-parser and fast-xml-parser vulnerabilities",
+        "Member list not filling full height",
+        "Invite-to-server via DM with workspace picker + member role update",
+        "DM call accept not emitting to server and invite-to-server not wired up",
+        "Add mobile/tablet responsive layout with sidebar drawer and mobile header",
+        "Poll Microsoft OAuth status after opening external browser",
+        "Add animations, skeletons, and polish for modern Discord-like feel"
+      ]
+    }
+  },
+  {
     "version": "1.22.0",
     "date": "2026-03-14",
     "notes": {
