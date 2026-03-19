@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.23.1",
+    "date": "2026-03-19",
+    "notes": {
+      "en": [
+        "Add h-full to sidebar-main for member list height"
+      ]
+    }
+  },
+  {
     "version": "1.23.0",
     "date": "2026-03-19",
     "notes": {
