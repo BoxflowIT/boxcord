@@ -15,26 +15,30 @@ import { test, expect, type Page, type BrowserContext } from '@playwright/test';
  */
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const TEST_TOKEN_SECRET = process.env.TEST_TOKEN_SECRET || 'e2e-test-only';
 
 /**
  * Helper: Setup authenticated page
+ * Uses a mock token constructed from env TEST_TOKEN_SECRET (never production credentials).
  */
 async function setupAuthenticatedPage(
   page: Page,
   userId: string = 'test-user-1'
 ): Promise<void> {
-  const mockToken = Buffer.from(
-    JSON.stringify({
-      sub: userId,
-      email: `${userId}@boxflow.com`,
-      exp: Math.floor(Date.now() / 1000) + 3600
-    })
-  ).toString('base64');
+  const payload = JSON.stringify({
+    sub: userId,
+    email: `${userId}@boxflow.com`,
+    exp: Math.floor(Date.now() / 1000) + 3600
+  });
+  const mockToken = Buffer.from(payload).toString('base64');
 
   await page.goto(FRONTEND_URL);
-  await page.evaluate((token) => {
-    localStorage.setItem('auth-token', `Bearer.${token}.sig`);
-  }, mockToken);
+  await page.evaluate(
+    ({ token, secret }) => {
+      localStorage.setItem('auth-token', `${secret}.${token}.test`);
+    },
+    { token: mockToken, secret: TEST_TOKEN_SECRET }
+  );
   await page.reload();
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(1000);
