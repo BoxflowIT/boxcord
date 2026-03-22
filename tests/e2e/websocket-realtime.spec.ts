@@ -18,22 +18,22 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 /**
  * Helper: Setup authenticated page
+ * Uses a mock token for E2E testing only (never production credentials).
  */
 async function setupAuthenticatedPage(
   page: Page,
   userId: string = 'test-user-1'
 ): Promise<void> {
-  const mockToken = Buffer.from(
-    JSON.stringify({
-      sub: userId,
-      email: `${userId}@boxflow.com`,
-      exp: Math.floor(Date.now() / 1000) + 3600
-    })
-  ).toString('base64');
+  const payload = JSON.stringify({
+    sub: userId,
+    email: `${userId}@boxflow.com`,
+    exp: Math.floor(Date.now() / 1000) + 3600
+  });
+  const mockToken = Buffer.from(payload).toString('base64');
 
   await page.goto(FRONTEND_URL);
   await page.evaluate((token) => {
-    localStorage.setItem('auth-token', `Bearer.${token}.sig`);
+    localStorage.setItem('auth-token', `mock.${token}.test`);
   }, mockToken);
   await page.reload();
   await page.waitForLoadState('networkidle');

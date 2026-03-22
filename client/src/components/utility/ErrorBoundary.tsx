@@ -82,7 +82,7 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   getErrorMessage(): { title: string; description: string; action: string } {
-    const { errorType, error } = this.state;
+    const { errorType } = this.state;
 
     switch (errorType) {
       case 'chunk':
@@ -102,9 +102,8 @@ export class ErrorBoundary extends Component<Props, State> {
       case 'runtime':
         return {
           title: 'Something went wrong',
-          description: import.meta.env.DEV
-            ? error?.message || 'An unexpected error occurred'
-            : 'An unexpected error occurred. Our team has been notified.',
+          description:
+            'An unexpected error occurred. Our team has been notified.',
           action: 'Try Again'
         };
       default:

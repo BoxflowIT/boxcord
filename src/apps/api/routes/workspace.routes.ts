@@ -23,7 +23,7 @@ const createInviteBody = z.object({
 });
 
 export async function workspaceRoutes(app: FastifyInstance) {
-  // All routes require authentication
+  // All routes require authentication (global rate limit from @fastify/rate-limit protects this scope)
   app.addHook('onRequest', async (request) => {
     await app.authenticate(request);
   });

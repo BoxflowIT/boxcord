@@ -18,12 +18,19 @@ export const options = {
 };
 
 export function setup() {
-  // Register or login a test user
+  // Register or login a test user (credentials MUST come from env vars)
+  const email = __ENV.TEST_USER_EMAIL;
+  const password = __ENV.TEST_USER_PASSWORD;
+  if (!email || !password) {
+    console.log('TEST_USER_EMAIL / TEST_USER_PASSWORD not set — running unauthenticated');
+    return { token: '' };
+  }
+
   const registerRes = http.post(
     `${API}/auth/register`,
     JSON.stringify({
-      email: __ENV.TEST_USER_EMAIL || 'loadtest@boxcord.test',
-      password: __ENV.TEST_USER_PASSWORD || 'LoadTest123!',
+      email,
+      password,
       username: 'k6-loadtest',
       displayName: 'K6 Load Tester',
     }),
