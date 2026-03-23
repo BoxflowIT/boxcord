@@ -130,8 +130,13 @@ function createMainWindow(): BrowserWindow {
     const appOrigin = new URL(APP_URL).origin;
     if (!url.startsWith(appOrigin)) {
       event.preventDefault();
-      if (url.startsWith('http://') || url.startsWith('https://')) {
-        shell.openExternal(url);
+      try {
+        const parsed = new URL(url);
+        if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+          shell.openExternal(url);
+        }
+      } catch {
+        // Invalid URL — ignore
       }
     }
   });
@@ -292,9 +297,14 @@ function registerIpcHandlers() {
   ipcMain.handle(
     'shell:open-external',
     (_event: IpcMainInvokeEvent, url: string) => {
-      // Only allow http/https URLs for security
-      if (url.startsWith('http://') || url.startsWith('https://')) {
-        return shell.openExternal(url);
+      // Validate via URL constructor — only http/https allowed
+      try {
+        const parsed = new URL(url);
+        if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+          return shell.openExternal(url);
+        }
+      } catch {
+        // Invalid URL — ignore
       }
       return Promise.resolve();
     }
@@ -417,9 +427,14 @@ app.on('window-all-closed', () => {
 // Security: prevent new window creation from renderer
 (app as Electron.App).on('web-contents-created', (_event, contents) => {
   contents.setWindowOpenHandler(({ url }: { url: string }) => {
-    // Only allow http/https URLs for security
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      shell.openExternal(url);
+    // Validate via URL constructor — only http/https allowed
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+        shell.openExternal(url);
+      }
+    } catch {
+      // Invalid URL — ignore
     }
     return { action: 'deny' };
   });

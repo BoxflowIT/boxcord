@@ -7,9 +7,22 @@ import { initReactI18next } from 'react-i18next';
 import en from './locales/en.json';
 import sv from './locales/sv.json';
 
-// Get saved language from localStorage or default to English
+// Supported language codes — used to validate user-supplied values
+const SUPPORTED_LANGUAGES = ['en', 'sv'] as const;
+type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
+
+function isSupported(lang: string | null): lang is SupportedLanguage {
+  return (
+    typeof lang === 'string' &&
+    SUPPORTED_LANGUAGES.includes(lang as SupportedLanguage)
+  );
+}
+
+// Get saved language from localStorage, validated against allowed list
 const savedLanguage = localStorage.getItem('language');
-const defaultLanguage = savedLanguage || 'en';
+const defaultLanguage: SupportedLanguage = isSupported(savedLanguage)
+  ? savedLanguage
+  : 'en';
 
 i18n
   .use(initReactI18next) // Passes i18n down to react-i18next
@@ -26,9 +39,11 @@ i18n
     debug: false // Set to true for debugging
   });
 
-// Save language to localStorage when it changes
+// Save language to localStorage when it changes (validated on read)
 i18n.on('languageChanged', (lng) => {
-  localStorage.setItem('language', lng);
+  if (isSupported(lng)) {
+    localStorage.setItem('language', lng);
+  }
   // Notify same-tab listeners (cross-tab sync happens via native storage events)
   window.dispatchEvent(new Event('settingsChanged'));
 });
