@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.23.2",
+    "date": "2026-03-23",
+    "notes": {
+      "en": [
+        "Security hardening — CodeQL findings + dependency vulns"
+      ]
+    }
+  },
+  {
     "version": "1.23.1",
     "date": "2026-03-19",
     "notes": {

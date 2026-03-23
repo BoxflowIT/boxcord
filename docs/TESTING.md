@@ -43,6 +43,10 @@ yarn test:e2e --grep-invert @auth
 - Frontend running on `http://localhost:5173`
 - Test database with seed data
 
+**Environment Variables (E2E):**
+- `FRONTEND_URL` — Override frontend URL (default: `http://localhost:5173`)
+- `TEST_TOKEN_SECRET` — Prefix for mock auth tokens (default: `e2e-test-only`)
+
 **CI Behavior:**
 - Auth-dependent tests are tagged with `{ tag: '@auth' }` and excluded in CI (`--grep-invert @auth`)
 - CI builds backend + client, then serves static files via `serve`
@@ -78,6 +82,7 @@ Performance tests that simulate concurrent users.
 sudo snap install k6
 
 # Production load test suite (targets staging)
+# Required env vars: TEST_USER_EMAIL, TEST_USER_PASSWORD
 k6 run load-tests/health.js        # Baseline health check
 k6 run load-tests/api-smoke.js     # Smoke test (5 VUs, 1 min)
 k6 run load-tests/api-load.js      # Full load test (ramp to 50 VUs)
