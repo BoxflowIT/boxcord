@@ -4,7 +4,7 @@ export const ICE_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
   // Development-only TURN servers (relay for NAT/firewall traversal)
-  // Production MUST use ephemeral TURN credentials from backend (GET /api/v1/voice/turn-credentials)
+  // Production MUST use ephemeral TURN credentials from backend (see server voice config)
   ...(import.meta.env.DEV
     ? [
         {

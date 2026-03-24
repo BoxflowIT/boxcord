@@ -150,11 +150,10 @@ export function registerVoiceHandlers(context: SocketHandlerContext): void {
         );
         return;
       }
-      // They are the rightful initiator, destroy our peer and accept their offer
+      // They are the rightful initiator, tear down our peer and accept their offer
       logger.log(
         `[WEBRTC] Accepting offer from ${data.fromUserId} (they are initiator)`
       );
-      existingPeer.destroy();
       store.removePeer(data.fromUserId);
     }
 
@@ -181,6 +180,13 @@ export function registerVoiceHandlers(context: SocketHandlerContext): void {
     store.removePeer(data.userId);
     candidateQueue.delete(data.userId);
   });
+}
+
+/**
+ * Reset the ICE candidate queue (call on voice channel leave/cleanup)
+ */
+export function resetCandidateQueue(): void {
+  candidateQueue.clear();
 }
 
 // Helper: Handle WebRTC signal (answer/ice-candidate) with ICE candidate queuing
