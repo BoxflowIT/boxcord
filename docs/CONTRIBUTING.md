@@ -398,7 +398,7 @@ git commit -m "feat: add dark mode"
 
 Automatically runs on `git commit`:
 - Lint-staged (ESLint + formatting)
-- **All tests** (Backend 113 tests + Frontend 77 tests)
+- **All tests** (Backend 113 tests + Frontend 84 tests)
 - Type checking where applicable
 
 **Takes ~10-15 seconds** to ensure code quality before committing.
@@ -444,7 +444,7 @@ All PRs must pass:
 ✅ **Frontend:**
 - TypeScript compilation (`tsc --noEmit`)
 - ESLint (`eslint src/`)
-- Unit tests (`vitest run`) - 77 passing
+- Unit tests (`vitest run`) - 84 passing
 - No console.log statements (use logger)
 
 ✅ **Integration:**
