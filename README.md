@@ -148,7 +148,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Content Security Policy** - Browser-level security
 
 ### 🔗 Microsoft 365 Integration
-- **OAuth 2.0 login** - Secure Microsoft identity with PKCE flow
+- **Multi-tenant OAuth 2.0** - Any organization or personal Microsoft account can connect
 - **OneDrive file browser** - Browse, upload, download, delete, share files with Teams-style UI
 - **Calendar view** - View, create, edit, delete Outlook calendar events
 - **SharePoint file browser** - Browse SharePoint sites and document libraries

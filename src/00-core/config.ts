@@ -110,9 +110,5 @@ export const features = {
   serveStatic: config.SERVE_STATIC,
   s3: !!(config.AWS_S3_BUCKET && config.AWS_ACCESS_KEY_ID),
   email: !!config.SENDGRID_API_KEY,
-  microsoft365: !!(
-    config.MS_CLIENT_ID &&
-    config.MS_CLIENT_SECRET &&
-    config.MS_TENANT_ID
-  )
+  microsoft365: !!(config.MS_CLIENT_ID && config.MS_CLIENT_SECRET)
 };
