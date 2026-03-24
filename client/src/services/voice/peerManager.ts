@@ -78,9 +78,13 @@ export function setupPeerListeners(
       );
 
       setTimeout(() => {
-        // Only retry if still in voice channel
+        // Only retry if still in voice channel and remote user is still present
         const store = useVoiceStore.getState();
-        if (store.isConnected && !store.peers.has(userId)) {
+        if (
+          store.isConnected &&
+          !store.peers.has(userId) &&
+          store.users.has(userId)
+        ) {
           createPeer(userId, localStream, socket);
         }
       }, delay);
