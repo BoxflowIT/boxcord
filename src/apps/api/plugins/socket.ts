@@ -1104,6 +1104,13 @@ export function setupSocketHandlers(
     // Join voice channel room
     socket.on(SOCKET_EVENTS.VOICE_JOIN, async (data: { channelId: string }) => {
       try {
+        // Cancel any pending disconnect grace timer — user is back in voice
+        const pendingTimer = voiceGraceTimers.get(userId);
+        if (pendingTimer) {
+          clearTimeout(pendingTimer);
+          voiceGraceTimers.delete(userId);
+        }
+
         socket.join(`voice:${data.channelId}`);
         app.log.debug(
           `[VOICE] User ${userId} joined voice channel: ${data.channelId}`

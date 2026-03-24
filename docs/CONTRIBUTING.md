@@ -398,7 +398,7 @@ git commit -m "feat: add dark mode"
 
 Automatically runs on `git commit`:
 - Lint-staged (ESLint + formatting)
-- **All tests** (Backend 61 tests + Frontend 61 tests)
+- **All tests** (Backend 113 tests + Frontend 77 tests)
 - Type checking where applicable
 
 **Takes ~10-15 seconds** to ensure code quality before committing.
