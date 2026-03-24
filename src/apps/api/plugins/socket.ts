@@ -118,6 +118,7 @@ export function setupSocketHandlers(
   const pushService = new PushService(prisma);
   const _voiceService = new VoiceService(prisma);
   const onlineUsers = new Map<string, Set<string>>(); // channelId -> Set of userIds
+  const voiceGraceTimers = new Map<string, ReturnType<typeof setTimeout>>();
   const isDev = process.env.NODE_ENV !== 'production';
   const allowMockTokens = isDev || process.env.ALLOW_MOCK_TOKENS === 'true';
 
@@ -1396,26 +1397,109 @@ export function setupSocketHandlers(
     socket.on('disconnect', async () => {
       app.log.debug(`User disconnected: ${userId}`);
 
-      // DON'T cleanup voice sessions on socket disconnect
-      // Users should stay in voice channels even if socket disconnects temporarily
-      // Voice sessions are explicitly closed via /voice/sessions/:sessionId/leave endpoint
-      // await voiceService.cleanupUserSessions(userId).catch(console.error);
+      // Grace period for voice sessions — if user doesn't reconnect within 30s,
+      // clean up their voice sessions (handles browser close, crash, network loss)
+      const VOICE_DISCONNECT_GRACE_MS = 30_000;
 
-      // DON'T set status to OFFLINE on socket disconnect
-      // Socket can disconnect temporarily (page reload, network issues)
-      // Only update lastSeen timestamp
+      // Clear any existing grace timer for this user (e.g. rapid reconnect/disconnect)
+      const existingTimer = voiceGraceTimers.get(userId);
+      if (existingTimer) clearTimeout(existingTimer);
+
+      const graceTimer = setTimeout(async () => {
+        try {
+          voiceGraceTimers.delete(userId);
+
+          // Fetch active voice sessions for this user
+          const activeSessions = await prisma.voiceSession
+            .findMany({
+              where: { userId, leftAt: null },
+              select: { id: true, channelId: true }
+            })
+            .catch((err) => {
+              app.log.error(
+                { err },
+                'Failed to fetch active voice sessions on disconnect'
+              );
+              return [];
+            });
+
+          if (!activeSessions || activeSessions.length === 0) return;
+
+          // Check if user reconnected to any of their voice rooms (not just any socket)
+          let inAnyVoiceRoom = false;
+          for (const session of activeSessions) {
+            const room = `voice:${session.channelId}`;
+            const roomSockets = await io.in(room).fetchSockets();
+            if (
+              roomSockets.some(
+                (s) => (s as unknown as AuthenticatedSocket).userId === userId
+              )
+            ) {
+              inAnyVoiceRoom = true;
+              break;
+            }
+          }
+
+          if (inAnyVoiceRoom) return;
+
+          app.log.info(
+            `[VOICE] User ${userId} did not reconnect within grace period, cleaning up voice sessions`
+          );
+
+          // Use transaction to atomically mark sessions as left
+          const closedSessions = await prisma
+            .$transaction(async (tx) => {
+              const sessions = await tx.voiceSession.findMany({
+                where: { userId, leftAt: null },
+                select: { id: true, channelId: true }
+              });
+
+              if (sessions.length > 0) {
+                await tx.voiceSession.updateMany({
+                  where: { id: { in: sessions.map((s) => s.id) } },
+                  data: { leftAt: new Date() }
+                });
+              }
+
+              return sessions;
+            })
+            .catch((err) => {
+              app.log.error(
+                { err },
+                'Failed to cleanup voice sessions on disconnect'
+              );
+              return [];
+            });
+
+          // Notify remaining users in voice channels
+          for (const session of closedSessions) {
+            io.to(`voice:${session.channelId}`).emit('voice:user-left', {
+              userId
+            });
+            io.to(`voice:${session.channelId}`).emit(
+              'webrtc:peer-disconnected',
+              { userId }
+            );
+          }
+        } catch (err) {
+          app.log.error(
+            { err },
+            '[VOICE] Error during disconnect grace-period cleanup'
+          );
+        }
+      }, VOICE_DISCONNECT_GRACE_MS);
+      voiceGraceTimers.set(userId, graceTimer);
+
+      // Update lastSeen timestamp (keep current status for reconnection grace period)
       await prisma.userPresence
         .upsert({
           where: { userId },
           create: { userId, status: 'ONLINE', lastSeen: new Date() },
-          update: { lastSeen: new Date() } // Keep current status, just update lastSeen
+          update: { lastSeen: new Date() }
         })
         .catch((err) =>
           app.log.error({ err }, 'Failed to update user lastSeen')
         );
-
-      // DON'T broadcast offline status on temporary disconnects
-      // Status should be managed by explicit user actions or timeout-based cleanup
 
       // Remove from channel tracking
       onlineUsers.forEach((users, _channelId) => {

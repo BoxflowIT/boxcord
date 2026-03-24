@@ -2,6 +2,7 @@
 import { useVoiceStore } from '../../../store/voiceStore';
 import { voiceService } from '../../voice.service';
 import { logger } from '../../../utils/logger';
+import { PEER_RECONNECT } from '../../voice/constants';
 import type SimplePeer from 'simple-peer';
 import type {
   SocketHandlerContext,
@@ -14,6 +15,34 @@ import type {
   WebRTCCandidatePayload,
   PeerDisconnectedPayload
 } from '../types';
+
+// Queue for ICE candidates that arrive before peer is created
+const candidateQueue = new Map<
+  string,
+  { data: SimplePeer.SignalData; timestamp: number }[]
+>();
+
+function flushCandidateQueue(userId: string): void {
+  const queued = candidateQueue.get(userId);
+  if (!queued || queued.length === 0) return;
+
+  const store = useVoiceStore.getState();
+  const peer = store.peers.get(userId);
+  if (!peer) return;
+
+  const now = Date.now();
+  let applied = 0;
+  for (const entry of queued) {
+    if (now - entry.timestamp < PEER_RECONNECT.ICE_QUEUE_TIMEOUT_MS) {
+      peer.signal(entry.data);
+      applied++;
+    }
+  }
+  candidateQueue.delete(userId);
+  if (applied > 0) {
+    logger.log(`[WEBRTC] Flushed ${applied} queued candidates for ${userId}`);
+  }
+}
 
 export function registerVoiceHandlers(context: SocketHandlerContext): void {
   const { socket, queryClient } = context;
@@ -35,8 +64,18 @@ export function registerVoiceHandlers(context: SocketHandlerContext): void {
       isSpeaking: false
     });
 
-    // Initiate peer connection (we are the initiator)
-    voiceService.createPeer(data.userId);
+    // Deterministic initiator: lower userId always initiates to prevent dual-offer race
+    const currentUserId = context.getCurrentUserId();
+    if (!currentUserId) {
+      logger.warn('[WEBRTC] No current user ID, cannot determine initiator');
+      return;
+    }
+    const shouldInitiate = currentUserId < data.userId;
+
+    if (shouldInitiate) {
+      voiceService.createPeer(data.userId);
+    }
+    // If we're not the initiator, we wait for the offer from the other peer
   });
 
   // When another user leaves the voice channel
@@ -46,6 +85,7 @@ export function registerVoiceHandlers(context: SocketHandlerContext): void {
 
     store.removeUser(data.userId);
     store.removePeer(data.userId);
+    candidateQueue.delete(data.userId);
 
     // Remove audio element
     const audioElement = document.getElementById(`voice-audio-${data.userId}`);
@@ -92,8 +132,35 @@ export function registerVoiceHandlers(context: SocketHandlerContext): void {
   socket.on('webrtc:offer', (data: WebRTCOfferPayload) => {
     logger.log('Received WebRTC offer from:', data.fromUserId);
 
+    // Deterministic conflict resolution: if we also sent an offer, lower userId wins
+    const store = useVoiceStore.getState();
+    const currentUserId = context.getCurrentUserId();
+    if (!currentUserId) {
+      logger.warn('[WEBRTC] No current user ID, cannot resolve offer conflict');
+      return;
+    }
+    const existingPeer = store.peers.get(data.fromUserId);
+
+    if (existingPeer) {
+      // We already have a peer for this user (we also initiated)
+      if (currentUserId < data.fromUserId) {
+        // We are the rightful initiator, ignore their offer
+        logger.log(
+          `[WEBRTC] Ignoring duplicate offer from ${data.fromUserId} (we are initiator)`
+        );
+        return;
+      }
+      // They are the rightful initiator, destroy our peer and accept their offer
+      logger.log(
+        `[WEBRTC] Accepting offer from ${data.fromUserId} (they are initiator)`
+      );
+      existingPeer.destroy();
+      store.removePeer(data.fromUserId);
+    }
+
     // Add peer (we are not the initiator)
     voiceService.addPeer(data.fromUserId, data.offer);
+    flushCandidateQueue(data.fromUserId);
   });
 
   // Receive WebRTC answer from peer
@@ -112,10 +179,11 @@ export function registerVoiceHandlers(context: SocketHandlerContext): void {
 
     const store = useVoiceStore.getState();
     store.removePeer(data.userId);
+    candidateQueue.delete(data.userId);
   });
 }
 
-// Helper: Handle WebRTC signal (answer/ice-candidate)
+// Helper: Handle WebRTC signal (answer/ice-candidate) with ICE candidate queuing
 function handleWebRTCSignal(
   fromUserId: string,
   signalData: SimplePeer.SignalData,
@@ -128,6 +196,31 @@ function handleWebRTCSignal(
 
   if (peer) {
     peer.signal(signalData);
+    // Also flush any queued candidates now that peer exists
+    if (signalType === 'answer') {
+      flushCandidateQueue(fromUserId);
+    }
+  } else if (signalType === 'candidate') {
+    // Queue ICE candidates if peer doesn't exist yet (capped + pruned)
+    const MAX_QUEUED_PER_USER = 50;
+    let queue = candidateQueue.get(fromUserId) ?? [];
+
+    // Prune expired entries on enqueue
+    const now = Date.now();
+    queue = queue.filter(
+      (e) => now - e.timestamp < PEER_RECONNECT.ICE_QUEUE_TIMEOUT_MS
+    );
+
+    // Drop oldest if at cap
+    if (queue.length >= MAX_QUEUED_PER_USER) {
+      queue.shift();
+    }
+
+    queue.push({ data: signalData, timestamp: now });
+    candidateQueue.set(fromUserId, queue);
+    logger.log(
+      `[WEBRTC] Queued ICE candidate for ${fromUserId} (peer not ready, queue size: ${queue.length})`
+    );
   } else {
     logger.warn(
       `[WEBRTC] No peer found for ${fromUserId} when receiving ${signalType}`

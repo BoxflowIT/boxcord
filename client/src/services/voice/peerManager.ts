@@ -3,9 +3,14 @@ import SimplePeer from 'simple-peer';
 import type { Socket } from 'socket.io-client';
 import { useVoiceStore } from '../../store/voiceStore';
 import { SOCKET_EVENTS } from '../../../../src/00-core/constants';
-import { ICE_SERVERS } from './constants';
+import { ICE_SERVERS, PEER_RECONNECT } from './constants';
 import { playRemoteStream } from './audioManager';
 import { logger } from '../../utils/logger';
+
+// Track retry counts per peer for exponential backoff
+const retryCountMap = new Map<string, number>();
+// Track which peers we initiated (only initiators should retry)
+const initiatorMap = new Map<string, boolean>();
 
 /**
  * Create a new peer connection
@@ -28,7 +33,8 @@ export function createPeerConnection(
 export function setupPeerListeners(
   peer: SimplePeer.Instance,
   userId: string,
-  socket: Socket | null
+  socket: Socket | null,
+  localStream: MediaStream | null
 ): void {
   peer.on('signal', (signal) => {
     const event = (peer as SimplePeer.Instance & { initiator: boolean })
@@ -44,11 +50,44 @@ export function setupPeerListeners(
 
   peer.on('stream', (remoteStream) => {
     playRemoteStream(remoteStream, userId);
+    // Connection succeeded — reset retry count
+    retryCountMap.delete(userId);
   });
 
   peer.on('error', (error) => {
     logger.error(`Peer error [${userId}]:`, error);
+    const wasInitiator = initiatorMap.get(userId) ?? false;
+    const retries = retryCountMap.get(userId) ?? 0;
+
     useVoiceStore.getState().removePeer(userId);
+
+    // Only the designated initiator retries; non-initiators wait for a fresh offer
+    if (!wasInitiator) {
+      logger.warn(
+        `Peer error for non-initiator connection to ${userId}, waiting for fresh offer`
+      );
+      retryCountMap.delete(userId);
+      return;
+    }
+
+    if (retries < PEER_RECONNECT.MAX_RETRIES) {
+      const delay = PEER_RECONNECT.BASE_DELAY_MS * Math.pow(2, retries);
+      retryCountMap.set(userId, retries + 1);
+      logger.warn(
+        `Retrying peer connection to ${userId} in ${delay}ms (attempt ${retries + 1}/${PEER_RECONNECT.MAX_RETRIES})`
+      );
+
+      setTimeout(() => {
+        // Only retry if still in voice channel
+        const store = useVoiceStore.getState();
+        if (store.isConnected && !store.peers.has(userId)) {
+          createPeer(userId, localStream, socket);
+        }
+      }, delay);
+    } else {
+      logger.error(`Max retries reached for peer ${userId}, giving up`);
+      retryCountMap.delete(userId);
+    }
   });
 
   peer.on('close', () => {
@@ -67,7 +106,8 @@ export function createPeer(
   const store = useVoiceStore.getState();
   const peer = createPeerConnection(true, localStream);
 
-  setupPeerListeners(peer, targetUserId, socket);
+  initiatorMap.set(targetUserId, true);
+  setupPeerListeners(peer, targetUserId, socket, localStream);
   store.addPeer(targetUserId, peer);
 
   return peer;
@@ -85,9 +125,18 @@ export function addPeer(
   const store = useVoiceStore.getState();
   const peer = createPeerConnection(false, localStream);
 
-  setupPeerListeners(peer, targetUserId, socket);
+  initiatorMap.set(targetUserId, false);
+  setupPeerListeners(peer, targetUserId, socket, localStream);
   store.addPeer(targetUserId, peer);
   peer.signal(offer);
 
   return peer;
+}
+
+/**
+ * Reset retry tracking (call on voice channel leave)
+ */
+export function resetRetryState(): void {
+  retryCountMap.clear();
+  initiatorMap.clear();
 }
