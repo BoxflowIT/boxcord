@@ -280,10 +280,16 @@ This is required for:
 
 ### PR Review Process
 
+- **Copilot Code Review** runs automatically on all PRs (inline comments, security, best practices)
 - **Self-review** your changes first
 - **Request reviews** from team members
-- **Address feedback** promptly
+- **Address feedback** from both Copilot and human reviewers promptly
 - **Keep PR updated** with develop if needed
+
+> 🤖 **Copilot Code Review** is enabled org-wide for all BoxflowIT repositories.
+> It reviews every PR automatically and provides inline suggestions for bugs,
+> security issues, performance, and code quality. You can also request a manual
+> Copilot review from the Reviewers panel on any PR.
 
 ### Merging Strategy
 
@@ -432,13 +438,13 @@ All PRs must pass:
 ✅ **Backend:**
 - TypeScript compilation (`tsc --noEmit`)
 - ESLint (`eslint src/`)
-- Unit tests (`vitest run`) - 61/61 passing
+- Unit tests (`vitest run`) - 113 passing
 - No console.log statements (use logger)
 
 ✅ **Frontend:**
 - TypeScript compilation (`tsc --noEmit`)
 - ESLint (`eslint src/`)
-- Unit tests (`vitest run`) - 61/61 passing
+- Unit tests (`vitest run`) - 76 passing
 - No console.log statements (use logger)
 
 ✅ **Integration:**
