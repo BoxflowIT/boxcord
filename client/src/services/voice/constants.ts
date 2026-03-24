@@ -3,7 +3,9 @@
 export const ICE_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
-  // Metered.ca free TURN servers (relay for NAT/firewall traversal)
+  // Metered.ca free TURN servers for development (relay for NAT/firewall traversal)
+  // TODO(production): Replace with ephemeral TURN credentials fetched from backend
+  // endpoint (e.g. GET /api/v1/voice/turn-credentials) to avoid exposing secrets in client code
   {
     urls: 'turn:a.relay.metered.ca:80',
     username: 'open',

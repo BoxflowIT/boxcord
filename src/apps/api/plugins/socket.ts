@@ -118,6 +118,7 @@ export function setupSocketHandlers(
   const pushService = new PushService(prisma);
   const _voiceService = new VoiceService(prisma);
   const onlineUsers = new Map<string, Set<string>>(); // channelId -> Set of userIds
+  const voiceGraceTimers = new Map<string, ReturnType<typeof setTimeout>>();
   const isDev = process.env.NODE_ENV !== 'production';
   const allowMockTokens = isDev || process.env.ALLOW_MOCK_TOKENS === 'true';
 
@@ -1399,7 +1400,14 @@ export function setupSocketHandlers(
       // Grace period for voice sessions — if user doesn't reconnect within 30s,
       // clean up their voice sessions (handles browser close, crash, network loss)
       const VOICE_DISCONNECT_GRACE_MS = 30_000;
-      setTimeout(async () => {
+
+      // Clear any existing grace timer for this user (e.g. rapid reconnect/disconnect)
+      const existingTimer = voiceGraceTimers.get(userId);
+      if (existingTimer) clearTimeout(existingTimer);
+
+      const graceTimer = setTimeout(async () => {
+        voiceGraceTimers.delete(userId);
+
         // Check if user reconnected by looking for their socket in any voice room
         const allSockets = await io.fetchSockets();
         const reconnected = allSockets.some(
@@ -1410,27 +1418,34 @@ export function setupSocketHandlers(
           app.log.info(
             `[VOICE] User ${userId} did not reconnect within grace period, cleaning up voice sessions`
           );
-          await prisma.voiceSession
-            .updateMany({
-              where: { userId, leftAt: null },
-              data: { leftAt: new Date() }
+
+          // Use transaction to atomically find active sessions and mark them as left
+          const closedSessions = await prisma
+            .$transaction(async (tx) => {
+              const sessions = await tx.voiceSession.findMany({
+                where: { userId, leftAt: null },
+                select: { id: true, channelId: true }
+              });
+
+              if (sessions.length > 0) {
+                await tx.voiceSession.updateMany({
+                  where: { id: { in: sessions.map((s) => s.id) } },
+                  data: { leftAt: new Date() }
+                });
+              }
+
+              return sessions;
             })
-            .catch((err) =>
+            .catch((err) => {
               app.log.error(
                 { err },
                 'Failed to cleanup voice sessions on disconnect'
-              )
-            );
+              );
+              return [];
+            });
 
           // Notify remaining users in voice channels
-          const activeSessions = await prisma.voiceSession
-            .findMany({
-              where: { userId, leftAt: { gte: new Date(Date.now() - 5000) } },
-              select: { channelId: true }
-            })
-            .catch(() => []);
-
-          for (const session of activeSessions) {
+          for (const session of closedSessions) {
             io.to(`voice:${session.channelId}`).emit('voice:user-left', {
               userId
             });
@@ -1441,6 +1456,7 @@ export function setupSocketHandlers(
           }
         }
       }, VOICE_DISCONNECT_GRACE_MS);
+      voiceGraceTimers.set(userId, graceTimer);
 
       // Update lastSeen timestamp (keep current status for reconnection grace period)
       await prisma.userPresence
