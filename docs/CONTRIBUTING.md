@@ -444,7 +444,7 @@ All PRs must pass:
 ✅ **Frontend:**
 - TypeScript compilation (`tsc --noEmit`)
 - ESLint (`eslint src/`)
-- Unit tests (`vitest run`) - 76 passing
+- Unit tests (`vitest run`) - 77 passing
 - No console.log statements (use logger)
 
 ✅ **Integration:**

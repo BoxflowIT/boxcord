@@ -25,7 +25,7 @@ import {
 } from './audioSetup';
 import { startVoiceActivityDetection, stopVoiceActivityDetection } from './vad';
 import { createPeer, addPeer, resetRetryState } from './peerManager';
-import { resetCandidateQueue } from '../socket/handlers/voiceHandlers';
+import { resetCandidateQueue } from './iceCandidateQueue';
 import { muteAllPeers, cleanupPeerAudio } from './audioManager';
 import {
   toggleVideo,
