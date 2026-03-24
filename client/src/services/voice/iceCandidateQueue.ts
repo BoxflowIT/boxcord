@@ -1,4 +1,6 @@
-// ICE Candidate Queue — dependency-free module shared by voiceHandlers and VoiceService
+// ICE Candidate Queue — shared module that breaks the circular dependency
+// between voiceHandlers (socket layer) and VoiceService (voice layer).
+// Imports only store, logger, and voice constants — never voice.service or voiceHandlers.
 import type SimplePeer from 'simple-peer';
 import { useVoiceStore } from '../../store/voiceStore';
 import { logger } from '../../utils/logger';

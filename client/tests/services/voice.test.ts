@@ -222,6 +222,214 @@ describe('ICE candidate queue', () => {
 });
 
 // ============================================================================
+// 4b. ICE candidate queue module — exported functions
+// ============================================================================
+
+describe('iceCandidateQueue module', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ now: 1000000 });
+    const { result } = renderHook(() => useVoiceStore());
+    act(() => result.current.reset());
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('queueCandidate adds entries and resetCandidateQueue clears all', async () => {
+    const { queueCandidate, resetCandidateQueue, flushCandidateQueue } =
+      await import('../../src/services/voice/iceCandidateQueue');
+
+    resetCandidateQueue();
+
+    queueCandidate('user-a', {
+      type: 'candidate',
+      candidate: 'c1'
+    } as unknown as import('simple-peer').SignalData);
+    queueCandidate('user-b', {
+      type: 'candidate',
+      candidate: 'c2'
+    } as unknown as import('simple-peer').SignalData);
+
+    // After reset, flushing should be a no-op (queue was cleared)
+    resetCandidateQueue();
+
+    const { result } = renderHook(() => useVoiceStore());
+    const mockPeer =
+      createMockPeer() as unknown as import('simple-peer').Instance;
+    act(() => result.current.addPeer('user-a', mockPeer));
+
+    flushCandidateQueue('user-a');
+    // Peer.signal should not have been called since queue was reset
+    expect(mockPeer.signal).not.toHaveBeenCalled();
+  });
+
+  it('deleteCandidateQueue removes entries for a specific user', async () => {
+    const {
+      queueCandidate,
+      deleteCandidateQueue,
+      flushCandidateQueue,
+      resetCandidateQueue
+    } = await import('../../src/services/voice/iceCandidateQueue');
+
+    resetCandidateQueue();
+
+    queueCandidate('user-a', {
+      type: 'candidate',
+      candidate: 'c1'
+    } as unknown as import('simple-peer').SignalData);
+    deleteCandidateQueue('user-a');
+
+    const { result } = renderHook(() => useVoiceStore());
+    const mockPeer =
+      createMockPeer() as unknown as import('simple-peer').Instance;
+    act(() => result.current.addPeer('user-a', mockPeer));
+
+    flushCandidateQueue('user-a');
+    expect(mockPeer.signal).not.toHaveBeenCalled();
+  });
+
+  it('flushCandidateQueue applies queued candidates to the peer', async () => {
+    const { queueCandidate, flushCandidateQueue, resetCandidateQueue } =
+      await import('../../src/services/voice/iceCandidateQueue');
+
+    resetCandidateQueue();
+
+    const candidate1 = {
+      type: 'candidate',
+      candidate: 'c1'
+    } as unknown as import('simple-peer').SignalData;
+    const candidate2 = {
+      type: 'candidate',
+      candidate: 'c2'
+    } as unknown as import('simple-peer').SignalData;
+    queueCandidate('user-a', candidate1);
+    queueCandidate('user-a', candidate2);
+
+    const { result } = renderHook(() => useVoiceStore());
+    const mockPeer =
+      createMockPeer() as unknown as import('simple-peer').Instance;
+    act(() => result.current.addPeer('user-a', mockPeer));
+
+    flushCandidateQueue('user-a');
+    expect(mockPeer.signal).toHaveBeenCalledTimes(2);
+    expect(mockPeer.signal).toHaveBeenCalledWith(candidate1);
+    expect(mockPeer.signal).toHaveBeenCalledWith(candidate2);
+  });
+
+  it('flushCandidateQueue skips expired entries', async () => {
+    const { queueCandidate, flushCandidateQueue, resetCandidateQueue } =
+      await import('../../src/services/voice/iceCandidateQueue');
+
+    resetCandidateQueue();
+
+    const expiredCandidate = {
+      type: 'candidate',
+      candidate: 'old'
+    } as unknown as import('simple-peer').SignalData;
+    queueCandidate('user-a', expiredCandidate);
+
+    // Advance past the 5s timeout
+    vi.advanceTimersByTime(6000);
+
+    const freshCandidate = {
+      type: 'candidate',
+      candidate: 'new'
+    } as unknown as import('simple-peer').SignalData;
+    queueCandidate('user-a', freshCandidate);
+
+    const { result } = renderHook(() => useVoiceStore());
+    const mockPeer =
+      createMockPeer() as unknown as import('simple-peer').Instance;
+    act(() => result.current.addPeer('user-a', mockPeer));
+
+    flushCandidateQueue('user-a');
+    // Only the fresh candidate should have been applied
+    expect(mockPeer.signal).toHaveBeenCalledTimes(1);
+    expect(mockPeer.signal).toHaveBeenCalledWith(freshCandidate);
+  });
+
+  it('queueCandidate caps entries at 50 per user', async () => {
+    const { queueCandidate, flushCandidateQueue, resetCandidateQueue } =
+      await import('../../src/services/voice/iceCandidateQueue');
+
+    resetCandidateQueue();
+
+    // Queue 51 candidates
+    for (let i = 0; i < 51; i++) {
+      queueCandidate('user-a', {
+        type: 'candidate',
+        candidate: `c${i}`
+      } as unknown as import('simple-peer').SignalData);
+    }
+
+    const { result } = renderHook(() => useVoiceStore());
+    const mockPeer =
+      createMockPeer() as unknown as import('simple-peer').Instance;
+    act(() => result.current.addPeer('user-a', mockPeer));
+
+    flushCandidateQueue('user-a');
+    // Should be capped at 50 (oldest dropped)
+    expect(mockPeer.signal).toHaveBeenCalledTimes(50);
+    // First call should be c1 (c0 was dropped as oldest)
+    expect(mockPeer.signal).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ candidate: 'c1' })
+    );
+  });
+
+  it('flushCandidateQueue is a no-op when no peer exists', async () => {
+    const { queueCandidate, flushCandidateQueue, resetCandidateQueue } =
+      await import('../../src/services/voice/iceCandidateQueue');
+
+    resetCandidateQueue();
+
+    queueCandidate('user-a', {
+      type: 'candidate',
+      candidate: 'c1'
+    } as unknown as import('simple-peer').SignalData);
+
+    // Flush without adding peer to store — should not throw
+    expect(() => flushCandidateQueue('user-a')).not.toThrow();
+  });
+
+  it('queueCandidate prunes expired entries on enqueue', async () => {
+    const { queueCandidate, flushCandidateQueue, resetCandidateQueue } =
+      await import('../../src/services/voice/iceCandidateQueue');
+
+    resetCandidateQueue();
+
+    // Add an entry that will expire
+    queueCandidate('user-a', {
+      type: 'candidate',
+      candidate: 'old'
+    } as unknown as import('simple-peer').SignalData);
+
+    // Advance past timeout
+    vi.advanceTimersByTime(6000);
+
+    // Add a fresh entry — this should prune the expired one
+    queueCandidate('user-a', {
+      type: 'candidate',
+      candidate: 'fresh'
+    } as unknown as import('simple-peer').SignalData);
+
+    const { result } = renderHook(() => useVoiceStore());
+    const mockPeer =
+      createMockPeer() as unknown as import('simple-peer').Instance;
+    act(() => result.current.addPeer('user-a', mockPeer));
+
+    flushCandidateQueue('user-a');
+    // Only the fresh one should remain
+    expect(mockPeer.signal).toHaveBeenCalledTimes(1);
+    expect(mockPeer.signal).toHaveBeenCalledWith(
+      expect.objectContaining({ candidate: 'fresh' })
+    );
+  });
+});
+
+// ============================================================================
 // 5. PEER_RECONNECT constants
 // ============================================================================
 
