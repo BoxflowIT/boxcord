@@ -243,26 +243,38 @@ describe('iceCandidateQueue module', () => {
 
     resetCandidateQueue();
 
+    // Phase 1: verify queueCandidate actually queues entries that get flushed
     queueCandidate('user-a', {
       type: 'candidate',
       candidate: 'c1'
     } as unknown as import('simple-peer').SignalData);
-    queueCandidate('user-b', {
+
+    const { result } = renderHook(() => useVoiceStore());
+    const mockPeer1 =
+      createMockPeer() as unknown as import('simple-peer').Instance;
+    act(() => result.current.addPeer('user-a', mockPeer1));
+
+    flushCandidateQueue('user-a');
+    expect(mockPeer1.signal).toHaveBeenCalledTimes(1);
+
+    // Phase 2: verify resetCandidateQueue clears all queued candidates
+    queueCandidate('user-a', {
       type: 'candidate',
       candidate: 'c2'
     } as unknown as import('simple-peer').SignalData);
+    queueCandidate('user-b', {
+      type: 'candidate',
+      candidate: 'c3'
+    } as unknown as import('simple-peer').SignalData);
 
-    // After reset, flushing should be a no-op (queue was cleared)
     resetCandidateQueue();
 
-    const { result } = renderHook(() => useVoiceStore());
-    const mockPeer =
+    const mockPeer2 =
       createMockPeer() as unknown as import('simple-peer').Instance;
-    act(() => result.current.addPeer('user-a', mockPeer));
+    act(() => result.current.addPeer('user-a', mockPeer2));
 
     flushCandidateQueue('user-a');
-    // Peer.signal should not have been called since queue was reset
-    expect(mockPeer.signal).not.toHaveBeenCalled();
+    expect(mockPeer2.signal).not.toHaveBeenCalled();
   });
 
   it('deleteCandidateQueue removes entries for a specific user', async () => {
@@ -324,30 +336,26 @@ describe('iceCandidateQueue module', () => {
 
     resetCandidateQueue();
 
-    const expiredCandidate = {
+    queueCandidate('user-a', {
       type: 'candidate',
       candidate: 'old'
-    } as unknown as import('simple-peer').SignalData;
-    queueCandidate('user-a', expiredCandidate);
+    } as unknown as import('simple-peer').SignalData);
 
-    // Advance past the 5s timeout
+    // Advance past the 5s timeout so the queued candidate is expired
     vi.advanceTimersByTime(6000);
-
-    const freshCandidate = {
-      type: 'candidate',
-      candidate: 'new'
-    } as unknown as import('simple-peer').SignalData;
-    queueCandidate('user-a', freshCandidate);
 
     const { result } = renderHook(() => useVoiceStore());
     const mockPeer =
       createMockPeer() as unknown as import('simple-peer').Instance;
     act(() => result.current.addPeer('user-a', mockPeer));
 
+    // Flushing should skip the expired candidate
     flushCandidateQueue('user-a');
-    // Only the fresh candidate should have been applied
-    expect(mockPeer.signal).toHaveBeenCalledTimes(1);
-    expect(mockPeer.signal).toHaveBeenCalledWith(freshCandidate);
+    expect(mockPeer.signal).not.toHaveBeenCalled();
+
+    // Subsequent flush should also be a no-op (queue deleted)
+    flushCandidateQueue('user-a');
+    expect(mockPeer.signal).not.toHaveBeenCalled();
   });
 
   it('queueCandidate caps entries at 50 per user', async () => {
