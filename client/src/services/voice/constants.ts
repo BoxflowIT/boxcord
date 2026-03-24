@@ -3,24 +3,27 @@
 export const ICE_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
-  // Metered.ca free TURN servers for development (relay for NAT/firewall traversal)
-  // TODO(production): Replace with ephemeral TURN credentials fetched from backend
-  // endpoint (e.g. GET /api/v1/voice/turn-credentials) to avoid exposing secrets in client code
-  {
-    urls: 'turn:a.relay.metered.ca:80',
-    username: 'open',
-    credential: 'open'
-  },
-  {
-    urls: 'turn:a.relay.metered.ca:443',
-    username: 'open',
-    credential: 'open'
-  },
-  {
-    urls: 'turn:a.relay.metered.ca:443?transport=tcp',
-    username: 'open',
-    credential: 'open'
-  }
+  // Development-only TURN servers (relay for NAT/firewall traversal)
+  // Production MUST use ephemeral TURN credentials from backend (GET /api/v1/voice/turn-credentials)
+  ...(import.meta.env.DEV
+    ? [
+        {
+          urls: 'turn:a.relay.metered.ca:80',
+          username: 'open',
+          credential: 'open'
+        },
+        {
+          urls: 'turns:a.relay.metered.ca:443',
+          username: 'open',
+          credential: 'open'
+        },
+        {
+          urls: 'turns:a.relay.metered.ca:443?transport=tcp',
+          username: 'open',
+          credential: 'open'
+        }
+      ]
+    : [])
 ];
 
 export const PEER_RECONNECT = {

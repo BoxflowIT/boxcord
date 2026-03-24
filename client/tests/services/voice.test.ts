@@ -253,14 +253,16 @@ describe('PEER_RECONNECT constants', () => {
 // ============================================================================
 
 describe('ICE_SERVERS', () => {
-  it('includes STUN and TURN servers', async () => {
+  it('includes STUN and TURN servers in dev mode', async () => {
     const { ICE_SERVERS } = await import('../../src/services/voice/constants');
 
     const stunServers = ICE_SERVERS.filter((s) =>
       s.urls.toString().startsWith('stun:')
     );
-    const turnServers = ICE_SERVERS.filter((s) =>
-      s.urls.toString().startsWith('turn:')
+    const turnServers = ICE_SERVERS.filter(
+      (s) =>
+        s.urls.toString().startsWith('turn:') ||
+        s.urls.toString().startsWith('turns:')
     );
 
     expect(stunServers.length).toBeGreaterThanOrEqual(1);
@@ -270,13 +272,27 @@ describe('ICE_SERVERS', () => {
   it('TURN servers have credentials', async () => {
     const { ICE_SERVERS } = await import('../../src/services/voice/constants');
 
-    const turnServers = ICE_SERVERS.filter((s) =>
-      s.urls.toString().startsWith('turn:')
+    const turnServers = ICE_SERVERS.filter(
+      (s) =>
+        s.urls.toString().startsWith('turn:') ||
+        s.urls.toString().startsWith('turns:')
     );
 
     for (const turn of turnServers) {
       expect(turn.username).toBeDefined();
       expect(turn.credential).toBeDefined();
+    }
+  });
+
+  it('uses turns: (TLS) for port 443 servers', async () => {
+    const { ICE_SERVERS } = await import('../../src/services/voice/constants');
+
+    const port443Servers = ICE_SERVERS.filter((s) =>
+      s.urls.toString().includes(':443')
+    );
+
+    for (const server of port443Servers) {
+      expect(server.urls.toString()).toMatch(/^turns:/);
     }
   });
 });

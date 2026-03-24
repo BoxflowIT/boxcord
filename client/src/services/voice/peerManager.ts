@@ -9,6 +9,8 @@ import { logger } from '../../utils/logger';
 
 // Track retry counts per peer for exponential backoff
 const retryCountMap = new Map<string, number>();
+// Track which peers we initiated (only initiators should retry)
+const initiatorMap = new Map<string, boolean>();
 
 /**
  * Create a new peer connection
@@ -54,7 +56,19 @@ export function setupPeerListeners(
 
   peer.on('error', (error) => {
     logger.error(`Peer error [${userId}]:`, error);
+    const wasInitiator = initiatorMap.get(userId) ?? false;
     const retries = retryCountMap.get(userId) ?? 0;
+
+    useVoiceStore.getState().removePeer(userId);
+
+    // Only the designated initiator retries; non-initiators wait for a fresh offer
+    if (!wasInitiator) {
+      logger.warn(
+        `Peer error for non-initiator connection to ${userId}, waiting for fresh offer`
+      );
+      retryCountMap.delete(userId);
+      return;
+    }
 
     if (retries < PEER_RECONNECT.MAX_RETRIES) {
       const delay = PEER_RECONNECT.BASE_DELAY_MS * Math.pow(2, retries);
@@ -63,7 +77,6 @@ export function setupPeerListeners(
         `Retrying peer connection to ${userId} in ${delay}ms (attempt ${retries + 1}/${PEER_RECONNECT.MAX_RETRIES})`
       );
 
-      useVoiceStore.getState().removePeer(userId);
       setTimeout(() => {
         // Only retry if still in voice channel
         const store = useVoiceStore.getState();
@@ -74,7 +87,6 @@ export function setupPeerListeners(
     } else {
       logger.error(`Max retries reached for peer ${userId}, giving up`);
       retryCountMap.delete(userId);
-      useVoiceStore.getState().removePeer(userId);
     }
   });
 
@@ -94,6 +106,7 @@ export function createPeer(
   const store = useVoiceStore.getState();
   const peer = createPeerConnection(true, localStream);
 
+  initiatorMap.set(targetUserId, true);
   setupPeerListeners(peer, targetUserId, socket, localStream);
   store.addPeer(targetUserId, peer);
 
@@ -112,6 +125,7 @@ export function addPeer(
   const store = useVoiceStore.getState();
   const peer = createPeerConnection(false, localStream);
 
+  initiatorMap.set(targetUserId, false);
   setupPeerListeners(peer, targetUserId, socket, localStream);
   store.addPeer(targetUserId, peer);
   peer.signal(offer);
@@ -124,4 +138,5 @@ export function addPeer(
  */
 export function resetRetryState(): void {
   retryCountMap.clear();
+  initiatorMap.clear();
 }

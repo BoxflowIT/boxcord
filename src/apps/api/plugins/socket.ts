@@ -1406,20 +1406,47 @@ export function setupSocketHandlers(
       if (existingTimer) clearTimeout(existingTimer);
 
       const graceTimer = setTimeout(async () => {
-        voiceGraceTimers.delete(userId);
+        try {
+          voiceGraceTimers.delete(userId);
 
-        // Check if user reconnected by looking for their socket in any voice room
-        const allSockets = await io.fetchSockets();
-        const reconnected = allSockets.some(
-          (s) => (s as unknown as AuthenticatedSocket).userId === userId
-        );
+          // Fetch active voice sessions for this user
+          const activeSessions = await prisma.voiceSession
+            .findMany({
+              where: { userId, leftAt: null },
+              select: { id: true, channelId: true }
+            })
+            .catch((err) => {
+              app.log.error(
+                { err },
+                'Failed to fetch active voice sessions on disconnect'
+              );
+              return [];
+            });
 
-        if (!reconnected) {
+          if (!activeSessions || activeSessions.length === 0) return;
+
+          // Check if user reconnected to any of their voice rooms (not just any socket)
+          let inAnyVoiceRoom = false;
+          for (const session of activeSessions) {
+            const room = `voice:${session.channelId}`;
+            const roomSockets = await io.in(room).fetchSockets();
+            if (
+              roomSockets.some(
+                (s) => (s as unknown as AuthenticatedSocket).userId === userId
+              )
+            ) {
+              inAnyVoiceRoom = true;
+              break;
+            }
+          }
+
+          if (inAnyVoiceRoom) return;
+
           app.log.info(
             `[VOICE] User ${userId} did not reconnect within grace period, cleaning up voice sessions`
           );
 
-          // Use transaction to atomically find active sessions and mark them as left
+          // Use transaction to atomically mark sessions as left
           const closedSessions = await prisma
             .$transaction(async (tx) => {
               const sessions = await tx.voiceSession.findMany({
@@ -1454,6 +1481,11 @@ export function setupSocketHandlers(
               { userId }
             );
           }
+        } catch (err) {
+          app.log.error(
+            { err },
+            '[VOICE] Error during disconnect grace-period cleanup'
+          );
         }
       }, VOICE_DISCONNECT_GRACE_MS);
       voiceGraceTimers.set(userId, graceTimer);

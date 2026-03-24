@@ -1,6 +1,5 @@
 // Voice Channel and WebRTC Event Handlers
 import { useVoiceStore } from '../../../store/voiceStore';
-import { useAuthStore } from '../../../store/auth';
 import { voiceService } from '../../voice.service';
 import { logger } from '../../../utils/logger';
 import { PEER_RECONNECT } from '../../voice/constants';
@@ -66,7 +65,11 @@ export function registerVoiceHandlers(context: SocketHandlerContext): void {
     });
 
     // Deterministic initiator: lower userId always initiates to prevent dual-offer race
-    const currentUserId = useAuthStore.getState().user?.id || '';
+    const currentUserId = context.getCurrentUserId();
+    if (!currentUserId) {
+      logger.warn('[WEBRTC] No current user ID, cannot determine initiator');
+      return;
+    }
     const shouldInitiate = currentUserId < data.userId;
 
     if (shouldInitiate) {
@@ -131,7 +134,11 @@ export function registerVoiceHandlers(context: SocketHandlerContext): void {
 
     // Deterministic conflict resolution: if we also sent an offer, lower userId wins
     const store = useVoiceStore.getState();
-    const currentUserId = useAuthStore.getState().user?.id || '';
+    const currentUserId = context.getCurrentUserId();
+    if (!currentUserId) {
+      logger.warn('[WEBRTC] No current user ID, cannot resolve offer conflict');
+      return;
+    }
     const existingPeer = store.peers.get(data.fromUserId);
 
     if (existingPeer) {
@@ -194,9 +201,22 @@ function handleWebRTCSignal(
       flushCandidateQueue(fromUserId);
     }
   } else if (signalType === 'candidate') {
-    // Queue ICE candidates if peer doesn't exist yet
-    const queue = candidateQueue.get(fromUserId) ?? [];
-    queue.push({ data: signalData, timestamp: Date.now() });
+    // Queue ICE candidates if peer doesn't exist yet (capped + pruned)
+    const MAX_QUEUED_PER_USER = 50;
+    let queue = candidateQueue.get(fromUserId) ?? [];
+
+    // Prune expired entries on enqueue
+    const now = Date.now();
+    queue = queue.filter(
+      (e) => now - e.timestamp < PEER_RECONNECT.ICE_QUEUE_TIMEOUT_MS
+    );
+
+    // Drop oldest if at cap
+    if (queue.length >= MAX_QUEUED_PER_USER) {
+      queue.shift();
+    }
+
+    queue.push({ data: signalData, timestamp: now });
     candidateQueue.set(fromUserId, queue);
     logger.log(
       `[WEBRTC] Queued ICE candidate for ${fromUserId} (peer not ready, queue size: ${queue.length})`
