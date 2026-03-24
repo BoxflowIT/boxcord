@@ -2,7 +2,11 @@
 import { useVoiceStore } from '../../../store/voiceStore';
 import { voiceService } from '../../voice.service';
 import { logger } from '../../../utils/logger';
-import { PEER_RECONNECT } from '../../voice/constants';
+import {
+  flushCandidateQueue,
+  queueCandidate,
+  deleteCandidateQueue
+} from '../../voice/iceCandidateQueue';
 import type SimplePeer from 'simple-peer';
 import type {
   SocketHandlerContext,
@@ -15,34 +19,6 @@ import type {
   WebRTCCandidatePayload,
   PeerDisconnectedPayload
 } from '../types';
-
-// Queue for ICE candidates that arrive before peer is created
-const candidateQueue = new Map<
-  string,
-  { data: SimplePeer.SignalData; timestamp: number }[]
->();
-
-function flushCandidateQueue(userId: string): void {
-  const queued = candidateQueue.get(userId);
-  if (!queued || queued.length === 0) return;
-
-  const store = useVoiceStore.getState();
-  const peer = store.peers.get(userId);
-  if (!peer) return;
-
-  const now = Date.now();
-  let applied = 0;
-  for (const entry of queued) {
-    if (now - entry.timestamp < PEER_RECONNECT.ICE_QUEUE_TIMEOUT_MS) {
-      peer.signal(entry.data);
-      applied++;
-    }
-  }
-  candidateQueue.delete(userId);
-  if (applied > 0) {
-    logger.log(`[WEBRTC] Flushed ${applied} queued candidates for ${userId}`);
-  }
-}
 
 export function registerVoiceHandlers(context: SocketHandlerContext): void {
   const { socket, queryClient } = context;
@@ -85,7 +61,7 @@ export function registerVoiceHandlers(context: SocketHandlerContext): void {
 
     store.removeUser(data.userId);
     store.removePeer(data.userId);
-    candidateQueue.delete(data.userId);
+    deleteCandidateQueue(data.userId);
 
     // Remove audio element
     const audioElement = document.getElementById(`voice-audio-${data.userId}`);
@@ -178,15 +154,8 @@ export function registerVoiceHandlers(context: SocketHandlerContext): void {
 
     const store = useVoiceStore.getState();
     store.removePeer(data.userId);
-    candidateQueue.delete(data.userId);
+    deleteCandidateQueue(data.userId);
   });
-}
-
-/**
- * Reset the ICE candidate queue (call on voice channel leave/cleanup)
- */
-export function resetCandidateQueue(): void {
-  candidateQueue.clear();
 }
 
 // Helper: Handle WebRTC signal (answer/ice-candidate) with ICE candidate queuing
@@ -207,26 +176,7 @@ function handleWebRTCSignal(
       flushCandidateQueue(fromUserId);
     }
   } else if (signalType === 'candidate') {
-    // Queue ICE candidates if peer doesn't exist yet (capped + pruned)
-    const MAX_QUEUED_PER_USER = 50;
-    let queue = candidateQueue.get(fromUserId) ?? [];
-
-    // Prune expired entries on enqueue
-    const now = Date.now();
-    queue = queue.filter(
-      (e) => now - e.timestamp < PEER_RECONNECT.ICE_QUEUE_TIMEOUT_MS
-    );
-
-    // Drop oldest if at cap
-    if (queue.length >= MAX_QUEUED_PER_USER) {
-      queue.shift();
-    }
-
-    queue.push({ data: signalData, timestamp: now });
-    candidateQueue.set(fromUserId, queue);
-    logger.log(
-      `[WEBRTC] Queued ICE candidate for ${fromUserId} (peer not ready, queue size: ${queue.length})`
-    );
+    queueCandidate(fromUserId, signalData);
   } else {
     logger.warn(
       `[WEBRTC] No peer found for ${fromUserId} when receiving ${signalType}`
