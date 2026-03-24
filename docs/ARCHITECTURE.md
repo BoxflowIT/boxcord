@@ -314,13 +314,16 @@ This is how all modern real-time apps work! 🚀
 
 ## 🔗 Microsoft 365 Integration Architecture
 
-### **OAuth 2.0 Flow**
+### **OAuth 2.0 Flow (Multi-Tenant)**
+
+Supports any Azure AD organization + personal Microsoft accounts.
+Uses `common` endpoint by default, or a specific `MS_TENANT_ID` for single-org restriction.
 
 ```
 User clicks "Connect Microsoft 365"
     ↓
 Client redirects to Microsoft login (PKCE)
-    ↓
+    ↓ (login.microsoftonline.com/common or /tenant-id)
 Microsoft redirects back with auth code
     ↓
 Server exchanges code for tokens

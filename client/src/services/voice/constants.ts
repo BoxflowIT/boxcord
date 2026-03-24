@@ -2,8 +2,35 @@
 
 export const ICE_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' }
+  { urls: 'stun:stun1.l.google.com:19302' },
+  // Development-only TURN servers (relay for NAT/firewall traversal)
+  // Production MUST use ephemeral TURN credentials from backend (GET /api/v1/voice/turn-credentials)
+  ...(import.meta.env.DEV
+    ? [
+        {
+          urls: 'turn:a.relay.metered.ca:80',
+          username: 'open',
+          credential: 'open'
+        },
+        {
+          urls: 'turns:a.relay.metered.ca:443',
+          username: 'open',
+          credential: 'open'
+        },
+        {
+          urls: 'turns:a.relay.metered.ca:443?transport=tcp',
+          username: 'open',
+          credential: 'open'
+        }
+      ]
+    : [])
 ];
+
+export const PEER_RECONNECT = {
+  MAX_RETRIES: 3,
+  BASE_DELAY_MS: 1000, // 1s, 2s, 4s exponential backoff
+  ICE_QUEUE_TIMEOUT_MS: 5000 // Drop queued candidates after 5s
+} as const;
 
 export const VAD_CONFIG = {
   FFT_SIZE: 256,

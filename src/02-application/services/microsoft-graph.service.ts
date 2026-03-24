@@ -8,7 +8,8 @@ import { prisma } from '../../03-infrastructure/database/client.js';
 const logger = createLogger('microsoft-graph');
 
 // Microsoft Identity Platform endpoints
-const AUTHORITY = `https://login.microsoftonline.com/${config.MS_TENANT_ID}`;
+// Use 'common' for multi-tenant + personal accounts, or specific tenant ID for single-tenant
+const AUTHORITY = `https://login.microsoftonline.com/${config.MS_TENANT_ID || 'common'}`;
 const AUTHORIZE_URL = `${AUTHORITY}/oauth2/v2.0/authorize`;
 const TOKEN_URL = `${AUTHORITY}/oauth2/v2.0/token`;
 const GRAPH_URL = 'https://graph.microsoft.com/v1.0';

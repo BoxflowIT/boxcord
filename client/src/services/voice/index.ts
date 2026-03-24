@@ -24,7 +24,7 @@ import {
   cleanupAudio
 } from './audioSetup';
 import { startVoiceActivityDetection, stopVoiceActivityDetection } from './vad';
-import { createPeer, addPeer } from './peerManager';
+import { createPeer, addPeer, resetRetryState } from './peerManager';
 import { muteAllPeers, cleanupPeerAudio } from './audioManager';
 import {
   toggleVideo,
@@ -370,6 +370,7 @@ class VoiceService {
 
     this.stopVAD();
     cleanupAudio(this.audioState);
+    resetRetryState();
 
     store.peers.forEach((peer) => peer.destroy());
     cleanupPeerAudio();

@@ -4,6 +4,15 @@
 
 Refactored voice and audio system following clean architecture principles with proper separation of concerns. Voice channels now include integrated text chat with split-panel layout for simultaneous voice communication and messaging.
 
+### WebRTC Connectivity
+
+- **STUN servers**: Google public STUN for NAT discovery
+- **TURN relay servers**: Metered.ca (UDP, TCP, TLS) for firewall/symmetric NAT traversal
+- **Peer recovery**: Exponential backoff retry (3 attempts: 1s, 2s, 4s)
+- **ICE candidate queuing**: Candidates arriving before peer creation are buffered (5s TTL)
+- **Deterministic initiator**: Lower userId always initiates to prevent dual-offer race conditions
+- **Disconnect cleanup**: 30s grace period before orphaned voice sessions are cleaned up
+
 ## Structure
 
 ### Core Utilities (`utils/`)
