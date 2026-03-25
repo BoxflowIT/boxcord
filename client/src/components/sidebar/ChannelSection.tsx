@@ -175,7 +175,7 @@ function VoiceChannelWithUsers({
       >
         <div
           className={cn(
-            'group w-full flex items-center gap-1.5 px-2 py-1 rounded-lg text-sm transition-colors cursor-pointer',
+            'group w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm transition-colors cursor-pointer',
             isSelected ? 'nav-item-active' : 'nav-item-default'
           )}
           onClick={onSelect}
@@ -270,7 +270,7 @@ function TextChannelItem({
     >
       <div
         className={cn(
-          'group w-full flex items-center gap-1.5 px-2 py-1 rounded-lg text-sm transition-colors cursor-pointer',
+          'group w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm transition-colors cursor-pointer',
           isSelected ? 'nav-item-active' : 'nav-item-default'
         )}
         onClick={onSelect}

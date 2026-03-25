@@ -2,7 +2,7 @@
 
 Open-source Discord-like real-time chat application for Boxflow, integrated with Boxtime.
 
-**Latest version:** 1.23.2 | [View Changelog](CHANGELOG.md) | [Download Desktop](https://github.com/BoxflowIT/boxcord/releases/latest)
+**Latest version:** 1.23.8 | [View Changelog](CHANGELOG.md) | [Download Desktop](https://github.com/BoxflowIT/boxcord/releases/latest)
 
 ## 🚀 Quick Start
 

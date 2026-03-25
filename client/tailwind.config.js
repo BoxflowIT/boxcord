@@ -84,6 +84,10 @@ export default {
           from: { backgroundPosition: '-200% 0' },
           to: { backgroundPosition: '200% 0' },
         },
+        'voice-glow': {
+          '0%, 100%': { boxShadow: '0 0 0 2px rgb(34 197 94), 0 0 8px 2px rgba(34, 197, 94, 0.3)' },
+          '50%': { boxShadow: '0 0 0 2px rgb(34 197 94), 0 0 14px 4px rgba(34, 197, 94, 0.5)' },
+        },
       },
       animation: {
         'voice-bar': 'voice-bar 0.4s ease-in-out infinite alternate',
@@ -95,6 +99,7 @@ export default {
         'slide-in-left': 'slide-in-left 0.25s ease-out',
         'pulse-soft': 'pulse-soft 1.5s ease-in-out infinite',
         'shimmer': 'shimmer 1.5s ease-in-out infinite',
+        'voice-glow': 'voice-glow 1.5s ease-in-out infinite',
       },
     },
   },

@@ -154,9 +154,7 @@ function VoiceUserItem({
       <div className="relative">
         <div
           className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-all ${
-            user.isSpeaking
-              ? 'ring-2 ring-green-500 ring-offset-2 ring-offset-gray-800'
-              : ''
+            user.isSpeaking ? 'voice-speaking' : ''
           }`}
           style={{
             backgroundColor: avatarUrl ? 'transparent' : '#4f46e5',
