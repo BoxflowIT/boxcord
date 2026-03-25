@@ -156,7 +156,7 @@ export function DMCallOverlay({
           <div className="flex items-center justify-center gap-1.5">
             <div className="relative">
               {!isMuted && isSpeaking && (
-                <span className="absolute inset-0 rounded-lg border-2 border-green-500 animate-pulse pointer-events-none" />
+                <span className="absolute inset-0 rounded-lg border-2 border-green-500 animate-voice-glow pointer-events-none" />
               )}
               <button
                 onClick={handleToggleMute}
