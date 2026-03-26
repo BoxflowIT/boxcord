@@ -1,10 +1,19 @@
-import { Download } from 'lucide-react';
+import { Download, AlertTriangle } from 'lucide-react';
 import { useDesktop } from '../hooks/useDesktop';
 
 export function UpdateBanner() {
-  const { updateReady, installUpdate } = useDesktop();
+  const { updateReady, updateError, installUpdate } = useDesktop();
 
-  if (!updateReady) return null;
+  if (!updateReady && !updateError) return null;
+
+  if (updateError) {
+    return (
+      <div className="flex items-center justify-center gap-3 bg-amber-600 px-4 py-2 text-sm text-white">
+        <AlertTriangle size={16} />
+        <span>Update failed: {updateError}</span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center gap-3 bg-blue-600 px-4 py-2 text-sm text-white">
