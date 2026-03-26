@@ -7,24 +7,29 @@ Open-source Discord-like real-time chat application for Boxflow, integrated with
 ## 🚀 Quick Start
 
 ```bash
+
 # 1. Clone and install
+
 git clone https://github.com/BoxflowIT/boxcord.git
 cd boxcord
 yarn install
 cd client && yarn install && cd ..
 
 # 2. Setup local environment (Docker required)
+
 ./scripts/dev-setup.sh
 
 # 3. Generate authentication tokens
+
 node scripts/generate-dev-tokens.cjs
 
 # 4. Start development
+
 yarn dev              # Backend (Terminal 1)
 cd client && yarn dev # Frontend (Terminal 2)
 ```
 
-**Open:** http://localhost:5173
+**Open:** <http://localhost:5173>
 
 **🔐 Login:** Use mock token from step 3 in browser localStorage (see [DEVELOPMENT.md](docs/DEVELOPMENT.md#-authentication-local-development))
 
@@ -35,6 +40,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 ## ✨ Features
 
 ### 💬 Messaging & Communication
+
 - **Real-time messaging** via WebSocket (Socket.io)
 - **Direct Messages (DMs)** - Private 1-on-1 conversations
 - **@Mentions** - Tag users with autocomplete
@@ -55,6 +61,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Channel Webhooks** - Bot integration with token-based message posting and management UI
 
 ### 🎤 Voice & Video
+
 - **Voice channels** - Real-time voice communication with text chat
 - **WebRTC peer-to-peer** - Direct audio/video streaming
 - **AI noise suppression** - RNNoise AI for crystal-clear audio
@@ -73,6 +80,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 **📖 See:** [docs/VOICE_ARCHITECTURE.md](docs/VOICE_ARCHITECTURE.md)
 
 ### 🧵 Threads
+
 - **Thread conversations** - Create threads from any channel message
 - **Thread search** - Server-side and client-side thread search
 - **Thread archiving/resolving** - Mark threads as archived or resolved
@@ -85,6 +93,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 **📖 See:** [docs/THREADS.md](docs/THREADS.md)
 
 ### 🌍 Workspaces & Channels
+
 - **Multiple workspaces** - Organize teams separately
 - **Text channels** - Topic-specific conversations
 - **Voice channels** - Real-time audio rooms
@@ -94,6 +103,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Member role management** - Promote/demote members via context menu (ADMIN/MEMBER)
 
 ### 👥 User Management
+
 - **User profiles** - Customizable with bio, avatar, status
 - **Online status** - Real-time presence tracking (Online/Away/DND/Offline)
 - **Custom status** - Set status text and emoji
@@ -102,6 +112,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Role-based permissions** - Admin, Member roles
 
 ### 🛡️ Moderation & Admin
+
 - **Kick users** - Remove users from workspace
 - **Ban users** - Permanently ban with reason tracking
 - **Role management** - Promote/demote users
@@ -109,6 +120,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Channel permissions** - Control who can access channels
 
 ### 🌐 Internationalization (i18n)
+
 - **Multi-language support** - English 🇬🇧 and Swedish 🇸🇪
 - **Live language switching** - Change language on the fly
 - **Persistent preferences** - Saves language choice
@@ -116,6 +128,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 **📖 See:** [docs/I18N.md](docs/I18N.md)
 
 ### 🔔 Notifications
+
 - **Web Push Notifications** - Browser notifications for mentions/DMs
 - **Email notifications** - Via SendGrid (optional)
 - **Notification settings** - Granular control per channel
@@ -124,6 +137,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Sound preview** - Test notification sounds before selecting (#226)
 
 ### ⚡ Performance & Optimization
+
 - **Redis caching** - 70-90% faster cached queries (optional)
 - **Prisma 6** - 30-50% faster database queries
 - **Connection pooling** - Efficient database connections
@@ -140,6 +154,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 **📖 See:** [docs/PERFORMANCE_OPTIMIZATIONS.md](docs/PERFORMANCE_OPTIMIZATIONS.md) | [docs/CACHING.md](docs/CACHING.md)
 
 ### 🔒 Security
+
 - **AWS Cognito authentication** - Enterprise-grade auth
 - **JWT tokens** - Secure session management
 - **XSS protection** - Sanitized user input
@@ -148,6 +163,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Content Security Policy** - Browser-level security
 
 ### 🔗 Microsoft 365 Integration
+
 - **Multi-tenant OAuth 2.0** - Any organization or personal Microsoft account can connect
 - **OneDrive file browser** - Browse, upload, download, delete, share files with Teams-style UI
 - **Calendar view** - View, create, edit, delete Outlook calendar events
@@ -159,6 +175,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 - **Settings integration** - Connect/disconnect Microsoft 365 from settings
 
 ### 🎨 UI/UX
+
 - **Discord-inspired design** - Familiar and intuitive
 - **Theme customization** - Dark/Medium/Light themes with persistent settings (#225, #6)
 - **Message density** - Compact/Cozy/Spacious spacing (#225)
@@ -179,6 +196,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 **📖 See:** [docs/SETTINGS_AND_SHORTCUTS.md](docs/SETTINGS_AND_SHORTCUTS.md)
 
 ### 🖥️ Desktop App (Electron)
+
 - **Native desktop app** - Electron wrapper for Windows, macOS, Linux
 - **SharePoint embedding** - `<webview>` bypasses CSP for in-app SharePoint
 - **Auto-update** - Checks GitHub Releases, auto-downloads and installs
@@ -232,16 +250,21 @@ docker compose up -d
 ### 2. Backend
 
 ```bash
+
 # Install dependencies
+
 yarn install
 
 # Generate Prisma client
+
 yarn prisma:generate
 
 # Run migrations
+
 yarn prisma:migrate-dev
 
 # Start development server
+
 yarn dev
 ```
 
@@ -253,9 +276,11 @@ Backend runs on <http://localhost:3001>
 cd client
 
 # Install dependencies
+
 yarn install
 
 # Start development server
+
 yarn dev
 ```
 
@@ -267,10 +292,10 @@ For production setup including Sentry, S3, email notifications, and scaling:
 
 **📖 See:** [docs/PRODUCTION.md](docs/PRODUCTION.md)
 
-| Environment | URL | Deploy trigger |
-|-------------|-----|----------------|
-| **Production** | `https://boxcord.boxflow.com` | Push to `main` |
-| **Staging** | `https://staging.boxcord.boxflow.com` | Push to `develop` |
+| Environment    | URL                                   | Deploy trigger    |
+| -------------- | ------------------------------------- | ----------------- |
+| **Production** | `https://boxcord.boxflow.com`         | Push to `main`    |
+| **Staging**    | `https://staging.boxcord.boxflow.com` | Push to `develop` |
 
 Quick production checklist:
 
@@ -284,26 +309,31 @@ Quick production checklist:
 ## Documentation
 
 ### Quick Links
+
 - 🎯 [**Features Overview**](docs/FEATURES.md) - Complete list of all features
 - 📐 [Architecture Overview](docs/ARCHITECTURE.md) - WebSocket-first design, data flow
 - 🧪 [Testing Guide](docs/TESTING.md) - Unit tests, E2E, load testing (K6)
 - 🚀 [Production Deployment](docs/PRODUCTION.md) - AWS, Docker, environment setup
 
 ### Architecture & Design
+
 - 📐 [Architecture Overview](docs/ARCHITECTURE.md) - WebSocket-first design, data flow
 - 🎤 [Voice Architecture](docs/VOICE_ARCHITECTURE.md) - WebRTC, RNNoise AI, audio pipeline
 - 💾 [Caching Strategy](docs/CACHING.md) - React Query, Redis, optimization
 
 ### Features & Integrations
+
 - 🎯 [**Features Overview**](docs/FEATURES.md) - Complete list of all features
 - 🎨 [GIF Support](docs/GIF_SUPPORT.md) - Giphy integration setup and usage
 - 🌍 [Internationalization](docs/I18N.md) - Multi-language support (en, sv)
 
 ### Performance & Testing
+
 - ⚡ [Performance Optimizations](docs/PERFORMANCE_OPTIMIZATIONS.md) - Prisma 6, Redis, benchmarks
 - 🧪 [Testing Guide](docs/TESTING.md) - Unit tests, E2E, load testing (K6)
 
 ### Production & Operations
+
 - 🚀 [Production Deployment](docs/PRODUCTION.md) - AWS, Docker, environment setup
 - 📊 [Scaling Strategy](docs/SCALING_STRATEGY.md) - Horizontal scaling, load balancing
 - 💾 [Database Optimization](docs/DATABASE_INDEX_OPTIMIZATION.md) - Indexes, query optimization
@@ -314,7 +344,9 @@ Quick production checklist:
 Copy `.env.example` to `.env` and fill in:
 
 ```env
+
 # Required
+
 DATABASE_URL="postgresql://boxcord:boxcord@localhost:5433/boxcord"
 PORT=3001
 JWT_SECRET=your-secret-key-here
@@ -326,6 +358,7 @@ VAPID_PRIVATE_KEY=your-vapid-key
 VAPID_SUBJECT=mailto:support@boxflow.com
 
 # Optional - Production Features
+
 REDIS_URL=redis://localhost:6379           # Enable Redis caching
 SENTRY_DSN=https://...                     # Backend error tracking
 AWS_S3_BUCKET=boxcord-uploads              # Cloud file storage
@@ -356,6 +389,7 @@ const users = await boxtimeService.searchUsers('john', token);
 ### Client → Server
 
 #### Channel Events
+
 - `channel:join` - Join a channel room
 - `channel:leave` - Leave a channel room
 - `message:send` - Send message to channel
@@ -368,6 +402,7 @@ const users = await boxtimeService.searchUsers('john', token);
 - `message:unpin` - Unpin message
 
 #### DM Events
+
 - `dm:join` - Join DM room
 - `dm:leave` - Leave DM room
 - `dm:send` - Send direct message
@@ -376,6 +411,7 @@ const users = await boxtimeService.searchUsers('john', token);
 - `dm:typing` - DM typing indicator
 
 #### Voice Events
+
 - `voice:join` - Join voice channel
 - `voice:leave` - Leave voice channel
 - `voice:signal` - WebRTC signaling
@@ -384,6 +420,7 @@ const users = await boxtimeService.searchUsers('john', token);
 ### Server → Client
 
 #### Message Events
+
 - `message:new` - New message received
 - `message:updated` - Message was edited
 - `message:deleted` - Message was deleted
@@ -394,18 +431,21 @@ const users = await boxtimeService.searchUsers('john', token);
 - `message:reaction:removed` - Reaction removed
 
 #### Channel/Workspace Events
+
 - `channel:created` - New channel created
 - `channel:updated` - Channel settings changed
 - `channel:deleted` - Channel removed
 - `workspace:updated` - Workspace settings changed
 
 #### User Events
+
 - `user:presence` - User online status changed
 - `user:status` - User status updated
 - `user:joined` - User joined workspace
 - `user:left` - User left workspace
 
-#### Voice Events
+#### Voice Events (Server-Emitted)
+
 - `voice:user:joined` - User joined voice channel
 - `voice:user:left` - User left voice channel
 - `voice:signal` - WebRTC signaling data
@@ -413,6 +453,7 @@ const users = await boxtimeService.searchUsers('john', token);
 - `voice:speaking:stop` - User stopped speaking
 
 #### Poll Events
+
 - `poll:created` - New poll created in channel
 - `poll:voted` - Vote cast/toggled on poll (includes voter IDs for per-user hasVoted; omitted for anonymous polls)
 - `poll:ended` - Poll ended (by creator or expiry)
@@ -421,184 +462,204 @@ const users = await boxtimeService.searchUsers('john', token);
 ## API Endpoints
 
 ### Authentication & Users
-| Method | Path                      | Description                  |
-| ------ | ------------------------- | ---------------------------- |
-| GET    | /api/v1/health           | Health check                 |
-| GET    | /api/v1/users/me         | Get current user             |
-| GET    | /api/v1/users/:id        | Get user by ID               |
-| PATCH  | /api/v1/users/me         | Update profile               |
-| DELETE | /api/v1/users/me         | Delete account               |
-| GET    | /api/v1/users/search     | Search users                 |
-| PATCH  | /api/v1/users/:id/role   | Update user role (admin)     |
+
+| Method | Path                   | Description              |
+| ------ | ---------------------- | ------------------------ |
+| GET    | /api/v1/health         | Health check             |
+| GET    | /api/v1/users/me       | Get current user         |
+| GET    | /api/v1/users/:id      | Get user by ID           |
+| PATCH  | /api/v1/users/me       | Update profile           |
+| DELETE | /api/v1/users/me       | Delete account           |
+| GET    | /api/v1/users/search   | Search users             |
+| PATCH  | /api/v1/users/:id/role | Update user role (admin) |
 
 ### Workspaces
-| Method | Path                           | Description                  |
-| ------ | ------------------------------ | ---------------------------- |
-| GET    | /api/v1/workspaces            | List user's workspaces       |
-| POST   | /api/v1/workspaces            | Create workspace             |
-| GET    | /api/v1/workspaces/:id        | Get workspace details        |
-| PATCH  | /api/v1/workspaces/:id        | Update workspace             |
-| DELETE | /api/v1/workspaces/:id        | Delete workspace             |
-| GET    | /api/v1/workspaces/:id/members| List workspace members       |
+
+| Method | Path                           | Description            |
+| ------ | ------------------------------ | ---------------------- |
+| GET    | /api/v1/workspaces             | List user's workspaces |
+| POST   | /api/v1/workspaces             | Create workspace       |
+| GET    | /api/v1/workspaces/:id         | Get workspace details  |
+| PATCH  | /api/v1/workspaces/:id         | Update workspace       |
+| DELETE | /api/v1/workspaces/:id         | Delete workspace       |
+| GET    | /api/v1/workspaces/:id/members | List workspace members |
 
 ### Channels
-| Method | Path                              | Description                  |
-| ------ | --------------------------------- | ---------------------------- |
-| GET    | /api/v1/channels                 | List channels (by workspace) |
-| POST   | /api/v1/channels                 | Create channel               |
-| GET    | /api/v1/channels/:id             | Get channel details          |
-| PATCH  | /api/v1/channels/:id             | Update channel               |
-| DELETE | /api/v1/channels/:id             | Delete channel               |
-| POST   | /api/v1/channels/:id/read        | Mark channel as read         |
+
+| Method | Path                      | Description                  |
+| ------ | ------------------------- | ---------------------------- |
+| GET    | /api/v1/channels          | List channels (by workspace) |
+| POST   | /api/v1/channels          | Create channel               |
+| GET    | /api/v1/channels/:id      | Get channel details          |
+| PATCH  | /api/v1/channels/:id      | Update channel               |
+| DELETE | /api/v1/channels/:id      | Delete channel               |
+| POST   | /api/v1/channels/:id/read | Mark channel as read         |
 
 ### Messages
-| Method | Path                              | Description                  |
-| ------ | --------------------------------- | ---------------------------- |
-| GET    | /api/v1/messages                 | Fetch messages (paginated)   |
-| POST   | /api/v1/messages                 | Create message               |
-| PATCH  | /api/v1/messages/:id             | Edit message                 |
-| DELETE | /api/v1/messages/:id             | Delete message               |
-| POST   | /api/v1/messages/:id/forward     | Forward message              |
-| POST   | /api/v1/messages/:id/pin         | Pin message                  |
-| DELETE | /api/v1/messages/:id/pin         | Unpin message                |
-| GET    | /api/v1/messages/search          | Search messages              |
+
+| Method | Path                         | Description                |
+| ------ | ---------------------------- | -------------------------- |
+| GET    | /api/v1/messages             | Fetch messages (paginated) |
+| POST   | /api/v1/messages             | Create message             |
+| PATCH  | /api/v1/messages/:id         | Edit message               |
+| DELETE | /api/v1/messages/:id         | Delete message             |
+| POST   | /api/v1/messages/:id/forward | Forward message            |
+| POST   | /api/v1/messages/:id/pin     | Pin message                |
+| DELETE | /api/v1/messages/:id/pin     | Unpin message              |
+| GET    | /api/v1/messages/search      | Search messages            |
 
 ### Direct Messages (DMs)
-| Method | Path                                   | Description                  |
-| ------ | -------------------------------------- | ---------------------------- |
-| GET    | /api/v1/dm/channels                   | List DM channels             |
-| POST   | /api/v1/dm/channels                   | Create/get DM channel        |
-| GET    | /api/v1/dm/channels/:id/messages      | Fetch DM messages            |
-| POST   | /api/v1/dm/channels/:id/messages      | Send DM                      |
-| PATCH  | /api/v1/dm/messages/:id               | Edit DM                      |
-| DELETE | /api/v1/dm/messages/:id               | Delete DM                    |
-| POST   | /api/v1/dm/channels/:id/read          | Mark DM as read              |
+
+| Method | Path                             | Description           |
+| ------ | -------------------------------- | --------------------- |
+| GET    | /api/v1/dm/channels              | List DM channels      |
+| POST   | /api/v1/dm/channels              | Create/get DM channel |
+| GET    | /api/v1/dm/channels/:id/messages | Fetch DM messages     |
+| POST   | /api/v1/dm/channels/:id/messages | Send DM               |
+| PATCH  | /api/v1/dm/messages/:id          | Edit DM               |
+| DELETE | /api/v1/dm/messages/:id          | Delete DM             |
+| POST   | /api/v1/dm/channels/:id/read     | Mark DM as read       |
 
 ### Reactions
-| Method | Path                                   | Description                  |
-| ------ | -------------------------------------- | ---------------------------- |
-| POST   | /api/v1/reactions/messages/:id        | Add reaction to message      |
-| DELETE | /api/v1/reactions/messages/:id/:emoji | Remove reaction              |
-| GET    | /api/v1/reactions/messages/:id        | Get message reactions        |
-| GET    | /api/v1/reactions/quick               | Get quick reaction emojis    |
+
+| Method | Path                                  | Description               |
+| ------ | ------------------------------------- | ------------------------- |
+| POST   | /api/v1/reactions/messages/:id        | Add reaction to message   |
+| DELETE | /api/v1/reactions/messages/:id/:emoji | Remove reaction           |
+| GET    | /api/v1/reactions/messages/:id        | Get message reactions     |
+| GET    | /api/v1/reactions/quick               | Get quick reaction emojis |
 
 ### Bookmarks
-| Method | Path                              | Description                  |
-| ------ | --------------------------------- | ---------------------------- |
-| GET    | /api/v1/bookmarks                | List user's bookmarks        |
-| POST   | /api/v1/bookmarks                | Add bookmark                 |
-| DELETE | /api/v1/bookmarks/:id            | Remove bookmark              |
-| GET    | /api/v1/bookmarks/count          | Get bookmark count           |
-| PATCH  | /api/v1/bookmarks/:id/note       | Update bookmark note         |
+
+| Method | Path                       | Description           |
+| ------ | -------------------------- | --------------------- |
+| GET    | /api/v1/bookmarks          | List user's bookmarks |
+| POST   | /api/v1/bookmarks          | Add bookmark          |
+| DELETE | /api/v1/bookmarks/:id      | Remove bookmark       |
+| GET    | /api/v1/bookmarks/count    | Get bookmark count    |
+| PATCH  | /api/v1/bookmarks/:id/note | Update bookmark note  |
 
 ### Polls
-| Method | Path                              | Description                  |
-| ------ | --------------------------------- | ---------------------------- |
-| POST   | /api/v1/polls                    | Create poll (with message)   |
-| GET    | /api/v1/polls/:id                | Get poll by ID               |
-| GET    | /api/v1/polls/message/:messageId | Get poll by message ID       |
-| POST   | /api/v1/polls/:id/vote           | Vote/toggle vote on poll     |
-| POST   | /api/v1/polls/:id/end            | End poll early (creator only)|
-| DELETE | /api/v1/polls/:id                | Delete poll (creator only)   |
+
+| Method | Path                             | Description                   |
+| ------ | -------------------------------- | ----------------------------- |
+| POST   | /api/v1/polls                    | Create poll (with message)    |
+| GET    | /api/v1/polls/:id                | Get poll by ID                |
+| GET    | /api/v1/polls/message/:messageId | Get poll by message ID        |
+| POST   | /api/v1/polls/:id/vote           | Vote/toggle vote on poll      |
+| POST   | /api/v1/polls/:id/end            | End poll early (creator only) |
+| DELETE | /api/v1/polls/:id                | Delete poll (creator only)    |
 
 ### Invites
-| Method | Path                              | Description                  |
-| ------ | --------------------------------- | ---------------------------- |
-| GET    | /api/v1/invites                  | List workspace invites       |
-| POST   | /api/v1/invites                  | Create invite link           |
-| DELETE | /api/v1/invites/:code            | Revoke invite                |
-| GET    | /api/v1/invites/:code/preview    | Preview invite               |
-| POST   | /api/v1/invites/:code/accept     | Accept invite                |
+
+| Method | Path                          | Description            |
+| ------ | ----------------------------- | ---------------------- |
+| GET    | /api/v1/invites               | List workspace invites |
+| POST   | /api/v1/invites               | Create invite link     |
+| DELETE | /api/v1/invites/:code         | Revoke invite          |
+| GET    | /api/v1/invites/:code/preview | Preview invite         |
+| POST   | /api/v1/invites/:code/accept  | Accept invite          |
 
 ### Moderation
-| Method | Path                                   | Description                  |
-| ------ | -------------------------------------- | ---------------------------- |
-| POST   | /api/v1/workspaces/:id/kick           | Kick user from workspace     |
-| POST   | /api/v1/workspaces/:id/ban            | Ban user from workspace      |
-| POST   | /api/v1/workspaces/:id/unban          | Unban user                   |
-| GET    | /api/v1/workspaces/:id/audit-logs     | Get audit logs               |
+
+| Method | Path                              | Description              |
+| ------ | --------------------------------- | ------------------------ |
+| POST   | /api/v1/workspaces/:id/kick       | Kick user from workspace |
+| POST   | /api/v1/workspaces/:id/ban        | Ban user from workspace  |
+| POST   | /api/v1/workspaces/:id/unban      | Unban user               |
+| GET    | /api/v1/workspaces/:id/audit-logs | Get audit logs           |
 
 ### File Uploads
-| Method | Path                              | Description                  |
-| ------ | --------------------------------- | ---------------------------- |
-| POST   | /api/v1/upload                   | Upload file (multipart)      |
-| POST   | /api/v1/files                    | Generic file upload          |
-| POST   | /api/v1/files/messages/:id       | Message file upload          |
-| POST   | /api/v1/files/dm/:id             | DM file upload               |
-| GET    | /uploads/:filename               | Get uploaded file            |
+
+| Method | Path                       | Description             |
+| ------ | -------------------------- | ----------------------- |
+| POST   | /api/v1/upload             | Upload file (multipart) |
+| POST   | /api/v1/files              | Generic file upload     |
+| POST   | /api/v1/files/messages/:id | Message file upload     |
+| POST   | /api/v1/files/dm/:id       | DM file upload          |
+| GET    | /uploads/:filename         | Get uploaded file       |
 
 ### Users (additional)
-| Method | Path                              | Description                  |
-| ------ | --------------------------------- | ---------------------------- |
-| POST   | /api/v1/users/batch              | Batch fetch users by IDs     |
-| GET    | /api/v1/users/online             | Get online users list        |
-| PATCH  | /api/v1/users/me/status          | Update custom status         |
-| PATCH  | /api/v1/users/me/dnd             | Update DND mode              |
+
+| Method | Path                    | Description              |
+| ------ | ----------------------- | ------------------------ |
+| POST   | /api/v1/users/batch     | Batch fetch users by IDs |
+| GET    | /api/v1/users/online    | Get online users list    |
+| PATCH  | /api/v1/users/me/status | Update custom status     |
+| PATCH  | /api/v1/users/me/dnd    | Update DND mode          |
 
 ### Voice
-| Method | Path                                        | Description                  |
-| ------ | ------------------------------------------- | ---------------------------- |
-| GET    | /api/v1/voice/channels/:id/users           | Get voice channel users      |
-| GET    | /api/v1/voice/workspaces/:id/voice-users   | Get workspace voice users    |
+
+| Method | Path                                     | Description               |
+| ------ | ---------------------------------------- | ------------------------- |
+| GET    | /api/v1/voice/channels/:id/users         | Get voice channel users   |
+| GET    | /api/v1/voice/workspaces/:id/voice-users | Get workspace voice users |
 
 ### Permissions
-| Method | Path                              | Description                  |
-| ------ | --------------------------------- | ---------------------------- |
-| GET    | /api/v1/permissions               | Get channel permissions      |
-| GET    | /api/v1/permissions/me            | Get current user permissions |
-| GET    | /api/v1/permissions/check         | Check specific permission    |
-| POST   | /api/v1/permissions               | Set permissions              |
-| DELETE | /api/v1/permissions               | Reset permissions            |
+
+| Method | Path                      | Description                  |
+| ------ | ------------------------- | ---------------------------- |
+| GET    | /api/v1/permissions       | Get channel permissions      |
+| GET    | /api/v1/permissions/me    | Get current user permissions |
+| GET    | /api/v1/permissions/check | Check specific permission    |
+| POST   | /api/v1/permissions       | Set permissions              |
+| DELETE | /api/v1/permissions       | Reset permissions            |
 
 ### Embeds
-| Method | Path                              | Description                  |
-| ------ | --------------------------------- | ---------------------------- |
-| POST   | /api/v1/embeds/parse             | Parse URL embeds from content|
+
+| Method | Path                 | Description                   |
+| ------ | -------------------- | ----------------------------- |
+| POST   | /api/v1/embeds/parse | Parse URL embeds from content |
 
 ### Search
-| Method | Path                              | Description                  |
-| ------ | --------------------------------- | ---------------------------- |
-| GET    | /api/v1/search                   | Global search (advanced)     |
-| GET    | /api/v1/search/messages          | Search channel messages      |
-| GET    | /api/v1/search/dms               | Search DMs                   |
+
+| Method | Path                    | Description              |
+| ------ | ----------------------- | ------------------------ |
+| GET    | /api/v1/search          | Global search (advanced) |
+| GET    | /api/v1/search/messages | Search channel messages  |
+| GET    | /api/v1/search/dms      | Search DMs               |
 
 **Search query parameters:**
-| Parameter      | Type    | Description                        |
-| -------------- | ------- | ---------------------------------- |
-| q              | string  | Search query (2-200 chars)         |
-| type           | string  | `channel`, `dm`, or `all`          |
-| channelId      | uuid    | Filter by specific channel         |
-| workspaceId    | uuid    | Filter by workspace                |
-| authorId       | string  | Filter by author                   |
-| before         | ISO8601 | Messages before date               |
-| after          | ISO8601 | Messages after date                |
-| hasAttachment  | boolean | Only messages with attachments     |
-| cursor         | string  | Pagination cursor                  |
-| limit          | number  | Results per page (1-100)           |
+
+| Parameter     | Type    | Description                    |
+| ------------- | ------- | ------------------------------ |
+| q             | string  | Search query (2-200 chars)     |
+| type          | string  | `channel`, `dm`, or `all`      |
+| channelId     | uuid    | Filter by specific channel     |
+| workspaceId   | uuid    | Filter by workspace            |
+| authorId      | string  | Filter by author               |
+| before        | ISO8601 | Messages before date           |
+| after         | ISO8601 | Messages after date            |
+| hasAttachment | boolean | Only messages with attachments |
+| cursor        | string  | Pagination cursor              |
+| limit         | number  | Results per page (1-100)       |
 
 ### Message Templates
-| Method | Path                              | Description                  |
-| ------ | --------------------------------- | ---------------------------- |
-| GET    | /api/v1/templates                | List user's templates        |
-| POST   | /api/v1/templates                | Create template              |
-| PATCH  | /api/v1/templates/:id            | Update template              |
-| DELETE | /api/v1/templates/:id            | Delete template              |
+
+| Method | Path                  | Description           |
+| ------ | --------------------- | --------------------- |
+| GET    | /api/v1/templates     | List user's templates |
+| POST   | /api/v1/templates     | Create template       |
+| PATCH  | /api/v1/templates/:id | Update template       |
+| DELETE | /api/v1/templates/:id | Delete template       |
 
 ### Channel Webhooks
-| Method | Path                                            | Description                  |
-| ------ | ----------------------------------------------- | ---------------------------- |
-| GET    | /api/v1/channel-webhooks/:channelId             | List channel webhooks        |
-| POST   | /api/v1/channel-webhooks/:channelId             | Create webhook               |
-| PATCH  | /api/v1/channel-webhooks/manage/:id             | Update webhook               |
-| DELETE | /api/v1/channel-webhooks/manage/:id             | Delete webhook               |
-| POST   | /api/v1/channel-webhooks/manage/:id/regenerate  | Regenerate token             |
-| POST   | /api/webhooks/execute/:token                    | Execute webhook (no auth)    |
+
+| Method | Path                                           | Description               |
+| ------ | ---------------------------------------------- | ------------------------- |
+| GET    | /api/v1/channel-webhooks/:channelId            | List channel webhooks     |
+| POST   | /api/v1/channel-webhooks/:channelId            | Create webhook            |
+| PATCH  | /api/v1/channel-webhooks/manage/:id            | Update webhook            |
+| DELETE | /api/v1/channel-webhooks/manage/:id            | Delete webhook            |
+| POST   | /api/v1/channel-webhooks/manage/:id/regenerate | Regenerate token          |
+| POST   | /api/webhooks/execute/:token                   | Execute webhook (no auth) |
 
 ### Push Notifications
-| Method | Path                              | Description                  |
-| ------ | --------------------------------- | ---------------------------- |
-| POST   | /api/v1/push/subscribe           | Subscribe to push            |
-| POST   | /api/v1/push/unsubscribe         | Unsubscribe from push        |
+
+| Method | Path                     | Description           |
+| ------ | ------------------------ | --------------------- |
+| POST   | /api/v1/push/subscribe   | Subscribe to push     |
+| POST   | /api/v1/push/unsubscribe | Unsubscribe from push |
 
 ## Code Quality
 
@@ -623,7 +684,9 @@ All production-ready features are **optional** and automatically enabled when co
 **Setup:**
 
 ```bash
+
 # Set in .env
+
 SENTRY_DSN=https://your-sentry-dsn@sentry.io/project
 ```
 
@@ -637,7 +700,9 @@ SENTRY_DSN=https://your-sentry-dsn@sentry.io/project
 **Setup:**
 
 ```bash
+
 # Set in .env
+
 AWS_REGION=eu-north-1
 AWS_ACCESS_KEY_ID=your-key
 AWS_SECRET_ACCESS_KEY=your-secret
@@ -654,7 +719,9 @@ AWS_S3_BUCKET=boxcord-uploads
 **Setup:**
 
 ```bash
+
 # Set in .env
+
 SENDGRID_API_KEY=your-sendgrid-key
 SENDGRID_FROM_EMAIL=noreply@boxflow.com
 ```
@@ -670,18 +737,20 @@ SENDGRID_FROM_EMAIL=noreply@boxflow.com
 
 Full automated pipeline with parallel jobs for fast feedback (~3 min):
 
-| Job | Time | What it checks |
-|-----|------|----------------|
-| **Test & Lint** | ~2 min | TypeScript, ESLint, 174 unit/integration tests (backend + frontend) |
-| **E2E Tests** | ~3 min | Playwright browser tests (health, API, Swagger) |
-| **Security Audit** | ~8 sec | `yarn audit` for known vulnerabilities |
-| **Desktop Typecheck** | ~20 sec | TypeScript validation for Electron main + preload |
+| Job                   | Time    | What it checks                                                      |
+| --------------------- | ------- | ------------------------------------------------------------------- |
+| **Test & Lint**       | ~2 min  | TypeScript, ESLint, 174 unit/integration tests (backend + frontend) |
+| **E2E Tests**         | ~3 min  | Playwright browser tests (health, API, Swagger)                     |
+| **Security Audit**    | ~8 sec  | `yarn audit` for known vulnerabilities                              |
+| **Desktop Typecheck** | ~20 sec | TypeScript validation for Electron main + preload                   |
 
 **Branch Protection:**
+
 - `develop` — Requires `Test & Lint` + `Security Audit` + `Desktop Typecheck` to pass. Enforced for admins (no bypass).
 - `main` — Same checks + requires PR with 1 approval.
 
 **Workflows:**
+
 - **CI** ([ci.yml](.github/workflows/ci.yml)) — Runs on push to `main`/`develop` and PRs
 - **Deploy Staging** ([deploy-staging.yml](.github/workflows/deploy-staging.yml)) — Auto-deploy to AWS staging on `develop` push
 - **Deploy Preview** ([deploy-preview.yml](.github/workflows/deploy-preview.yml)) — Preview environments for PRs
@@ -689,11 +758,13 @@ Full automated pipeline with parallel jobs for fast feedback (~3 min):
 - **Version Bump** — Auto-bump on merge to `main`
 
 **Git Hooks (Husky):**
+
 - `pre-commit` — lint-staged (fast, <2s)
 - `commit-msg` — conventional commit format enforcement
 - `pre-push` — full validation: typecheck + lint + tests + client build
 
 **Optimizations:**
+
 - E2E runs in parallel with Test & Lint (not sequential)
 - Playwright browser cache (~300MB saved per run)
 - Yarn dependency cache
@@ -745,10 +816,13 @@ yarn validate
 **Quick Start with Redis:**
 
 ```bash
+
 # Start PostgreSQL + Redis
+
 docker-compose -f docker-compose.dev.yml up -d
 
 # Configure in .env
+
 REDIS_URL=redis://localhost:6379
 PRISMA_QUERY_CACHE_TTL=60
 ```
