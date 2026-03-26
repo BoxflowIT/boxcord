@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.24.1",
+    "date": "2026-03-26",
+    "notes": {
+      "en": [
+        "Resolve picomatch ReDoS vulnerability"
+      ]
+    }
+  },
+  {
     "version": "1.24.0",
     "date": "2026-03-26",
     "notes": {
