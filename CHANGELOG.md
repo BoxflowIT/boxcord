@@ -5,6 +5,38 @@ All notable changes to Boxcord will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.23.8] - 2026-03-24
+
+### Changed
+- **ICE candidate queue tests** — Phase-based queueCandidate test with proper flush expiry assertions
+- **Test quality** — Improved voice module test assertions per Copilot Code Review feedback
+
+## [1.23.6] - 2026-03-24
+
+### Changed
+- **ICE candidate queue extraction** — Extracted `iceCandidateQueue.ts` as shared module to break circular dependency between voice/index, voiceHandlers, and voice.service
+- **7 unit tests** for ICE candidate queue module (enqueue, flush, reset, capacity cap)
+
+## [1.23.4] - 2026-03-24
+
+### Fixed
+- **Voice call reliability** — 7 critical WebRTC fixes:
+  - Added TURN server support (relay fallback for restrictive networks)
+  - ICE candidate buffering with queue (cap 50) and flush on remote description
+  - Retry gating on remote peer presence to prevent ghost connections
+  - Initiator tracking to prevent dual-offer race conditions
+  - Disconnect cleanup with grace timer (clear on VOICE_JOIN)
+  - Proper `getCurrentUserId()` usage in voice membership checks
+- **Copilot Code Review** — Applied all review suggestions across 5 rounds (voice room membership check, try/catch grace timer, TURN TLS URLs, initiator map cleanup, candidate queue cap)
+
+### Added
+- **Copilot review instructions** — `.github/copilot-review-instructions.md` to focus reviews on security/bugs/data integrity and skip test style/comment wording/doc counts
+
+## [1.10.0] - 2026-03-22
+
+### Added
+- **Microsoft 365 multi-tenant** — Changed Azure AD authority to `common` endpoint for multi-tenant support, updated config feature flag
+
 ## [1.9.0] - 2026-03-05
 
 ### Added

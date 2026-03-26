@@ -21,22 +21,27 @@ export function startVoiceActivityDetection(
     audioState.analyser.fftSize = VAD_CONFIG.FFT_SIZE;
     audioState.analyser.smoothingTimeConstant = VAD_CONFIG.SMOOTHING;
 
-    // Connect analyser to pipeline output (before outputGain)
-    (audioState.audioPipeline as AudioPipelineNodes).limiter.connect(
+    // Connect analyser BEFORE vadGate to measure raw input audio.
+    // If connected after vadGate, the gate closing zeroes the signal,
+    // which makes the VAD never re-open — a self-locking feedback loop.
+    (audioState.audioPipeline as AudioPipelineNodes).highPassFilter.connect(
       audioState.analyser
     );
 
     const dataArray = new Uint8Array(audioState.analyser.frequencyBinCount);
 
     const detectSpeaking = () => {
-      if (!audioState.analyser || !audioState.audioPipeline) return;
+      if (!audioState.analyser || !audioState.audioPipeline) {
+        // Pipeline temporarily unavailable — keep loop alive and retry next frame
+        vadState.animationFrame = requestAnimationFrame(detectSpeaking);
+        return;
+      }
 
       audioState.analyser.getByteFrequencyData(dataArray);
 
       const average =
         dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
       const normalizedLevel = (average / 128) * 100;
-      const isSpeaking = average > VAD_CONFIG.SPEAKING_THRESHOLD;
 
       // Voice Activity Detection for gate control (Discord-like)
       // Input Sensitivity controls how easily the gate opens
@@ -84,13 +89,14 @@ export function startVoiceActivityDetection(
         Math.min(VAD_CONFIG.ACTIVATE_THRESHOLD + 5, vadState.frameCounter)
       );
 
-      // Update speaking indicator
-      if (isSpeaking !== vadState.lastSpeakingState) {
-        vadState.lastSpeakingState = isSpeaking;
+      // Update speaking indicator — tied to vadActive (debounced) rather than
+      // raw per-frame threshold to avoid flickering on/off every frame.
+      if (vadState.vadActive !== vadState.lastSpeakingState) {
+        vadState.lastSpeakingState = vadState.vadActive;
         const store = useVoiceStore.getState();
 
         if (!store.isMuted) {
-          store.setSpeaking(isSpeaking);
+          store.setSpeaking(vadState.vadActive);
         }
       }
 

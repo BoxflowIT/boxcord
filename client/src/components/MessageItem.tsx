@@ -104,7 +104,7 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({
   return (
     <div
       className={cn(
-        'group relative hover:bg-[var(--color-bg-hover)]/70 hover:border-l-2 hover:border-boxflow-primary',
+        'group relative message-hover',
         '-mx-4 px-4 rounded transition-all duration-100',
         compact ? 'py-0.5' : 'py-1'
       )}
