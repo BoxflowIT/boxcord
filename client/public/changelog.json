@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.24.0",
+    "date": "2026-03-26",
+    "notes": {
+      "en": [
+        "Discord-style UI modernization & voice VAD fixes (#349)"
+      ]
+    }
+  },
+  {
     "version": "1.23.5",
     "date": "2026-03-24",
     "notes": {
