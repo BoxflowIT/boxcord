@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.24.2",
+    "date": "2026-03-26",
+    "notes": {
+      "en": [
+        "Resolve picomatch ReDoS in client deps"
+      ]
+    }
+  },
+  {
     "version": "1.24.1",
     "date": "2026-03-26",
     "notes": {
