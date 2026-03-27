@@ -82,7 +82,6 @@
     "flatted": ">=3.4.2",
     "undici": ">=7.24.0",
     "socket.io-parser": ">=4.2.6",
-    "picomatch": "^4.0.3",
-    "micromatch/picomatch": "^4.0.3"
+    "micromatch/picomatch": "^2.3.2"
   }
 }
