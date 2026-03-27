@@ -170,6 +170,20 @@ Manage your account settings and preferences.
 - Theme settings - Appearance customization
 - Account deletion - Permanently delete account
 
+#### ℹ️ About Tab
+
+Version info and update management (desktop only).
+
+**Features:**
+- App version display (desktop version vs web)
+- "Check for updates" button — manually triggers update check via IPC
+- Update status indicators:
+  - Downloading version X...
+  - Version X ready to install + "Restart now" button
+  - Error display with retry option
+- Privacy & Security information
+- Technology Stack information
+
 ## Video Quality System
 
 ### Architecture

@@ -215,16 +215,35 @@ if (isDesktop()) {
 
 ```typescript
 // client/src/hooks/useDesktop.ts
-const { isDesktop, canEmbed, version, updateReady, installUpdate } = useDesktop();
+const {
+  isDesktop,
+  canEmbed,
+  version,
+  updateReady,
+  updateAvailable,
+  updateError,
+  checkingUpdate,
+  installUpdate,
+  checkForUpdates,
+} = useDesktop();
 
 // SharePoint embedding
 if (canEmbed) {
   // Render <webview> instead of external link
 }
 
+// Manual update check (Settings > About)
+const handleManualUpdateCheck = async () => {
+  await checkForUpdates(); // triggers autoUpdater.checkForUpdates() via IPC
+};
+
 // Update banner
 if (updateReady) {
   // Show "Version {updateReady} ready — click to install"
+  // If updateError is also set, show inline error alongside restart button
+}
+if (updateError) {
+  // Show amber error banner: "Update failed: {updateError}"
 }
 ```
 
