@@ -173,10 +173,6 @@ function createMainWindow(): BrowserWindow {
   });
 
   // ─── Close-to-tray (keep running for notifications) ────
-  app.on('before-quit', () => {
-    forceQuit = true;
-  });
-
   win.on('close', (event) => {
     if (!forceQuit && process.platform !== 'darwin') {
       event.preventDefault();
@@ -402,6 +398,10 @@ if (!gotLock) {
     }
   });
 }
+
+app.on('before-quit', () => {
+  forceQuit = true;
+});
 
 app.whenReady().then(async () => {
   mainWindow = createMainWindow();

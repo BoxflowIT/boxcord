@@ -24,12 +24,14 @@ export function useDesktop() {
     api.canEmbed().then(setCanEmbed);
     api.getVersion().then(setVersion);
 
-    const unsubAvailable = api.onUpdateAvailable((ver) =>
-      setUpdateAvailable(ver)
-    );
-    const unsubDownloaded = api.onUpdateDownloaded((ver) =>
-      setUpdateReady(ver)
-    );
+    const unsubAvailable = api.onUpdateAvailable((ver) => {
+      setUpdateError(null);
+      setUpdateAvailable(ver);
+    });
+    const unsubDownloaded = api.onUpdateDownloaded((ver) => {
+      setUpdateError(null);
+      setUpdateReady(ver);
+    });
     const unsubError = api.onUpdateError?.((msg) => setUpdateError(msg));
 
     // Sleep/wake: refresh token, reconnect socket, invalidate stale queries
@@ -67,6 +69,11 @@ export function useDesktop() {
       try {
         const result = await api.checkForUpdates();
         if (result.error) setUpdateError(result.error);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Failed to check for updates';
+        setUpdateError(message);
+        console.error('checkForUpdates failed:', err);
       } finally {
         setCheckingUpdate(false);
       }
