@@ -12,7 +12,9 @@ export function useDesktop() {
   const [canEmbed, setCanEmbed] = useState(false);
   const [version, setVersion] = useState<string | null>(null);
   const [updateReady, setUpdateReady] = useState<string | null>(null);
+  const [updateAvailable, setUpdateAvailable] = useState<string | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
 
   useEffect(() => {
     const api = getElectronAPI();
@@ -22,6 +24,9 @@ export function useDesktop() {
     api.canEmbed().then(setCanEmbed);
     api.getVersion().then(setVersion);
 
+    const unsubAvailable = api.onUpdateAvailable((ver) =>
+      setUpdateAvailable(ver)
+    );
     const unsubDownloaded = api.onUpdateDownloaded((ver) =>
       setUpdateReady(ver)
     );
@@ -38,6 +43,7 @@ export function useDesktop() {
     });
 
     return () => {
+      unsubAvailable();
       unsubDownloaded();
       unsubError?.();
       unsubResume?.();
@@ -49,8 +55,22 @@ export function useDesktop() {
     canEmbed,
     version,
     updateReady,
+    updateAvailable,
     updateError,
+    checkingUpdate,
     installUpdate: () => getElectronAPI()?.installUpdate(),
+    checkForUpdates: async () => {
+      const api = getElectronAPI();
+      if (!api?.checkForUpdates) return;
+      setCheckingUpdate(true);
+      setUpdateError(null);
+      try {
+        const result = await api.checkForUpdates();
+        if (result.error) setUpdateError(result.error);
+      } finally {
+        setCheckingUpdate(false);
+      }
+    },
     showNotification: (payload: {
       title: string;
       body: string;

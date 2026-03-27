@@ -51,6 +51,11 @@ const electronAPI = {
     return () => ipcRenderer.removeListener('update:error', handler);
   },
   installUpdate: () => ipcRenderer.send('update:install'),
+  checkForUpdates: () =>
+    ipcRenderer.invoke('update:check') as Promise<{
+      version: string | null;
+      error?: string;
+    }>,
 
   // ─── Persistent store ───────────────────────
   storeGet: (key: string) =>

@@ -24,6 +24,10 @@ export interface ElectronAPI {
   onUpdateDownloaded: (callback: (version: string) => void) => () => void;
   onUpdateError: (callback: (message: string) => void) => () => void;
   installUpdate: () => void;
+  checkForUpdates: () => Promise<{
+    version: string | null;
+    error?: string;
+  }>;
   storeGet: (key: string) => Promise<unknown>;
   storeSet: (key: string, value: unknown) => void;
   clearCache: () => Promise<void>;

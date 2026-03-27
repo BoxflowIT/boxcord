@@ -1,9 +1,19 @@
 // About Tab Component
 import { APP_VERSION } from '../../utils/version';
 import { useDesktop } from '../../hooks/useDesktop';
+import { RefreshCw, AlertTriangle } from 'lucide-react';
 
 export default function AboutTab() {
-  const { isDesktop, version: desktopVersion } = useDesktop();
+  const {
+    isDesktop,
+    version: desktopVersion,
+    updateReady,
+    updateAvailable,
+    updateError,
+    checkingUpdate,
+    checkForUpdates,
+    installUpdate
+  } = useDesktop();
 
   return (
     <div className="space-y-6">
@@ -18,6 +28,45 @@ export default function AboutTab() {
                 : APP_VERSION}
             </p>
           </div>
+          {isDesktop && (
+            <div className="flex flex-col gap-2">
+              {updateReady ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-green-400">
+                    Version {updateReady} ready to install
+                  </span>
+                  <button
+                    onClick={installUpdate}
+                    className="btn-primary text-xs px-3 py-1"
+                  >
+                    Restart now
+                  </button>
+                </div>
+              ) : updateAvailable ? (
+                <p className="text-sm text-blue-400">
+                  Downloading version {updateAvailable}...
+                </p>
+              ) : (
+                <button
+                  onClick={checkForUpdates}
+                  disabled={checkingUpdate}
+                  className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw
+                    size={14}
+                    className={checkingUpdate ? 'animate-spin' : ''}
+                  />
+                  {checkingUpdate ? 'Checking...' : 'Check for updates'}
+                </button>
+              )}
+              {updateError && (
+                <p className="flex items-center gap-1.5 text-sm text-amber-400">
+                  <AlertTriangle size={14} />
+                  {updateError}
+                </p>
+              )}
+            </div>
+          )}
           <div className="border-t border-discord-darkest pt-4">
             <p className="text-sm font-semibold text-gray-300 mb-2">
               Privacy & Security

@@ -36,6 +36,7 @@ const IS_DEV =
   process.env.NODE_ENV === 'development' || APP_URL.includes('localhost');
 
 let mainWindow: BrowserWindow | null = null;
+let forceQuit = false;
 
 function getAssetPath(...segments: string[]): string {
   const asarPath = path.join(__dirname, '..', '..', ...segments);
@@ -172,7 +173,6 @@ function createMainWindow(): BrowserWindow {
   });
 
   // ─── Close-to-tray (keep running for notifications) ────
-  let forceQuit = false;
   app.on('before-quit', () => {
     forceQuit = true;
   });
@@ -356,7 +356,27 @@ function setupAutoUpdater() {
 
   // Allow renderer to trigger install
   ipcMain.on('update:install', () => {
-    autoUpdater.quitAndInstall(false, true);
+    try {
+      forceQuit = true;
+      autoUpdater.quitAndInstall(false, true);
+    } catch (err) {
+      forceQuit = false;
+      const message = err instanceof Error ? err.message : 'Install failed';
+      console.error('quitAndInstall failed:', message);
+      mainWindow?.webContents.send('update:error', message);
+    }
+  });
+
+  // Allow renderer to manually trigger an update check
+  ipcMain.handle('update:check', async () => {
+    try {
+      const result = await autoUpdater.checkForUpdates();
+      return { version: result?.updateInfo?.version ?? null };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Check failed';
+      mainWindow?.webContents.send('update:error', message);
+      return { version: null, error: message };
+    }
   });
 }
 
