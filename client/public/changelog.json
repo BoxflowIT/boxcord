@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.24.5",
+    "date": "2026-03-27",
+    "notes": {
+      "en": [
+        "Fallback to relaunch when pkexec unavailable on Linux (#361)"
+      ]
+    }
+  },
+  {
     "version": "1.24.4",
     "date": "2026-03-27",
     "notes": {
