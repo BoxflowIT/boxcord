@@ -233,7 +233,9 @@ if (canEmbed) {
 }
 
 // Manual update check (Settings > About)
-await checkForUpdates(); // triggers autoUpdater.checkForUpdates() via IPC
+const handleManualUpdateCheck = async () => {
+  await checkForUpdates(); // triggers autoUpdater.checkForUpdates() via IPC
+};
 
 // Update banner
 if (updateReady) {

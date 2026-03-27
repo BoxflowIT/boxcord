@@ -199,7 +199,7 @@ cd client && yarn dev # Frontend (Terminal 2)
 
 - **Native desktop app** - Electron wrapper for Windows, macOS, Linux
 - **SharePoint embedding** - `<webview>` bypasses CSP for in-app SharePoint
-- **Auto-update** — Checks S3/CloudFront for updates, auto-downloads and installs with manual "Check for updates" in Settings
+- **Auto-update** - Checks S3/CloudFront for updates, auto-downloads and installs with manual "Check for updates" in Settings
 - **System tray** - Minimize to tray with unread badge
 - **Native notifications** - OS-level notifications with click-to-focus
 - **Window state** - Persists size, position, maximized state
