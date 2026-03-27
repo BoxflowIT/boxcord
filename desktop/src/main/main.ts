@@ -37,6 +37,7 @@ const IS_DEV =
 
 let mainWindow: BrowserWindow | null = null;
 let forceQuit = false;
+let isInstallingUpdate = false;
 
 function getAssetPath(...segments: string[]): string {
   const asarPath = path.join(__dirname, '..', '..', ...segments);
@@ -324,6 +325,20 @@ function registerIpcHandlers() {
 
 // ─── Auto-Update ─────────────────────────────────────────
 
+/** Detect pkexec/polkit privilege-escalation failure (exit code 127). */
+function isPkexecFailure(err: unknown): boolean {
+  const anyErr = err as Record<string, unknown>;
+  const exitCode =
+    typeof anyErr?.code === 'number'
+      ? anyErr.code
+      : typeof anyErr?.exitCode === 'number'
+        ? anyErr.exitCode
+        : undefined;
+  if (exitCode === 127) return true;
+  const message = err instanceof Error ? err.message : String(err);
+  return /pkexec.*exit(ed)? with code 127/i.test(message);
+}
+
 function setupAutoUpdater() {
   if (IS_DEV) return;
 
@@ -340,6 +355,19 @@ function setupAutoUpdater() {
 
   autoUpdater.on('error', (err: Error) => {
     console.error('Auto-update error:', err.message);
+    if (
+      isInstallingUpdate &&
+      process.platform === 'linux' &&
+      isPkexecFailure(err)
+    ) {
+      console.log(
+        'Falling back to relaunch for Linux update install (async error)'
+      );
+      app.relaunch();
+      app.quit();
+      return;
+    }
+    isInstallingUpdate = false;
     mainWindow?.webContents.send('update:error', err.message);
   });
 
@@ -354,6 +382,7 @@ function setupAutoUpdater() {
   ipcMain.on('update:install', () => {
     try {
       forceQuit = true;
+      isInstallingUpdate = true;
       autoUpdater.quitAndInstall(false, true);
     } catch (err) {
       // On Linux, quitAndInstall can fail when pkexec/polkit is unavailable
@@ -361,12 +390,13 @@ function setupAutoUpdater() {
       // the actual file replacement on next launch.
       const message = err instanceof Error ? err.message : 'Install failed';
       console.error('quitAndInstall failed:', message);
-      if (process.platform === 'linux' && /pkexec|127|sudo/.test(message)) {
+      if (process.platform === 'linux' && isPkexecFailure(err)) {
         console.log('Falling back to relaunch for Linux update install');
         app.relaunch();
         app.quit();
       } else {
         forceQuit = false;
+        isInstallingUpdate = false;
         mainWindow?.webContents.send('update:error', message);
       }
     }
