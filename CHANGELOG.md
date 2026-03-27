@@ -5,6 +5,55 @@ All notable changes to Boxcord will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.24.4] - 2026-03-27
+
+### Fixed
+- **Security** — Resolve 4 Dependabot alerts:
+  - Bump fastify 5.8.2 → 5.8.4 (X-Forwarded-Proto/Host spoofing)
+  - Add brace-expansion >=5.0.5 resolution (zero-step sequence DoS)
+  - Add yaml >=2.8.3 resolution (stack overflow via nested collections)
+  - Add picomatch ^4.0.4 resolution in desktop (POSIX class method injection)
+
+## [1.24.3] - 2026-03-27
+
+### Fixed
+- **Desktop updater** — Address Copilot review comments:
+  - Clear stale `updateError` when update available/downloaded
+  - Add catch block to `checkForUpdates` for unhandled rejections
+  - Move `before-quit` listener to module scope (prevent duplicate listeners)
+  - Scope picomatch resolutions to respect semver ranges
+- **UpdateBanner** — Prioritize restart action over error display
+
+## [1.24.2] - 2026-03-26
+
+### Fixed
+- **Security** — Resolve picomatch ReDoS vulnerability in client deps
+
+## [1.24.1] - 2026-03-26
+
+### Fixed
+- **Security** — Resolve picomatch ReDoS vulnerability in root deps
+- **Desktop updater** — Fix "Restart now" button not working:
+  - Move `forceQuit` to module scope (close-to-tray was blocking quit)
+  - Add try/catch on `quitAndInstall` with error reporting to renderer
+  - Add `update:check` IPC handler for manual update checks
+
+### Added
+- **Desktop** — "Check for updates" button in Settings > About
+- **Desktop** — Update error banner (amber) in UpdateBanner component
+
+## [1.24.0] - 2026-03-26
+
+### Added
+- **UI modernization** — Discord-style visual refresh:
+  - Button press feedback (scale + brightness)
+  - Input focus glow effect
+  - Voice speaking pulse animation
+  - Channel spacing improvements
+  - Message hover background
+  - Message actions positioning fix
+- **Voice VAD** — Fix analyser→highPassFilter, vadState.vadActive, requestAnimationFrame resilience
+
 ## [1.23.8] - 2026-03-24
 
 ### Changed
