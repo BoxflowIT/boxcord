@@ -356,10 +356,19 @@ function setupAutoUpdater() {
       forceQuit = true;
       autoUpdater.quitAndInstall(false, true);
     } catch (err) {
-      forceQuit = false;
+      // On Linux, quitAndInstall can fail when pkexec/polkit is unavailable
+      // (exit code 127). Fall back to relaunch — autoInstallOnAppQuit handles
+      // the actual file replacement on next launch.
       const message = err instanceof Error ? err.message : 'Install failed';
       console.error('quitAndInstall failed:', message);
-      mainWindow?.webContents.send('update:error', message);
+      if (process.platform === 'linux' && /pkexec|127|sudo/.test(message)) {
+        console.log('Falling back to relaunch for Linux update install');
+        app.relaunch();
+        app.quit();
+      } else {
+        forceQuit = false;
+        mainWindow?.webContents.send('update:error', message);
+      }
     }
   });
 
