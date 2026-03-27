@@ -105,8 +105,8 @@
     "socket.io-parser": ">=4.2.6",
     "fast-xml-parser": ">=5.5.7",
     "effect": ">=3.20.0",
-    "picomatch": "^2.3.2",
-    "micromatch/picomatch": "^2.3.2"
+    "picomatch": "^4.0.3",
+    "micromatch/picomatch": "^4.0.3"
   },
   "engines": {
     "node": ">=20.0.0"
