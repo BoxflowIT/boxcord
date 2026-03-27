@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.24.4",
+    "date": "2026-03-27",
+    "notes": {
+      "en": [
+        "Resolve 4 dependabot alerts (#359)"
+      ]
+    }
+  },
+  {
     "version": "1.24.3",
     "date": "2026-03-27",
     "notes": {
