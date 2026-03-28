@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Download, Terminal } from 'lucide-react';
+import { Download, Terminal, Check } from 'lucide-react';
 
 declare const __APP_VERSION__: string;
 
@@ -42,28 +42,32 @@ const PLATFORM_ICONS = {
 function getPlatforms(version: string) {
   return [
     {
+      id: 'linux-deb' as const,
+      label: 'Linux (.deb)',
+      file: `boxcord-desktop_${version}_amd64.deb`,
+      description: 'Ubuntu / Debian',
+      recommended: true
+    },
+    {
+      id: 'linux' as const,
+      label: 'Linux (AppImage)',
+      file: `Boxcord-${version}.AppImage`,
+      description: 'AppImage (all distros)',
+      recommended: false
+    },
+    {
       id: 'windows' as const,
       label: 'Windows',
       file: `Boxcord.Setup.${version}.exe`,
-      description: 'Windows 10+'
+      description: 'Windows 10+',
+      recommended: false
     },
     {
       id: 'mac' as const,
       label: 'macOS',
       file: `Boxcord-${version}-arm64.dmg`,
-      description: 'macOS 12+ (Apple Silicon)'
-    },
-    {
-      id: 'linux' as const,
-      label: 'Linux',
-      file: `Boxcord-${version}.AppImage`,
-      description: 'AppImage (all distros)'
-    },
-    {
-      id: 'linux-deb' as const,
-      label: 'Linux (.deb)',
-      file: `boxcord-desktop_${version}_amd64.deb`,
-      description: 'Ubuntu / Debian'
+      description: 'macOS 12+ (Apple Silicon)',
+      recommended: false
     }
   ];
 }
@@ -75,17 +79,18 @@ export function DownloadSection() {
   const platforms = getPlatforms(version);
 
   return (
-    <section id="download" className="py-20 px-6 bg-boxflow-darkest/40">
+    <section id="download" className="py-24 px-6 bg-boxflow-darkest/40">
       <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-3xl font-bold mb-4">
-          {t('landing.downloadHeading', 'Download Boxcord')}
+        <h2 className="text-3xl sm:text-4xl font-bold mb-3 text-white">
+          {t('landing.downloadHeading', 'Get Boxcord')}
         </h2>
-        <p className="text-boxflow-muted mb-12 max-w-xl mx-auto">
+        <p className="text-boxflow-muted mb-4 max-w-lg mx-auto">
           {t(
             'landing.downloadSubheading',
             'Available for Windows, macOS and Linux. Auto-update included.'
           )}
         </p>
+        <p className="text-xs text-boxflow-subtle mb-12">v{version}</p>
 
         <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
           {platforms.map((p) => {
@@ -94,8 +99,14 @@ export function DownloadSection() {
               <a
                 key={p.id}
                 href={downloadUrl(tag, p.file)}
-                className="flex items-center gap-4 p-5 rounded-xl border border-boxflow-border-50 bg-boxflow-darker/60 hover:border-boxflow-primary-30 transition-interactive group"
+                className="relative flex items-center gap-4 p-5 rounded-xl border border-boxflow-border-50 bg-boxflow-darker/60 hover:border-boxflow-primary-30 transition-interactive group"
               >
+                {p.recommended && (
+                  <span className="absolute -top-2.5 left-4 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-boxflow-primary text-white">
+                    <Check className="w-3 h-3" />
+                    {t('landing.recommended', 'Recommended')}
+                  </span>
+                )}
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-boxflow-hover">
                   <PlatformIcon className="w-5 h-5 text-boxflow-muted group-hover:text-white transition-colors" />
                 </div>
@@ -113,7 +124,24 @@ export function DownloadSection() {
           })}
         </div>
 
-        <p className="text-xs text-boxflow-subtle mt-6">v{version}</p>
+        <div className="mt-8 flex items-center justify-center gap-6 text-xs text-boxflow-subtle">
+          <a
+            href={`https://github.com/${REPO}/releases/tag/${tag}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white transition-colors"
+          >
+            {t('landing.releaseNotes', 'Release notes')}
+          </a>
+          <a
+            href={`https://github.com/${REPO}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white transition-colors"
+          >
+            {t('landing.sourceCode', 'Source code')}
+          </a>
+        </div>
       </div>
     </section>
   );

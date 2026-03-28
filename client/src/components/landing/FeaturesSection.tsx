@@ -72,18 +72,22 @@ export function FeaturesSection() {
   const { t } = useTranslation();
 
   return (
-    <section id="features" className="py-20 px-6">
+    <section id="features" className="py-24 px-6">
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold text-center mb-4">
-          {t('landing.featuresHeading', 'Everything your team needs')}
+        <h2 className="text-3xl sm:text-4xl font-bold text-center mb-3 text-white">
+          {t('landing.featuresHeading', 'Everything your team needs.')}
+          <br />
+          <span className="text-boxflow-muted">
+            {t('landing.featuresHeading2', "Nothing you don't.")}
+          </span>
         </h2>
-        <p className="text-boxflow-muted text-center mb-14 max-w-xl mx-auto">
+        <p className="text-boxflow-muted text-center mb-16 max-w-xl mx-auto">
           {t(
             'landing.featuresSubheading',
             'One platform for communication, collaboration and file sharing.'
           )}
         </p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {FEATURES.map((f) => {
             const Icon = f.icon;
             return (
@@ -91,8 +95,8 @@ export function FeaturesSection() {
                 key={f.titleKey}
                 className="bg-boxflow-darker/60 border border-boxflow-border-50 rounded-xl p-6 hover:border-boxflow-primary-30 transition-interactive group"
               >
-                <div className="w-12 h-12 rounded-xl bg-boxflow-primary-10 flex items-center justify-center mb-4 group-hover:bg-boxflow-primary-20 transition-colors">
-                  <Icon className="w-6 h-6 text-boxflow-primary" />
+                <div className="w-11 h-11 rounded-xl bg-boxflow-primary-10 flex items-center justify-center mb-4 group-hover:bg-boxflow-primary-20 transition-colors">
+                  <Icon className="w-5 h-5 text-boxflow-primary" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2 text-white">
                   {t(f.titleKey, f.titleFallback)}
