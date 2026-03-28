@@ -1,4 +1,4 @@
-import { Download, AlertTriangle } from 'lucide-react';
+import { Download, AlertTriangle, ClipboardCopy } from 'lucide-react';
 import { useDesktop } from '../hooks/useDesktop';
 
 export function UpdateBanner() {
@@ -7,10 +7,17 @@ export function UpdateBanner() {
   if (!updateReady && !updateError) return null;
 
   if (updateError) {
+    const isManualInstall = updateError.includes('clipboard');
     return (
       <div className="flex items-center justify-center gap-3 bg-amber-600 px-4 py-2 text-sm text-white">
-        <AlertTriangle size={16} />
-        <span>Update failed: {updateError}</span>
+        {isManualInstall ? (
+          <ClipboardCopy size={16} />
+        ) : (
+          <AlertTriangle size={16} />
+        )}
+        <span>
+          {isManualInstall ? updateError : `Update failed: ${updateError}`}
+        </span>
       </div>
     );
   }

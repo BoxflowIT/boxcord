@@ -6,12 +6,14 @@ import {
   desktopCapturer,
   session,
   dialog,
-  powerMonitor
+  powerMonitor,
+  clipboard
 } from 'electron';
 import type { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
 import electronUpdater from 'electron-updater';
 const { autoUpdater } = electronUpdater;
 import path from 'node:path';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { createTray, updateTrayBadge } from './tray.js';
 import { registerNotificationHandlers } from './notifications.js';
@@ -334,9 +336,67 @@ function registerIpcHandlers() {
  */
 function isPkexecFailure(err: unknown): boolean {
   const message = err instanceof Error ? err.message : String(err);
-  // Message mentions pkexec (e.g. "Command pkexec exited with code 100",
-  // "spawn pkexec ENOENT", etc.)
   return /pkexec/i.test(message);
+}
+
+/**
+ * Find the downloaded .deb file in electron-updater's cache directory.
+ * Returns the absolute path if found, null otherwise.
+ */
+function findDownloadedDeb(): string | null {
+  try {
+    const cacheDir = path.join(
+      app.getPath('home'),
+      '.cache',
+      `${app.name}-updater`,
+      'pending'
+    );
+    if (!fs.existsSync(cacheDir)) return null;
+    const debs = fs
+      .readdirSync(cacheDir)
+      .filter((f) => f.endsWith('.deb'))
+      .sort()
+      .reverse(); // newest first (version sort)
+    return debs.length > 0 ? path.join(cacheDir, debs[0]) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Handle pkexec failure on Linux .deb installs.
+ * Shows a native dialog with the manual dpkg -i command and copies
+ * it to clipboard, since autoInstallOnAppQuit also needs root and
+ * a silent relaunch would not actually install the update.
+ */
+function handleLinuxInstallFailure(): void {
+  const debPath = findDownloadedDeb();
+  const command = debPath
+    ? `sudo dpkg -i ${debPath}`
+    : 'sudo dpkg -i ~/.cache/boxcord-desktop-updater/pending/*.deb';
+
+  if (debPath) {
+    clipboard.writeText(command);
+  }
+
+  const message = debPath
+    ? `The update was downloaded but could not be installed automatically because administrator access was denied.\n\nThe install command has been copied to your clipboard. Open a terminal and paste it:\n\n${command}`
+    : 'The update was downloaded but could not be installed automatically because administrator access was denied.\n\nOpen a terminal and run:\n\n' +
+      command;
+
+  dialog.showMessageBox(mainWindow!, {
+    type: 'info',
+    title: 'Manual install required',
+    message: 'Update requires manual installation',
+    detail: message,
+    buttons: ['OK']
+  });
+
+  // Send a user-friendly error to the renderer
+  mainWindow?.webContents.send(
+    'update:error',
+    'Admin access denied — install command copied to clipboard. Open a terminal and paste it.'
+  );
 }
 
 function setupAutoUpdater() {
@@ -361,10 +421,11 @@ function setupAutoUpdater() {
       isPkexecFailure(err)
     ) {
       console.log(
-        'Falling back to relaunch for Linux update install (async error)'
+        'pkexec failed during install, showing manual install dialog'
       );
-      app.relaunch();
-      app.quit();
+      isInstallingUpdate = false;
+      forceQuit = false;
+      handleLinuxInstallFailure();
       return;
     }
     isInstallingUpdate = false;
@@ -386,15 +447,15 @@ function setupAutoUpdater() {
       isInstallingUpdate = true;
       autoUpdater.quitAndInstall(false, true);
     } catch (err) {
-      // On Linux, quitAndInstall can fail when pkexec/polkit is unavailable
-      // or auth is denied (exit codes 100, 126, 127, etc). Fall back to
-      // relaunch — autoInstallOnAppQuit handles the file replacement.
       const message = err instanceof Error ? err.message : 'Install failed';
       console.error('quitAndInstall failed:', message);
       if (process.platform === 'linux' && isPkexecFailure(err)) {
-        console.log('Falling back to relaunch for Linux update install');
-        app.relaunch();
-        app.quit();
+        // pkexec/polkit denied — autoInstallOnAppQuit also needs root,
+        // so a silent relaunch won't help. Show the user a manual command.
+        console.log('pkexec failed, showing manual install dialog');
+        forceQuit = false;
+        isInstallingUpdate = false;
+        handleLinuxInstallFailure();
       } else {
         forceQuit = false;
         isInstallingUpdate = false;
