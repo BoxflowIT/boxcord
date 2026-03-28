@@ -187,9 +187,9 @@ export default function Landing() {
             >
               {t('landing.changelog', 'Changelog')}
             </a>
-            <Link to="/login" className="ml-2">
-              <Button size="sm">{t('auth.login', 'Login')}</Button>
-            </Link>
+            <Button asChild size="sm" className="ml-2">
+              <Link to="/login">{t('auth.login', 'Login')}</Link>
+            </Button>
           </nav>
         </div>
       </header>
@@ -211,16 +211,17 @@ export default function Landing() {
             )}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href="#download">
-              <Button size="lg" className="px-8 text-base">
-                {t('landing.download', 'Download')}
-              </Button>
-            </a>
-            <Link to="/login">
-              <Button size="lg" variant="outline" className="px-8 text-base">
-                {t('landing.openApp', 'Open in browser')}
-              </Button>
-            </Link>
+            <Button asChild size="lg" className="px-8 text-base">
+              <a href="#download">{t('landing.download', 'Download')}</a>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="px-8 text-base"
+            >
+              <Link to="/login">{t('landing.openApp', 'Open in browser')}</Link>
+            </Button>
           </div>
         </div>
 
