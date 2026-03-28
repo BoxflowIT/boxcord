@@ -333,22 +333,10 @@ function registerIpcHandlers() {
  * than a specific code.
  */
 function isPkexecFailure(err: unknown): boolean {
-  const anyErr = err as Record<string, unknown>;
   const message = err instanceof Error ? err.message : String(err);
-
-  // Message mentions pkexec (e.g. "Command pkexec exited with code 100")
-  if (/pkexec/i.test(message)) return true;
-
-  // Node may report missing pkexec as ENOENT ("spawn pkexec ENOENT").
-  if (
-    typeof anyErr?.code === 'string' &&
-    anyErr.code === 'ENOENT' &&
-    /pkexec/i.test(message)
-  ) {
-    return true;
-  }
-
-  return false;
+  // Message mentions pkexec (e.g. "Command pkexec exited with code 100",
+  // "spawn pkexec ENOENT", etc.)
+  return /pkexec/i.test(message);
 }
 
 function setupAutoUpdater() {
