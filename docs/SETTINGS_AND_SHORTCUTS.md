@@ -181,7 +181,7 @@ Version info and update management (desktop only).
   - Downloading version X...
   - Version X ready to install + "Restart now" button
   - Error display with retry option (AlertTriangle icon)
-  - Linux manual-install error with clipboard command (ClipboardCopy icon)
+  - Linux manual-install error surfaced via the update banner, which shows the dpkg command with a ClipboardCopy icon
 - Privacy & Security information
 - Technology Stack information
 

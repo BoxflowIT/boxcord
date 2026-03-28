@@ -180,7 +180,7 @@ The desktop app checks for updates every 4 hours via `electron-updater` using a 
 On Linux, `electron-updater` installs `.deb` updates via `pkexec dpkg -i`, which requires root access. If `pkexec` fails (e.g. authentication denied, not installed, or any other error), the app falls back to a **manual install dialog**:
 
 1. `isPkexecFailure(err)` detects pkexec-related errors by matching `/pkexec/i` against the error message.
-2. `findDownloadedDeb()` locates the cached `.deb` in `$XDG_CACHE_HOME/{app}-updater/pending/` (or `~/.cache/` if `XDG_CACHE_HOME` is unset), selecting the most recent file by mtime.
+2. `findDownloadedDeb()` locates the cached `.deb` in `$XDG_CACHE_HOME/<app-name>-updater/pending/` (or `~/.cache/` if `XDG_CACHE_HOME` is unset), selecting the most recent file by mtime.
 3. `handleLinuxInstallFailure()` shows a native Electron dialog with the `sudo dpkg -i '<path>'` command and copies it to the clipboard.
 4. A `[MANUAL_INSTALL]`-prefixed error is sent to the renderer, which displays the banner with a ClipboardCopy icon instead of the standard AlertTriangle error icon.
 
