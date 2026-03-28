@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.24.7",
+    "date": "2026-03-28",
+    "notes": {
+      "en": [
+        "Handle all pkexec exit codes in update fallback"
+      ]
+    }
+  },
+  {
     "version": "1.24.6",
     "date": "2026-03-28",
     "notes": {
