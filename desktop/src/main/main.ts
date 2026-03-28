@@ -325,30 +325,19 @@ function registerIpcHandlers() {
 
 // ─── Auto-Update ─────────────────────────────────────────
 
-/** Detect pkexec/polkit privilege-escalation failure (exit code 127). */
+/**
+ * Detect pkexec/polkit privilege-escalation failure on Linux.
+ * pkexec can fail with various exit codes (100 = auth denied/dialog dismissed,
+ * 126 = not authorized, 127 = not found) — any non-zero pkexec exit is a
+ * failure we should fall back from, so we match on the pkexec keyword rather
+ * than a specific code.
+ */
 function isPkexecFailure(err: unknown): boolean {
   const anyErr = err as Record<string, unknown>;
   const message = err instanceof Error ? err.message : String(err);
 
-  // Normalize numeric exit code from either numeric or string fields.
-  let exitCode: number | undefined;
-  if (typeof anyErr?.code === 'number') {
-    exitCode = anyErr.code;
-  } else if (
-    typeof anyErr?.code === 'string' &&
-    /^\d+$/.test(anyErr.code as string)
-  ) {
-    exitCode = Number(anyErr.code);
-  } else if (typeof anyErr?.exitCode === 'number') {
-    exitCode = anyErr.exitCode;
-  } else if (
-    typeof anyErr?.exitCode === 'string' &&
-    /^\d+$/.test(anyErr.exitCode as string)
-  ) {
-    exitCode = Number(anyErr.exitCode);
-  }
-
-  if (exitCode === 127) return true;
+  // Message mentions pkexec (e.g. "Command pkexec exited with code 100")
+  if (/pkexec/i.test(message)) return true;
 
   // Node may report missing pkexec as ENOENT ("spawn pkexec ENOENT").
   if (
@@ -359,7 +348,7 @@ function isPkexecFailure(err: unknown): boolean {
     return true;
   }
 
-  return /pkexec.*exit(ed)? with code 127/i.test(message);
+  return false;
 }
 
 function setupAutoUpdater() {
@@ -410,8 +399,8 @@ function setupAutoUpdater() {
       autoUpdater.quitAndInstall(false, true);
     } catch (err) {
       // On Linux, quitAndInstall can fail when pkexec/polkit is unavailable
-      // (exit code 127). Fall back to relaunch — autoInstallOnAppQuit handles
-      // the actual file replacement on next launch.
+      // or auth is denied (exit codes 100, 126, 127, etc). Fall back to
+      // relaunch — autoInstallOnAppQuit handles the file replacement.
       const message = err instanceof Error ? err.message : 'Install failed';
       console.error('quitAndInstall failed:', message);
       if (process.platform === 'linux' && isPkexecFailure(err)) {
