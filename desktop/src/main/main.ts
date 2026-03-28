@@ -37,6 +37,7 @@ const IS_DEV =
 
 let mainWindow: BrowserWindow | null = null;
 let forceQuit = false;
+let isInstallingUpdate = false;
 
 function getAssetPath(...segments: string[]): string {
   const asarPath = path.join(__dirname, '..', '..', ...segments);
@@ -324,6 +325,43 @@ function registerIpcHandlers() {
 
 // ─── Auto-Update ─────────────────────────────────────────
 
+/** Detect pkexec/polkit privilege-escalation failure (exit code 127). */
+function isPkexecFailure(err: unknown): boolean {
+  const anyErr = err as Record<string, unknown>;
+  const message = err instanceof Error ? err.message : String(err);
+
+  // Normalize numeric exit code from either numeric or string fields.
+  let exitCode: number | undefined;
+  if (typeof anyErr?.code === 'number') {
+    exitCode = anyErr.code;
+  } else if (
+    typeof anyErr?.code === 'string' &&
+    /^\d+$/.test(anyErr.code as string)
+  ) {
+    exitCode = Number(anyErr.code);
+  } else if (typeof anyErr?.exitCode === 'number') {
+    exitCode = anyErr.exitCode;
+  } else if (
+    typeof anyErr?.exitCode === 'string' &&
+    /^\d+$/.test(anyErr.exitCode as string)
+  ) {
+    exitCode = Number(anyErr.exitCode);
+  }
+
+  if (exitCode === 127) return true;
+
+  // Node may report missing pkexec as ENOENT ("spawn pkexec ENOENT").
+  if (
+    typeof anyErr?.code === 'string' &&
+    anyErr.code === 'ENOENT' &&
+    /pkexec/i.test(message)
+  ) {
+    return true;
+  }
+
+  return /pkexec.*exit(ed)? with code 127/i.test(message);
+}
+
 function setupAutoUpdater() {
   if (IS_DEV) return;
 
@@ -340,6 +378,20 @@ function setupAutoUpdater() {
 
   autoUpdater.on('error', (err: Error) => {
     console.error('Auto-update error:', err.message);
+    if (
+      isInstallingUpdate &&
+      process.platform === 'linux' &&
+      isPkexecFailure(err)
+    ) {
+      console.log(
+        'Falling back to relaunch for Linux update install (async error)'
+      );
+      app.relaunch();
+      app.quit();
+      return;
+    }
+    isInstallingUpdate = false;
+    forceQuit = false;
     mainWindow?.webContents.send('update:error', err.message);
   });
 
@@ -354,6 +406,7 @@ function setupAutoUpdater() {
   ipcMain.on('update:install', () => {
     try {
       forceQuit = true;
+      isInstallingUpdate = true;
       autoUpdater.quitAndInstall(false, true);
     } catch (err) {
       // On Linux, quitAndInstall can fail when pkexec/polkit is unavailable
@@ -361,12 +414,13 @@ function setupAutoUpdater() {
       // the actual file replacement on next launch.
       const message = err instanceof Error ? err.message : 'Install failed';
       console.error('quitAndInstall failed:', message);
-      if (process.platform === 'linux' && /pkexec|127|sudo/.test(message)) {
+      if (process.platform === 'linux' && isPkexecFailure(err)) {
         console.log('Falling back to relaunch for Linux update install');
         app.relaunch();
         app.quit();
       } else {
         forceQuit = false;
+        isInstallingUpdate = false;
         mainWindow?.webContents.send('update:error', message);
       }
     }
