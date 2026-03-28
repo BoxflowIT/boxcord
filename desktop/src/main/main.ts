@@ -6,12 +6,14 @@ import {
   desktopCapturer,
   session,
   dialog,
-  powerMonitor
+  powerMonitor,
+  clipboard
 } from 'electron';
 import type { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
 import electronUpdater from 'electron-updater';
 const { autoUpdater } = electronUpdater;
 import path from 'node:path';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { createTray, updateTrayBadge } from './tray.js';
 import { registerNotificationHandlers } from './notifications.js';
@@ -334,9 +336,81 @@ function registerIpcHandlers() {
  */
 function isPkexecFailure(err: unknown): boolean {
   const message = err instanceof Error ? err.message : String(err);
-  // Message mentions pkexec (e.g. "Command pkexec exited with code 100",
-  // "spawn pkexec ENOENT", etc.)
   return /pkexec/i.test(message);
+}
+
+/**
+ * Find the downloaded .deb file in electron-updater's cache directory.
+ * Returns the absolute path if found, null otherwise.
+ */
+function findDownloadedDeb(): string | null {
+  try {
+    const cacheBase =
+      process.env.XDG_CACHE_HOME || path.join(app.getPath('home'), '.cache');
+    const cacheDir = path.join(cacheBase, `${app.name}-updater`, 'pending');
+    if (!fs.existsSync(cacheDir)) return null;
+    const debs = fs.readdirSync(cacheDir).filter((f) => f.endsWith('.deb'));
+
+    if (debs.length === 0) return null;
+
+    // Pick the most recently modified .deb
+    const newestDeb = debs
+      .map((file) => {
+        const fullPath = path.join(cacheDir, file);
+        const stat = fs.statSync(fullPath);
+        return { file, mtimeMs: stat.mtimeMs };
+      })
+      .sort((a, b) => b.mtimeMs - a.mtimeMs)[0].file;
+
+    return path.join(cacheDir, newestDeb);
+  } catch {
+    return null;
+  }
+}
+
+/** Stable prefix for manual-install errors (used by renderer to branch UI). */
+const MANUAL_INSTALL_PREFIX = '[MANUAL_INSTALL] ';
+
+/**
+ * Handle pkexec failure on Linux .deb installs.
+ * Shows a native dialog with the manual dpkg -i command and copies
+ * it to clipboard, since autoInstallOnAppQuit also needs root and
+ * a silent relaunch would not actually install the update.
+ */
+function handleLinuxInstallFailure(): void {
+  const debPath = findDownloadedDeb();
+  const cacheBase =
+    process.env.XDG_CACHE_HOME || path.join(app.getPath('home'), '.cache');
+  const fallbackDir = path.join(
+    cacheBase,
+    `${app.name}-updater`,
+    'pending',
+    '*.deb'
+  );
+  // Shell-quote the path to handle spaces/special characters
+  const quotedPath = debPath ? `'${debPath}'` : `'${fallbackDir}'`;
+  const command = `sudo dpkg -i ${quotedPath}`;
+
+  // Always copy the command to clipboard (even with the fallback glob)
+  clipboard.writeText(command);
+
+  const detail =
+    'The update was downloaded but could not be installed automatically because administrator access was denied.\n\n' +
+    `The install command has been copied to your clipboard. Open a terminal and paste it:\n\n${command}`;
+
+  dialog.showMessageBox(mainWindow!, {
+    type: 'info',
+    title: 'Manual install required',
+    message: 'Update requires manual installation',
+    detail,
+    buttons: ['OK']
+  });
+
+  mainWindow?.webContents.send(
+    'update:error',
+    MANUAL_INSTALL_PREFIX +
+      'Admin access denied — install command copied to clipboard. Open a terminal and paste it.'
+  );
 }
 
 function setupAutoUpdater() {
@@ -361,10 +435,11 @@ function setupAutoUpdater() {
       isPkexecFailure(err)
     ) {
       console.log(
-        'Falling back to relaunch for Linux update install (async error)'
+        'pkexec failed during install, showing manual install dialog'
       );
-      app.relaunch();
-      app.quit();
+      isInstallingUpdate = false;
+      forceQuit = false;
+      handleLinuxInstallFailure();
       return;
     }
     isInstallingUpdate = false;
@@ -386,15 +461,15 @@ function setupAutoUpdater() {
       isInstallingUpdate = true;
       autoUpdater.quitAndInstall(false, true);
     } catch (err) {
-      // On Linux, quitAndInstall can fail when pkexec/polkit is unavailable
-      // or auth is denied (exit codes 100, 126, 127, etc). Fall back to
-      // relaunch — autoInstallOnAppQuit handles the file replacement.
       const message = err instanceof Error ? err.message : 'Install failed';
       console.error('quitAndInstall failed:', message);
       if (process.platform === 'linux' && isPkexecFailure(err)) {
-        console.log('Falling back to relaunch for Linux update install');
-        app.relaunch();
-        app.quit();
+        // pkexec/polkit denied — autoInstallOnAppQuit also needs root,
+        // so a silent relaunch won't help. Show the user a manual command.
+        console.log('pkexec failed, showing manual install dialog');
+        forceQuit = false;
+        isInstallingUpdate = false;
+        handleLinuxInstallFailure();
       } else {
         forceQuit = false;
         isInstallingUpdate = false;
