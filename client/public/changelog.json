@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.25.0",
+    "date": "2026-03-28",
+    "notes": {
+      "en": [
+        "Redesign landing page inspired by usebottles.com"
+      ]
+    }
+  },
+  {
     "version": "1.24.9",
     "date": "2026-03-28",
     "notes": {
