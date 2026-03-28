@@ -328,14 +328,37 @@ function registerIpcHandlers() {
 /** Detect pkexec/polkit privilege-escalation failure (exit code 127). */
 function isPkexecFailure(err: unknown): boolean {
   const anyErr = err as Record<string, unknown>;
-  const exitCode =
-    typeof anyErr?.code === 'number'
-      ? anyErr.code
-      : typeof anyErr?.exitCode === 'number'
-        ? anyErr.exitCode
-        : undefined;
-  if (exitCode === 127) return true;
   const message = err instanceof Error ? err.message : String(err);
+
+  // Normalize numeric exit code from either numeric or string fields.
+  let exitCode: number | undefined;
+  if (typeof anyErr?.code === 'number') {
+    exitCode = anyErr.code;
+  } else if (
+    typeof anyErr?.code === 'string' &&
+    /^\d+$/.test(anyErr.code as string)
+  ) {
+    exitCode = Number(anyErr.code);
+  } else if (typeof anyErr?.exitCode === 'number') {
+    exitCode = anyErr.exitCode;
+  } else if (
+    typeof anyErr?.exitCode === 'string' &&
+    /^\d+$/.test(anyErr.exitCode as string)
+  ) {
+    exitCode = Number(anyErr.exitCode);
+  }
+
+  if (exitCode === 127) return true;
+
+  // Node may report missing pkexec as ENOENT ("spawn pkexec ENOENT").
+  if (
+    typeof anyErr?.code === 'string' &&
+    anyErr.code === 'ENOENT' &&
+    /pkexec/i.test(message)
+  ) {
+    return true;
+  }
+
   return /pkexec.*exit(ed)? with code 127/i.test(message);
 }
 
@@ -368,6 +391,7 @@ function setupAutoUpdater() {
       return;
     }
     isInstallingUpdate = false;
+    forceQuit = false;
     mainWindow?.webContents.send('update:error', err.message);
   });
 
