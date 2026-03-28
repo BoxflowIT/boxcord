@@ -180,7 +180,8 @@ Version info and update management (desktop only).
 - Update status indicators:
   - Downloading version X...
   - Version X ready to install + "Restart now" button
-  - Error display with retry option
+  - Error display with retry option (AlertTriangle icon)
+  - Linux manual-install error with clipboard command (ClipboardCopy icon)
 - Privacy & Security information
 - Technology Stack information
 

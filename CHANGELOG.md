@@ -5,6 +5,43 @@ All notable changes to Boxcord will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.24.8] - 2026-03-28
+
+### Changed
+
+- **Desktop updater (Linux)** — Show manual install dialog when pkexec fails:
+  - Detect downloaded `.deb` in `XDG_CACHE_HOME` (or `~/.cache`) with mtime-based selection
+  - Display native Electron dialog with `sudo dpkg -i '<path>'` command
+  - Copy install command to clipboard automatically
+  - Send `[MANUAL_INSTALL]` prefixed error to renderer for distinct UI treatment
+  - UpdateBanner shows ClipboardCopy icon for manual-install errors
+
+## [1.24.7] - 2026-03-28
+
+### Fixed
+
+- **Desktop updater (Linux)** — Handle all pkexec exit codes in update fallback:
+  - Match on `/pkexec/i` keyword instead of specific exit codes (100, 126, 127)
+  - Remove unreachable ENOENT branch; simplify `isPkexecFailure()` to 3-line function
+
+## [1.24.6] - 2026-03-28
+
+### Fixed
+
+- **Desktop updater (Linux)** — Handle async pkexec failure and tighten detection:
+  - Add `isInstallingUpdate` flag for async `autoUpdater.on('error')` handler
+  - Create `isPkexecFailure()` helper with structured error code/exit code checks
+  - Handle ENOENT and string exit codes
+  - Reset `forceQuit` flag in async error path
+
+## [1.24.5] - 2026-03-27
+
+### Fixed
+
+- **Desktop updater (Linux)** — Fallback to `app.relaunch()` when pkexec is unavailable:
+  - Detect pkexec/sudo failure (exit code 127) in `quitAndInstall` catch block
+  - Fall back to `app.relaunch()` + `app.quit()` when elevated install fails
+
 ## [1.24.4] - 2026-03-27
 
 ### Fixed
