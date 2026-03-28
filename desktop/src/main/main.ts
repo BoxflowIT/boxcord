@@ -345,23 +345,31 @@ function isPkexecFailure(err: unknown): boolean {
  */
 function findDownloadedDeb(): string | null {
   try {
-    const cacheDir = path.join(
-      app.getPath('home'),
-      '.cache',
-      `${app.name}-updater`,
-      'pending'
-    );
+    const cacheBase =
+      process.env.XDG_CACHE_HOME || path.join(app.getPath('home'), '.cache');
+    const cacheDir = path.join(cacheBase, `${app.name}-updater`, 'pending');
     if (!fs.existsSync(cacheDir)) return null;
-    const debs = fs
-      .readdirSync(cacheDir)
-      .filter((f) => f.endsWith('.deb'))
-      .sort()
-      .reverse(); // newest first (version sort)
-    return debs.length > 0 ? path.join(cacheDir, debs[0]) : null;
+    const debs = fs.readdirSync(cacheDir).filter((f) => f.endsWith('.deb'));
+
+    if (debs.length === 0) return null;
+
+    // Pick the most recently modified .deb
+    const newestDeb = debs
+      .map((file) => {
+        const fullPath = path.join(cacheDir, file);
+        const stat = fs.statSync(fullPath);
+        return { file, mtimeMs: stat.mtimeMs };
+      })
+      .sort((a, b) => b.mtimeMs - a.mtimeMs)[0].file;
+
+    return path.join(cacheDir, newestDeb);
   } catch {
     return null;
   }
 }
+
+/** Stable prefix for manual-install errors (used by renderer to branch UI). */
+const MANUAL_INSTALL_PREFIX = '[MANUAL_INSTALL] ';
 
 /**
  * Handle pkexec failure on Linux .deb installs.
@@ -371,31 +379,37 @@ function findDownloadedDeb(): string | null {
  */
 function handleLinuxInstallFailure(): void {
   const debPath = findDownloadedDeb();
-  const command = debPath
-    ? `sudo dpkg -i ${debPath}`
-    : 'sudo dpkg -i ~/.cache/boxcord-desktop-updater/pending/*.deb';
+  const cacheBase =
+    process.env.XDG_CACHE_HOME || path.join(app.getPath('home'), '.cache');
+  const fallbackDir = path.join(
+    cacheBase,
+    `${app.name}-updater`,
+    'pending',
+    '*.deb'
+  );
+  // Shell-quote the path to handle spaces/special characters
+  const quotedPath = debPath ? `'${debPath}'` : `'${fallbackDir}'`;
+  const command = `sudo dpkg -i ${quotedPath}`;
 
-  if (debPath) {
-    clipboard.writeText(command);
-  }
+  // Always copy the command to clipboard (even with the fallback glob)
+  clipboard.writeText(command);
 
-  const message = debPath
-    ? `The update was downloaded but could not be installed automatically because administrator access was denied.\n\nThe install command has been copied to your clipboard. Open a terminal and paste it:\n\n${command}`
-    : 'The update was downloaded but could not be installed automatically because administrator access was denied.\n\nOpen a terminal and run:\n\n' +
-      command;
+  const detail =
+    'The update was downloaded but could not be installed automatically because administrator access was denied.\n\n' +
+    `The install command has been copied to your clipboard. Open a terminal and paste it:\n\n${command}`;
 
   dialog.showMessageBox(mainWindow!, {
     type: 'info',
     title: 'Manual install required',
     message: 'Update requires manual installation',
-    detail: message,
+    detail,
     buttons: ['OK']
   });
 
-  // Send a user-friendly error to the renderer
   mainWindow?.webContents.send(
     'update:error',
-    'Admin access denied — install command copied to clipboard. Open a terminal and paste it.'
+    MANUAL_INSTALL_PREFIX +
+      'Admin access denied — install command copied to clipboard. Open a terminal and paste it.'
   );
 }
 

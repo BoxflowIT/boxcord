@@ -7,7 +7,11 @@ export function UpdateBanner() {
   if (!updateReady && !updateError) return null;
 
   if (updateError) {
-    const isManualInstall = updateError.includes('clipboard');
+    // Main process prefixes manual-install errors with [MANUAL_INSTALL]
+    const isManualInstall = updateError.startsWith('[MANUAL_INSTALL] ');
+    const displayMessage = isManualInstall
+      ? updateError.slice('[MANUAL_INSTALL] '.length)
+      : `Update failed: ${updateError}`;
     return (
       <div className="flex items-center justify-center gap-3 bg-amber-600 px-4 py-2 text-sm text-white">
         {isManualInstall ? (
@@ -15,9 +19,7 @@ export function UpdateBanner() {
         ) : (
           <AlertTriangle size={16} />
         )}
-        <span>
-          {isManualInstall ? updateError : `Update failed: ${updateError}`}
-        </span>
+        <span>{displayMessage}</span>
       </div>
     );
   }
