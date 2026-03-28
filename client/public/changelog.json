@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.24.6",
+    "date": "2026-03-28",
+    "notes": {
+      "en": [
+        "Handle async pkexec failure and tighten detection"
+      ]
+    }
+  },
+  {
     "version": "1.24.5",
     "date": "2026-03-27",
     "notes": {
