@@ -3,7 +3,10 @@
     "version": "1.25.1",
     "date": "2026-04-07",
     "notes": {
-      "en": ["Patch critical security vulnerabilities in dependencies (#66)"]
+      "en": [
+        "Patch critical security vulnerabilities in dependencies",
+        "Fix macOS DMG build + CI audit hardening"
+      ]
     }
   },
   {
