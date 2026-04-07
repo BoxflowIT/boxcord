@@ -247,9 +247,19 @@ jobs:
 
       - name: Run yarn audit (fail on high/critical only)
         run: |
-          # fast-jwt advisories have no upstream patch — mitigated via explicit algorithm config in jwt.ts
+          # fast-jwt advisories have no upstream patch — no runtime risk (Cognito uses jsonwebtoken with RS256)
           IGNORED_ADVISORIES="1115824 1115959 1116107 1116113"
-          AUDIT_JSON=$(yarn audit --json --level high 2>/dev/null || true)
+          AUDIT_EXIT_CODE=0
+          AUDIT_JSON=$(yarn audit --json --level high 2>/dev/null) || AUDIT_EXIT_CODE=$?
+          # Yarn audit exit codes: 0=clean, >=2=vulns found, 1=execution error
+          if [ "$AUDIT_EXIT_CODE" -eq 1 ]; then
+            echo "::error::yarn audit failed to run correctly (exit code 1)"
+            exit 1
+          fi
+          if ! echo "$AUDIT_JSON" | grep -q '"type":"auditSummary"'; then
+            echo "::error::yarn audit did not produce a valid auditSummary"
+            exit 1
+          fi
           UNIGNORED=$(echo "$AUDIT_JSON" | grep '"type":"auditAdvisory"' | while read -r line; do
             id=$(echo "$line" | grep -o '"id":[0-9]*' | head -1 | grep -o '[0-9]*')
             skip=false
