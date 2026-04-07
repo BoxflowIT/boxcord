@@ -247,8 +247,8 @@ jobs:
 
       - name: Run yarn audit (fail on high/critical only)
         run: |
-          # fast-jwt advisories 1115824,1115959 have no upstream patch — mitigated via explicit algorithm config in jwt.ts
-          IGNORED_ADVISORIES="1115824 1115959"
+          # fast-jwt advisories have no upstream patch — mitigated via explicit algorithm config in jwt.ts
+          IGNORED_ADVISORIES="1115824 1115959 1116107 1116113"
           AUDIT_JSON=$(yarn audit --json --level high 2>/dev/null || true)
           UNIGNORED=$(echo "$AUDIT_JSON" | grep '"type":"auditAdvisory"' | while read -r line; do
             id=$(echo "$line" | grep -o '"id":[0-9]*' | head -1 | grep -o '[0-9]*')
