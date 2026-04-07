@@ -276,6 +276,20 @@ jobs:
       - name: Run client yarn audit (fail on high/critical only)
         working-directory: ./client
         run: |
-          EXIT_CODE=0
-          yarn audit --level high || EXIT_CODE=$?
-          if [ $EXIT_CODE -ge 8 ]; then exit 1; fi
+          AUDIT_EXIT_CODE=0
+          AUDIT_JSON=$(yarn audit --json --level high 2>/dev/null) || AUDIT_EXIT_CODE=$?
+          if [ "$AUDIT_EXIT_CODE" -eq 1 ]; then
+            echo "::error::client yarn audit failed to run correctly (exit code 1)"
+            exit 1
+          fi
+          if ! echo "$AUDIT_JSON" | grep -q '"type":"auditSummary"'; then
+            echo "::error::client yarn audit did not produce a valid auditSummary"
+            exit 1
+          fi
+          HIGH_COUNT=$(echo "$AUDIT_JSON" | grep '"type":"auditAdvisory"' | grep -c '"severity":"high"\|"severity":"critical"' || true)
+          if [ "$HIGH_COUNT" -gt 0 ]; then
+            echo "$AUDIT_JSON" | grep '"type":"auditAdvisory"' | grep '"severity":"high"\|"severity":"critical"' | head -10
+            echo "::error::client yarn audit found $HIGH_COUNT high/critical vulnerabilities"
+            exit 1
+          fi
+          echo "✅ No high/critical client vulnerabilities found"
