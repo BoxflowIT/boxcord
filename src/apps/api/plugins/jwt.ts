@@ -65,8 +65,7 @@ async function jwtPluginImpl(app: FastifyInstance) {
 
   await app.register(jwt, {
     secret: jwtSecret,
-    decode: { complete: true },
-    verify: { algorithms: ['HS256'] }
+    decode: { complete: true }
   });
 
   // Auth decorator for protected routes
