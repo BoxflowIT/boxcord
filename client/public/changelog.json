@@ -4,16 +4,8 @@
     "date": "2026-04-07",
     "notes": {
       "en": [
-        "MacOS DMG build + CI audit hardening + security review fixes"
-      ]
-    }
-  },
-  {
-    "version": "1.25.1",
-    "date": "2026-04-07",
-    "notes": {
-      "en": [
-        "Patch critical security vulnerabilities in dependencies (#66)"
+        "Patch critical security vulnerabilities in dependencies",
+        "Fix macOS DMG build + CI audit hardening"
       ]
     }
   },
@@ -21,63 +13,49 @@
     "version": "1.25.0",
     "date": "2026-03-28",
     "notes": {
-      "en": [
-        "Redesign landing page inspired by usebottles.com"
-      ]
+      "en": ["Redesign landing page inspired by usebottles.com"]
     }
   },
   {
     "version": "1.24.9",
     "date": "2026-03-28",
     "notes": {
-      "en": [
-        "Resolve CHANGELOG markdown lint errors (#365)"
-      ]
+      "en": ["Resolve CHANGELOG markdown lint errors (#365)"]
     }
   },
   {
     "version": "1.24.8",
     "date": "2026-03-28",
     "notes": {
-      "en": [
-        "Show manual install dialog when pkexec fails on Linux"
-      ]
+      "en": ["Show manual install dialog when pkexec fails on Linux"]
     }
   },
   {
     "version": "1.24.7",
     "date": "2026-03-28",
     "notes": {
-      "en": [
-        "Handle all pkexec exit codes in update fallback"
-      ]
+      "en": ["Handle all pkexec exit codes in update fallback"]
     }
   },
   {
     "version": "1.24.6",
     "date": "2026-03-28",
     "notes": {
-      "en": [
-        "Handle async pkexec failure and tighten detection"
-      ]
+      "en": ["Handle async pkexec failure and tighten detection"]
     }
   },
   {
     "version": "1.24.5",
     "date": "2026-03-27",
     "notes": {
-      "en": [
-        "Fallback to relaunch when pkexec unavailable on Linux (#361)"
-      ]
+      "en": ["Fallback to relaunch when pkexec unavailable on Linux (#361)"]
     }
   },
   {
     "version": "1.24.4",
     "date": "2026-03-27",
     "notes": {
-      "en": [
-        "Resolve 4 dependabot alerts (#359)"
-      ]
+      "en": ["Resolve 4 dependabot alerts (#359)"]
     }
   },
   {
@@ -94,9 +72,7 @@
     "version": "1.24.2",
     "date": "2026-03-26",
     "notes": {
-      "en": [
-        "Resolve picomatch ReDoS in client deps"
-      ]
+      "en": ["Resolve picomatch ReDoS in client deps"]
     }
   },
   {
@@ -113,45 +89,35 @@
     "version": "1.24.0",
     "date": "2026-03-26",
     "notes": {
-      "en": [
-        "Discord-style UI modernization & voice VAD fixes (#349)"
-      ]
+      "en": ["Discord-style UI modernization & voice VAD fixes (#349)"]
     }
   },
   {
     "version": "1.23.5",
     "date": "2026-03-24",
     "notes": {
-      "en": [
-        "Address copilot review round 2 (#348)"
-      ]
+      "en": ["Address copilot review round 2 (#348)"]
     }
   },
   {
     "version": "1.23.4",
     "date": "2026-03-24",
     "notes": {
-      "en": [
-        "Voice call reliability + multi-tenant Microsoft 365"
-      ]
+      "en": ["Voice call reliability + multi-tenant Microsoft 365"]
     }
   },
   {
     "version": "1.23.2",
     "date": "2026-03-23",
     "notes": {
-      "en": [
-        "Security hardening — CodeQL findings + dependency vulns"
-      ]
+      "en": ["Security hardening — CodeQL findings + dependency vulns"]
     }
   },
   {
     "version": "1.23.1",
     "date": "2026-03-19",
     "notes": {
-      "en": [
-        "Add h-full to sidebar-main for member list height"
-      ]
+      "en": ["Add h-full to sidebar-main for member list height"]
     }
   },
   {
@@ -174,18 +140,14 @@
     "version": "1.22.0",
     "date": "2026-03-14",
     "notes": {
-      "en": [
-        "Hide desktop menu bar and add stay signed in option"
-      ]
+      "en": ["Hide desktop menu bar and add stay signed in option"]
     }
   },
   {
     "version": "1.21.7",
     "date": "2026-03-14",
     "notes": {
-      "en": [
-        "Fix Ubuntu taskbar icon, pinning, and multi-size icons"
-      ]
+      "en": ["Fix Ubuntu taskbar icon, pinning, and multi-size icons"]
     }
   },
   {
@@ -201,18 +163,14 @@
     "version": "1.21.5",
     "date": "2026-03-14",
     "notes": {
-      "en": [
-        "Resolve all 84 CodeQL code quality findings"
-      ]
+      "en": ["Resolve all 84 CodeQL code quality findings"]
     }
   },
   {
     "version": "1.21.4",
     "date": "2026-03-14",
     "notes": {
-      "en": [
-        "Add per-route rate limits to file attachment routes"
-      ]
+      "en": ["Add per-route rate limits to file attachment routes"]
     }
   },
   {
@@ -239,9 +197,7 @@
     "version": "1.21.1",
     "date": "2026-03-14",
     "notes": {
-      "en": [
-        "Add security resolutions to client package.json"
-      ]
+      "en": ["Add security resolutions to client package.json"]
     }
   },
   {
