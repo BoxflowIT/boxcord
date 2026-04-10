@@ -24,16 +24,28 @@ interface AuthState {
   logout: () => void;
 }
 
-// Check if user previously chose "remember me" (stored in localStorage)
-let wasRemembered = false;
-try {
-  wasRemembered = localStorage.getItem('boxcord-remember-me') === 'true';
-} catch {
-  // localStorage may not be available in test environments
+// Safe localStorage wrapper for environments where it may not be available
+// Node.js test environments may define localStorage without full Storage API
+function safeLocalStorage(): Storage | null {
+  try {
+    if (
+      typeof localStorage !== 'undefined' &&
+      typeof localStorage.getItem === 'function'
+    ) {
+      return localStorage;
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }
 
+// Check if user previously chose "remember me" (stored in localStorage)
+const wasRemembered =
+  safeLocalStorage()?.getItem('boxcord-remember-me') === 'true';
+
 function getStorage() {
-  return wasRemembered ? localStorage : sessionStorage;
+  return wasRemembered ? safeLocalStorage() || sessionStorage : sessionStorage;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -50,16 +62,19 @@ export const useAuthStore = create<AuthState>()(
         })),
       setLoading: (loading) => set({ isLoading: loading }),
       setRememberMe: (remember) => {
-        localStorage.setItem('boxcord-remember-me', String(remember));
+        safeLocalStorage()?.setItem('boxcord-remember-me', String(remember));
         set({ rememberMe: remember });
       },
       logout: () => {
         // Clear Cognito tokens from both storages
-        const keys = Object.keys(localStorage).filter((k) =>
-          k.startsWith('CognitoIdentityServiceProvider')
-        );
+        const ls = safeLocalStorage();
+        const keys = ls
+          ? Object.keys(ls).filter((k) =>
+              k.startsWith('CognitoIdentityServiceProvider')
+            )
+          : [];
         keys.forEach((k) => {
-          localStorage.removeItem(k);
+          ls?.removeItem(k);
           sessionStorage.removeItem(k);
         });
         set({ token: null, user: null });
