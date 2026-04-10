@@ -25,7 +25,12 @@ interface AuthState {
 }
 
 // Check if user previously chose "remember me" (stored in localStorage)
-const wasRemembered = localStorage.getItem('boxcord-remember-me') === 'true';
+let wasRemembered = false;
+try {
+  wasRemembered = localStorage.getItem('boxcord-remember-me') === 'true';
+} catch {
+  // localStorage may not be available in test environments
+}
 
 function getStorage() {
   return wasRemembered ? localStorage : sessionStorage;

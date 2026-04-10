@@ -1,6 +1,6 @@
 {
   "name": "boxcord",
-  "version": "1.25.1",
+  "version": "1.25.2",
   "description": "Internal chat system for Boxflow - Discord-like chat integrated with Boxtime",
   "type": "module",
   "scripts": {
@@ -110,7 +110,8 @@
     "yaml": ">=2.8.3",
     "defu": ">=6.1.5",
     "vite": "^7.3.2",
-    "fast-jwt": ">=6.2.0"
+    "fast-jwt": ">=6.2.0",
+    "axios": ">=1.15.0"
   },
   "engines": {
     "node": ">=20.0.0"
