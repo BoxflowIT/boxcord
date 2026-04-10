@@ -5,6 +5,14 @@ All notable changes to Boxcord will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.25.3] - 2026-04-11
+
+### Added
+
+- **Desktop (Linux)** — Add RPM and Pacman build targets for broader distro support:
+  - AppImage (universal), .deb (Debian/Ubuntu), .rpm (Fedora/RHEL/openSUSE), .pacman (Arch/Manjaro)
+  - Update manual install fallback to detect package type and show correct command (`dpkg -i`, `rpm -U`, `pacman -U`)
+
 ## [1.24.9] - 2026-03-28
 
 ### Fixed

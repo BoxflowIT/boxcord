@@ -95,7 +95,7 @@ This compiles TypeScript and starts Electron pointed at `localhost:5173`.
 |`yarn build`|Compile TypeScript only|
 |`yarn build:win`|Build Windows installer (.exe)|
 |`yarn build:mac`|Build macOS package (.dmg)|
-|`yarn build:linux`|Build Linux packages (.AppImage + .deb)|
+|`yarn build:linux`|Build Linux packages (.AppImage + .deb + .rpm + .pacman)|
 |`yarn build:all`|Build for all platforms|
 |`yarn typecheck`|TypeScript validation|
 |`yarn clean`|Remove dist/ and out/|
@@ -123,7 +123,7 @@ The workflow runs three parallel jobs — Linux (`ubuntu-latest`), Windows (`win
 
 | Platform | Output |
 |---|---|
-| Linux | `Boxcord-1.13.0.AppImage`, `boxcord_1.13.0_amd64.deb` |
+| Linux | `Boxcord-1.13.0.AppImage`, `boxcord_1.13.0_amd64.deb`, `boxcord-1.13.0-1-x86_64.pkg.tar.zst`, `boxcord-1.13.0.x86_64.rpm` |
 | Windows | `Boxcord Setup 1.13.0.exe` |
 | macOS | `Boxcord-1.13.0.dmg` |
 
@@ -133,7 +133,7 @@ No manual icon conversion needed — `electron-builder` auto-converts `icon-1024
 
 ```bash
 cd desktop
-yarn build:linux    # → out/Boxcord-1.12.0.AppImage + .deb
+yarn build:linux    # → out/Boxcord-1.12.0.AppImage + .deb + .rpm + .pacman
 yarn build:win      # → out/Boxcord Setup 1.12.0.exe  (Windows or cross-compile)
 yarn build:mac      # → out/Boxcord-1.12.0.dmg        (macOS only)
 ```
