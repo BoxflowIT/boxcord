@@ -107,7 +107,7 @@ jobs:
 
       - name: Upload artifacts to release
         working-directory: desktop/out
-        run: gh release upload "${{ needs.create-release.outputs.tag }}" *.AppImage *.deb *.rpm *.pacman latest-linux.yml --clobber
+        run: gh release upload "${{ needs.create-release.outputs.tag }}" *.AppImage *.deb *.rpm *.pkg.tar.zst latest-linux.yml --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -121,7 +121,7 @@ jobs:
         working-directory: desktop/out
         run: |
           # Binaries — immutable cache
-          for f in *.AppImage *.deb *.rpm *.pacman; do
+          for f in *.AppImage *.deb *.rpm *.pkg.tar.zst; do
             aws s3 cp "$f" "s3://${{ vars.FRONTEND_BUCKET_NAME }}/desktop-updates/$f" \
               --cache-control "public, max-age=31536000, immutable"
           done
