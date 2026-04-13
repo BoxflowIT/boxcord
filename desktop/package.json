@@ -65,7 +65,9 @@
     "linux": {
       "target": [
         "AppImage",
-        "deb"
+        "deb",
+        "rpm",
+        "pacman"
       ],
       "executableName": "boxcord",
       "icon": "build/icons",
