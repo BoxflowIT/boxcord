@@ -340,29 +340,40 @@ function isPkexecFailure(err: unknown): boolean {
 }
 
 /**
- * Find the downloaded .deb file in electron-updater's cache directory.
- * Returns the absolute path if found, null otherwise.
+ * Find the downloaded .deb/.rpm/.pkg.tar.zst file in electron-updater's cache directory.
+ * Returns the absolute path and package type if found, null otherwise.
  */
-function findDownloadedDeb(): string | null {
+function findDownloadedPackage(): {
+  path: string;
+  type: 'deb' | 'rpm' | 'pacman';
+} | null {
   try {
     const cacheBase =
       process.env.XDG_CACHE_HOME || path.join(app.getPath('home'), '.cache');
     const cacheDir = path.join(cacheBase, `${app.name}-updater`, 'pending');
     if (!fs.existsSync(cacheDir)) return null;
-    const debs = fs.readdirSync(cacheDir).filter((f) => f.endsWith('.deb'));
 
-    if (debs.length === 0) return null;
+    const extensions: Array<{ ext: string; type: 'deb' | 'rpm' | 'pacman' }> = [
+      { ext: '.deb', type: 'deb' },
+      { ext: '.rpm', type: 'rpm' },
+      { ext: '.pkg.tar.zst', type: 'pacman' }
+    ];
 
-    // Pick the most recently modified .deb
-    const newestDeb = debs
-      .map((file) => {
-        const fullPath = path.join(cacheDir, file);
-        const stat = fs.statSync(fullPath);
-        return { file, mtimeMs: stat.mtimeMs };
-      })
-      .sort((a, b) => b.mtimeMs - a.mtimeMs)[0].file;
+    for (const { ext, type } of extensions) {
+      const packages = fs.readdirSync(cacheDir).filter((f) => f.endsWith(ext));
+      if (packages.length > 0) {
+        const newest = packages
+          .map((file) => {
+            const fullPath = path.join(cacheDir, file);
+            const stat = fs.statSync(fullPath);
+            return { file, mtimeMs: stat.mtimeMs };
+          })
+          .sort((a, b) => b.mtimeMs - a.mtimeMs)[0].file;
+        return { path: path.join(cacheDir, newest), type };
+      }
+    }
 
-    return path.join(cacheDir, newestDeb);
+    return null;
   } catch {
     return null;
   }
@@ -372,24 +383,43 @@ function findDownloadedDeb(): string | null {
 const MANUAL_INSTALL_PREFIX = '[MANUAL_INSTALL] ';
 
 /**
- * Handle pkexec failure on Linux .deb installs.
- * Shows a native dialog with the manual dpkg -i command and copies
+ * Handle pkexec failure on Linux package installs.
+ * Shows a native dialog with the appropriate manual install command
+ * (dpkg for .deb, rpm for .rpm, pacman for .pkg.tar.zst) and copies
  * it to clipboard, since autoInstallOnAppQuit also needs root and
  * a silent relaunch would not actually install the update.
  */
 function handleLinuxInstallFailure(): void {
-  const debPath = findDownloadedDeb();
+  const pkg = findDownloadedPackage();
   const cacheBase =
     process.env.XDG_CACHE_HOME || path.join(app.getPath('home'), '.cache');
-  const fallbackDir = path.join(
-    cacheBase,
-    `${app.name}-updater`,
-    'pending',
-    '*.deb'
-  );
-  // Shell-quote the path to handle spaces/special characters
-  const quotedPath = debPath ? `'${debPath}'` : `'${fallbackDir}'`;
-  const command = `sudo dpkg -i ${quotedPath}`;
+  const fallbackDir = path.join(cacheBase, `${app.name}-updater`, 'pending');
+
+  let command: string;
+  if (pkg) {
+    const quotedPath = `'${pkg.path}'`;
+    switch (pkg.type) {
+      case 'rpm':
+        command = `sudo rpm -U ${quotedPath}`;
+        break;
+      case 'pacman':
+        command = `sudo pacman -U ${quotedPath}`;
+        break;
+      default:
+        command = `sudo dpkg -i ${quotedPath}`;
+    }
+  } else {
+    // Fallback: detect available package manager and suggest correct command
+    const hasRpm = fs.existsSync('/usr/bin/rpm');
+    const hasPacman = fs.existsSync('/usr/bin/pacman');
+    if (hasPacman) {
+      command = `sudo pacman -U '${fallbackDir}'/*.pkg.tar.zst`;
+    } else if (hasRpm) {
+      command = `sudo rpm -U '${fallbackDir}'/*.rpm`;
+    } else {
+      command = `sudo dpkg -i '${fallbackDir}'/*.deb`;
+    }
+  }
 
   // Always copy the command to clipboard (even with the fallback glob)
   clipboard.writeText(command);
