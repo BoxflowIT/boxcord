@@ -75,7 +75,7 @@ jobs:
 
   # ─── Linux ──────────────────────────────────────────────────────────
   release-linux:
-    name: Linux (AppImage + deb)
+    name: Linux (AppImage + deb + rpm + pacman)
     needs: create-release
     runs-on: ubuntu-latest
 
@@ -89,6 +89,9 @@ jobs:
           node-version: '22'
           cache: 'yarn'
           cache-dependency-path: desktop/yarn.lock
+
+      - name: Install system dependencies for rpm/pacman builds
+        run: sudo apt-get update && sudo apt-get install -y libarchive-tools rpm
 
       - name: Install dependencies
         working-directory: desktop
@@ -104,7 +107,7 @@ jobs:
 
       - name: Upload artifacts to release
         working-directory: desktop/out
-        run: gh release upload "${{ needs.create-release.outputs.tag }}" *.AppImage *.deb latest-linux.yml --clobber
+        run: gh release upload "${{ needs.create-release.outputs.tag }}" *.AppImage *.deb *.rpm *.pacman latest-linux.yml --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -118,7 +121,7 @@ jobs:
         working-directory: desktop/out
         run: |
           # Binaries — immutable cache
-          for f in *.AppImage *.deb; do
+          for f in *.AppImage *.deb *.rpm *.pacman; do
             aws s3 cp "$f" "s3://${{ vars.FRONTEND_BUCKET_NAME }}/desktop-updates/$f" \
               --cache-control "public, max-age=31536000, immutable"
           done
