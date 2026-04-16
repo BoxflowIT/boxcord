@@ -112,7 +112,6 @@
     "vite": "^7.3.2",
     "fast-jwt": ">=6.2.2",
     "follow-redirects": ">=1.16.0",
-    "dompurify": ">=3.4.0",
     "axios": ">=1.15.0"
   },
   "engines": {

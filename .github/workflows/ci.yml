@@ -246,6 +246,10 @@ jobs:
           node-version: '20'
 
       - name: Run npm audit (fail on high/critical only)
+        # NOTE: yarn audit API returns HTTP 410 (deprecated/shutdown by yarnpkg.com).
+        # We generate a temporary package-lock.json for npm audit instead.
+        # The audited graph may slightly differ from yarn.lock but is the best
+        # available option until the project migrates to a newer package manager.
         run: |
           npm i --package-lock-only --ignore-scripts 2>/dev/null
           set +e
