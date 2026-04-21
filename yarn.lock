@@ -3653,7 +3653,7 @@ fast-json-stringify@^6.0.0:
     json-schema-ref-resolver "^3.0.0"
     rfdc "^1.2.0"
 
-fast-jwt@>=6.2.1, fast-jwt@^6.0.2:
+fast-jwt@>=6.2.2, fast-jwt@^6.0.2:
   version "6.2.2"
   resolved "https://registry.yarnpkg.com/fast-jwt/-/fast-jwt-6.2.2.tgz#a84b1862410c7b1fb37ee74608c44dfaf917f082"
   integrity sha512-lzy+8JVyBOvwxjydFRBKLFVe1elRArL37pHRX1zHPt4T7FP7kNIpqauE1lOjZlD79DBzzRzQmp+28wbsY13weA==
@@ -5086,9 +5086,9 @@ safe-buffer@~5.1.0, safe-buffer@~5.1.1:
   integrity sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==
 
 safe-regex2@^5.0.0, safe-regex2@^5.1.0:
-  version "5.1.1"
-  resolved "https://registry.yarnpkg.com/safe-regex2/-/safe-regex2-5.1.1.tgz#a5f3a6e35b8d84d0f41fa22efd5b6d30b367bbc7"
-  integrity sha512-mOSBvHGDZMuIEZMdOz/aCEYDCv0E7nfcNsIhUF+/P+xC7Hyf3FkvymqgPbg9D1EdSGu+uKbJgy09K/RKKc7kJA==
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/safe-regex2/-/safe-regex2-5.1.0.tgz#758fd224d066f5abe24f67bd574a01c9dd447f51"
+  integrity sha512-pNHAuBW7TrcleFHsxBr5QMi/Iyp0ENjUKz7GCcX1UO7cMh+NmVK6HxQckNL1tJp1XAJVjG6B8OKIPqodqj9rtw==
   dependencies:
     ret "~0.5.0"
 

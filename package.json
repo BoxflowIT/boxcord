@@ -110,7 +110,7 @@
     "yaml": ">=2.8.3",
     "defu": ">=6.1.5",
     "vite": "^7.3.2",
-    "fast-jwt": ">=6.2.1",
+    "fast-jwt": ">=6.2.2",
     "follow-redirects": ">=1.16.0",
     "axios": ">=1.15.0",
     "@fastify/static": "9.1.3",
