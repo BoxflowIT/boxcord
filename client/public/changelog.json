@@ -1,5 +1,16 @@
 [
   {
+    "version": "1.26.1",
+    "date": "2026-04-21",
+    "notes": {
+      "en": [
+        "Patch 15 security vulnerabilities from yarn audit",
+        "Use .pkg.tar.zst glob for pacman artifacts in desktop release workflow (#371)",
+        "Install bsdtar/rpm for pacman/rpm Linux desktop builds"
+      ]
+    }
+  },
+  {
     "version": "1.26.0",
     "date": "2026-04-13",
     "notes": {
