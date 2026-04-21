@@ -21,8 +21,9 @@ jobs:
         include:
           - env: production
             url_var: PRODUCTION_URL
-          - env: staging
-            url_var: STAGING_URL
+          # Staging shut down 2026-04-21 — re-enable if reprovisioned
+          # - env: staging
+          #   url_var: STAGING_URL
 
     steps:
       - name: Health Check (${{ matrix.env }})

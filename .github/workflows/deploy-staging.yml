@@ -1,8 +1,11 @@
 name: Deploy to Staging
 
+# Staging environment shut down 2026-04-21 to save costs (~$46/month).
+# Re-enable push trigger if staging is reprovisioned.
 on:
-  push:
-    branches: [develop]
+  workflow_dispatch:
+  # push:
+  #   branches: [develop]
 
 concurrency:
   group: staging-deploy
