@@ -132,10 +132,24 @@ export async function threadRoutes(app: FastifyInstance) {
   // Get analytics for a specific thread
   app.get<{
     Params: { id: string };
-  }>('/:id/analytics', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request) => {
-    const analytics = await threadService.getThreadAnalytics(request.params.id);
-    return { success: true, data: analytics };
-  });
+  }>(
+    '/:id/analytics',
+    { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      try {
+        const analytics = await threadService.getThreadAnalytics(
+          request.params.id
+        );
+        return { success: true, data: analytics };
+      } catch (err) {
+        request.log.error({ err }, 'Failed to get thread analytics');
+        return reply.status(500).send({
+          success: false,
+          error: 'Failed to retrieve thread analytics'
+        });
+      }
+    }
+  );
 
   // Get channel-level thread analytics
   app.get<{
@@ -149,11 +163,19 @@ export async function threadRoutes(app: FastifyInstance) {
       preHandler: app.validateQuery(z.object({ channelId: z.string().min(1) }))
     },
     async (request, reply) => {
-      const analytics = await threadService.getChannelThreadAnalytics(
-        request.query.channelId
-      );
-      reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
-      return { success: true, data: analytics };
+      try {
+        const analytics = await threadService.getChannelThreadAnalytics(
+          request.query.channelId
+        );
+        reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+        return { success: true, data: analytics };
+      } catch (err) {
+        request.log.error({ err }, 'Failed to get channel thread analytics');
+        return reply.status(500).send({
+          success: false,
+          error: 'Failed to retrieve channel thread analytics'
+        });
+      }
     }
   );
 
@@ -202,42 +224,50 @@ export async function threadRoutes(app: FastifyInstance) {
   // Get thread by ID
   app.get<{
     Params: { id: string };
-  }>('/:id', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request, reply) => {
-    const thread = await threadService.getThread(
-      request.params.id,
-      request.user.id
-    );
+  }>(
+    '/:id',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      const thread = await threadService.getThread(
+        request.params.id,
+        request.user.id
+      );
 
-    if (!thread) {
-      return reply.status(404).send({
-        success: false,
-        message: 'Thread not found'
-      });
+      if (!thread) {
+        return reply.status(404).send({
+          success: false,
+          message: 'Thread not found'
+        });
+      }
+
+      reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return { success: true, data: thread };
     }
-
-    reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
-    return { success: true, data: thread };
-  });
+  );
 
   // Get thread by message ID
   app.get<{
     Params: { messageId: string };
-  }>('/by-message/:messageId', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request, reply) => {
-    const thread = await threadService.getThreadByMessageId(
-      request.params.messageId,
-      request.user.id
-    );
+  }>(
+    '/by-message/:messageId',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      const thread = await threadService.getThreadByMessageId(
+        request.params.messageId,
+        request.user.id
+      );
 
-    if (!thread) {
-      return reply.status(404).send({
-        success: false,
-        message: 'Thread not found'
-      });
+      if (!thread) {
+        return reply.status(404).send({
+          success: false,
+          message: 'Thread not found'
+        });
+      }
+
+      reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return { success: true, data: thread };
     }
-
-    reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
-    return { success: true, data: thread };
-  });
+  );
 
   // Update thread
   app.patch<{
@@ -275,26 +305,33 @@ export async function threadRoutes(app: FastifyInstance) {
   // Delete thread
   app.delete<{
     Params: { id: string };
-  }>('/:id', { config: { rateLimit: { max: 20, timeWindow: '1 minute' } } }, async (request, reply) => {
-    // Get thread info before deletion for broadcasting
-    const thread = await prisma.thread.findUnique({
-      where: { id: request.params.id },
-      select: { channelId: true }
-    });
-
-    await threadService.deleteThread(request.params.id, request.user.id);
-
-    // Broadcast to WebSocket if io is available
-    const io = app.io;
-    if (io && thread) {
-      // Broadcast to channel room
-      io.to(`channel:${thread.channelId}`).emit(SOCKET_EVENTS.THREAD_DELETED, {
-        threadId: request.params.id
+  }>(
+    '/:id',
+    { config: { rateLimit: { max: 20, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      // Get thread info before deletion for broadcasting
+      const thread = await prisma.thread.findUnique({
+        where: { id: request.params.id },
+        select: { channelId: true }
       });
-    }
 
-    return reply.status(204).send();
-  });
+      await threadService.deleteThread(request.params.id, request.user.id);
+
+      // Broadcast to WebSocket if io is available
+      const io = app.io;
+      if (io && thread) {
+        // Broadcast to channel room
+        io.to(`channel:${thread.channelId}`).emit(
+          SOCKET_EVENTS.THREAD_DELETED,
+          {
+            threadId: request.params.id
+          }
+        );
+      }
+
+      return reply.status(204).send();
+    }
+  );
 
   // Get replies for a thread
   app.get<{
@@ -435,10 +472,14 @@ export async function threadRoutes(app: FastifyInstance) {
   // Mark thread as read
   app.post<{
     Params: { id: string };
-  }>('/:id/read', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request, reply) => {
-    await threadService.markAsRead(request.params.id, request.user.id);
-    return reply.status(200).send({ success: true });
-  });
+  }>(
+    '/:id/read',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      await threadService.markAsRead(request.params.id, request.user.id);
+      return reply.status(200).send({ success: true });
+    }
+  );
 
   // Edit thread reply
   const editReplySchema = z.object({
@@ -521,58 +562,62 @@ export async function threadRoutes(app: FastifyInstance) {
   // Delete thread reply
   app.delete<{
     Params: { id: string; replyId: string };
-  }>('/:id/replies/:replyId', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request, reply) => {
-    // Get the reply to check ownership
-    const replyMessage = await prisma.message.findUnique({
-      where: { id: request.params.replyId }
-    });
-
-    if (!replyMessage) {
-      return reply.status(404).send({ error: 'Reply not found' });
-    }
-
-    if (replyMessage.authorId !== request.user.id) {
-      return reply
-        .status(403)
-        .send({ error: 'Not authorized to delete this reply' });
-    }
-
-    // Delete the reply
-    await prisma.message.delete({
-      where: { id: request.params.replyId }
-    });
-
-    // Get thread info before updating
-    const thread = await prisma.thread.findUnique({
-      where: { id: request.params.id },
-      select: { channelId: true, replyCount: true }
-    });
-
-    if (thread) {
-      // Update thread reply count
-      await prisma.thread.update({
-        where: { id: request.params.id },
-        data: {
-          replyCount: Math.max(0, thread.replyCount - 1)
-        }
+  }>(
+    '/:id/replies/:replyId',
+    { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      // Get the reply to check ownership
+      const replyMessage = await prisma.message.findUnique({
+        where: { id: request.params.replyId }
       });
 
-      // Broadcast to WebSocket if io is available
-      const io = app.io;
-      if (io) {
-        // Broadcast to channel room
-        io.to(`channel:${thread.channelId}`).emit(
-          SOCKET_EVENTS.THREAD_REPLY_DELETED,
-          {
-            threadId: request.params.id,
-            replyId: request.params.replyId
-          }
-        );
+      if (!replyMessage) {
+        return reply.status(404).send({ error: 'Reply not found' });
       }
-    }
 
-    return reply.status(200).send({ success: true });
-  });
+      if (replyMessage.authorId !== request.user.id) {
+        return reply
+          .status(403)
+          .send({ error: 'Not authorized to delete this reply' });
+      }
+
+      // Delete the reply
+      await prisma.message.delete({
+        where: { id: request.params.replyId }
+      });
+
+      // Get thread info before updating
+      const thread = await prisma.thread.findUnique({
+        where: { id: request.params.id },
+        select: { channelId: true, replyCount: true }
+      });
+
+      if (thread) {
+        // Update thread reply count
+        await prisma.thread.update({
+          where: { id: request.params.id },
+          data: {
+            replyCount: Math.max(0, thread.replyCount - 1)
+          }
+        });
+
+        // Broadcast to WebSocket if io is available
+        const io = app.io;
+        if (io) {
+          // Broadcast to channel room
+          io.to(`channel:${thread.channelId}`).emit(
+            SOCKET_EVENTS.THREAD_REPLY_DELETED,
+            {
+              threadId: request.params.id,
+              replyId: request.params.replyId
+            }
+          );
+        }
+      }
+
+      return reply.status(200).send({ success: true });
+    }
+  );
 
   // Add reaction to thread reply
   const addReactionSchema = z.object({
@@ -656,53 +701,57 @@ export async function threadRoutes(app: FastifyInstance) {
   // Remove reaction from thread reply
   app.delete<{
     Params: { id: string; replyId: string; emoji: string };
-  }>('/:id/replies/:replyId/reactions/:emoji', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (request, reply) => {
-    // Get thread to validate and for broadcasting
-    const thread = await prisma.thread.findUnique({
-      where: { id: request.params.id },
-      select: { messageId: true, channelId: true }
-    });
+  }>(
+    '/:id/replies/:replyId/reactions/:emoji',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+    async (request, reply) => {
+      // Get thread to validate and for broadcasting
+      const thread = await prisma.thread.findUnique({
+        where: { id: request.params.id },
+        select: { messageId: true, channelId: true }
+      });
 
-    if (!thread) {
-      return reply.status(404).send({ error: 'Thread not found' });
-    }
-
-    // Validate: replyId must be an actual reply in this thread
-    const replyMessage = await prisma.message.findUnique({
-      where: { id: request.params.replyId },
-      select: { parentId: true }
-    });
-
-    if (!replyMessage || replyMessage.parentId !== thread.messageId) {
-      return reply
-        .status(400)
-        .send({ error: 'Message is not a reply in this thread' });
-    }
-
-    await prisma.reaction.deleteMany({
-      where: {
-        messageId: request.params.replyId,
-        userId: request.user.id,
-        emoji: request.params.emoji
+      if (!thread) {
+        return reply.status(404).send({ error: 'Thread not found' });
       }
-    });
 
-    // Broadcast to WebSocket if io is available
-    const io = app.io;
-    if (io) {
-      // Broadcast to channel room
-      io.to(`channel:${thread.channelId}`).emit(
-        SOCKET_EVENTS.THREAD_REPLY_REACTION,
-        {
-          threadId: request.params.id,
-          replyId: request.params.replyId,
-          emoji: request.params.emoji,
-          action: 'remove',
-          userId: request.user.id
+      // Validate: replyId must be an actual reply in this thread
+      const replyMessage = await prisma.message.findUnique({
+        where: { id: request.params.replyId },
+        select: { parentId: true }
+      });
+
+      if (!replyMessage || replyMessage.parentId !== thread.messageId) {
+        return reply
+          .status(400)
+          .send({ error: 'Message is not a reply in this thread' });
+      }
+
+      await prisma.reaction.deleteMany({
+        where: {
+          messageId: request.params.replyId,
+          userId: request.user.id,
+          emoji: request.params.emoji
         }
-      );
-    }
+      });
 
-    return reply.status(200).send({ success: true });
-  });
+      // Broadcast to WebSocket if io is available
+      const io = app.io;
+      if (io) {
+        // Broadcast to channel room
+        io.to(`channel:${thread.channelId}`).emit(
+          SOCKET_EVENTS.THREAD_REPLY_REACTION,
+          {
+            threadId: request.params.id,
+            replyId: request.params.replyId,
+            emoji: request.params.emoji,
+            action: 'remove',
+            userId: request.user.id
+          }
+        );
+      }
+
+      return reply.status(200).send({ success: true });
+    }
+  );
 }
