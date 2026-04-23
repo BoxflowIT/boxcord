@@ -12,9 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Voice/video stability** — Peer destroy ordering (map removal before destroy), audio pipeline destination track cleanup, video quality mutex lock, RNNoise lazy-init with shared promise to prevent duplicate WASM loads
 - **Voice cleanup** — New per-user cleanup functions: `cleanupPeerAudioElement` (audioManager), `cleanupPeerState` (peerManager), `resetRNNoiseInit` (rnnoise); orphaned audio element removal
 - **Retry timer leaks** — Track and cancel `setTimeout` IDs in peerManager on peer leave/channel exit
-- **Backend socket error disclosure** — All 28 `socket.emit('error')` calls now send generic messages instead of raw `error.message` (OWASP info disclosure fix)
+- **Backend socket error disclosure** — `socket.emit('error')` calls now send generic messages instead of raw `error.message` (OWASP info disclosure fix)
 - **Thread analytics** — Added try-catch with 500 responses to both analytics endpoints
-- **Voice session cleanup** — Retry with exponential backoff (3 attempts) on disconnect DB operations
+- **Voice session cleanup** — Retry with increasing delay (3 attempts) on disconnect DB operations
 
 ### Changed
 
