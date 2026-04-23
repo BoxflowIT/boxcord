@@ -37,8 +37,8 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "3.1005.0",
-    "@aws-sdk/s3-request-presigner": "^3.995.0",
+    "@aws-sdk/client-s3": "3.1035.0",
+    "@aws-sdk/s3-request-presigner": "3.1035.0",
     "@fastify/compress": "^8.3.1",
     "@fastify/cors": "^11.2.0",
     "@fastify/helmet": "^12.0.1",
@@ -54,7 +54,7 @@
     "@sentry/node": "^10.39.0",
     "@sentry/react": "^10.39.0",
     "@socket.io/redis-adapter": "^8.3.0",
-    "bullmq": "^5.70.0",
+    "bullmq": "^5.76.1",
     "cheerio": "^1.2.0",
     "dompurify": "3.4.0",
     "dotenv-safe": "^9.1.0",
@@ -95,7 +95,7 @@
   },
   "overrides": {
     "ajv": "^8.18.0",
-    "fast-xml-parser": "^5.3.6",
+    "fast-xml-parser": ">=5.7.0",
     "minimatch": "^10.2.3"
   },
   "resolutions": {
@@ -103,7 +103,7 @@
     "flatted": ">=3.4.2",
     "undici": ">=7.24.0",
     "socket.io-parser": ">=4.2.6",
-    "fast-xml-parser": ">=5.5.7",
+    "fast-xml-parser": ">=5.7.0",
     "effect": ">=3.20.0",
     "micromatch/picomatch": "^2.3.2",
     "brace-expansion": ">=5.0.5",
