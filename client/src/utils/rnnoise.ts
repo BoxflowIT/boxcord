@@ -14,6 +14,7 @@ const rnnoiseWorkletPath =
 
 let rnnoiseWasmBinary: ArrayBuffer | null = null;
 let isInitialized = false;
+let initPromise: Promise<void> | null = null;
 const workletAddedContexts = new WeakSet<AudioContext>();
 
 /**
@@ -24,17 +25,37 @@ export async function initializeRNNoise(): Promise<void> {
     return;
   }
 
-  try {
-    rnnoiseWasmBinary = await loadRnnoise({
-      url: rnnoiseWasmPath,
-      simdUrl: rnnoiseSimdWasmPath
-    });
-    isInitialized = true;
-  } catch (error) {
-    logger.error('❌ Failed to load RNNoise:', error);
-    isInitialized = false;
-    throw error;
+  // If already loading, return the existing promise to avoid concurrent loads
+  if (initPromise) {
+    return initPromise;
   }
+
+  initPromise = (async () => {
+    try {
+      rnnoiseWasmBinary = await loadRnnoise({
+        url: rnnoiseWasmPath,
+        simdUrl: rnnoiseSimdWasmPath
+      });
+      isInitialized = true;
+    } catch (error) {
+      logger.error('❌ Failed to load RNNoise:', error);
+      isInitialized = false;
+      throw error;
+    } finally {
+      initPromise = null;
+    }
+  })();
+
+  return initPromise;
+}
+
+/**
+ * Reset RNNoise initialization state so it can be retried
+ */
+export function resetRNNoiseInit(): void {
+  isInitialized = false;
+  initPromise = null;
+  rnnoiseWasmBinary = null;
 }
 
 /**
@@ -97,5 +118,9 @@ export function cleanupRNNoise(stream?: MediaStream): void {
  * Check if RNNoise is available and initialized
  */
 export function isRNNoiseAvailable(): boolean {
+  // If not yet attempted, try lazy-init (non-blocking)
+  if (!isInitialized && !initPromise) {
+    initializeRNNoise().catch(() => {});
+  }
   return isInitialized && rnnoiseWasmBinary !== null;
 }

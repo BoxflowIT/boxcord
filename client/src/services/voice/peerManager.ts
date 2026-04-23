@@ -11,6 +11,8 @@ import { logger } from '../../utils/logger';
 const retryCountMap = new Map<string, number>();
 // Track which peers we initiated (only initiators should retry)
 const initiatorMap = new Map<string, boolean>();
+// Track pending retry timers so they can be cancelled on leave
+const retryTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
 /**
  * Create a new peer connection
@@ -77,7 +79,12 @@ export function setupPeerListeners(
         `Retrying peer connection to ${userId} in ${delay}ms (attempt ${retries + 1}/${PEER_RECONNECT.MAX_RETRIES})`
       );
 
-      setTimeout(() => {
+      // Cancel any existing timer for this peer before scheduling a new one
+      const existing = retryTimers.get(userId);
+      if (existing) clearTimeout(existing);
+
+      const timer = setTimeout(() => {
+        retryTimers.delete(userId);
         // Only retry if still in voice channel and remote user is still present
         const store = useVoiceStore.getState();
         if (
@@ -88,6 +95,7 @@ export function setupPeerListeners(
           createPeer(userId, localStream, socket);
         }
       }, delay);
+      retryTimers.set(userId, timer);
     } else {
       logger.error(`Max retries reached for peer ${userId}, giving up`);
       retryCountMap.delete(userId);
@@ -138,9 +146,25 @@ export function addPeer(
 }
 
 /**
+ * Cleanup tracking state for a single peer
+ */
+export function cleanupPeerState(userId: string): void {
+  retryCountMap.delete(userId);
+  initiatorMap.delete(userId);
+  const timer = retryTimers.get(userId);
+  if (timer) {
+    clearTimeout(timer);
+    retryTimers.delete(userId);
+  }
+}
+
+/**
  * Reset retry tracking (call on voice channel leave)
  */
 export function resetRetryState(): void {
+  // Cancel all pending retry timers
+  retryTimers.forEach((timer) => clearTimeout(timer));
+  retryTimers.clear();
   retryCountMap.clear();
   initiatorMap.clear();
 }

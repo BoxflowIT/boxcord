@@ -7,6 +7,8 @@ import {
   queueCandidate,
   deleteCandidateQueue
 } from '../../voice/iceCandidateQueue';
+import { cleanupPeerAudioElement } from '../../voice/audioManager';
+import { cleanupPeerState } from '../../voice/peerManager';
 import type SimplePeer from 'simple-peer';
 import type {
   SocketHandlerContext,
@@ -62,10 +64,8 @@ export function registerVoiceHandlers(context: SocketHandlerContext): void {
     store.removeUser(data.userId);
     store.removePeer(data.userId);
     deleteCandidateQueue(data.userId);
-
-    // Remove audio element
-    const audioElement = document.getElementById(`voice-audio-${data.userId}`);
-    audioElement?.remove();
+    cleanupPeerState(data.userId);
+    cleanupPeerAudioElement(data.userId);
   });
 
   // When another user updates their voice state (mute/deafen/speaking)
@@ -155,6 +155,8 @@ export function registerVoiceHandlers(context: SocketHandlerContext): void {
     const store = useVoiceStore.getState();
     store.removePeer(data.userId);
     deleteCandidateQueue(data.userId);
+    cleanupPeerState(data.userId);
+    cleanupPeerAudioElement(data.userId);
   });
 }
 

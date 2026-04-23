@@ -42,6 +42,40 @@ function extractMentions(content: string): string[] {
   return mentions;
 }
 
+// In-memory cache for channel → workspace ID mapping (avoids N+1 DB query per message)
+const channelWorkspaceCache = new Map<
+  string,
+  { workspaceId: string; expiresAt: number }
+>();
+const CHANNEL_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const CHANNEL_CACHE_MAX_SIZE = 1000;
+
+function getCachedWorkspaceId(channelId: string): string | null {
+  const entry = channelWorkspaceCache.get(channelId);
+  if (entry && entry.expiresAt > Date.now()) return entry.workspaceId;
+  if (entry) channelWorkspaceCache.delete(channelId);
+  return null;
+}
+
+function setCachedWorkspaceId(channelId: string, workspaceId: string): void {
+  // Evict expired entries if cache is at capacity
+  if (channelWorkspaceCache.size >= CHANNEL_CACHE_MAX_SIZE) {
+    const now = Date.now();
+    for (const [key, val] of channelWorkspaceCache) {
+      if (val.expiresAt <= now) channelWorkspaceCache.delete(key);
+    }
+    // If still at capacity after evicting expired, remove oldest entry
+    if (channelWorkspaceCache.size >= CHANNEL_CACHE_MAX_SIZE) {
+      const firstKey = channelWorkspaceCache.keys().next().value;
+      if (firstKey) channelWorkspaceCache.delete(firstKey);
+    }
+  }
+  channelWorkspaceCache.set(channelId, {
+    workspaceId,
+    expiresAt: Date.now() + CHANNEL_CACHE_TTL_MS
+  });
+}
+
 // Utility: Decode base64url (JWT payload)
 function decodeBase64Url(str: string): string {
   let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
@@ -347,15 +381,22 @@ export function setupSocketHandlers(
           );
 
           // Also broadcast to workspace for unread badge updates
-          const channel = await prisma.channel.findUnique({
-            where: { id: data.channelId },
-            select: { workspaceId: true }
-          });
-          if (channel) {
+          let workspaceId = getCachedWorkspaceId(data.channelId);
+          if (!workspaceId) {
+            const channel = await prisma.channel.findUnique({
+              where: { id: data.channelId },
+              select: { workspaceId: true }
+            });
+            if (channel) {
+              workspaceId = channel.workspaceId;
+              setCachedWorkspaceId(data.channelId, workspaceId);
+            }
+          }
+          if (workspaceId) {
             app.log.info(
-              `[WORKSPACE_BROADCAST] Broadcasting to workspace:${channel.workspaceId} for unread badges`
+              `[WORKSPACE_BROADCAST] Broadcasting to workspace:${workspaceId} for unread badges`
             );
-            io.to(`workspace:${channel.workspaceId}`).emit(
+            io.to(`workspace:${workspaceId}`).emit(
               SOCKET_EVENTS.MESSAGE_NEW,
               message
             );
@@ -408,8 +449,8 @@ export function setupSocketHandlers(
             }
           }
         } catch (err) {
-          app.log.error('Error creating message: ' + (err as Error).message);
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -438,7 +479,8 @@ export function setupSocketHandlers(
             );
           }
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -463,7 +505,8 @@ export function setupSocketHandlers(
             );
           }
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -577,7 +620,8 @@ export function setupSocketHandlers(
             }
           }
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -624,7 +668,8 @@ export function setupSocketHandlers(
           // Broadcast to all users in DM channel
           io.to(`dm:${existing.channelId}`).emit('dm:edit', updated);
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -662,7 +707,8 @@ export function setupSocketHandlers(
             channelId: existing.channelId
           });
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -711,7 +757,8 @@ export function setupSocketHandlers(
             });
           }
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -754,7 +801,8 @@ export function setupSocketHandlers(
             );
           }
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -889,7 +937,8 @@ export function setupSocketHandlers(
             }
           }
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -932,7 +981,8 @@ export function setupSocketHandlers(
             );
           }
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -963,7 +1013,8 @@ export function setupSocketHandlers(
             );
           }
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -986,7 +1037,8 @@ export function setupSocketHandlers(
             following: data.shouldFollow
           });
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -1002,7 +1054,8 @@ export function setupSocketHandlers(
           userId
         });
       } catch (err) {
-        socket.emit('error', { message: (err as Error).message });
+        app.log.error({ err }, 'Socket handler error');
+        socket.emit('error', { message: 'An unexpected error occurred' });
       }
     });
 
@@ -1030,7 +1083,8 @@ export function setupSocketHandlers(
             );
           }
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -1057,7 +1111,8 @@ export function setupSocketHandlers(
             );
           }
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -1092,7 +1147,8 @@ export function setupSocketHandlers(
             );
           }
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -1116,7 +1172,8 @@ export function setupSocketHandlers(
           `[VOICE] User ${userId} joined voice channel: ${data.channelId}`
         );
       } catch (err) {
-        socket.emit('error', { message: (err as Error).message });
+        app.log.error({ err }, 'Socket handler error');
+        socket.emit('error', { message: 'An unexpected error occurred' });
       }
     });
 
@@ -1130,7 +1187,8 @@ export function setupSocketHandlers(
             `[VOICE] User ${userId} left voice channel: ${data.channelId}`
           );
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -1154,7 +1212,8 @@ export function setupSocketHandlers(
             app.log
           );
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -1178,7 +1237,8 @@ export function setupSocketHandlers(
             app.log
           );
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -1202,7 +1262,8 @@ export function setupSocketHandlers(
             app.log
           );
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -1266,7 +1327,8 @@ export function setupSocketHandlers(
             }
           }
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -1287,7 +1349,8 @@ export function setupSocketHandlers(
           userId
         });
       } catch (err) {
-        socket.emit('error', { message: (err as Error).message });
+        app.log.error({ err }, 'Socket handler error');
+        socket.emit('error', { message: 'An unexpected error occurred' });
       }
     });
 
@@ -1304,7 +1367,8 @@ export function setupSocketHandlers(
           userId
         });
       } catch (err) {
-        socket.emit('error', { message: (err as Error).message });
+        app.log.error({ err }, 'Socket handler error');
+        socket.emit('error', { message: 'An unexpected error occurred' });
       }
     });
 
@@ -1324,7 +1388,8 @@ export function setupSocketHandlers(
           userId
         });
       } catch (err) {
-        socket.emit('error', { message: (err as Error).message });
+        app.log.error({ err }, 'Socket handler error');
+        socket.emit('error', { message: 'An unexpected error occurred' });
       }
     });
 
@@ -1347,7 +1412,8 @@ export function setupSocketHandlers(
             app.log
           );
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -1371,7 +1437,8 @@ export function setupSocketHandlers(
             app.log
           );
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -1395,7 +1462,8 @@ export function setupSocketHandlers(
             app.log
           );
         } catch (err) {
-          socket.emit('error', { message: (err as Error).message });
+          app.log.error({ err }, 'Socket handler error');
+          socket.emit('error', { message: 'An unexpected error occurred' });
         }
       }
     );
@@ -1407,6 +1475,8 @@ export function setupSocketHandlers(
       // Grace period for voice sessions — if user doesn't reconnect within 30s,
       // clean up their voice sessions (handles browser close, crash, network loss)
       const VOICE_DISCONNECT_GRACE_MS = 30_000;
+      const VOICE_CLEANUP_MAX_RETRIES = 3;
+      const VOICE_CLEANUP_RETRY_DELAY_MS = 2_000;
 
       // Clear any existing grace timer for this user (e.g. rapid reconnect/disconnect)
       const existingTimer = voiceGraceTimers.get(userId);
@@ -1416,19 +1486,31 @@ export function setupSocketHandlers(
         try {
           voiceGraceTimers.delete(userId);
 
-          // Fetch active voice sessions for this user
-          const activeSessions = await prisma.voiceSession
-            .findMany({
-              where: { userId, leftAt: null },
-              select: { id: true, channelId: true }
-            })
-            .catch((err) => {
+          // Fetch active voice sessions with retry
+          let activeSessions: { id: string; channelId: string }[] = [];
+          for (
+            let attempt = 0;
+            attempt < VOICE_CLEANUP_MAX_RETRIES;
+            attempt++
+          ) {
+            try {
+              activeSessions = await prisma.voiceSession.findMany({
+                where: { userId, leftAt: null },
+                select: { id: true, channelId: true }
+              });
+              break;
+            } catch (err) {
               app.log.error(
-                { err },
+                { err, attempt },
                 'Failed to fetch active voice sessions on disconnect'
               );
-              return [];
-            });
+              if (attempt < VOICE_CLEANUP_MAX_RETRIES - 1) {
+                await new Promise((r) =>
+                  setTimeout(r, VOICE_CLEANUP_RETRY_DELAY_MS * (attempt + 1))
+                );
+              }
+            }
+          }
 
           if (!activeSessions || activeSessions.length === 0) return;
 
@@ -1453,30 +1535,42 @@ export function setupSocketHandlers(
             `[VOICE] User ${userId} did not reconnect within grace period, cleaning up voice sessions`
           );
 
-          // Use transaction to atomically mark sessions as left
-          const closedSessions = await prisma
-            .$transaction(async (tx) => {
-              const sessions = await tx.voiceSession.findMany({
-                where: { userId, leftAt: null },
-                select: { id: true, channelId: true }
-              });
-
-              if (sessions.length > 0) {
-                await tx.voiceSession.updateMany({
-                  where: { id: { in: sessions.map((s) => s.id) } },
-                  data: { leftAt: new Date() }
+          // Use transaction to atomically mark sessions as left, with retry
+          let closedSessions: { id: string; channelId: string }[] = [];
+          for (
+            let attempt = 0;
+            attempt < VOICE_CLEANUP_MAX_RETRIES;
+            attempt++
+          ) {
+            try {
+              closedSessions = await prisma.$transaction(async (tx) => {
+                const sessions = await tx.voiceSession.findMany({
+                  where: { userId, leftAt: null },
+                  select: { id: true, channelId: true }
                 });
-              }
 
-              return sessions;
-            })
-            .catch((err) => {
+                if (sessions.length > 0) {
+                  await tx.voiceSession.updateMany({
+                    where: { id: { in: sessions.map((s) => s.id) } },
+                    data: { leftAt: new Date() }
+                  });
+                }
+
+                return sessions;
+              });
+              break;
+            } catch (err) {
               app.log.error(
-                { err },
+                { err, attempt },
                 'Failed to cleanup voice sessions on disconnect'
               );
-              return [];
-            });
+              if (attempt < VOICE_CLEANUP_MAX_RETRIES - 1) {
+                await new Promise((r) =>
+                  setTimeout(r, VOICE_CLEANUP_RETRY_DELAY_MS * (attempt + 1))
+                );
+              }
+            }
+          }
 
           // Notify remaining users in voice channels
           for (const session of closedSessions) {

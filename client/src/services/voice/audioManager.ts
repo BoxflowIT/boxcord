@@ -55,12 +55,31 @@ export function muteAllPeers(muted: boolean): void {
 }
 
 /**
+ * Cleanup audio element for a single peer (call when user leaves)
+ */
+export function cleanupPeerAudioElement(userId: string): void {
+  const el = document.getElementById(
+    `voice-audio-${userId}`
+  ) as HTMLAudioElement | null;
+  if (el) {
+    el.srcObject = null;
+    el.remove();
+  }
+}
+
+/**
  * Cleanup all peer audio elements
  */
 export function cleanupPeerAudio(): void {
   const store = useVoiceStore.getState();
 
   store.users.forEach((user) => {
-    document.getElementById(`voice-audio-${user.userId}`)?.remove();
+    cleanupPeerAudioElement(user.userId);
+  });
+
+  // Also remove any orphaned voice-audio elements
+  document.querySelectorAll('audio[id^="voice-audio-"]').forEach((el) => {
+    (el as HTMLAudioElement).srcObject = null;
+    el.remove();
   });
 }

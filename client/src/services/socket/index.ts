@@ -43,8 +43,10 @@ export function getQueryClient(): QueryClient | null {
 }
 
 class SocketService {
+  private static readonly MAX_TOKEN_REFRESH_ATTEMPTS = 5;
   private socket: Socket | null = null;
   private connecting: boolean = false;
+  private tokenRefreshAttempts: number = 0;
   private pendingOperations: Array<() => void> = [];
   private listenersRegistered: boolean = false;
 
@@ -105,6 +107,7 @@ class SocketService {
     // Register connection event handlers
     socket.on('connect', () => {
       this.connecting = false;
+      this.tokenRefreshAttempts = 0;
       this.executePendingOperations();
     });
 
@@ -117,6 +120,15 @@ class SocketService {
         error.message.includes('Invalid token') ||
         error.message.includes('jwt')
       ) {
+        this.tokenRefreshAttempts++;
+        if (
+          this.tokenRefreshAttempts >= SocketService.MAX_TOKEN_REFRESH_ATTEMPTS
+        ) {
+          logger.error('Max token refresh attempts reached, logging out');
+          this.socket?.disconnect();
+          useAuthStore.getState().logout();
+          return;
+        }
         try {
           const { refreshAuthToken } = await import('../cognito');
           const freshToken = await refreshAuthToken();
