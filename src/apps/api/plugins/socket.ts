@@ -42,6 +42,27 @@ function extractMentions(content: string): string[] {
   return mentions;
 }
 
+// In-memory cache for channel → workspace ID mapping (avoids N+1 DB query per message)
+const channelWorkspaceCache = new Map<
+  string,
+  { workspaceId: string; expiresAt: number }
+>();
+const CHANNEL_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+function getCachedWorkspaceId(channelId: string): string | null {
+  const entry = channelWorkspaceCache.get(channelId);
+  if (entry && entry.expiresAt > Date.now()) return entry.workspaceId;
+  if (entry) channelWorkspaceCache.delete(channelId);
+  return null;
+}
+
+function setCachedWorkspaceId(channelId: string, workspaceId: string): void {
+  channelWorkspaceCache.set(channelId, {
+    workspaceId,
+    expiresAt: Date.now() + CHANNEL_CACHE_TTL_MS
+  });
+}
+
 // Utility: Decode base64url (JWT payload)
 function decodeBase64Url(str: string): string {
   let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
@@ -347,15 +368,22 @@ export function setupSocketHandlers(
           );
 
           // Also broadcast to workspace for unread badge updates
-          const channel = await prisma.channel.findUnique({
-            where: { id: data.channelId },
-            select: { workspaceId: true }
-          });
-          if (channel) {
+          let workspaceId = getCachedWorkspaceId(data.channelId);
+          if (!workspaceId) {
+            const channel = await prisma.channel.findUnique({
+              where: { id: data.channelId },
+              select: { workspaceId: true }
+            });
+            if (channel) {
+              workspaceId = channel.workspaceId;
+              setCachedWorkspaceId(data.channelId, workspaceId);
+            }
+          }
+          if (workspaceId) {
             app.log.info(
-              `[WORKSPACE_BROADCAST] Broadcasting to workspace:${channel.workspaceId} for unread badges`
+              `[WORKSPACE_BROADCAST] Broadcasting to workspace:${workspaceId} for unread badges`
             );
-            io.to(`workspace:${channel.workspaceId}`).emit(
+            io.to(`workspace:${workspaceId}`).emit(
               SOCKET_EVENTS.MESSAGE_NEW,
               message
             );
