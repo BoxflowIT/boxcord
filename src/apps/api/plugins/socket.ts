@@ -48,6 +48,7 @@ const channelWorkspaceCache = new Map<
   { workspaceId: string; expiresAt: number }
 >();
 const CHANNEL_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const CHANNEL_CACHE_MAX_SIZE = 1000;
 
 function getCachedWorkspaceId(channelId: string): string | null {
   const entry = channelWorkspaceCache.get(channelId);
@@ -57,6 +58,18 @@ function getCachedWorkspaceId(channelId: string): string | null {
 }
 
 function setCachedWorkspaceId(channelId: string, workspaceId: string): void {
+  // Evict expired entries if cache is at capacity
+  if (channelWorkspaceCache.size >= CHANNEL_CACHE_MAX_SIZE) {
+    const now = Date.now();
+    for (const [key, val] of channelWorkspaceCache) {
+      if (val.expiresAt <= now) channelWorkspaceCache.delete(key);
+    }
+    // If still at capacity after evicting expired, remove oldest entry
+    if (channelWorkspaceCache.size >= CHANNEL_CACHE_MAX_SIZE) {
+      const firstKey = channelWorkspaceCache.keys().next().value;
+      if (firstKey) channelWorkspaceCache.delete(firstKey);
+    }
+  }
   channelWorkspaceCache.set(channelId, {
     workspaceId,
     expiresAt: Date.now() + CHANNEL_CACHE_TTL_MS
@@ -1477,7 +1490,7 @@ export function setupSocketHandlers(
           let activeSessions: { id: string; channelId: string }[] = [];
           for (
             let attempt = 0;
-            attempt <= VOICE_CLEANUP_MAX_RETRIES;
+            attempt < VOICE_CLEANUP_MAX_RETRIES;
             attempt++
           ) {
             try {
@@ -1491,7 +1504,7 @@ export function setupSocketHandlers(
                 { err, attempt },
                 'Failed to fetch active voice sessions on disconnect'
               );
-              if (attempt < VOICE_CLEANUP_MAX_RETRIES) {
+              if (attempt < VOICE_CLEANUP_MAX_RETRIES - 1) {
                 await new Promise((r) =>
                   setTimeout(r, VOICE_CLEANUP_RETRY_DELAY_MS * (attempt + 1))
                 );
@@ -1526,7 +1539,7 @@ export function setupSocketHandlers(
           let closedSessions: { id: string; channelId: string }[] = [];
           for (
             let attempt = 0;
-            attempt <= VOICE_CLEANUP_MAX_RETRIES;
+            attempt < VOICE_CLEANUP_MAX_RETRIES;
             attempt++
           ) {
             try {
@@ -1551,7 +1564,7 @@ export function setupSocketHandlers(
                 { err, attempt },
                 'Failed to cleanup voice sessions on disconnect'
               );
-              if (attempt < VOICE_CLEANUP_MAX_RETRIES) {
+              if (attempt < VOICE_CLEANUP_MAX_RETRIES - 1) {
                 await new Promise((r) =>
                   setTimeout(r, VOICE_CLEANUP_RETRY_DELAY_MS * (attempt + 1))
                 );

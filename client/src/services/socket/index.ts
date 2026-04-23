@@ -122,9 +122,10 @@ class SocketService {
       ) {
         this.tokenRefreshAttempts++;
         if (
-          this.tokenRefreshAttempts > SocketService.MAX_TOKEN_REFRESH_ATTEMPTS
+          this.tokenRefreshAttempts >= SocketService.MAX_TOKEN_REFRESH_ATTEMPTS
         ) {
           logger.error('Max token refresh attempts reached, logging out');
+          this.socket?.disconnect();
           useAuthStore.getState().logout();
           return;
         }
