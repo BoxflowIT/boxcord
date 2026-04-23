@@ -251,7 +251,8 @@ jobs:
         # The audited graph may slightly differ from yarn.lock but is the best
         # available option until the project migrates to a newer package manager.
         run: |
-          npm i --package-lock-only --ignore-scripts 2>/dev/null
+          trap 'rm -f package-lock.json' EXIT
+          npm i --package-lock-only --ignore-scripts
           set +e
           npm audit --audit-level=high 2>&1
           AUDIT_EXIT=$?
@@ -273,13 +274,12 @@ jobs:
               exit 1
             fi
           fi
-          rm -f package-lock.json
           echo "✅ Root audit passed"
 
       - name: Run client npm audit (fail on high/critical only)
         working-directory: ./client
         run: |
-          npm i --package-lock-only --ignore-scripts 2>/dev/null
+          trap 'rm -f package-lock.json' EXIT
+          npm i --package-lock-only --ignore-scripts
           npm audit --audit-level=high
-          rm -f package-lock.json
           echo "✅ No high/critical client vulnerabilities found"

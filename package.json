@@ -95,8 +95,11 @@
   },
   "overrides": {
     "ajv": "^8.18.0",
-    "fast-xml-parser": ">=5.7.0",
-    "minimatch": "^10.2.3"
+    "fast-xml-parser": "^5.7.0",
+    "minimatch": "^10.2.3",
+    "fast-jwt": "^6.2.2",
+    "follow-redirects": "^1.16.0",
+    "axios": "^1.15.0"
   },
   "resolutions": {
     "minimatch": "^10.2.3",
