@@ -1,5 +1,18 @@
 [
   {
+    "version": "1.26.2",
+    "date": "2026-04-23",
+    "notes": {
+      "en": [
+        "Voice/video stability, backend robustness & security hardening",
+        "Address Copilot review — audit cleanup traps + overrides sync (#372)",
+        "Patch 3 high xmldom vulnerabilities in desktop (#375)",
+        "Patch 9 moderate security vulnerabilities",
+        "Update vulnerable dependencies (fastify, dompurify, fast-jwt, follow-redirects)"
+      ]
+    }
+  },
+  {
     "version": "1.26.1",
     "date": "2026-04-21",
     "notes": {
