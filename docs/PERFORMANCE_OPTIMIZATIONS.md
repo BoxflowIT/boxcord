@@ -187,6 +187,24 @@ docker-compose up -d redis
 - Use managed Redis services (ElastiCache, Azure Cache for Redis, Cloud Memorystore)
 - Configure connection string in environment variables
 
+## ⚡ Socket Layer Optimizations
+
+### Channel→Workspace In-Memory Cache
+
+The backend socket plugin caches channel→workspace ID mappings to avoid a DB query on every `MESSAGE_SEND`:
+
+- **TTL**: 5 minutes
+- **Size cap**: 1,000 entries (evicts expired first, then oldest)
+- Eliminates per-message `prisma.channel.findUnique()` for workspace room routing
+
+### Voice Session Cleanup Retry
+
+Voice session cleanup on disconnect uses retry with exponential backoff:
+
+- **Max retries**: 3 attempts
+- **Backoff**: 2s × attempt number
+- Prevents orphaned sessions when DB is temporarily unavailable during 30s grace window
+
 ## 🔧 Cache Management
 
 ### Programmatic Access
