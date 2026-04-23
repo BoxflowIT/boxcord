@@ -199,7 +199,7 @@ The backend socket plugin caches channel→workspace ID mappings to avoid a DB q
 
 ### Voice Session Cleanup Retry
 
-Voice session cleanup on disconnect uses retry with exponential backoff:
+Voice session cleanup on disconnect uses retry with increasing delay:
 
 - **Max retries**: 3 attempts
 - **Backoff**: 2s × attempt number

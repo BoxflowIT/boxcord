@@ -273,8 +273,8 @@ Activate via: `./scripts/setup-branch-protection.sh`
 
 This configures:
 
-- **main**: Require PR + 1 approval + 3 CI checks (`Test & Lint`, `Security Audit`, `Desktop Typecheck`)
-- **develop**: Require 3 CI checks + `enforce_admins` (no admin bypass)
+- **main**: Require PR + 1 approval + 2 CI checks (`Test & Lint`, `Security Audit`)
+- **develop**: Require PR + 0 approvals + 2 CI checks (`Test & Lint`, `Security Audit`) with `enforce_admins: false` (admin bypass allowed)
 
 ### Copilot Review Ruleset
 
