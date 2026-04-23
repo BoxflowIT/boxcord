@@ -124,6 +124,11 @@ export function updateOutputGain(
  * Disconnects and cleans up audio pipeline
  */
 export function cleanupAudioPipeline(nodes: Partial<AudioPipelineNodes>): void {
+  // Stop destination stream tracks before disconnecting nodes
+  if (nodes.destination) {
+    nodes.destination.stream.getTracks().forEach((track) => track.stop());
+  }
+
   Object.values(nodes).forEach((node) => {
     if (node && 'disconnect' in node) {
       node.disconnect();

@@ -160,13 +160,20 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
 
   removePeer: (userId) => {
     const peer = get().peers.get(userId);
-    peer?.destroy();
 
+    // Remove from map first to prevent other code from accessing a destroyed peer
     set((state) => {
       const peers = new Map(state.peers);
       peers.delete(userId);
       return { peers };
     });
+
+    // Destroy after removal
+    try {
+      peer?.destroy();
+    } catch (err) {
+      logger.error(`Error destroying peer ${userId}:`, err);
+    }
   },
 
   // Video window controls
