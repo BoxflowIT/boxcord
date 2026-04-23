@@ -5,6 +5,23 @@ All notable changes to Boxcord will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.26.2] - 2026-04-23
+
+### Fixed
+
+- **Voice/video stability** — Peer destroy ordering (map removal before destroy), audio pipeline destination track cleanup, video quality mutex lock, RNNoise lazy-init with shared promise to prevent duplicate WASM loads
+- **Voice cleanup** — New per-user cleanup functions: `cleanupPeerAudioElement` (audioManager), `cleanupPeerState` (peerManager), `resetRNNoiseInit` (rnnoise); orphaned audio element removal
+- **Retry timer leaks** — Track and cancel `setTimeout` IDs in peerManager on peer leave/channel exit
+- **Backend socket error disclosure** — All 28 `socket.emit('error')` calls now send generic messages instead of raw `error.message` (OWASP info disclosure fix)
+- **Thread analytics** — Added try-catch with 500 responses to both analytics endpoints
+- **Voice session cleanup** — Retry with exponential backoff (3 attempts) on disconnect DB operations
+
+### Changed
+
+- **Token refresh** — Max 5 retry attempts on `connect_error`; exhaustion triggers logout + socket disconnect
+- **Channel→workspace cache** — In-memory cache with 5min TTL and 1000-entry size cap for socket message routing
+- **Copilot review ruleset** — Now applies to `develop` branch only (removed `main` to allow auto version bump)
+
 ## [1.25.3] - 2026-04-11
 
 ### Added

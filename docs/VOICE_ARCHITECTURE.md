@@ -21,15 +21,31 @@ Refactored voice and audio system following clean architecture principles with p
 
 - `createAudioPipeline()` - Creates Discord-quality processing chain
 - `updateOutputGain()` - Dynamic gain adjustment
-- `cleanupAudioPipeline()` - Resource cleanup
+- `cleanupAudioPipeline()` - Resource cleanup (stops destination stream tracks before disconnecting nodes)
 - Pipeline: Pre-gain → HPF → Noise Gate → Compression → Limiting → Output
 
 **rnnoise.ts** - AI noise suppression
 
-- `initializeRNNoise()` - Loads WASM binary
+- `initializeRNNoise()` - Loads WASM binary (shared promise prevents duplicate concurrent loads)
 - `applyRNNoise()` - Applies AI processing to MediaStream
 - `cleanupRNNoise()` - Cleanup
+- `resetRNNoiseInit()` - Reset init state for retry after failure
+- `isRNNoiseAvailable()` - Lazy-inits if not yet attempted
 - Uses @sapphi-red/web-noise-suppressor
+
+**audioManager.ts** - Remote peer audio management
+
+- `playRemoteStream()` - Creates/updates audio elements for remote peers
+- `setUserVolume()` - Per-user volume control
+- `cleanupPeerAudioElement()` - Per-user audio element cleanup (nullifies srcObject before removal)
+- `cleanupPeerAudio()` - Full cleanup including orphaned `audio[id^="voice-audio-"]` elements
+
+**peerManager.ts** - WebRTC peer connection management
+
+- `createPeer()` / `addPeer()` - Peer creation with retry logic
+- `cleanupPeerState()` - Per-peer cleanup (cancels retry timers, clears tracking maps)
+- `resetRetryState()` - Cancels all pending retry timers on channel leave
+- Retry timers tracked in Map for cancellation on peer disconnect
 
 **voiceSound.ts** - Sound effects
 
@@ -118,6 +134,8 @@ Refactored voice and audio system following clean architecture principles with p
 - Mute/deafen state
 - Speaking indicators
 - Video quality settings (360p/480p/720p/1080p)
+- `removePeer()` — Removes from map first, then destroys peer (prevents accessing destroyed peer); wrapped in try-catch
+- `changeVideoQuality()` — Mutex lock prevents concurrent quality changes
 
 ## Video Communication System
 

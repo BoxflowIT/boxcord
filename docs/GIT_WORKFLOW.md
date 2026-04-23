@@ -272,8 +272,17 @@ All 4 CI jobs run **in parallel** for fast feedback:
 Activate via: `./scripts/setup-branch-protection.sh`
 
 This configures:
+
 - **main**: Require PR + 1 approval + 3 CI checks (`Test & Lint`, `Security Audit`, `Desktop Typecheck`)
 - **develop**: Require 3 CI checks + `enforce_admins` (no admin bypass)
+
+### Copilot Review Ruleset
+
+Configured via GitHub Rulesets (Settings → Rules):
+
+- **Scope**: `develop` branch only (main excluded to allow auto version bump)
+- **Rules**: Copilot code review on push + draft PRs, PR required with conversation resolution
+- **Bypass**: Organization admins
 
 ---
 
