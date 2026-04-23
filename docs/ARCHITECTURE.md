@@ -161,7 +161,7 @@ export const CACHE_TIMES = {
 All hooks use `client/src/services/api.ts` — a single HTTP layer with auth headers, 401 auto-refresh, and typed responses. No raw `fetch()` calls anywhere.
 
 - **401 auto-refresh** — On 401, the API tries refreshing the Cognito token via a locked `refreshOnce()` promise (prevents concurrent refresh races). Falls back to logout only if refresh fails.
-- **Socket reconnect** — On `connect_error` with token errors, the socket handler refreshes the token and updates `socket.auth` before the next retry.
+- **Socket reconnect** — On `connect_error` with token errors, the socket handler refreshes the token (max 5 attempts). If all retries fail, triggers logout and socket disconnect to prevent zombie connections.
 - **Desktop sleep/wake** — `powerMonitor.resume` triggers token refresh → socket reconnect → cache invalidation.
 
 ### **WebSocket → Cache Updates**
