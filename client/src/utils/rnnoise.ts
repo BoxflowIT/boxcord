@@ -14,6 +14,7 @@ const rnnoiseWorkletPath =
 
 let rnnoiseWasmBinary: ArrayBuffer | null = null;
 let isInitialized = false;
+let initAttempted = false;
 const workletAddedContexts = new WeakSet<AudioContext>();
 
 /**
@@ -30,11 +31,22 @@ export async function initializeRNNoise(): Promise<void> {
       simdUrl: rnnoiseSimdWasmPath
     });
     isInitialized = true;
+    initAttempted = true;
   } catch (error) {
     logger.error('❌ Failed to load RNNoise:', error);
     isInitialized = false;
+    initAttempted = true;
     throw error;
   }
+}
+
+/**
+ * Reset RNNoise initialization state so it can be retried
+ */
+export function resetRNNoiseInit(): void {
+  isInitialized = false;
+  initAttempted = false;
+  rnnoiseWasmBinary = null;
 }
 
 /**
@@ -97,5 +109,9 @@ export function cleanupRNNoise(stream?: MediaStream): void {
  * Check if RNNoise is available and initialized
  */
 export function isRNNoiseAvailable(): boolean {
+  // If not yet attempted, try lazy-init (non-blocking)
+  if (!initAttempted) {
+    initializeRNNoise().catch(() => {});
+  }
   return isInitialized && rnnoiseWasmBinary !== null;
 }

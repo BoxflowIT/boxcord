@@ -173,6 +173,9 @@ export async function toggleScreenShare(
   }
 }
 
+// Lock to prevent concurrent quality changes
+let qualityChangeLock = false;
+
 /**
  * Change video quality during a call
  * Restarts video with new quality settings
@@ -188,6 +191,13 @@ export async function changeVideoQuality(
     return;
   }
 
+  // Prevent concurrent quality changes
+  if (qualityChangeLock) {
+    logger.warn('Video quality change already in progress, skipping');
+    return;
+  }
+  qualityChangeLock = true;
+
   try {
     logger.info('Changing video quality...');
 
@@ -201,6 +211,7 @@ export async function changeVideoQuality(
     await enableVideo(audioState);
 
     logger.info('✅ Video quality changed successfully');
+    qualityChangeLock = false;
   } catch (error) {
     logger.error('❌ Failed to change video quality:', error);
     // Try to restore video with any quality
@@ -208,6 +219,8 @@ export async function changeVideoQuality(
       await enableVideo(audioState);
     } catch (restoreError) {
       logger.error('❌ Failed to restore video:', restoreError);
+    } finally {
+      qualityChangeLock = false;
     }
   }
 }
