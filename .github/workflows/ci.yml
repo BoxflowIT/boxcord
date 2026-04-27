@@ -24,11 +24,12 @@ jobs:
       - name: Setup PostgreSQL
         run: |
           brew list postgresql@16 &>/dev/null || brew install postgresql@16
+          export PATH="$(brew --prefix postgresql@16)/bin:$PATH"
           brew services start postgresql@16
           for i in $(seq 1 30); do pg_isready -q && break; sleep 1; done
           psql postgres -c "CREATE USER boxcord WITH SUPERUSER PASSWORD 'boxcord';" 2>/dev/null || true
-          dropdb -U boxcord --if-exists boxcord_test
-          createdb -U boxcord boxcord_test
+          psql postgres -c "DROP DATABASE IF EXISTS boxcord_test;"
+          psql postgres -c "CREATE DATABASE boxcord_test OWNER boxcord;"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -129,11 +130,12 @@ jobs:
       - name: Setup PostgreSQL
         run: |
           brew list postgresql@16 &>/dev/null || brew install postgresql@16
+          export PATH="$(brew --prefix postgresql@16)/bin:$PATH"
           brew services start postgresql@16
           for i in $(seq 1 30); do pg_isready -q && break; sleep 1; done
           psql postgres -c "CREATE USER boxcord WITH SUPERUSER PASSWORD 'boxcord';" 2>/dev/null || true
-          dropdb -U boxcord --if-exists boxcord_e2e
-          createdb -U boxcord boxcord_e2e
+          psql postgres -c "DROP DATABASE IF EXISTS boxcord_e2e;"
+          psql postgres -c "CREATE DATABASE boxcord_e2e OWNER boxcord;"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -189,7 +191,7 @@ jobs:
 
       - name: Install Playwright system deps (cached browsers)
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
+        run: npx playwright install-deps chromium || true
 
       - name: Run E2E tests
         run: yarn test:e2e --project=chromium --grep-invert @auth

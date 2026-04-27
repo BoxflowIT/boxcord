@@ -27,6 +27,15 @@ jobs:
       image_tag: ${{ steps.meta.outputs.sha_tag }}
 
     steps:
+      - name: Verify Docker is available
+        run: |
+          if ! command -v docker &>/dev/null; then
+            echo "❌ Docker is not installed on this runner"
+            exit 1
+          fi
+          docker info >/dev/null 2>&1 || { echo "❌ Docker daemon is not running"; exit 1; }
+          echo "✅ Docker $(docker --version)"
+
       - name: Checkout code
         uses: actions/checkout@v4
 

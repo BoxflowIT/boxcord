@@ -30,6 +30,11 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
     steps:
+      - name: Ensure required tools
+        run: |
+          command -v gh &>/dev/null || brew install gh
+          echo "✅ gh $(gh --version | head -1)"
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -90,9 +95,17 @@ jobs:
           cache: 'yarn'
           cache-dependency-path: desktop/yarn.lock
 
+      - name: Verify Docker for cross-compilation
+        run: |
+          if ! command -v docker &>/dev/null; then
+            echo "❌ Docker is required for Linux cross-compilation"
+            exit 1
+          fi
+          docker info >/dev/null 2>&1 || { echo "❌ Docker daemon is not running"; exit 1; }
+          echo "✅ Docker $(docker --version)"
+
       - name: Install system dependencies for rpm/pacman builds
-        # Running on macOS — electron-builder uses Docker for Linux cross-compilation
-        run: brew install rpm 2>/dev/null || true
+        run: brew install rpm || { echo "❌ Failed to install rpm"; exit 1; }
 
       - name: Install dependencies
         working-directory: desktop
@@ -137,6 +150,15 @@ jobs:
     runs-on: [self-hosted, macOS, ARM64]
 
     steps:
+      - name: Verify Docker for cross-compilation
+        run: |
+          if ! command -v docker &>/dev/null; then
+            echo "❌ Docker is required for Windows cross-compilation"
+            exit 1
+          fi
+          docker info >/dev/null 2>&1 || { echo "❌ Docker daemon is not running"; exit 1; }
+          echo "✅ Docker $(docker --version)"
+
       - name: Checkout
         uses: actions/checkout@v4
 
