@@ -225,8 +225,8 @@ jobs:
         uses: actions/cache@v4
         id: playwright-cache
         with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ steps.playwright-version.outputs.version }}-chromium
+          path: ~/Library/Caches/ms-playwright
+          key: playwright-macos-arm64-${{ steps.playwright-version.outputs.version }}-chromium
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
