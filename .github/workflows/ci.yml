@@ -13,7 +13,7 @@ jobs:
   # ─── Unit & Integration Tests ───────────────────────────────────────
   test:
     name: Test & Lint
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     permissions:
       contents: read
 
@@ -96,7 +96,7 @@ jobs:
   # ─── Desktop TypeScript Check ──────────────────────────────────────
   desktop-typecheck:
     name: Desktop Typecheck
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     permissions:
       contents: read
 
@@ -124,7 +124,7 @@ jobs:
   # Auth-dependent tests are skipped in CI until auth mocking is added.
   e2e:
     name: E2E Tests
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     permissions:
       contents: read
 
@@ -232,7 +232,7 @@ jobs:
   # ─── Security Audit ─────────────────────────────────────────────────
   security:
     name: Security Audit
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     permissions:
       contents: read
 

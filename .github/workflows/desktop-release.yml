@@ -25,7 +25,7 @@ jobs:
   # ─── Create GitHub Release first ───────────────────────────────────
   create-release:
     name: Create GitHub Release
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     outputs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
@@ -187,7 +187,7 @@ jobs:
   release-mac:
     name: macOS (DMG)
     needs: create-release
-    runs-on: macos-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - name: Checkout
@@ -243,7 +243,7 @@ jobs:
   publish-release:
     name: Publish Release
     needs: [create-release, release-linux, release-windows, release-mac]
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - name: Checkout

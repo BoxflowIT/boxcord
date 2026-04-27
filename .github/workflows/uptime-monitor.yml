@@ -13,7 +13,7 @@ permissions:
 jobs:
   check-uptime:
     name: Check Uptime
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     strategy:
       fail-fast: false
