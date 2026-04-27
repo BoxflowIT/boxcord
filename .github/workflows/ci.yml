@@ -17,24 +17,18 @@ jobs:
     permissions:
       contents: read
 
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: boxcord
-          POSTGRES_PASSWORD: boxcord
-          POSTGRES_DB: boxcord_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup PostgreSQL
+        run: |
+          brew list postgresql@16 &>/dev/null || brew install postgresql@16
+          brew services start postgresql@16
+          for i in $(seq 1 30); do pg_isready -q && break; sleep 1; done
+          psql postgres -c "CREATE USER boxcord WITH SUPERUSER PASSWORD 'boxcord';" 2>/dev/null || true
+          dropdb -U boxcord --if-exists boxcord_test
+          createdb -U boxcord boxcord_test
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -128,24 +122,18 @@ jobs:
     permissions:
       contents: read
 
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: boxcord
-          POSTGRES_PASSWORD: boxcord
-          POSTGRES_DB: boxcord_e2e
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup PostgreSQL
+        run: |
+          brew list postgresql@16 &>/dev/null || brew install postgresql@16
+          brew services start postgresql@16
+          for i in $(seq 1 30); do pg_isready -q && break; sleep 1; done
+          psql postgres -c "CREATE USER boxcord WITH SUPERUSER PASSWORD 'boxcord';" 2>/dev/null || true
+          dropdb -U boxcord --if-exists boxcord_e2e
+          createdb -U boxcord boxcord_e2e
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
