@@ -17,8 +17,8 @@ permissions:
 jobs:
   preview:
     name: Deploy Preview
-    runs-on: [self-hosted, macOS, ARM64]
-    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    if: github.event.action != 'closed' && !github.event.pull_request.head.repo.fork
     environment:
       name: preview-pr-${{ github.event.pull_request.number }}
 
@@ -110,7 +110,7 @@ jobs:
 
   cleanup:
     name: Cleanup Preview
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: ubuntu-latest
     if: github.event.action == 'closed'
 
     steps:

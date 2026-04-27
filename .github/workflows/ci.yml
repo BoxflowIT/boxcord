@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   HOMEBREW_PREFIX: /opt/homebrew
 
@@ -17,6 +21,7 @@ jobs:
   test:
     name: Test & Lint
     runs-on: [self-hosted, macOS, ARM64]
+    if: github.event_name == 'push' || !github.event.pull_request.head.repo.fork
     permissions:
       contents: read
 
@@ -31,7 +36,20 @@ jobs:
           export PATH="$(brew --prefix postgresql@16)/bin:$PATH"
           brew services start postgresql@16
           for i in $(seq 1 30); do pg_isready -q && break; sleep 1; done
-          psql postgres -c "CREATE USER boxcord WITH SUPERUSER PASSWORD 'boxcord';" 2>/dev/null || true
+          if ! pg_isready -q; then
+            echo "PostgreSQL did not become ready in time." >&2
+            exit 1
+          fi
+          psql postgres <<'SQL'
+          DO $$
+          BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'boxcord') THEN
+              CREATE ROLE boxcord LOGIN;
+            END IF;
+          END
+          $$;
+          ALTER ROLE boxcord WITH LOGIN NOSUPERUSER CREATEDB PASSWORD 'boxcord';
+          SQL
           psql postgres -c "DROP DATABASE IF EXISTS boxcord_test;"
           psql postgres -c "CREATE DATABASE boxcord_test OWNER boxcord;"
 
@@ -98,6 +116,7 @@ jobs:
   desktop-typecheck:
     name: Desktop Typecheck
     runs-on: [self-hosted, macOS, ARM64]
+    if: github.event_name == 'push' || !github.event.pull_request.head.repo.fork
     permissions:
       contents: read
 
@@ -127,6 +146,7 @@ jobs:
   e2e:
     name: E2E Tests
     runs-on: [self-hosted, macOS, ARM64]
+    if: github.event_name == 'push' || !github.event.pull_request.head.repo.fork
     permissions:
       contents: read
 
@@ -141,7 +161,20 @@ jobs:
           export PATH="$(brew --prefix postgresql@16)/bin:$PATH"
           brew services start postgresql@16
           for i in $(seq 1 30); do pg_isready -q && break; sleep 1; done
-          psql postgres -c "CREATE USER boxcord WITH SUPERUSER PASSWORD 'boxcord';" 2>/dev/null || true
+          if ! pg_isready -q; then
+            echo "PostgreSQL did not become ready in time." >&2
+            exit 1
+          fi
+          psql postgres <<'SQL'
+          DO $$
+          BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'boxcord') THEN
+              CREATE ROLE boxcord LOGIN;
+            END IF;
+          END
+          $$;
+          ALTER ROLE boxcord WITH LOGIN NOSUPERUSER CREATEDB PASSWORD 'boxcord';
+          SQL
           psql postgres -c "DROP DATABASE IF EXISTS boxcord_e2e;"
           psql postgres -c "CREATE DATABASE boxcord_e2e OWNER boxcord;"
 
@@ -201,7 +234,8 @@ jobs:
 
       - name: Install Playwright system deps (cached browsers)
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium || true
+        # install-deps may fail on macOS (designed for Linux apt); non-fatal on macOS
+        run: npx playwright install-deps chromium || echo '⚠️ install-deps not supported on this OS — skipping'
 
       - name: Run E2E tests
         run: yarn test:e2e --project=chromium --grep-invert @auth
@@ -233,6 +267,7 @@ jobs:
   security:
     name: Security Audit
     runs-on: [self-hosted, macOS, ARM64]
+    if: github.event_name == 'push' || !github.event.pull_request.head.repo.fork
     permissions:
       contents: read
 
