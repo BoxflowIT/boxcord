@@ -134,7 +134,7 @@ jobs:
   release-windows:
     name: Windows (NSIS installer)
     needs: create-release
-    runs-on: windows-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - name: Checkout
@@ -156,8 +156,11 @@ jobs:
         run: yarn build
 
       - name: Build Windows installer
+        # electron-builder uses Docker (electronuserland/builder:wine) for cross-compilation on macOS
         working-directory: desktop
         run: npx electron-builder --win --publish never
+        env:
+          USE_HARD_LINKS: false
 
       - name: Upload artifacts to release
         working-directory: desktop/out
