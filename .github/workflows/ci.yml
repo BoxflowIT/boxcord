@@ -35,11 +35,13 @@ jobs:
           psql postgres -c "DROP DATABASE IF EXISTS boxcord_test;"
           psql postgres -c "CREATE DATABASE boxcord_test OWNER boxcord;"
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'yarn'
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile --ignore-engines
@@ -103,15 +105,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'yarn'
-          cache-dependency-path: desktop/yarn.lock
-
-      - name: Enable Corepack
-        run: corepack enable
 
       - name: Install dependencies
         working-directory: ./desktop
@@ -145,13 +145,14 @@ jobs:
           psql postgres -c "DROP DATABASE IF EXISTS boxcord_e2e;"
           psql postgres -c "CREATE DATABASE boxcord_e2e OWNER boxcord;"
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'yarn'
-      - name: Enable Corepack
-        run: corepack enable
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile --ignore-engines
 
