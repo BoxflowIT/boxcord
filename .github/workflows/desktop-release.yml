@@ -32,6 +32,7 @@ jobs:
     steps:
       - name: Ensure required tools
         run: |
+          export PATH="/opt/homebrew/bin:$PATH"
           command -v gh &>/dev/null || brew install gh
           echo "✅ gh $(gh --version | head -1)"
 
@@ -105,7 +106,9 @@ jobs:
           echo "✅ Docker $(docker --version)"
 
       - name: Install system dependencies for rpm/pacman builds
-        run: brew install rpm || { echo "❌ Failed to install rpm"; exit 1; }
+        run: |
+          export PATH="/opt/homebrew/bin:$PATH"
+          brew install rpm || { echo "❌ Failed to install rpm"; exit 1; }
 
       - name: Install dependencies
         working-directory: desktop

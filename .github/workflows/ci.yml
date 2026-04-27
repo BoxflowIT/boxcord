@@ -9,6 +9,9 @@ on:
 permissions:
   contents: read
 
+env:
+  HOMEBREW_PREFIX: /opt/homebrew
+
 jobs:
   # ─── Unit & Integration Tests ───────────────────────────────────────
   test:
@@ -23,6 +26,7 @@ jobs:
 
       - name: Setup PostgreSQL
         run: |
+          export PATH="$HOMEBREW_PREFIX/bin:$PATH"
           brew list postgresql@16 &>/dev/null || brew install postgresql@16
           export PATH="$(brew --prefix postgresql@16)/bin:$PATH"
           brew services start postgresql@16
@@ -106,6 +110,9 @@ jobs:
           cache: 'yarn'
           cache-dependency-path: desktop/yarn.lock
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Install dependencies
         working-directory: ./desktop
         run: yarn install --frozen-lockfile
@@ -129,6 +136,7 @@ jobs:
 
       - name: Setup PostgreSQL
         run: |
+          export PATH="$HOMEBREW_PREFIX/bin:$PATH"
           brew list postgresql@16 &>/dev/null || brew install postgresql@16
           export PATH="$(brew --prefix postgresql@16)/bin:$PATH"
           brew services start postgresql@16
@@ -142,7 +150,8 @@ jobs:
         with:
           node-version: '20'
           cache: 'yarn'
-
+      - name: Enable Corepack
+        run: corepack enable
       - name: Install dependencies
         run: yarn install --frozen-lockfile --ignore-engines
 

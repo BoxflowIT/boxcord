@@ -23,6 +23,7 @@ jobs:
     steps:
       - name: Ensure required tools
         run: |
+          export PATH="/opt/homebrew/bin:$PATH"
           command -v jq &>/dev/null || brew install jq
           command -v gh &>/dev/null || brew install gh
           echo "✅ jq $(jq --version), gh $(gh --version | head -1)"
