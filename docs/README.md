@@ -39,7 +39,7 @@ Make Boxcord fast and efficient:
 
 - [**Performance Optimizations**](PERFORMANCE_OPTIMIZATIONS.md) - Prisma 6, Redis caching, benchmarks
 - [**Database Optimization**](DATABASE_INDEX_OPTIMIZATION.md) - Indexes, query optimization
-- [**Testing Guide**](TESTING.md) - Unit tests (61/61), E2E tests, load testing with K6
+- [**Testing Guide**](TESTING.md) - Unit tests (197 passing), E2E tests, load testing with K6
 
 ### 🚀 Production & Operations
 

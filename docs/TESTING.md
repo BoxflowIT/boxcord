@@ -8,8 +8,11 @@ This document describes how to run various tests for the Boxcord application.
 Tests individual functions and services.
 
 ```bash
-# Run all unit tests
+# Run backend unit tests (113 tests)
 yarn test
+
+# Run client unit tests (84 tests)
+cd client && yarn test
 
 # Run with coverage
 yarn test:coverage
