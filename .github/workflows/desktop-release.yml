@@ -90,6 +90,9 @@ jobs:
           cache: 'yarn'
           cache-dependency-path: desktop/yarn.lock
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Install system dependencies for rpm/pacman builds
         # Running on macOS — electron-builder uses Docker for Linux cross-compilation
         run: brew install rpm 2>/dev/null || true
