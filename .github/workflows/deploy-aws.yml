@@ -46,7 +46,8 @@ jobs:
           # 2. File-based credential helper that replaces osxkeychain
           HELPER_DIR="${RUNNER_TEMP}/docker-helpers"
           CRED_DIR="${RUNNER_TEMP}/.docker-creds"
-          mkdir -p "$HELPER_DIR" "$CRED_DIR"
+          mkdir -p "$HELPER_DIR"
+          mkdir -p "$CRED_DIR" && chmod 700 "$CRED_DIR"
 
           cat > "$HELPER_DIR/docker-credential-osxkeychain" << 'HELPERSCRIPT'
           #!/usr/bin/env bash
@@ -58,11 +59,17 @@ jobs:
               INPUT=$(cat)
               KEY=$(echo "$INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin)['ServerURL'].replace('/','_').replace(':','_'))")
               echo "$INPUT" > "$STORE/$KEY"
+              chmod 600 "$STORE/$KEY"
               ;;
             get)
               KEY=$(cat | sanitize)
               F="$STORE/$KEY"
-              if [ -f "$F" ]; then cat "$F"; else echo '{"ServerURL":"","Username":"","Secret":""}'; fi
+              if [ -f "$F" ]; then
+                cat "$F"
+              else
+                echo "credentials not found" >&2
+                exit 1
+              fi
               ;;
             erase)
               KEY=$(cat | sanitize)
@@ -132,6 +139,12 @@ jobs:
             ${{ steps.meta.outputs.latest_tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Clean up Docker credentials
+        if: always()
+        run: |
+          rm -rf "${RUNNER_TEMP}/.docker-creds" "${RUNNER_TEMP}/.docker" "${RUNNER_TEMP}/docker-helpers"
+          echo "Cleaned up temporary Docker credentials"
 
   # ─── Deploy Frontend to S3/CloudFront ───────────────────────────
   deploy-frontend:
