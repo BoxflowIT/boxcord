@@ -30,6 +30,67 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
+      - name: Configure Docker for headless CI
+        run: |
+          # On macOS self-hosted runners, docker-credential-osxkeychain tries to
+          # access the system keychain which requires GUI interaction (-25308).
+          # Fix: use an isolated Docker config dir + file-based credential helper
+          # that shadows the real osxkeychain/desktop helpers via PATH.
+
+          # 1. Isolated Docker config directory
+          DOCKER_CFG="${RUNNER_TEMP}/.docker"
+          mkdir -p "$DOCKER_CFG"
+          echo '{}' > "$DOCKER_CFG/config.json"
+          echo "DOCKER_CONFIG=$DOCKER_CFG" >> "$GITHUB_ENV"
+
+          # 2. File-based credential helper that replaces osxkeychain
+          HELPER_DIR="${RUNNER_TEMP}/docker-helpers"
+          CRED_DIR="${RUNNER_TEMP}/.docker-creds"
+          mkdir -p "$HELPER_DIR" "$CRED_DIR"
+
+          cat > "$HELPER_DIR/docker-credential-osxkeychain" << 'HELPERSCRIPT'
+          #!/usr/bin/env bash
+          STORE="CRED_DIR_PLACEHOLDER"
+          mkdir -p "$STORE"
+          sanitize() { python3 -c "import sys; print(sys.stdin.read().strip().replace('/','_').replace(':','_'))"; }
+          case "$1" in
+            store)
+              INPUT=$(cat)
+              KEY=$(echo "$INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin)['ServerURL'].replace('/','_').replace(':','_'))")
+              echo "$INPUT" > "$STORE/$KEY"
+              ;;
+            get)
+              KEY=$(cat | sanitize)
+              F="$STORE/$KEY"
+              if [ -f "$F" ]; then cat "$F"; else echo '{"ServerURL":"","Username":"","Secret":""}'; fi
+              ;;
+            erase)
+              KEY=$(cat | sanitize)
+              rm -f "$STORE/$KEY" 2>/dev/null
+              ;;
+            list)
+              echo '{}'
+              ;;
+          esac
+          HELPERSCRIPT
+
+          # Inject the actual credential store path
+          sed -i '' "s|CRED_DIR_PLACEHOLDER|$CRED_DIR|g" "$HELPER_DIR/docker-credential-osxkeychain"
+          chmod +x "$HELPER_DIR/docker-credential-osxkeychain"
+
+          # Also shadow docker-credential-desktop
+          cp "$HELPER_DIR/docker-credential-osxkeychain" "$HELPER_DIR/docker-credential-desktop"
+          chmod +x "$HELPER_DIR/docker-credential-desktop"
+
+          # 3. Prepend helper dir to PATH so our helpers are found first
+          echo "$HELPER_DIR" >> "$GITHUB_PATH"
+
+          echo "Docker config ($DOCKER_CFG/config.json):"
+          cat "$DOCKER_CFG/config.json"
+          echo "Credential helpers installed in: $HELPER_DIR"
+          echo "Credential store: $CRED_DIR"
+          ls -la "$HELPER_DIR/"
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
         with:
@@ -38,7 +99,14 @@ jobs:
 
       - name: Login to Amazon ECR
         id: ecr-login
-        uses: aws-actions/amazon-ecr-login@19d944daaa35f0fa1d3f7f8af1d3f2e5de25c5b7 # v2
+        run: |
+          # Manual ECR login using --password-stdin (avoids credential store issues)
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          REGISTRY="${ACCOUNT_ID}.dkr.ecr.eu-north-1.amazonaws.com"
+          aws ecr get-login-password --region eu-north-1 | \
+            docker login --username AWS --password-stdin "$REGISTRY"
+          echo "registry=${REGISTRY}" >> "$GITHUB_OUTPUT"
+          echo "Logged in to ECR: $REGISTRY"
 
       - name: Docker meta
         id: meta

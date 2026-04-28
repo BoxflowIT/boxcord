@@ -1,5 +1,15 @@
 [
   {
+    "version": "1.26.4",
+    "date": "2026-04-28",
+    "notes": {
+      "en": [
+        " update .pkg.tar.zst references to .pacman in main.ts and docs ",
+        " desktop release build — pin xmldom <0.9 and fix pacman glob "
+      ]
+    }
+  },
+  {
     "version": "1.26.2",
     "date": "2026-04-23",
     "notes": {
