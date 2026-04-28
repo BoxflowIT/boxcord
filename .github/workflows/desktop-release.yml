@@ -91,7 +91,7 @@ jobs:
           cache-dependency-path: desktop/yarn.lock
 
       - name: Install system dependencies for rpm/pacman builds
-        run: sudo apt-get update && sudo apt-get install -y libarchive-tools rpm
+        run: sudo apt-get update && sudo apt-get install -y rpm libarchive-tools zstd
 
       - name: Install dependencies
         working-directory: desktop
@@ -160,6 +160,7 @@ jobs:
 
       - name: Upload artifacts to release
         working-directory: desktop/out
+        shell: bash
         run: gh release upload "${{ needs.create-release.outputs.tag }}" *.exe *.exe.blockmap latest.yml --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -187,9 +188,14 @@ jobs:
   release-mac:
     name: macOS (DMG)
     needs: create-release
-    runs-on: macos-latest
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
+      - name: Ensure required tools
+        run: |
+          export PATH="/opt/homebrew/bin:$PATH"
+          command -v gh &>/dev/null || brew install gh
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -197,8 +203,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'yarn'
-          cache-dependency-path: desktop/yarn.lock
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
         working-directory: desktop

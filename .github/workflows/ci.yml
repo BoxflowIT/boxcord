@@ -9,38 +9,36 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  HOMEBREW_PREFIX: /opt/homebrew
+
 jobs:
   # ─── Unit & Integration Tests ───────────────────────────────────────
   test:
     name: Test & Lint
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
+    if: github.event_name == 'push' || !github.event.pull_request.head.repo.fork
     permissions:
       contents: read
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: boxcord
-          POSTGRES_PASSWORD: boxcord
-          POSTGRES_DB: boxcord_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup PostgreSQL
+        run: ./scripts/setup-postgres.sh boxcord_test
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'yarn'
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile --ignore-engines
@@ -96,7 +94,8 @@ jobs:
   # ─── Desktop TypeScript Check ──────────────────────────────────────
   desktop-typecheck:
     name: Desktop Typecheck
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
+    if: github.event_name == 'push' || !github.event.pull_request.head.repo.fork
     permissions:
       contents: read
 
@@ -108,8 +107,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'yarn'
-          cache-dependency-path: desktop/yarn.lock
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
         working-directory: ./desktop
@@ -124,34 +124,25 @@ jobs:
   # Auth-dependent tests are skipped in CI until auth mocking is added.
   e2e:
     name: E2E Tests
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
+    if: github.event_name == 'push' || !github.event.pull_request.head.repo.fork
     permissions:
       contents: read
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: boxcord
-          POSTGRES_PASSWORD: boxcord
-          POSTGRES_DB: boxcord_e2e
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup PostgreSQL
+        run: ./scripts/setup-postgres.sh boxcord_e2e
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'yarn'
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile --ignore-engines
@@ -192,16 +183,18 @@ jobs:
         uses: actions/cache@v4
         id: playwright-cache
         with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ steps.playwright-version.outputs.version }}-chromium
+          path: ~/Library/Caches/ms-playwright
+          key: playwright-macos-arm64-${{ steps.playwright-version.outputs.version }}-chromium
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
+        # --with-deps installs OS-level libs via apt (Linux only); on macOS just install the browser
+        run: npx playwright install chromium
 
       - name: Install Playwright system deps (cached browsers)
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
+        # install-deps uses apt (Linux only); safe to skip on macOS
+        run: npx playwright install-deps chromium || echo '⚠️ install-deps not supported on this OS — skipping'
 
       - name: Run E2E tests
         run: yarn test:e2e --project=chromium --grep-invert @auth
@@ -232,7 +225,8 @@ jobs:
   # ─── Security Audit ─────────────────────────────────────────────────
   security:
     name: Security Audit
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
+    if: github.event_name == 'push' || !github.event.pull_request.head.repo.fork
     permissions:
       contents: read
 

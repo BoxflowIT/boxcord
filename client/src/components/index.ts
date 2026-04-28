@@ -8,7 +8,7 @@ export * from './message';
 export * from './channel';
 
 // Sidebar components
-export * from './sidebar';
+export * from './sidebar/index';
 
 // DM components
 export * from './dm';
