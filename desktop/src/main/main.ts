@@ -340,7 +340,7 @@ function isPkexecFailure(err: unknown): boolean {
 }
 
 /**
- * Find the downloaded .deb/.rpm/.pkg.tar.zst file in electron-updater's cache directory.
+ * Find the downloaded .deb/.rpm/.pacman file in electron-updater's cache directory.
  * Returns the absolute path and package type if found, null otherwise.
  */
 function findDownloadedPackage(): {
@@ -356,7 +356,7 @@ function findDownloadedPackage(): {
     const extensions: Array<{ ext: string; type: 'deb' | 'rpm' | 'pacman' }> = [
       { ext: '.deb', type: 'deb' },
       { ext: '.rpm', type: 'rpm' },
-      { ext: '.pkg.tar.zst', type: 'pacman' }
+      { ext: '.pacman', type: 'pacman' }
     ];
 
     for (const { ext, type } of extensions) {
@@ -385,7 +385,7 @@ const MANUAL_INSTALL_PREFIX = '[MANUAL_INSTALL] ';
 /**
  * Handle pkexec failure on Linux package installs.
  * Shows a native dialog with the appropriate manual install command
- * (dpkg for .deb, rpm for .rpm, pacman for .pkg.tar.zst) and copies
+ * (dpkg for .deb, rpm for .rpm, pacman for .pacman) and copies
  * it to clipboard, since autoInstallOnAppQuit also needs root and
  * a silent relaunch would not actually install the update.
  */
@@ -413,7 +413,7 @@ function handleLinuxInstallFailure(): void {
     const hasRpm = fs.existsSync('/usr/bin/rpm');
     const hasPacman = fs.existsSync('/usr/bin/pacman');
     if (hasPacman) {
-      command = `sudo pacman -U '${fallbackDir}'/*.pkg.tar.zst`;
+      command = `sudo pacman -U '${fallbackDir}'/*.pacman`;
     } else if (hasRpm) {
       command = `sudo rpm -U '${fallbackDir}'/*.rpm`;
     } else {
