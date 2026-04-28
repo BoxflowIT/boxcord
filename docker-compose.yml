@@ -27,9 +27,9 @@ services:
       - "127.0.0.1:6380:6379"  # Avoid conflict with system Redis
     volumes:
       - boxcord-redis:/data
-    command: redis-server --appendonly yes --requirepass boxcord
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeme}
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "boxcord", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-changeme}", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
