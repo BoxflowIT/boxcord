@@ -8,8 +8,11 @@ This document describes how to run various tests for the Boxcord application.
 Tests individual functions and services.
 
 ```bash
-# Run all unit tests
+# Run backend unit tests (113 tests)
 yarn test
+
+# Run client unit tests (84 tests)
+cd client && yarn test
 
 # Run with coverage
 yarn test:coverage
@@ -18,8 +21,8 @@ yarn test:coverage
 yarn test:watch
 ```
 
-**Current Status:** ✅ 61/61 passing  
-**Coverage:** Backend services, store, hooks
+**Current Status:** ✅ 197 passing (113 backend + 84 frontend)  
+**Coverage:** Backend services, store, hooks, components
 
 ### 2. E2E Tests (Playwright)
 End-to-end tests that simulate real user interactions.
@@ -176,11 +179,16 @@ Automatically runs on `git push`:
 
 ## CI/CD Pipeline
 
-The GitHub Actions workflow runs:
-1. TypeScript compilation check
-2. ESLint (backend + client)
-3. Unit tests (all 61 tests)
-4. Code coverage report
+The GitHub Actions CI workflow (`ci.yml`) runs on a **self-hosted macOS ARM64 runner** with 4 parallel jobs:
+
+1. **Test & Lint** — PostgreSQL via Homebrew (`scripts/setup-postgres.sh`), TypeScript check, ESLint, unit tests (backend + client), client build
+2. **Desktop Typecheck** — TypeScript check for the Electron desktop app
+3. **E2E Tests** — Playwright (Chromium) with seeded test database, runs non-auth tests (`--grep-invert @auth`)
+4. **Security Audit** — `npm audit` (high/critical only)
+
+**Runner security:** All PR-triggered jobs include fork protection — PRs from forks are skipped on self-hosted runners to prevent arbitrary code execution.
+
+**PostgreSQL setup:** Uses `scripts/setup-postgres.sh` (Homebrew PostgreSQL 16) instead of Docker services (not available on macOS runners).
 
 ## Test Files Structure
 
@@ -235,7 +243,7 @@ client/tests/
 
 | Test Type | Status | Coverage | Notes |
 |-----------|--------|----------|-------|
-| Unit Tests | ✅ Passing | 61 tests | Backend services |
+| Unit Tests | ✅ Passing | 197 tests (113+84) | Backend services + frontend components |
 | E2E Tests | ✅ Ready | 42+ scenarios | Playwright configured (user flows, auth flows, file uploads, WebSocket) |
 | Load Tests | ✅ **OPTIMIZED** | 4 scenarios | All targets achieved (500+ users) |
 | XSS Tests | ✅ Passing | 6 payloads | Sanitization active |
