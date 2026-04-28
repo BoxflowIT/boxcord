@@ -32,19 +32,20 @@ jobs:
 
       - name: Configure Docker credential store
         run: |
-          # Prevent Docker from using macOS Keychain (requires GUI interaction)
+          # Prevent Docker from using macOS Keychain (requires GUI interaction on headless runner)
+          # Setting credsStore to empty string forces file-based credential storage
+          # Just removing credsStore causes Docker to fall back to system default (osxkeychain)
           mkdir -p ~/.docker
-          if [[ -f ~/.docker/config.json ]]; then
-            python3 -c "
+          python3 -c "
           import json, pathlib, os
           p = pathlib.Path(os.path.expanduser('~/.docker/config.json'))
           cfg = json.loads(p.read_text()) if p.exists() else {}
-          cfg.pop('credsStore', None)
+          cfg.pop('credHelpers', None)
+          cfg['credsStore'] = ''
           p.write_text(json.dumps(cfg, indent=2))
           "
-          else
-            echo '{}' > ~/.docker/config.json
-          fi
+          echo "Docker config after update:"
+          cat ~/.docker/config.json
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
