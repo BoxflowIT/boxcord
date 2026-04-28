@@ -4,10 +4,10 @@
     "date": "2026-04-28",
     "notes": {
       "en": [
-        " address Copilot review — harden credential helper & fix changelog ",
-        " use file-based Docker credential helper for headless macOS runner ",
-        " set empty credsStore instead of removing it for Docker ECR login ",
-        " disable macOS Keychain for Docker ECR login on self-hosted runner "
+        "Harden credential helper — restrict file permissions (chmod 700/600)",
+        "Return non-zero exit on missing Docker credentials",
+        "Add always-run cleanup step for temporary Docker credentials",
+        "Fix changelog formatting and add missing 1.26.3 entry"
       ]
     }
   },
