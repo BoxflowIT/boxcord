@@ -30,6 +30,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
+      - name: Configure Docker credential store
+        run: |
+          # Prevent Docker from using macOS Keychain (requires GUI interaction)
+          mkdir -p ~/.docker
+          if [[ -f ~/.docker/config.json ]]; then
+            python3 -c "
+          import json, pathlib, os
+          p = pathlib.Path(os.path.expanduser('~/.docker/config.json'))
+          cfg = json.loads(p.read_text()) if p.exists() else {}
+          cfg.pop('credsStore', None)
+          p.write_text(json.dumps(cfg, indent=2))
+          "
+          else
+            echo '{}' > ~/.docker/config.json
+          fi
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
         with:
