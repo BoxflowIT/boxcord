@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: boxcord
       POSTGRES_DB: boxcord
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - boxcord-data:/var/lib/postgresql/data
     healthcheck:
@@ -24,12 +24,12 @@ services:
     image: redis:7-alpine
     container_name: boxcord-redis
     ports:
-      - "6380:6379"  # Avoid conflict with system Redis
+      - "127.0.0.1:6380:6379"  # Avoid conflict with system Redis
     volumes:
       - boxcord-redis:/data
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass boxcord
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "boxcord", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
