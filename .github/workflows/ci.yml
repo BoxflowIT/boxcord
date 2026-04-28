@@ -9,38 +9,36 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  HOMEBREW_PREFIX: /opt/homebrew
+
 jobs:
   # ─── Unit & Integration Tests ───────────────────────────────────────
   test:
     name: Test & Lint
     runs-on: [self-hosted, macOS, ARM64]
+    if: github.event_name == 'push' || !github.event.pull_request.head.repo.fork
     permissions:
       contents: read
 
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: boxcord
-          POSTGRES_PASSWORD: boxcord
-          POSTGRES_DB: boxcord_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Setup PostgreSQL
+        run: ./scripts/setup-postgres.sh boxcord_test
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
-          cache: 'yarn'
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile --ignore-engines
@@ -97,19 +95,21 @@ jobs:
   desktop-typecheck:
     name: Desktop Typecheck
     runs-on: [self-hosted, macOS, ARM64]
+    if: github.event_name == 'push' || !github.event.pull_request.head.repo.fork
     permissions:
       contents: read
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
-          cache: 'yarn'
-          cache-dependency-path: desktop/yarn.lock
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
         working-directory: ./desktop
@@ -125,33 +125,24 @@ jobs:
   e2e:
     name: E2E Tests
     runs-on: [self-hosted, macOS, ARM64]
+    if: github.event_name == 'push' || !github.event.pull_request.head.repo.fork
     permissions:
       contents: read
 
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: boxcord
-          POSTGRES_PASSWORD: boxcord
-          POSTGRES_DB: boxcord_e2e
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Setup PostgreSQL
+        run: ./scripts/setup-postgres.sh boxcord_e2e
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
-          cache: 'yarn'
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile --ignore-engines
@@ -189,19 +180,21 @@ jobs:
         run: echo "version=$(npx playwright --version | awk '{print $2}')" >> $GITHUB_OUTPUT
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         id: playwright-cache
         with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ steps.playwright-version.outputs.version }}-chromium
+          path: ~/Library/Caches/ms-playwright
+          key: playwright-macos-arm64-${{ steps.playwright-version.outputs.version }}-chromium
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
+        # --with-deps installs OS-level libs via apt (Linux only); on macOS just install the browser
+        run: npx playwright install chromium
 
       - name: Install Playwright system deps (cached browsers)
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
+        # install-deps uses apt (Linux only); safe to skip on macOS
+        run: npx playwright install-deps chromium || echo '⚠️ install-deps not supported on this OS — skipping'
 
       - name: Run E2E tests
         run: yarn test:e2e --project=chromium --grep-invert @auth
@@ -222,7 +215,7 @@ jobs:
           CI: true
 
       - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
@@ -233,15 +226,16 @@ jobs:
   security:
     name: Security Audit
     runs-on: [self-hosted, macOS, ARM64]
+    if: github.event_name == 'push' || !github.event.pull_request.head.repo.fork
     permissions:
       contents: read
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
 

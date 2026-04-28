@@ -17,14 +17,14 @@ permissions:
 jobs:
   preview:
     name: Deploy Preview
-    runs-on: [self-hosted, macOS, ARM64]
-    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    if: github.event.action != 'closed' && !github.event.pull_request.head.repo.fork
     environment:
       name: preview-pr-${{ github.event.pull_request.number }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Check AWS credentials
         id: check
@@ -38,7 +38,7 @@ jobs:
 
       - name: Setup Node.js
         if: steps.check.outputs.skip != 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
           cache: 'yarn'
@@ -50,7 +50,7 @@ jobs:
 
       - name: Configure AWS credentials
         if: steps.check.outputs.skip != 'true'
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
         with:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: eu-north-1
@@ -68,7 +68,7 @@ jobs:
 
       - name: Comment preview URL on PR
         if: steps.check.outputs.skip != 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             const prNumber = context.payload.pull_request.number;
@@ -110,13 +110,13 @@ jobs:
 
   cleanup:
     name: Cleanup Preview
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: ubuntu-latest
     if: github.event.action == 'closed'
 
     steps:
       - name: Configure AWS credentials
         id: check
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
         with:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: eu-north-1
