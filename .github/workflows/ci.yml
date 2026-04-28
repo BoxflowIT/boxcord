@@ -30,29 +30,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup PostgreSQL
-        run: |
-          set -euo pipefail
-          export PATH="$HOMEBREW_PREFIX/bin:$PATH"
-          brew list postgresql@16 &>/dev/null || brew install postgresql@16
-          export PATH="$(brew --prefix postgresql@16)/bin:$PATH"
-          brew services start postgresql@16
-          for i in $(seq 1 30); do pg_isready -q && break; sleep 1; done
-          if ! pg_isready -q; then
-            echo "PostgreSQL did not become ready in time." >&2
-            exit 1
-          fi
-          psql -v ON_ERROR_STOP=1 postgres <<'SQL'
-          DO $$
-          BEGIN
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'boxcord') THEN
-              CREATE ROLE boxcord LOGIN;
-            END IF;
-          END
-          $$;
-          ALTER ROLE boxcord WITH LOGIN NOSUPERUSER CREATEDB PASSWORD 'boxcord';
-          SQL
-          psql -v ON_ERROR_STOP=1 postgres -c "DROP DATABASE IF EXISTS boxcord_test;"
-          psql -v ON_ERROR_STOP=1 postgres -c "CREATE DATABASE boxcord_test OWNER boxcord;"
+        run: ./scripts/setup-postgres.sh boxcord_test
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -156,29 +134,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup PostgreSQL
-        run: |
-          set -euo pipefail
-          export PATH="$HOMEBREW_PREFIX/bin:$PATH"
-          brew list postgresql@16 &>/dev/null || brew install postgresql@16
-          export PATH="$(brew --prefix postgresql@16)/bin:$PATH"
-          brew services start postgresql@16
-          for i in $(seq 1 30); do pg_isready -q && break; sleep 1; done
-          if ! pg_isready -q; then
-            echo "PostgreSQL did not become ready in time." >&2
-            exit 1
-          fi
-          psql -v ON_ERROR_STOP=1 postgres <<'SQL'
-          DO $$
-          BEGIN
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'boxcord') THEN
-              CREATE ROLE boxcord LOGIN;
-            END IF;
-          END
-          $$;
-          ALTER ROLE boxcord WITH LOGIN NOSUPERUSER CREATEDB PASSWORD 'boxcord';
-          SQL
-          psql -v ON_ERROR_STOP=1 postgres -c "DROP DATABASE IF EXISTS boxcord_e2e;"
-          psql -v ON_ERROR_STOP=1 postgres -c "CREATE DATABASE boxcord_e2e OWNER boxcord;"
+        run: ./scripts/setup-postgres.sh boxcord_e2e
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
