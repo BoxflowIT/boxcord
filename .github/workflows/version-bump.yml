@@ -129,9 +129,9 @@ jobs:
           NOTES=$(git log "$RANGE" --pretty=format:"%s" \
             | grep -iE "^(✨ |🐛 )?(feat|fix)(\(.+\))?:" \
             | sed -E 's/^[^ ]+ //' \
-            | sed -E 's/^(feat|fix)(\([^)]*\))?:\s*//' \
-            | sed -E 's/\s*\(#[0-9]+\)\s*$//' \
-            | sed -E 's/^\s+//;s/\s+$//' \
+            | sed -E 's/^(feat|fix)(\([^)]*\))?:[[:space:]]*//' \
+            | sed -E 's/[[:space:]]*\(#[0-9]+\)[[:space:]]*$//' \
+            | sed -E 's/^[[:space:]]+//;s/[[:space:]]+$//' \
             | grep -v '^$' || true)
 
           if [ -z "$NOTES" ]; then
