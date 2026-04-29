@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.26.6",
+    "date": "2026-04-28",
+    "notes": {
+      "en": [
+        " upgrade postcss to 8.5.12 to resolve XSS vulnerability (#387) "
+      ]
+    }
+  },
+  {
     "version": "1.26.5",
     "date": "2026-04-28",
     "notes": {

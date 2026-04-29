@@ -38,9 +38,15 @@ jobs:
           # that shadows the real osxkeychain/desktop helpers via PATH.
 
           # 1. Isolated Docker config directory
+          # credsStore:"" explicitly disables credential helpers so docker login
+          # stores base64 creds directly in "auths".  The buildx docker-container
+          # driver mounts this config.json inside its builder container — if a
+          # credsStore were set, the helper binary wouldn't exist inside the
+          # container and every image pull (even public Docker Hub) would fail
+          # with "error getting credentials - err: exit status 1".
           DOCKER_CFG="${RUNNER_TEMP}/.docker"
           mkdir -p "$DOCKER_CFG"
-          echo '{}' > "$DOCKER_CFG/config.json"
+          echo '{"credsStore":""}' > "$DOCKER_CFG/config.json"
           echo "DOCKER_CONFIG=$DOCKER_CFG" >> "$GITHUB_ENV"
 
           # 2. File-based credential helper that replaces osxkeychain
