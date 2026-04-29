@@ -180,7 +180,10 @@ BREAKING CHANGE: API endpoint changed from /v1 to /v2
 Co-authored-by: Name <email@example.com>
 ```
 
-### 🚨 PR Numbers (MANDATORY)
+### PR Numbers (Optional)
+
+PR numbers are automatically appended by GitHub when squash-merging a PR.
+You do not need to add them manually.
 
 **Examples:**
 ```bash
