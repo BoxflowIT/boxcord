@@ -327,7 +327,6 @@ feat(frontend): add dark mode
 
 **Validation rules:**
 - Must have valid type: `feat|fix|refactor|docs|test|chore|perf|style|ci|merge`
-- Subject must be lowercase
 - Emoji is optional but recommended
 
 **Example workflow:**
@@ -349,19 +348,15 @@ git commit -m "feat: add dark mode"
 ### Pre-commit Hooks
 
 Automatically runs on `git commit`:
-- Lint-staged (ESLint + formatting)
-- **All tests** (Backend 113 tests + Frontend 84 tests)
-- Type checking where applicable
-
-**Takes ~10-15 seconds** to ensure code quality before committing.
+- Lint-staged (ESLint + Prettier formatting)
 
 ### Pre-push Hooks
 
 Automatically runs on `git push`:
-- Backend: TypeScript check, ESLint, tests
-- Frontend: TypeScript check, ESLint, tests
+- Backend: TypeScript check (`tsc --noEmit`)
+- Frontend: TypeScript check (`tsc --noEmit`)
 
-**Takes ~25-30 seconds** for comprehensive validation before pushing.
+Full tests run in CI, not locally.
 
 **Skip hooks (emergency only):**
 ```bash
