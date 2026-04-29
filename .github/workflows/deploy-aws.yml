@@ -54,10 +54,14 @@ jobs:
           TOKEN=$(aws ecr get-login-password --region eu-north-1)
           AUTH=$(printf 'AWS:%s' "$TOKEN" | base64 | tr -d '\n')
 
+          # Restrict permissions — self-hosted runners may share the filesystem
+          umask 077
+
           # Write auth directly — no credsStore, no credential helpers needed
           cat > "$DOCKER_CFG/config.json" << EOF
           {"auths":{"${REGISTRY}":{"auth":"${AUTH}"}}}
           EOF
+          chmod 600 "$DOCKER_CFG/config.json"
 
           echo "DOCKER_CONFIG=$DOCKER_CFG" >> "$GITHUB_ENV"
           echo "registry=${REGISTRY}" >> "$GITHUB_OUTPUT"
