@@ -6,8 +6,8 @@ on:
     paths-ignore:
       - 'docs/**'
       - '*.md'
-      - '.pr-number'
       - '.github/workflows/version-bump.yml'
+      - 'client/public/changelog.json'
   workflow_dispatch:
 
 concurrency:
