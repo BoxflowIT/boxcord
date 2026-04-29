@@ -114,15 +114,6 @@ jobs:
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "✅ Bumped version to: $NEW_VERSION"
 
-      - name: Update PR counter
-        run: |
-          # Get next PR number
-          NEXT_PR=$(./scripts/get-next-pr-number.sh)
-          echo "📝 Next PR number: $NEXT_PR"
-          echo "$NEXT_PR" > .pr-number
-          echo "pr_number=$NEXT_PR" >> $GITHUB_OUTPUT
-        id: pr_number
-
       - name: Generate changelog
         env:
           NEW_VERSION: ${{ steps.new_version.outputs.version }}
@@ -171,10 +162,9 @@ jobs:
       - name: Commit version bump
         env:
           NEW_VERSION: ${{ steps.new_version.outputs.version }}
-          PR_NUMBER: ${{ steps.pr_number.outputs.pr_number }}
         run: |
-          git add package.json client/package.json desktop/package.json .pr-number client/public/changelog.json
-          git commit -m "🔖 chore: auto bump version to $NEW_VERSION (#$PR_NUMBER) [skip ci]"
+          git add package.json client/package.json desktop/package.json client/public/changelog.json
+          git commit -m "🔖 chore: auto bump version to $NEW_VERSION [skip ci]"
 
           # Create or update git tag (force-replace if it already exists)
           if git rev-parse "v$NEW_VERSION" >/dev/null 2>&1; then
@@ -191,27 +181,31 @@ jobs:
           git push origin main --follow-tags
           echo "✅ Pushed to main with tags"
 
+      - name: Check for desktop-relevant changes
+        id: desktop_changes
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$LATEST_TAG" ]; then
+            CHANGED=$(git diff --name-only "${LATEST_TAG}..HEAD" -- desktop/ client/ package.json)
+          else
+            CHANGED="force"
+          fi
+          if [ -n "$CHANGED" ]; then
+            echo "trigger=true" >> $GITHUB_OUTPUT
+            echo "📱 Desktop-relevant changes found — will trigger release"
+          else
+            echo "trigger=false" >> $GITHUB_OUTPUT
+            echo "⏭️ No desktop-relevant changes — skipping release"
+          fi
+
       - name: Trigger desktop release
+        if: steps.desktop_changes.outputs.trigger == 'true'
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           gh workflow run "Desktop Release" \
             -f version="${{ steps.new_version.outputs.version }}"
           echo "✅ Triggered desktop-release.yml for v${{ steps.new_version.outputs.version }}"
-
-      - name: Trigger redeploy with new version
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
-        run: |
-          gh workflow run "Deploy to AWS"
-          echo "✅ Triggered deploy-aws.yml to deploy with v${{ steps.new_version.outputs.version }}"
-
-      - name: Update PR number file
-        run: |
-          CURRENT_PR=${{ steps.pr_number.outputs.pr_number }}
-          NEXT_PR=$((CURRENT_PR + 1))
-          ./scripts/update-pr-number.sh $NEXT_PR
-          echo "Updated .pr-number to $NEXT_PR for next commit"
 
       - name: Summary
         env:

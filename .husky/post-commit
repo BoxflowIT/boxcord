@@ -1,14 +1,2 @@
 #!/bin/bash
-# post-commit hook
-# Automatically updates .pr-number after successful commit
-
-# Get the PR number from the last commit message
-LAST_COMMIT_MSG=$(git log -1 --pretty=%B)
-PR_NUMBER=$(echo "$LAST_COMMIT_MSG" | grep -oE '\(#([0-9]+)\)' | grep -oE '[0-9]+' | head -1)
-
-if [ -n "$PR_NUMBER" ]; then
-  ./scripts/update-pr-number.sh "$PR_NUMBER" > /dev/null 2>&1
-  echo "✅ Updated .pr-number to $PR_NUMBER (next will be $((PR_NUMBER + 1)))"
-else
-  echo "⚠️  No PR number found in commit message"
-fi
+# No-op — PR number tracking removed
