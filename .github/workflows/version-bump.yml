@@ -184,9 +184,10 @@ jobs:
       - name: Check for desktop-relevant changes
         id: desktop_changes
         run: |
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          if [ -n "$LATEST_TAG" ]; then
-            CHANGED=$(git diff --name-only "${LATEST_TAG}..HEAD" -- desktop/ client/ package.json)
+          # Use the tag before the one we just created (HEAD^ is the pre-bump commit)
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            CHANGED=$(git diff --name-only "${PREV_TAG}..HEAD^" -- desktop/ client/ package.json)
           else
             CHANGED="force"
           fi
