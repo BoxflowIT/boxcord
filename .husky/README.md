@@ -42,6 +42,19 @@ git commit -m "feat(frontend): add dark mode"
 - ❌ Invalid commit type
 - ❌ Incorrect format
 
+### pre-push
+**Runs:** Before push to remote  
+**Purpose:** Fast typecheck validation
+
+**What it does:**
+- 📦 Runs backend TypeScript check (`tsc --noEmit`)
+- 🎨 Runs client TypeScript check (`tsc --noEmit`)
+- Auto-installs client deps if `client/node_modules` is missing
+
+### post-commit
+**Runs:** After successful commit  
+**Purpose:** No-op (PR number tracking removed)
+
 ## 🔧 Emoji Mapping
 
 | Type | Emoji | Description |
