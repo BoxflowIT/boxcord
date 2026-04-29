@@ -182,47 +182,13 @@ Co-authored-by: Name <email@example.com>
 
 ### 🚨 PR Numbers (MANDATORY)
 
-**ALL commits MUST include a sequential PR number at the end of the subject line.**
-
-This is required for:
-- **Searchability** - Find all commits related to a feature/fix
-- **Traceability** - Link code changes to discussions and reviews
-- **Audit trail** - Understand context of changes months later
-- **Sequential tracking** - Consistent numbering across the project
-
-**Format:** `<type>(<scope>): <subject> (#NUMBER)`
-
-**Getting the next number:**
-```bash
-# Get next PR number automatically
-./scripts/get-next-pr-number.sh  # Returns: 230
-
-# After committing, update the counter
-./scripts/update-pr-number.sh 230
-```
-
 **Examples:**
 ```bash
-✅ feat: add video window controls with PiP support (#229)
-✅ fix: resolve Giphy API rate limiting errors (#230)
-✅ refactor: convert console.log to structured logger (#231)
-✅ 🔀 merge: Phase 1 - Appearance Settings into main (v1.2.0) (#232)
+✅ feat: add video window controls with PiP support
+✅ fix: resolve Giphy API rate limiting errors
+✅ refactor: convert console.log to structured logger
+✅ 🔀 merge: Phase 1 - Appearance Settings into main (v1.2.0)
 ```
-
-**Invalid commits (will be rejected):**
-```bash
-❌ feat: add video window controls with PiP support
-❌ fix: resolve Giphy API rate limiting errors
-❌ merge: Phase 1 - Appearance Settings into main
-```
-
-**Why this matters:**
-- Sequential numbers provide clear chronological ordering
-- Easy to reference in discussions and documentation
-- Automated tracking via `.pr-number` file
-- Consistent across entire project history
-
-**Note:** Even single commits on feature branches need PR numbers, as they will be part of the merge commit history.
 
 ---
 
@@ -341,9 +307,7 @@ Our repository uses automated git hooks to ensure all commits follow CONTRIBUTIN
 #### prepare-commit-msg (Automatic)
 **Runs BEFORE you edit the commit message**
 
-- 🔢 Automatically adds the next PR number from `.pr-number`
 - ✨ Automatically adds emoji based on commit type
-- 📝 Formats message according to conventional commits
 
 **What it does:**
 ```bash
@@ -351,29 +315,20 @@ Our repository uses automated git hooks to ensure all commits follow CONTRIBUTIN
 feat(frontend): add dark mode
 
 # Hook transforms to:
-✨ feat(frontend): add dark mode (#230)
+✨ feat(frontend): add dark mode
 ```
 
 #### commit-msg (Validation)
 **Runs AFTER you write the commit message**
 
 - ✅ Validates conventional commit format
-- ✅ Checks for mandatory PR number
 - ✅ Warns if subject line is too long (>72 chars)
 - ❌ Rejects commits that don't follow format
 
 **Validation rules:**
 - Must have valid type: `feat|fix|refactor|docs|test|chore|perf|style|ci|merge`
-- Must have PR number at end: `(#230)`
 - Subject must be lowercase
 - Emoji is optional but recommended
-
-#### post-commit (Auto-update)
-**Runs AFTER successful commit**
-
-- 🔄 Automatically updates `.pr-number` file
-- 📈 Increments counter for next commit
-- ✅ No manual tracking needed
 
 **Example workflow:**
 ```bash
@@ -385,13 +340,10 @@ git commit -m "feat: add dark mode"
 
 # 3. Hooks automatically:
 #    - Add emoji: ✨
-#    - Add PR number: (#230)
 #    - Validate format
-#    - Update .pr-number to 230
-#    - Next commit will be #231
 
 # Final commit message:
-# ✨ feat: add dark mode (#230)
+# ✨ feat: add dark mode
 ```
 
 ### Pre-commit Hooks

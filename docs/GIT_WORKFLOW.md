@@ -330,9 +330,6 @@ gh pr checks
 
 # View PR list
 gh pr list
-
-# Check current PR number
-cat .pr-number
 ```
 
 ---
@@ -344,14 +341,6 @@ cat .pr-number
 # Reinstall hooks
 yarn husky install
 chmod +x .husky/*
-```
-
-### PR number conflicts
-```bash
-# Manually sync PR number
-./scripts/update-pr-number.sh 235
-git add .pr-number
-git commit --no-verify -m "🔧 chore: sync PR counter"
 ```
 
 ### Failed CI checks
