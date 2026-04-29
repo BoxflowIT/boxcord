@@ -8,6 +8,11 @@ echo "📦 Backend: TypeScript check..."
 yarn typecheck
 
 echo "🎨 Client: TypeScript check..."
-cd client && yarn tsc --noEmit
+cd client
+if [ ! -d node_modules ]; then
+  echo "   Installing client dependencies..."
+  yarn install --frozen-lockfile --ignore-engines --silent
+fi
+yarn tsc --noEmit
 
 echo "✅ Typechecks passed! CI will run full tests."
