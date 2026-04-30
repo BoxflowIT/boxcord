@@ -22,7 +22,7 @@ jobs:
   # ─── Build & Push Docker Image ──────────────────────────────────
   build-backend:
     name: Build Backend Image
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: [self-hosted]
     outputs:
       image_tag: ${{ steps.meta.outputs.sha_tag }}
 
@@ -52,7 +52,8 @@ jobs:
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           REGISTRY="${ACCOUNT_ID}.dkr.ecr.eu-north-1.amazonaws.com"
           TOKEN=$(aws ecr get-login-password --region eu-north-1)
-          AUTH=$(printf 'AWS:%s' "$TOKEN" | base64 | tr -d '\n')
+          AUTH=$(printf 'AWS:%s' "$TOKEN" | base64 | tr -d '
+')
 
           # Restrict permissions — self-hosted runners may share the filesystem
           umask 077
@@ -101,7 +102,7 @@ jobs:
   # ─── Deploy Frontend to S3/CloudFront ───────────────────────────
   deploy-frontend:
     name: Deploy Frontend
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: [self-hosted]
 
     steps:
       - name: Checkout code
@@ -160,7 +161,7 @@ jobs:
   # ─── Update ECS Service ─────────────────────────────────────────
   deploy-backend:
     name: Deploy Backend
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: [self-hosted]
     needs: build-backend
 
     steps:
@@ -245,7 +246,7 @@ jobs:
   # ─── Post-Deploy Summary ────────────────────────────────────────
   summary:
     name: Deploy Summary
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: [self-hosted]
     needs: [deploy-backend, deploy-frontend]
     if: always()
 
