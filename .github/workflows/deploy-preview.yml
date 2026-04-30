@@ -17,7 +17,7 @@ permissions:
 jobs:
   preview:
     name: Deploy Preview
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted]
     if: github.event.action != 'closed' && !github.event.pull_request.head.repo.fork
     environment:
       name: preview-pr-${{ github.event.pull_request.number }}
@@ -85,11 +85,18 @@ jobs:
               c.user.type === 'Bot' && c.body.includes('🚀 Deploy Preview')
             );
 
-            const body = `## 🚀 Deploy Preview\n\n` +
-              `| Status | Path | Commit |\n` +
-              `|--------|------|---------|\n` +
-              `| ✅ Deployed | \`${previewPath}\` | \`${sha}\` |\n\n` +
-              `> Preview frontend uses staging backend.\n` +
+            const body = `## 🚀 Deploy Preview
+
+` +
+              `| Status | Path | Commit |
+` +
+              `|--------|------|---------|
+` +
+              `| ✅ Deployed | \`${previewPath}\` | \`${sha}\` |
+
+` +
+              `> Preview frontend uses staging backend.
+` +
               `> Preview will be cleaned up when this PR is closed.`;
 
             if (botComment) {
@@ -110,7 +117,7 @@ jobs:
 
   cleanup:
     name: Cleanup Preview
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted]
     if: github.event.action == 'closed'
 
     steps:
