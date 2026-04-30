@@ -1,35 +1,67 @@
 #!/usr/bin/env bash
-# Setup PostgreSQL 16 via Homebrew for CI (macOS self-hosted runner).
+# Setup PostgreSQL for CI (macOS via Homebrew or Linux via system package).
 # Usage: ./scripts/setup-postgres.sh <database_name>
 #   e.g. ./scripts/setup-postgres.sh boxcord_test
 set -euo pipefail
 
 DB_NAME="${1:?Usage: setup-postgres.sh <database_name>}"
 
-export PATH="${HOMEBREW_PREFIX:-/opt/homebrew}/bin:$PATH"
-brew list postgresql@16 &>/dev/null || brew install postgresql@16
-export PATH="$(brew --prefix postgresql@16)/bin:$PATH"
+OS="$(uname -s)"
 
-brew services start postgresql@16
+if [ "$OS" = "Darwin" ]; then
+  # macOS: use Homebrew
+  export PATH="${HOMEBREW_PREFIX:-/opt/homebrew}/bin:$PATH"
+  brew list postgresql@16 &>/dev/null || brew install postgresql@16
+  export PATH="$(brew --prefix postgresql@16)/bin:$PATH"
+  brew services start postgresql@16
+  PSQL_USER="${USER}"
+elif [ "$OS" = "Linux" ]; then
+  # Linux: PostgreSQL should be installed via apt
+  if ! command -v psql &>/dev/null; then
+    echo "ERROR: PostgreSQL not installed. Run: sudo apt-get install postgresql postgresql-client" >&2
+    exit 1
+  fi
+  sudo systemctl start postgresql 2>/dev/null || sudo pg_ctlcluster 16 main start 2>/dev/null || true
+  PSQL_USER="postgres"
+else
+  echo "ERROR: Unsupported OS: $OS" >&2
+  exit 1
+fi
 
+# Wait for PostgreSQL to be ready
 for i in $(seq 1 30); do pg_isready -q && break; sleep 1; done
 if ! pg_isready -q; then
   echo "PostgreSQL did not become ready in time." >&2
   exit 1
 fi
 
-psql -v ON_ERROR_STOP=1 postgres <<'SQL'
-DO $$
+# Create role and database (run as appropriate user)
+if [ "$OS" = "Linux" ]; then
+  sudo -u postgres psql -v ON_ERROR_STOP=1 <<SQL
+DO \$\$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'boxcord') THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = boxcord) THEN
     CREATE ROLE boxcord LOGIN;
   END IF;
 END
-$$;
-ALTER ROLE boxcord WITH LOGIN NOSUPERUSER CREATEDB PASSWORD 'boxcord';
+\$\$;
+ALTER ROLE boxcord WITH LOGIN NOSUPERUSER CREATEDB PASSWORD boxcord;
 SQL
+  sudo -u postgres psql -v ON_ERROR_STOP=1 -c "DROP DATABASE IF EXISTS ${DB_NAME};"
+  sudo -u postgres psql -v ON_ERROR_STOP=1 -c "CREATE DATABASE ${DB_NAME} OWNER boxcord;"
+else
+  psql -v ON_ERROR_STOP=1 postgres <<SQL
+DO \$\$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = boxcord) THEN
+    CREATE ROLE boxcord LOGIN;
+  END IF;
+END
+\$\$;
+ALTER ROLE boxcord WITH LOGIN NOSUPERUSER CREATEDB PASSWORD boxcord;
+SQL
+  psql -v ON_ERROR_STOP=1 postgres -c "DROP DATABASE IF EXISTS ${DB_NAME};"
+  psql -v ON_ERROR_STOP=1 postgres -c "CREATE DATABASE ${DB_NAME} OWNER boxcord;"
+fi
 
-psql -v ON_ERROR_STOP=1 postgres -c "DROP DATABASE IF EXISTS ${DB_NAME};"
-psql -v ON_ERROR_STOP=1 postgres -c "CREATE DATABASE ${DB_NAME} OWNER boxcord;"
-
-echo "✅ PostgreSQL ready — database '${DB_NAME}' created"
+echo "✅ PostgreSQL ready — database '${DB_NAME}' created (${OS})"
