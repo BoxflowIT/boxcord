@@ -20,7 +20,7 @@ jobs:
   # ─── Unit & Integration Tests ───────────────────────────────────────
   test:
     name: Test & Lint
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: [self-hosted]
     if: github.event_name == 'push' || !github.event.pull_request.head.repo.fork
     permissions:
       contents: read
@@ -94,7 +94,7 @@ jobs:
   # ─── Desktop TypeScript Check ──────────────────────────────────────
   desktop-typecheck:
     name: Desktop Typecheck
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: [self-hosted]
     if: github.event_name == 'push' || !github.event.pull_request.head.repo.fork
     permissions:
       contents: read
@@ -124,7 +124,7 @@ jobs:
   # Auth-dependent tests are skipped in CI until auth mocking is added.
   e2e:
     name: E2E Tests
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: [self-hosted]
     if: github.event_name == 'push' || !github.event.pull_request.head.repo.fork
     permissions:
       contents: read
@@ -225,7 +225,7 @@ jobs:
   # ─── Security Audit ─────────────────────────────────────────────────
   security:
     name: Security Audit
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: [self-hosted]
     if: github.event_name == 'push' || !github.event.pull_request.head.repo.fork
     permissions:
       contents: read
