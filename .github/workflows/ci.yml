@@ -49,7 +49,7 @@ jobs:
       - name: Run database migrations
         run: yarn prisma:migrate-deploy
         env:
-          DATABASE_URL: postgresql://boxcord:boxcord@localhost:5432/boxcord_test
+          DATABASE_URL: postgresql://boxcord:boxcord@localhost:${{ runner.os == 'Linux' && '5433' || '5432' }}/boxcord_test
 
       - name: TypeScript check
         run: yarn typecheck
@@ -60,7 +60,7 @@ jobs:
       - name: Run backend tests
         run: yarn test
         env:
-          DATABASE_URL: postgresql://boxcord:boxcord@localhost:5432/boxcord_test
+          DATABASE_URL: postgresql://boxcord:boxcord@localhost:${{ runner.os == 'Linux' && '5433' || '5432' }}/boxcord_test
           NODE_ENV: test
           JWT_SECRET: test-secret-key-for-ci-only
           COGNITO_USER_POOL_ID: test-pool
@@ -151,12 +151,12 @@ jobs:
       - name: Run database migrations
         run: yarn prisma:migrate-deploy
         env:
-          DATABASE_URL: postgresql://boxcord:boxcord@localhost:5432/boxcord_e2e
+          DATABASE_URL: postgresql://boxcord:boxcord@localhost:${{ runner.os == 'Linux' && '5433' || '5432' }}/boxcord_e2e
 
       - name: Seed test database
         run: yarn seed
         env:
-          DATABASE_URL: postgresql://boxcord:boxcord@localhost:5432/boxcord_e2e
+          DATABASE_URL: postgresql://boxcord:boxcord@localhost:${{ runner.os == 'Linux' && '5433' || '5432' }}/boxcord_e2e
           NODE_ENV: test
 
       - name: Build backend
@@ -206,7 +206,7 @@ jobs:
       - name: Run E2E tests
         run: yarn test:e2e --project=chromium --grep-invert @auth
         env:
-          DATABASE_URL: postgresql://boxcord:boxcord@localhost:5432/boxcord_e2e
+          DATABASE_URL: postgresql://boxcord:boxcord@localhost:${{ runner.os == 'Linux' && '5433' || '5432' }}/boxcord_e2e
           NODE_ENV: test
           PORT: 3001
           JWT_SECRET: test-secret-key-for-ci-only
