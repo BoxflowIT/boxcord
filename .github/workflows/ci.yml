@@ -35,7 +35,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Enable Corepack
         run: corepack enable
@@ -106,7 +106,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: '22'
+          node-version: "22"
 
       - name: Enable Corepack
         run: corepack enable
@@ -120,8 +120,6 @@ jobs:
         run: yarn typecheck
 
   # ─── E2E Tests (Playwright) ────────────────────────────────────────
-  # Runs only tests that don't require Cognito auth (tagged @auth).
-  # Auth-dependent tests are skipped in CI until auth mocking is added.
   e2e:
     name: E2E Tests
     runs-on: [self-hosted]
@@ -139,7 +137,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Enable Corepack
         run: corepack enable
@@ -179,22 +177,31 @@ jobs:
         id: playwright-version
         run: echo "version=$(npx playwright --version | awk '{print $2}')" >> $GITHUB_OUTPUT
 
+      - name: Determine Playwright cache path
+        id: pw-cache-path
+        run: |
+          if [ "$(uname -s)" = "Darwin" ]; then
+            echo "path=$HOME/Library/Caches/ms-playwright" >> $GITHUB_OUTPUT
+            echo "key-prefix=playwright-macos-arm64" >> $GITHUB_OUTPUT
+          else
+            echo "path=$HOME/.cache/ms-playwright" >> $GITHUB_OUTPUT
+            echo "key-prefix=playwright-linux-x64" >> $GITHUB_OUTPUT
+          fi
+
       - name: Cache Playwright browsers
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         id: playwright-cache
         with:
-          path: ~/Library/Caches/ms-playwright
-          key: playwright-macos-arm64-${{ steps.playwright-version.outputs.version }}-chromium
+          path: ${{ steps.pw-cache-path.outputs.path }}
+          key: ${{ steps.pw-cache-path.outputs.key-prefix }}-${{ steps.playwright-version.outputs.version }}-chromium
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        # --with-deps installs OS-level libs via apt (Linux only); on macOS just install the browser
-        run: npx playwright install chromium
+        run: npx playwright install --with-deps chromium
 
       - name: Install Playwright system deps (cached browsers)
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-        # install-deps uses apt (Linux only); safe to skip on macOS
-        run: npx playwright install-deps chromium || echo '⚠️ install-deps not supported on this OS — skipping'
+        run: npx playwright install-deps chromium || echo "install-deps not supported on this OS — skipping"
 
       - name: Run E2E tests
         run: yarn test:e2e --project=chromium --grep-invert @auth
@@ -237,13 +244,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Run npm audit (fail on high/critical only)
-        # NOTE: yarn audit API returns HTTP 410 (deprecated/shutdown by yarnpkg.com).
-        # We generate a temporary package-lock.json for npm audit instead.
-        # The audited graph may slightly differ from yarn.lock but is the best
-        # available option until the project migrates to a newer package manager.
         run: |
           trap 'rm -f package-lock.json' EXIT
           npm i --package-lock-only --ignore-scripts
@@ -252,7 +255,6 @@ jobs:
           AUDIT_EXIT=$?
           set -e
           if [ "$AUDIT_EXIT" -ne 0 ]; then
-            # Check if only known prisma/effect transitive vulnerabilities remain
             UNKNOWN_VULNS=$(npm audit --audit-level=high --json 2>/dev/null | node -e '
               const data = JSON.parse(require("fs").readFileSync("/dev/stdin","utf8"));
               const vulns = data.vulnerabilities || {};
@@ -261,14 +263,14 @@ jobs:
               console.log(unknown.length);
             ' 2>/dev/null || echo "unknown")
             if [ "$UNKNOWN_VULNS" = "0" ]; then
-              echo "⚠️  Only known Prisma/effect transitive vulnerabilities found (build-time only) — passing"
+              echo "Only known Prisma/effect transitive vulnerabilities found (build-time only) — passing"
             else
               echo "::error::npm audit found high/critical vulnerabilities"
               npm audit --audit-level=high 2>&1 || true
               exit 1
             fi
           fi
-          echo "✅ Root audit passed"
+          echo "Root audit passed"
 
       - name: Run client npm audit (fail on high/critical only)
         working-directory: ./client
@@ -276,4 +278,4 @@ jobs:
           trap 'rm -f package-lock.json' EXIT
           npm i --package-lock-only --ignore-scripts
           npm audit --audit-level=high
-          echo "✅ No high/critical client vulnerabilities found"
+          echo "No high/critical client vulnerabilities found"
