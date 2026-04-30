@@ -14,15 +14,17 @@ if [ "$OS" = "Darwin" ]; then
   brew list postgresql@16 &>/dev/null || brew install postgresql@16
   export PATH="$(brew --prefix postgresql@16)/bin:$PATH"
   brew services start postgresql@16
-  PSQL_USER="${USER}"
+  PSQL_CMD="psql"
+  PSQL_DB="postgres"
 elif [ "$OS" = "Linux" ]; then
   # Linux: PostgreSQL should be installed via apt
   if ! command -v psql &>/dev/null; then
     echo "ERROR: PostgreSQL not installed. Run: sudo apt-get install postgresql postgresql-client" >&2
     exit 1
   fi
-  sudo systemctl start postgresql 2>/dev/null || sudo pg_ctlcluster 16 main start 2>/dev/null || true
-  PSQL_USER="postgres"
+  sudo systemctl start postgresql 2>/dev/null || true
+  PSQL_CMD="sudo -u postgres psql"
+  PSQL_DB="postgres"
 else
   echo "ERROR: Unsupported OS: $OS" >&2
   exit 1
@@ -35,33 +37,19 @@ if ! pg_isready -q; then
   exit 1
 fi
 
-# Create role and database (run as appropriate user)
-if [ "$OS" = "Linux" ]; then
-  sudo -u postgres psql -v ON_ERROR_STOP=1 <<SQL
+# Create role and database
+$PSQL_CMD -v ON_ERROR_STOP=1 -d "$PSQL_DB" -c "
 DO \$\$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = boxcord) THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'boxcord') THEN
     CREATE ROLE boxcord LOGIN;
   END IF;
 END
 \$\$;
-ALTER ROLE boxcord WITH LOGIN NOSUPERUSER CREATEDB PASSWORD boxcord;
-SQL
-  sudo -u postgres psql -v ON_ERROR_STOP=1 -c "DROP DATABASE IF EXISTS ${DB_NAME};"
-  sudo -u postgres psql -v ON_ERROR_STOP=1 -c "CREATE DATABASE ${DB_NAME} OWNER boxcord;"
-else
-  psql -v ON_ERROR_STOP=1 postgres <<SQL
-DO \$\$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = boxcord) THEN
-    CREATE ROLE boxcord LOGIN;
-  END IF;
-END
-\$\$;
-ALTER ROLE boxcord WITH LOGIN NOSUPERUSER CREATEDB PASSWORD boxcord;
-SQL
-  psql -v ON_ERROR_STOP=1 postgres -c "DROP DATABASE IF EXISTS ${DB_NAME};"
-  psql -v ON_ERROR_STOP=1 postgres -c "CREATE DATABASE ${DB_NAME} OWNER boxcord;"
-fi
+"
+
+$PSQL_CMD -v ON_ERROR_STOP=1 -d "$PSQL_DB" -c "ALTER ROLE boxcord WITH LOGIN NOSUPERUSER CREATEDB PASSWORD 'boxcord';"
+$PSQL_CMD -v ON_ERROR_STOP=1 -d "$PSQL_DB" -c "DROP DATABASE IF EXISTS ${DB_NAME};"
+$PSQL_CMD -v ON_ERROR_STOP=1 -d "$PSQL_DB" -c "CREATE DATABASE ${DB_NAME} OWNER boxcord;"
 
 echo "✅ PostgreSQL ready — database '${DB_NAME}' created (${OS})"
