@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.26.13",
+    "date": "2026-04-30",
+    "notes": {
+      "en": [
+        "Use port 5433 for system postgres on Linux"
+      ]
+    }
+  },
+  {
     "version": "1.26.12",
     "date": "2026-04-30",
     "notes": {
