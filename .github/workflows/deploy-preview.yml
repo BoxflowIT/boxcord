@@ -18,7 +18,7 @@ jobs:
   preview:
     name: Deploy Preview
     runs-on: [self-hosted]
-    if: github.event.action != 'closed' && !github.event.pull_request.head.repo.fork
+    if: github.event_name == 'pull_request' && github.event.action != 'closed' && !github.event.pull_request.head.repo.fork
     environment:
       name: preview-pr-${{ github.event.pull_request.number }}
 
