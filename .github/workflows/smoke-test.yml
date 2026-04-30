@@ -26,7 +26,7 @@ permissions:
 jobs:
   smoke-test:
     name: Smoke Test (${{ github.event.inputs.environment || 'production' }})
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: [self-hosted]
     # Don't run if the triggering workflow failed
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
 
@@ -152,12 +152,21 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: `🚨 ${env} smoke test failed after deploy (${sha})`,
-              body: `## Smoke Test Failure\n\n` +
-                    `- **Environment:** ${env}\n` +
-                    `- **Commit:** ${sha}\n` +
-                    `- **Workflow Run:** ${runUrl}\n` +
-                    `- **Time:** ${new Date().toISOString()}\n\n` +
-                    `The post-deploy smoke test detected issues. Please investigate immediately.\n\n` +
+              body: `## Smoke Test Failure
+
+` +
+                    `- **Environment:** ${env}
+` +
+                    `- **Commit:** ${sha}
+` +
+                    `- **Workflow Run:** ${runUrl}
+` +
+                    `- **Time:** ${new Date().toISOString()}
+
+` +
+                    `The post-deploy smoke test detected issues. Please investigate immediately.
+
+` +
                     `cc @BoxflowIT/developers`,
               labels: ['bug', 'production', 'urgent']
             });
