@@ -27,7 +27,7 @@ jobs:
   smoke-test:
     name: Smoke Test (${{ github.event.inputs.environment || 'production' }})
     if: github.event_name != 'push'
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, Linux, X64]
     # Don't run if the triggering workflow failed
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
 

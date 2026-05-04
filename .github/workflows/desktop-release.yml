@@ -25,7 +25,7 @@ jobs:
   # ─── Create GitHub Release first ───────────────────────────────────
   create-release:
     name: Create GitHub Release
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, Linux, X64]
     outputs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
@@ -77,7 +77,7 @@ jobs:
   release-linux:
     name: Linux (AppImage + deb + rpm + pacman)
     needs: create-release
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, Linux, X64]
 
     steps:
       - name: Checkout
@@ -94,7 +94,7 @@ jobs:
         run: corepack enable
 
       - name: Install system dependencies for rpm/pacman builds
-        # Running on macOS — electron-builder uses Docker for Linux cross-compilation
+        # Native Linux build
         run: brew install rpm 2>/dev/null || true
 
       - name: Install dependencies
@@ -137,7 +137,7 @@ jobs:
   release-windows:
     name: Windows (NSIS installer)
     needs: create-release
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, Linux, X64]
 
     steps:
       - name: Checkout
@@ -198,7 +198,7 @@ jobs:
   release-mac:
     name: macOS (DMG)
     needs: create-release
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - name: Ensure required tools
@@ -260,7 +260,7 @@ jobs:
   publish-release:
     name: Publish Release
     needs: [create-release, release-linux, release-windows, release-mac]
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, Linux, X64]
 
     steps:
       - name: Checkout

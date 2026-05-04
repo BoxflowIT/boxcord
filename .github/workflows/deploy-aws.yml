@@ -22,7 +22,7 @@ jobs:
   # ─── Build & Push Docker Image ──────────────────────────────────
   build-backend:
     name: Build Backend Image
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, Linux, X64]
     outputs:
       image_tag: ${{ steps.meta.outputs.sha_tag }}
 
@@ -102,7 +102,7 @@ jobs:
   # ─── Deploy Frontend to S3/CloudFront ───────────────────────────
   deploy-frontend:
     name: Deploy Frontend
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, Linux, X64]
 
     steps:
       - name: Checkout code
@@ -161,7 +161,7 @@ jobs:
   # ─── Update ECS Service ─────────────────────────────────────────
   deploy-backend:
     name: Deploy Backend
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, Linux, X64]
     needs: build-backend
 
     steps:
@@ -246,7 +246,7 @@ jobs:
   # ─── Post-Deploy Summary ────────────────────────────────────────
   summary:
     name: Deploy Summary
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, Linux, X64]
     needs: [deploy-backend, deploy-frontend]
     if: always()
 
