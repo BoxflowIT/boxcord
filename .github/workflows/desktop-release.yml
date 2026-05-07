@@ -20,8 +20,6 @@ env:
   BOXCORD_URL: https://boxcord.boxflow.com
   # Resolve version: workflow_dispatch input takes priority, otherwise extract from tag
   RELEASE_VERSION: ${{ inputs.version || '' }}
-  # Docker socket for Colima on macOS self-hosted runner
-  DOCKER_HOST: unix:///Users/miniserver/.colima/docker.sock
 
 jobs:
   # ─── Create GitHub Release first ───────────────────────────────────
@@ -95,6 +93,12 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
+      - name: Setup Docker environment
+        run: |
+          SOCKET="$HOME/.colima/default/docker.sock"
+          [ -S "$SOCKET" ] || { echo "::error::Docker socket not found at $SOCKET"; exit 1; }
+          echo "DOCKER_HOST=unix://$SOCKET" >> $GITHUB_ENV
+
       - name: Pull electron-builder Docker image for Linux cross-compilation
         run: docker pull --platform linux/amd64 electronuserland/builder:20-wine
 
@@ -154,6 +158,12 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
+      - name: Setup Docker environment
+        run: |
+          SOCKET="$HOME/.colima/default/docker.sock"
+          [ -S "$SOCKET" ] || { echo "::error::Docker socket not found at $SOCKET"; exit 1; }
+          echo "DOCKER_HOST=unix://$SOCKET" >> $GITHUB_ENV
+
       - name: Pull electron-builder Docker image for Windows cross-compilation
         run: docker pull --platform linux/amd64 electronuserland/builder:20-wine
 
@@ -166,7 +176,6 @@ jobs:
         run: yarn build
 
       - name: Build Windows installer
-        # electron-builder uses Docker (electronuserland/builder:wine) for cross-compilation on macOS
         working-directory: desktop
         run: npx electron-builder --win --publish never
         env:
