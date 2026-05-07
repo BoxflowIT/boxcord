@@ -93,9 +93,14 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
-      - name: Install system dependencies for rpm/pacman builds
-        # Native Linux build
-        run: brew install rpm 2>/dev/null || true
+      - name: Setup Docker environment
+        run: |
+          SOCKET="$HOME/.colima/default/docker.sock"
+          [ -S "$SOCKET" ] || { echo "::error::Docker socket not found at $SOCKET"; exit 1; }
+          echo "DOCKER_HOST=unix://$SOCKET" >> $GITHUB_ENV
+
+      - name: Pull electron-builder Docker image for Linux cross-compilation
+        run: docker pull --platform linux/amd64 electronuserland/builder:20-wine
 
       - name: Install dependencies
         working-directory: desktop
@@ -153,6 +158,15 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
+      - name: Setup Docker environment
+        run: |
+          SOCKET="$HOME/.colima/default/docker.sock"
+          [ -S "$SOCKET" ] || { echo "::error::Docker socket not found at $SOCKET"; exit 1; }
+          echo "DOCKER_HOST=unix://$SOCKET" >> $GITHUB_ENV
+
+      - name: Pull electron-builder Docker image for Windows cross-compilation
+        run: docker pull --platform linux/amd64 electronuserland/builder:20-wine
+
       - name: Install dependencies
         working-directory: desktop
         run: yarn install --frozen-lockfile
@@ -162,7 +176,6 @@ jobs:
         run: yarn build
 
       - name: Build Windows installer
-        # electron-builder uses Docker (electronuserland/builder:wine) for cross-compilation on macOS
         working-directory: desktop
         run: npx electron-builder --win --publish never
         env:
