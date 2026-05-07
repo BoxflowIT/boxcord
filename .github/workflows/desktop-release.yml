@@ -93,14 +93,10 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
-      - name: Setup Docker environment
+      - name: Install system dependencies for rpm/pacman builds
         run: |
-          SOCKET="$HOME/.colima/default/docker.sock"
-          [ -S "$SOCKET" ] || { echo "::error::Docker socket not found at $SOCKET"; exit 1; }
-          echo "DOCKER_HOST=unix://$SOCKET" >> $GITHUB_ENV
-
-      - name: Pull electron-builder Docker image for Linux cross-compilation
-        run: docker pull --platform linux/amd64 electronuserland/builder:20-wine
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq rpm libarchive-tools 2>/dev/null || true
 
       - name: Install dependencies
         working-directory: desktop
@@ -160,9 +156,14 @@ jobs:
 
       - name: Setup Docker environment
         run: |
-          SOCKET="$HOME/.colima/default/docker.sock"
-          [ -S "$SOCKET" ] || { echo "::error::Docker socket not found at $SOCKET"; exit 1; }
-          echo "DOCKER_HOST=unix://$SOCKET" >> $GITHUB_ENV
+          if [ -S /var/run/docker.sock ]; then
+            echo "DOCKER_HOST=unix:///var/run/docker.sock" >> $GITHUB_ENV
+          elif [ -S "$HOME/.colima/default/docker.sock" ]; then
+            echo "DOCKER_HOST=unix://$HOME/.colima/default/docker.sock" >> $GITHUB_ENV
+          else
+            echo "::error::No Docker socket found"; exit 1
+          fi
+          docker info --format '{{.OSType}}/{{.Architecture}}'
 
       - name: Pull electron-builder Docker image for Windows cross-compilation
         run: docker pull --platform linux/amd64 electronuserland/builder:20-wine
