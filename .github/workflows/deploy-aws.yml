@@ -78,6 +78,12 @@ jobs:
           echo "sha_tag=${SHA_TAG}" >> $GITHUB_OUTPUT
           echo "latest_tag=${LATEST_TAG}" >> $GITHUB_OUTPUT
 
+      - name: Clean up old Docker buildx resources
+        run: |
+          docker buildx prune --filter until=24h -f 2>/dev/null || true
+          docker container prune -f 2>/dev/null || true
+          docker volume prune -f 2>/dev/null || true
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
@@ -93,11 +99,12 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Clean up Docker credentials
+      - name: Clean up Docker credentials and buildx
         if: always()
         run: |
           rm -rf "${RUNNER_TEMP}/.docker"
-          echo "Cleaned up temporary Docker credentials"
+          docker buildx rm --all-inactive --force 2>/dev/null || true
+          echo "Cleaned up temporary Docker credentials and inactive builders"
 
   # ─── Deploy Frontend to S3/CloudFront ───────────────────────────
   deploy-frontend:
