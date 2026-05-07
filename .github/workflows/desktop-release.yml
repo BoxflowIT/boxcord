@@ -146,7 +146,7 @@ jobs:
         run: docker info --format '{{.OSType}}/{{.Architecture}}'
 
       - name: Pull electron-builder Docker image for Windows cross-compilation
-        run: docker pull electronuserland/builder:20-wine
+        run: docker pull electronuserland/builder:22-wine
 
       - name: Build Windows installer via Docker
         run: |
@@ -154,7 +154,7 @@ jobs:
             -v "${{ github.workspace }}:/workspace" \
             -w /workspace/desktop \
             -e USE_HARD_LINKS=false \
-            electronuserland/builder:20-wine \
+            electronuserland/builder:22-wine \
             bash -c "corepack enable && yarn install --frozen-lockfile && yarn build && npx electron-builder --win --publish never"
 
       - name: Upload artifacts to release
