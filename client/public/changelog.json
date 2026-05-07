@@ -1,5 +1,17 @@
 [
   {
+    "version": "1.26.14",
+    "date": "2026-05-07",
+    "notes": {
+      "en": [
+        "Upgrade fast-jwt to 6.2.4 and axios to 1.16.0",
+        "Address PR review — fix .pr-number, remove unused postcss dep, clean changelog",
+        "Trim changelog whitespace and update 1.26.5 notes to match actual changes",
+        "Update .pkg.tar.zst references to .pacman in main.ts and docs"
+      ]
+    }
+  },
+  {
     "version": "1.26.13",
     "date": "2026-04-30",
     "notes": {
