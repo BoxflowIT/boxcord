@@ -94,9 +94,7 @@ jobs:
         run: corepack enable
 
       - name: Install system dependencies for rpm/pacman builds
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq rpm libarchive-tools 2>/dev/null || true
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq rpm libarchive-tools
 
       - name: Install dependencies
         working-directory: desktop
@@ -144,43 +142,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: '22'
-          cache: 'yarn'
-          cache-dependency-path: desktop/yarn.lock
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Setup Docker environment
-        run: |
-          if [ -S /var/run/docker.sock ]; then
-            echo "DOCKER_HOST=unix:///var/run/docker.sock" >> $GITHUB_ENV
-          elif [ -S "$HOME/.colima/default/docker.sock" ]; then
-            echo "DOCKER_HOST=unix://$HOME/.colima/default/docker.sock" >> $GITHUB_ENV
-          else
-            echo "::error::No Docker socket found"; exit 1
-          fi
-          docker info --format '{{.OSType}}/{{.Architecture}}'
+      - name: Verify Docker is available
+        run: docker info --format '{{.OSType}}/{{.Architecture}}'
 
       - name: Pull electron-builder Docker image for Windows cross-compilation
-        run: docker pull --platform linux/amd64 electronuserland/builder:20-wine
+        run: docker pull electronuserland/builder:20-wine
 
-      - name: Install dependencies
-        working-directory: desktop
-        run: yarn install --frozen-lockfile
-
-      - name: Compile TypeScript
-        working-directory: desktop
-        run: yarn build
-
-      - name: Build Windows installer
-        working-directory: desktop
-        run: npx electron-builder --win --publish never
-        env:
-          USE_HARD_LINKS: false
+      - name: Build Windows installer via Docker
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/workspace" \
+            -w /workspace/desktop \
+            -e USE_HARD_LINKS=false \
+            electronuserland/builder:20-wine \
+            bash -c "corepack enable && yarn install --frozen-lockfile && yarn build && npx electron-builder --win --publish never"
 
       - name: Upload artifacts to release
         working-directory: desktop/out
