@@ -20,6 +20,8 @@ env:
   BOXCORD_URL: https://boxcord.boxflow.com
   # Resolve version: workflow_dispatch input takes priority, otherwise extract from tag
   RELEASE_VERSION: ${{ inputs.version || '' }}
+  # Docker socket for Colima on macOS self-hosted runner
+  DOCKER_HOST: unix:///Users/miniserver/.colima/docker.sock
 
 jobs:
   # ─── Create GitHub Release first ───────────────────────────────────
@@ -93,9 +95,8 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
-      - name: Install system dependencies for rpm/pacman builds
-        # Running on macOS — electron-builder uses Docker for Linux cross-compilation
-        run: brew install rpm 2>/dev/null || true
+      - name: Pull electron-builder Docker image for Linux cross-compilation
+        run: docker pull --platform linux/amd64 electronuserland/builder:20-wine
 
       - name: Install dependencies
         working-directory: desktop
@@ -152,6 +153,9 @@ jobs:
 
       - name: Enable Corepack
         run: corepack enable
+
+      - name: Pull electron-builder Docker image for Windows cross-compilation
+        run: docker pull --platform linux/amd64 electronuserland/builder:20-wine
 
       - name: Install dependencies
         working-directory: desktop
