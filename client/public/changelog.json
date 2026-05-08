@@ -1,5 +1,45 @@
 [
   {
+    "version": "1.26.14",
+    "date": "2026-05-07",
+    "notes": {
+      "en": [
+        "Upgrade fast-jwt to 6.2.4 and axios to 1.16.0",
+        "Address PR review — fix .pr-number, remove unused postcss dep, clean changelog",
+        "Trim changelog whitespace and update 1.26.5 notes to match actual changes",
+        "Update .pkg.tar.zst references to .pacman in main.ts and docs"
+      ]
+    }
+  },
+  {
+    "version": "1.26.13",
+    "date": "2026-04-30",
+    "notes": {
+      "en": ["Use port 5433 for system postgres on Linux"]
+    }
+  },
+  {
+    "version": "1.26.12",
+    "date": "2026-04-30",
+    "notes": {
+      "en": ["Correct heredoc quoting in setup-postgres.sh for Linux"]
+    }
+  },
+  {
+    "version": "1.26.11",
+    "date": "2026-04-30",
+    "notes": {
+      "en": ["Make setup-postgres.sh cross-platform (macOS + Linux)"]
+    }
+  },
+  {
+    "version": "1.26.10",
+    "date": "2026-04-29",
+    "notes": {
+      "en": ["Clean up changelog entry wording and remove inline PR reference"]
+    }
+  },
+  {
     "version": "1.26.9",
     "date": "2026-04-29",
     "notes": {
