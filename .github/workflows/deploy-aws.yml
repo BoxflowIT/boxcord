@@ -52,8 +52,7 @@ jobs:
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           REGISTRY="${ACCOUNT_ID}.dkr.ecr.eu-north-1.amazonaws.com"
           TOKEN=$(aws ecr get-login-password --region eu-north-1)
-          AUTH=$(printf 'AWS:%s' "$TOKEN" | base64 | tr -d '
-')
+          AUTH=$(printf 'AWS:%s' "$TOKEN" | base64 | tr -d '\n')
 
           # Restrict permissions — self-hosted runners may share the filesystem
           umask 077
