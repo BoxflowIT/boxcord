@@ -154,8 +154,9 @@ jobs:
             -v "${{ github.workspace }}:/workspace" \
             -w /workspace/desktop \
             -e USE_HARD_LINKS=false \
+            -e HOME=/tmp \
             electronuserland/builder:22-wine \
-            bash -c "corepack enable && yarn install --frozen-lockfile && yarn build && npx electron-builder --win --publish never"
+            bash -c "corepack enable && yarn install --frozen-lockfile && yarn build && npx electron-builder --win --publish never && chown -R $(id -u):$(id -g) /workspace/desktop/out /workspace/desktop/dist /workspace/desktop/node_modules"
 
       - name: Upload artifacts to release
         working-directory: desktop/out
@@ -249,7 +250,7 @@ jobs:
   publish-release:
     name: Publish Release
     needs: [create-release, release-linux, release-windows, release-mac]
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: [self-hosted, macOS, ARM64]
 
     steps:
       - name: Checkout
