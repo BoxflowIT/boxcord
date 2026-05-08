@@ -25,7 +25,7 @@ jobs:
   # ─── Create GitHub Release first ───────────────────────────────────
   create-release:
     name: Create GitHub Release
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: [self-hosted, Linux, X64]
     outputs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
@@ -146,7 +146,7 @@ jobs:
         run: docker info --format '{{.OSType}}/{{.Architecture}}'
 
       - name: Pull electron-builder Docker image for Windows cross-compilation
-        run: docker pull electronuserland/builder:20-wine
+        run: docker pull electronuserland/builder:22-wine
 
       - name: Build Windows installer via Docker
         run: |
@@ -154,8 +154,9 @@ jobs:
             -v "${{ github.workspace }}:/workspace" \
             -w /workspace/desktop \
             -e USE_HARD_LINKS=false \
-            electronuserland/builder:20-wine \
-            bash -c "corepack enable && yarn install --frozen-lockfile && yarn build && npx electron-builder --win --publish never"
+            -e HOME=/tmp \
+            electronuserland/builder:22-wine \
+            bash -c "corepack enable && yarn install --frozen-lockfile && yarn build && npx electron-builder --win --publish never && chown -R $(id -u):$(id -g) /workspace/desktop/out /workspace/desktop/dist /workspace/desktop/node_modules"
 
       - name: Upload artifacts to release
         working-directory: desktop/out
