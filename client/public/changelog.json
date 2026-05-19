@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.26.17",
+    "date": "2026-05-19",
+    "notes": {
+      "en": [
+        "Upgrade brace-expansion to 5.0.6 (CVE fix - DoS protection bypass)"
+      ]
+    }
+  },
+  {
     "version": "1.26.16",
     "date": "2026-05-11",
     "notes": {
