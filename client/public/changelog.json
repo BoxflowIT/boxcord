@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.26.18",
+    "date": "2026-05-19",
+    "notes": {
+      "en": [
+        "Upgrade ws to 8.20.1 (CVE fix - moderate severity)"
+      ]
+    }
+  },
+  {
     "version": "1.26.17",
     "date": "2026-05-19",
     "notes": {
