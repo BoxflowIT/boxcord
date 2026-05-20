@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.26.19",
+    "date": "2026-05-20",
+    "notes": {
+      "en": [
+        "Upgrade ws to 8.20.1 to fix uninitialized memory disclosure"
+      ]
+    }
+  },
+  {
     "version": "1.26.18",
     "date": "2026-05-19",
     "notes": {
