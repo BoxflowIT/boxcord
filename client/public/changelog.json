@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.26.20",
+    "date": "2026-05-25",
+    "notes": {
+      "en": [
+        "Upgrade uuid >=12.0.1 and js-cookie >=3.0.7 via resolutions"
+      ]
+    }
+  },
+  {
     "version": "1.26.19",
     "date": "2026-05-20",
     "notes": {
