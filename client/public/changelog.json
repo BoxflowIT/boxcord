@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.26.22",
+    "date": "2026-05-28",
+    "notes": {
+      "en": [
+        "Regenerate yarn.lock to resolve frozen-lockfile CI failure"
+      ]
+    }
+  },
+  {
     "version": "1.26.21",
     "date": "2026-05-28",
     "notes": {
