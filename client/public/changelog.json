@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.26.21",
+    "date": "2026-05-28",
+    "notes": {
+      "en": [
+        "Update dependencies to resolve security vulnerabilities"
+      ]
+    }
+  },
+  {
     "version": "1.26.20",
     "date": "2026-05-25",
     "notes": {
