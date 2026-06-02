@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.26.25",
+    "date": "2026-06-02",
+    "notes": {
+      "en": [
+        "Upgrade vitest to 4.1.x (critical security patch)"
+      ]
+    }
+  },
+  {
     "version": "1.26.22",
     "date": "2026-05-28",
     "notes": {
