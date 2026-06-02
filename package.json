@@ -79,7 +79,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.19.33",
     "@types/web-push": "^3.6.4",
-    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/coverage-v8": "^4.1.8",
     "eslint": "^10.0.1",
     "eslint-config-prettier": "^9.1.0",
     "husky": "^9.1.7",
@@ -91,7 +91,7 @@
     "tsx": "^4.11.0",
     "typescript": "^5.4.5",
     "typescript-eslint": "^8.56.0",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.8"
   },
   "overrides": {
     "ajv": "^8.18.0",
