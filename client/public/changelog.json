@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.26.26",
+    "date": "2026-06-05",
+    "notes": {
+      "en": [
+        "Update react-router to 6.30.4 to resolve security alert"
+      ]
+    }
+  },
+  {
     "version": "1.26.25",
     "date": "2026-06-02",
     "notes": {
