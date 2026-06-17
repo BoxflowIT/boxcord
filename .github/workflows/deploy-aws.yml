@@ -108,7 +108,7 @@ jobs:
   # ─── Deploy Frontend to S3/CloudFront ───────────────────────────
   deploy-frontend:
     name: Deploy Frontend
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: [self-hosted, Linux]
 
     steps:
       - name: Checkout code
@@ -167,7 +167,7 @@ jobs:
   # ─── Update ECS Service ─────────────────────────────────────────
   deploy-backend:
     name: Deploy Backend
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: [self-hosted, Linux]
     needs: build-backend
 
     steps:
@@ -252,7 +252,7 @@ jobs:
   # ─── Post-Deploy Summary ────────────────────────────────────────
   summary:
     name: Deploy Summary
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: [self-hosted, Linux]
     needs: [deploy-backend, deploy-frontend]
     if: always()
 
