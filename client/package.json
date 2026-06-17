@@ -75,7 +75,7 @@
     "typescript": "^5.4.5",
     "typescript-eslint": "^8.56.0",
     "undici": "^7.24.0",
-    "vite": "^7.3.2",
+    "vite": "^7.3.5",
     "vitest": "^4.1.8"
   },
   "overrides": {
@@ -85,7 +85,10 @@
     "socket.io-parser": "^4.2.6",
     "picomatch": "^2.3.2",
     "brace-expansion": "^5.0.5",
-    "vite": "^7.3.2"
+    "vite": "^7.3.5",
+    "ws": ">=8.20.2",
+    "js-cookie": ">=3.0.7",
+    "esbuild": "^0.28.1"
   },
   "resolutions": {
     "minimatch": "^10.2.3",
@@ -95,9 +98,9 @@
     "picomatch": "^2.3.2",
     "micromatch/picomatch": "^2.3.2",
     "brace-expansion": ">=5.0.5",
-    "vite": "^7.3.2",
+    "vite": "^7.3.5",
     "postcss": ">=8.5.12",
-    "ws": ">=8.20.1",
+    "ws": ">=8.20.2",
     "uuid": ">=12.0.1",
     "js-cookie": ">=3.0.7",
     "esbuild": "^0.28.1"
