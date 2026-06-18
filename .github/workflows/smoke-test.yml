@@ -27,7 +27,7 @@ jobs:
   smoke-test:
     name: Smoke Test (${{ github.event.inputs.environment || 'production' }})
     if: github.event_name != 'push' && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: [self-hosted, Linux]
 
     steps:
       - name: Validate required tools
