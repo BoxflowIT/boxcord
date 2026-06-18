@@ -832,10 +832,10 @@
     fastq "^1.17.1"
     glob "^13.0.0"
 
-"@fastify/swagger-ui@^5.2.5":
-  version "5.2.6"
-  resolved "https://registry.npmjs.org/@fastify/swagger-ui/-/swagger-ui-5.2.6.tgz"
-  integrity sha512-OMnms0O5s9wb6wis/K5nlrAMLsgUbr1GA8uphM41IasWe3AFdgxz6r/3bA9HTxlDNUYc2FGGKeqMp3ntxmSiNA==
+"@fastify/swagger-ui@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@fastify/swagger-ui/-/swagger-ui-6.0.0.tgz#f28af8458617fdbd95d3e992d15bb83e596323bc"
+  integrity sha512-L9c4CbXj3FnquqpCmn0IfbEeIqDUNi6QwXd23VhQj/bHEjNzDFIAy2W9I3prvSqM+mJWOElIa6uXROmcMDnfUA==
   dependencies:
     "@fastify/static" "^9.1.2"
     fastify-plugin "^5.0.0"
