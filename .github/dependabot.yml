@@ -11,6 +11,13 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      # Prisma 7 introduces breaking schema changes (datasource url moved to
+      # prisma.config.ts). Stay on 6.x until we plan the migration.
+      - dependency-name: prisma
+        update-types: [version-update:semver-major]
+      - dependency-name: "@prisma/client"
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: docker
     directory: /
