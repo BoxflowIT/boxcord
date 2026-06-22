@@ -181,7 +181,7 @@ export class DirectMessageService {
         const participant = ch.participants.find((p) => p.userId === userId);
         const lastReadAt = participant?.lastReadAt;
 
-        let unreadCount = 0;
+        let unreadCount: number;
         if (lastReadAt) {
           unreadCount = await this.prisma.directMessage.count({
             where: {
