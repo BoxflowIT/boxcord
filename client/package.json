@@ -1,6 +1,6 @@
 {
   "name": "boxcord-client",
-  "version": "1.26.36",
+  "version": "1.26.37",
   "type": "module",
   "scripts": {
     "dev": "vite",
