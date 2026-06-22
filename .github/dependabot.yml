@@ -18,6 +18,11 @@ updates:
         update-types: [version-update:semver-major]
       - dependency-name: "@prisma/client"
         update-types: [version-update:semver-major]
+      # Zod 4 introduces breaking API changes (ZodError.errors -> .issues,
+      # default-overloads changed, stricter inferred types). Stay on 3.x
+      # until we plan the migration.
+      - dependency-name: zod
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: docker
     directory: /
